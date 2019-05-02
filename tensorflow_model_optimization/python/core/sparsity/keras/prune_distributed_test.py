@@ -14,6 +14,7 @@
 # ==============================================================================
 """Distributed pruning test."""
 
+import tempfile
 from absl.testing import parameterized
 import numpy as np
 
@@ -70,6 +71,14 @@ class PruneDistributedTest(test.TestCase, parameterized.TestCase):
         batch_size=20)
     model.predict(np.random.rand(20, 10))
     test_utils.assert_model_sparsity(self, 0.5, model)
+
+    _, keras_file = tempfile.mkstemp('.h5')
+    keras.models.save_model(model, keras_file)
+
+    with prune.prune_scope():
+      loaded_model = keras.models.load_model(keras_file)
+
+    test_utils.assert_model_sparsity(self, 0.5, loaded_model)
 
 
 if __name__ == '__main__':

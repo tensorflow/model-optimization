@@ -67,9 +67,9 @@ class PruningTest(test.TestCase):
     self.assertAllEqual(np.count_nonzero(mask_before_pruning), 100)
 
     if context.executing_eagerly():
-      p.mask_update_op()
+      p.conditional_mask_update()
     else:
-      K.get_session().run(p.mask_update_op())
+      K.get_session().run(p.conditional_mask_update())
 
     mask_after_pruning = K.get_value(mask)
     self.assertAllEqual(np.count_nonzero(mask_after_pruning), 50)
@@ -142,31 +142,6 @@ class PruningTest(test.TestCase):
     # Block masking should only be used with 2 Dimensional weights.
     with self.assertRaises(ValueError):
       self._blockMasking(block_size, block_pooling_type, weight, expected_mask)
-
-  def testPartitionedVariableMasking(self):
-    partitioner = partitioned_variables.variable_axis_size_partitioner(40)
-    with self.cached_session():
-      with variable_scope.variable_scope("", partitioner=partitioner):
-        weight = variable_scope.get_variable(
-            "weights", initializer=math_ops.linspace(1.0, 100.0, 100))
-        mask = pruning_utils.mask_variable(weight)
-        threshold = pruning_utils.threshold_variable(weight)
-
-      p = pruning_impl.Pruning(
-          pruning_vars=[(weight, mask, threshold)],
-          training_step_fn=self.training_step_fn,
-          pruning_schedule=self.constant_sparsity,
-          block_size=self.block_size,
-          block_pooling_type=self.block_pooling_type)
-
-      if context.executing_eagerly():
-        p.mask_update_op()
-      else:
-        variables.global_variables_initializer().run()
-        K.get_session().run(p.mask_update_op())
-
-      mask_after_pruning = K.get_value(mask.as_tensor())
-      self.assertAllEqual(np.count_nonzero(mask_after_pruning), 50)
 
   def testConditionalMaskUpdate(self):
     weight = K.variable(np.linspace(1.0, 100.0, 100), name="weights")

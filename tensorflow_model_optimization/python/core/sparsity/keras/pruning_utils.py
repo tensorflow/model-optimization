@@ -34,52 +34,6 @@ from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import variable_scope
 
 
-def mask_variable(var, scope=''):
-  """Create a mask for the weights.
-
-  This function adds a variable 'mask' to the graph.
-
-  Args:
-    var: the weight variable that needs to be masked
-    scope: The variable scope of the variable var
-
-  Returns:
-    the mask variable of the same size and shape as var, initialized to all 1s.
-  """
-  with variable_scope.variable_scope(scope):
-    # TODO(suyoggupta): Remove variable_scope dependency
-    mask = variable_scope.get_variable(
-        'mask',
-        var.get_shape(),
-        initializer=init_ops.ones_initializer(),
-        trainable=False,
-        dtype=var.dtype)
-  return mask
-
-
-def threshold_variable(var, scope=''):
-  """Create a scalar threshold for the weights.
-
-  This function adds a variable
-  'threshold' to the graph.
-
-  Args:
-    var: The weight variable that needs to be masked
-    scope: The variable scope of the variable var
-
-  Returns:
-    A scalar threshold variable initialized to 0.
-  """
-  with variable_scope.variable_scope(scope):
-    # TODO(suyoggupta): Remove variable_scope dependency
-    threshold = variable_scope.get_variable(
-        'threshold', [],
-        initializer=init_ops.zeros_initializer(),
-        trainable=False,
-        dtype=var.dtype)
-    return threshold
-
-
 def kronecker_product(mat1, mat2):
   """Computes the Kronecker product of two matrices mat1 and mat2.
 
@@ -96,7 +50,6 @@ def kronecker_product(mat1, mat2):
   m2, n2 = mat2.get_shape().as_list()
   mat2_rsh = array_ops.reshape(mat2, [1, m2, 1, n2])
   return array_ops.reshape(mat1_rsh * mat2_rsh, [m1 * m2, n1 * n2])
-
 
 def expand_tensor(tensor, block_size):
   """Expands a 2D tensor by replicating the tensor values.
@@ -213,50 +166,3 @@ def factorized_pool(input_tensor,
 
   return array_ops.squeeze(
       array_ops.transpose(width_pooling, perm=[0, 1, 3, 2]))
-
-
-def determine_partitioned_axis(partitioned_variable):
-  partitioned_axis = 0
-  concatenated_variable_shape = partitioned_variable.get_shape()
-  for partition in partitioned_variable:
-    partition_shape = partition.get_shape()
-    maybe_partitioned_axis = np.less(partition_shape,
-                                     concatenated_variable_shape)
-    # Sanity check: make sure number of partitioned axis == 1
-    if np.count_nonzero(maybe_partitioned_axis) != 1:
-      raise ValueError('Number of partitioned axes %s not equal to 1' %
-                       np.count_nonzero(maybe_partitioned_axis))
-    partitioned_axis = np.where(maybe_partitioned_axis)[0][0]
-  return partitioned_axis
-
-
-def variable_assign(var, new_value):
-  return state_ops.assign(var, new_value)
-
-
-def partitioned_variable_assign(partitioned_var, new_value):
-  """Assign op for partitioned variables.
-
-  Args:
-    partitioned_var: A partitioned tensorflow variable
-    new_value: Value to be assigned to the variable var
-
-  Returns:
-    A tensorflow op that groups the assign ops for each of the variable slices
-  """
-  # Determine which axis was used to partition the variable. Currently
-  # tensorflow allows partitioning variable only along 1 axis.
-  axis = 0 if len(partitioned_var) == 1 else determine_partitioned_axis(
-      partitioned_var)
-
-  partition_sizes = np.array(
-      [partition.get_shape()[axis] for partition in partitioned_var])
-  new_partitioned_values = array_ops.split(
-      new_value,
-      ops.convert_to_tensor(partition_sizes, dtype=dtypes.int32),
-      axis=axis)
-  op_list = []
-  for partition in partitioned_var:
-    op_list.append(
-        variable_assign(partition, new_partitioned_values[len(op_list)]))
-  return control_flow_ops.group(*op_list)

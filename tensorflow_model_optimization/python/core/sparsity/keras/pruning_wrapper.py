@@ -231,9 +231,9 @@ class PruneLowMagnitude(Wrapper):
       return control_flow_ops.no_op('no_update')
 
     update_op = tf_utils.smart_cond(training, add_update, no_op)
-    self.layer.add_update(update_op)
+    self.add_update(update_op)
     # Always execute the op that performs weights = weights * mask
-    self.layer.add_update(self.pruning_obj.weight_mask_op())
+    self.add_update(self.pruning_obj.weight_mask_op())
 
     return self.layer.call(inputs)
 

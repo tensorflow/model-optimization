@@ -26,11 +26,11 @@ from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import control_flow_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn_ops
+from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import summary_ops_v2
 from tensorflow.python.ops import variables
 from tensorflow.python.summary import summary as summary_ops_v1
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
-
 
 class Pruning(object):
   """Implementation of magnitude-based weight pruning."""
@@ -55,14 +55,8 @@ class Pruning(object):
     self._block_pooling_type = block_pooling_type
     self._validate_block()
 
-    # List of tensorflow assignments ops for new masks and thresholds
-    self._assign_ops = []
-
     # Training step
     self._step_fn = training_step_fn
-
-    # List of tensorflow assignment ops for the weights
-    self._weight_assign_ops = []
 
     self._validate_block()
 
@@ -72,9 +66,6 @@ class Pruning(object):
         if weight.get_shape().ndims != 2:
           raise ValueError('Block Sparsity can only be used for layers which '
                            'have 2-dimensional weights.')
-
-  def get_weight_sparsity(self):
-    return [math_ops.reduce_mean(weight) for weight, _, _ in self._pruning_vars]
 
   def _update_mask(self, weights):
     """Updates the mask for a given weight tensor.
@@ -161,55 +152,47 @@ class Pruning(object):
     return new_threshold, array_ops.reshape(sliced_mask,
                                             array_ops.shape(weights))
 
-  def _get_assign_ops(self):
-    """Gather the assign ops for assigning updated masks and threshold."""
-    # Make sure the assignment ops have not already been added to the list
-    if self._assign_ops:
-      raise ValueError(
-          'Assign op list not empty. _get_assign_ops() called twice?')
-
-    for weight, mask, threshold in self._pruning_vars:
-      is_partitioned = isinstance(weight, variables.PartitionedVariable)
-      weight_as_tensor = weight
-      if is_partitioned:
-        weight_as_tensor = weight.as_tensor()
-
-      new_threshold, new_mask = self._maybe_update_block_mask(weight_as_tensor)
-      self._assign_ops.append(
-          pruning_utils.variable_assign(threshold, new_threshold))
-
-      self._assign_ops.append(
-          pruning_utils.partitioned_variable_assign(mask, new_mask)
-          if is_partitioned else pruning_utils.variable_assign(mask, new_mask))
-
   def _get_weight_assign_ops(self):
     """Gather the assign ops for assigning weights<=weights*mask."""
-    if self._weight_assign_ops:
-      raise ValueError(
-          'Assign op list not empty. _get_weight_assign_ops() called twice?')
 
-    for weight, mask, _ in self._pruning_vars:
-      is_partitioned = isinstance(weight, variables.PartitionedVariable)
-      masked_weight = math_ops.multiply(weight, mask)
-      self._weight_assign_ops.append(
-          pruning_utils.partitioned_variable_assign(weight, masked_weight)
-          if is_partitioned else pruning_utils
-          .variable_assign(weight, masked_weight))
+    def update_fn(distribution, values_and_vars):
+      # TODO(yunluli): Need this ReduceOp because the weight is created by the
+      # layer wrapped, so we don't have control of its aggregation policy. May
+      # be able to optimize this when distribution strategy supports easier
+      # update to mirrored variables in replica context.
+      reduced_values = distribution.extended.batch_reduce_to(
+          tf.distribute.ReduceOp.MEAN, values_and_vars)
+      var_list = [v for _, v in values_and_vars]
+      values_and_vars = zip(reduced_values, var_list)
+
+      def update_var(variable, reduced_value):
+        return state_ops.assign(variable, reduced_value)
+
+      update_ops = []
+      for value, var in values_and_vars:
+        update_ops.append(
+            distribution.extended.update(var, update_var, args=(value,)))
+
+      return control_flow_ops.group(update_ops)
+
+    assign_ops = []
+
+    if tf.distribute.get_replica_context():
+      values_and_vars = []
+      for weight, mask, _ in self._pruning_vars:
+        masked_weight = math_ops.multiply(weight, mask)
+        values_and_vars.append((masked_weight, weight))
+      assign_ops.append(tf.distribute.get_replica_context().merge_call(
+          update_fn, args=(values_and_vars,)))
+    else:
+      for weight, mask, _ in self._pruning_vars:
+        masked_weight = math_ops.multiply(weight, mask)
+        assign_ops.append(state_ops.assign(weight, masked_weight))
+
+    return assign_ops
 
   def weight_mask_op(self):
-    if tf.executing_eagerly() or not self._weight_assign_ops:
-      self._weight_assign_ops = []
-      self._get_weight_assign_ops()
-
-    with ops.control_dependencies(self._weight_assign_ops):
-      return control_flow_ops.no_op('mask_weights')
-
-  def mask_update_op(self):
-    self._assign_ops = []
-    self._get_assign_ops()
-
-    with ops.control_dependencies(self._assign_ops):
-      return control_flow_ops.no_op('mask_update')
+    return control_flow_ops.group(self._get_weight_assign_ops())
 
   def conditional_mask_update(self):
     """Returns an op to updates masks as per the pruning schedule."""
@@ -217,13 +200,51 @@ class Pruning(object):
     def maybe_update_masks():
       return self._pruning_schedule(self._step_fn())[0]
 
-    def mask_update_op():
-      return self.mask_update_op()
-
-    def no_op():
+    def no_update():
       return control_flow_ops.no_op()
 
-    return control_flow_ops.cond(maybe_update_masks(), mask_update_op, no_op)
+    def mask_update():
+      """Updates mask without distribution strategy."""
+
+      def update():
+        assign_ops = []
+
+        for weight, mask, threshold in self._pruning_vars:
+          new_threshold, new_mask = self._maybe_update_block_mask(weight)
+          assign_ops.append(state_ops.assign(threshold, new_threshold))
+          assign_ops.append(state_ops.assign(mask, new_mask))
+
+        return control_flow_ops.group(assign_ops)
+
+      return control_flow_ops.cond(maybe_update_masks(), update, no_update)
+
+    def mask_update_distributed(distribution):
+      """Updates mask with distribution strategy."""
+
+      def update(var, value):
+        return state_ops.assign(var, value)
+
+      def update_distributed():
+        """Gather distributed update ops."""
+        assign_ops = []
+
+        for weight, mask, threshold in self._pruning_vars:
+          new_threshold, new_mask = self._maybe_update_block_mask(weight)
+          assign_ops.append(
+              distribution.extended.update(mask, update, (new_mask,)))
+          assign_ops.append(
+              distribution.extended.update(threshold, update, (new_threshold,)))
+
+        return control_flow_ops.group(assign_ops)
+
+      return control_flow_ops.cond(maybe_update_masks(), update_distributed,
+                                   no_update)
+
+    if tf.distribute.get_replica_context():
+      return tf.distribute.get_replica_context().merge_call(
+          mask_update_distributed)
+    else:
+      return mask_update()
 
   def add_pruning_summaries(self):
     """Adds summaries of weight sparsities and thresholds."""
