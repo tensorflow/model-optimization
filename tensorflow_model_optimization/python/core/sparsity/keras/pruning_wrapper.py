@@ -31,6 +31,7 @@ from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import check_ops
 from tensorflow.python.ops import control_flow_ops
+from tensorflow.python.ops import variables as tf_variables
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
@@ -175,8 +176,20 @@ class PruneLowMagnitude(Wrapper):
 
     # For each of the prunable weights, add mask and threshold variables
     for weight in self.prunable_weights:
-      mask = K.variable(np.ones(weight.shape), dtype=weight.dtype)
-      threshold = K.variable(0, dtype=weight.dtype)
+      mask = self.add_variable(
+          'mask',
+          shape=weight.shape,
+          initializer=initializers.get('ones'),
+          dtype=weight.dtype,
+          trainable=False,
+          aggregation=tf_variables.VariableAggregation.MEAN)
+      threshold = self.add_variable(
+          'threshold',
+          shape=[],
+          initializer=initializers.get('zeros'),
+          dtype=weight.dtype,
+          trainable=False,
+          aggregation=tf_variables.VariableAggregation.MEAN)
 
       weight_vars.append(weight)
       mask_vars.append(mask)
@@ -273,7 +286,7 @@ class PruneLowMagnitude(Wrapper):
 
   @property
   def non_trainable_weights(self):
-    return self.layer.non_trainable_weights
+    return self.layer.non_trainable_weights + self._non_trainable_weights
 
   @property
   def updates(self):

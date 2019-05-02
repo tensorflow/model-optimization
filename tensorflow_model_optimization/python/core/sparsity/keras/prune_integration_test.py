@@ -259,6 +259,49 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self._check_strip_pruning_matches_original(model, 0.6)
 
+  @parameterized.parameters(test_utils.save_restore_fns())
+  def testPruneWithPolynomialDecayPreservesSparsity(self, save_restore_fn):
+    params = {
+        'pruning_schedule': pruning_schedule.PolynomialDecay(
+            0.2, 0.6, 0, 1, 3, 1),
+        'block_size': (1, 1),
+        'block_pooling_type': 'AVG'
+    }
+    model = prune.prune_low_magnitude(
+        test_utils.build_simple_dense_model(), **params)
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    # Model hasn't been trained yet. Sparsity 0.0
+    test_utils.assert_model_sparsity(self, 0.0, model)
+
+    model.fit(
+        np.random.rand(20, 10),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        batch_size=20,
+        callbacks=[pruning_callbacks.UpdatePruningStep()])
+    # Training has run only 1 step. Sparsity 0.2 (initial_sparsity)
+    test_utils.assert_model_sparsity(self, 0.2, model)
+
+    model.fit(
+        np.random.rand(20, 10),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        batch_size=20,
+        callbacks=[pruning_callbacks.UpdatePruningStep()])
+    # Training has run 2 steps. Sparsity 0.6 (final_sparsity)
+    test_utils.assert_model_sparsity(self, 0.6, model)
+
+    model = save_restore_fn(model)
+    model.fit(
+        np.random.rand(20, 10),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        batch_size=20,
+        epochs=2,
+        callbacks=[pruning_callbacks.UpdatePruningStep()])
+    # Training has run all 4 steps. Sparsity 0.6 (final_sparsity)
+    test_utils.assert_model_sparsity(self, 0.6, model)
+
+    self._check_strip_pruning_matches_original(model, 0.6)
+
   def testPrunesPreviouslyUnprunedModel(self):
     model = test_utils.build_simple_dense_model()
     model.compile(

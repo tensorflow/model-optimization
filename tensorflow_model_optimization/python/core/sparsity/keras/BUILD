@@ -97,6 +97,7 @@ py_library(
         # python:control_flow_ops tensorflow dep2,
         # python:dtypes tensorflow dep2,
         # python:framework_ops tensorflow dep2,
+        # python:variables tensorflow dep2,
         # python/keras:backend tensorflow dep2,
         # python/keras:engine tensorflow dep2,
         # python/keras:generic_utils tensorflow dep2,
