@@ -33,7 +33,10 @@ from version import __version__  # pylint: disable=g-import-not-at-top
 # one of the two) to one where a user installs the tf package and then
 # also installs the gpu package if they need gpu support. The latter allows
 # us (and our dependents) to maintain a single package instead of two.
-REQUIRED_PACKAGES = []
+REQUIRED_PACKAGES = [
+    'numpy~=1.14',
+    'six~=1.10',
+]
 
 if '--release' in sys.argv:
   release = True
