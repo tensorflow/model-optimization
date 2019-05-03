@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 # import g3
+import numpy as np
 import tensorflow as tf
 
 from tensorflow.python.keras import backend as K
@@ -61,12 +62,16 @@ class UpdatePruningStep(callbacks.Callback):
     # At the end of every epoch, remask the weights. This ensures that when
     # the model is saved after completion, the weights represent mask*weights.
     layers = self.model.layers
+    weight_mask_ops = []
+
     for layer in layers:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         if tf.executing_eagerly():
           layer.pruning_obj.weight_mask_op()
         else:
-          K.get_session().run(layer.pruning_obj.weight_mask_op())
+          weight_mask_ops.append(layer.pruning_obj.weight_mask_op())
+
+    K.batch_get_value(weight_mask_ops)
 
 
 class PruningSummaries(callbacks.TensorBoard):
@@ -83,15 +88,28 @@ class PruningSummaries(callbacks.TensorBoard):
     super(PruningSummaries, self).on_epoch_end(batch, logs)
 
     pruning_logs = {}
+    params = []
     layers = self.model.layers
     for layer in layers:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         for _, mask, threshold in layer.pruning_vars:
-          pruning_logs.update({
-              mask.name + '/sparsity':
-                  K.get_value(1.0 - math_ops.reduce_mean(mask))
-          })
-          pruning_logs.update(
-              {threshold.name + '/threshold': K.get_value(threshold)})
-    self._log_metrics(pruning_logs, '',
-                      K.get_value(self.model.optimizer.iterations))
+          params.append(mask)
+          params.append(threshold)
+    params.append(self.model.optimizer.iterations)
+
+    values = K.batch_get_value(params)
+    iteration = values[-1]
+    del values[-1]
+    del params[-1]
+
+    param_value_pairs = zip(params, values)
+
+    for mask, mask_value in param_value_pairs[::2]:
+      pruning_logs.update({
+          mask.name + '/sparsity': 1 - np.mean(mask_value)
+      })
+
+    for threshold, threshold_value in param_value_pairs[1::2]:
+      pruning_logs.update({threshold.name + '/threshold': threshold_value})
+
+    self._log_metrics(pruning_logs, '', iteration)

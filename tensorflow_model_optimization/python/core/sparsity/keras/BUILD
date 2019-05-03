@@ -114,6 +114,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
+        # numpy dep1,
         # tensorflow dep1,
         # python:math_ops tensorflow dep2,
         # python/keras:backend tensorflow dep2,
