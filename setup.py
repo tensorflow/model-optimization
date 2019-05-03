@@ -65,8 +65,8 @@ setup(
     name=project_name,
     version=__version__,
     description='A suite of tools that users, both novice and advanced'
-    'can use to optimize machine learning models for deployment'
-    'and execution.',
+    ' can use to optimize machine learning models for deployment'
+    ' and execution.',
     author='Google LLC',
     author_email='no-reply@google.com',
     url='https://github.com/tensorflow/model-optimization',
