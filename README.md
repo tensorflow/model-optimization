@@ -7,12 +7,9 @@ deployment and execution.
 For an overview of this project and individual tools, the optimization gains,
 and our roadmap refer to
 [tensorflow.org/model_optimization](https://www.tensorflow.org/model_optimization).
-<!-- TODO: should we include the support matrix (Keras, 1.0/2.0 there or on GitHub?) If we include them there, we should also call that out in this section.-->
+The website also provides various tutorials and API docs.
 
 The toolkit provides stable Python APIs.
-
-For exploring the different techniques, see the documentation
-[here](https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/README.md).
 
 ## Installation
 
