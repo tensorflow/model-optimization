@@ -1,0 +1,32 @@
+# Automatically generated file; please do not edit
+toc:
+  - title: tfmot
+    section:
+    - title: Overview
+      path: /model_optimization/api_docs/python/tfmot
+  - title: tfmot.sparsity
+    section:
+    - title: Overview
+      path: /model_optimization/api_docs/python/tfmot/sparsity
+    - title: keras
+      section:
+      - title: Overview
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras
+      - title: ConstantSparsity
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/ConstantSparsity
+      - title: PolynomialDecay
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/PolynomialDecay
+      - title: PrunableLayer
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/PrunableLayer
+      - title: prune_low_magnitude
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/prune_low_magnitude
+      - title: prune_scope
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/prune_scope
+      - title: PruningSchedule
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/PruningSchedule
+      - title: PruningSummaries
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/PruningSummaries
+      - title: strip_pruning
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/strip_pruning
+      - title: UpdatePruningStep
+        path: /model_optimization/api_docs/python/tfmot/sparsity/keras/UpdatePruningStep
