@@ -18,14 +18,12 @@ This technique brings improvements via model compression. In the future,
 framework support for this technique will provide latency improvements. We've
 seen up to 6x improvements in model compression with minimal loss of accuracy.
 
-The technique is used in production in various speech applications, such as
+The technique is being evaluated in various speech applications, such as
 speech recognition and text-to-speech, and has been experimented on across
 various vision and translation models.
 
-<!-- TODO: TF 1.14 ... TODO: roadmap ok? -->
-
 Users can apply this technique using APIs for Keras on Tensorflow 1.x for
-versions 1.14+ in both graph and eager execution.
+versions 1.14+ and nightly in both graph and eager execution.
 
 Note: The pruning API is only compatible with `tf.distribute` when using graph
 execution. It is on our roadmap to bring full support to TF 2.x and eager
