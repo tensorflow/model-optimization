@@ -102,7 +102,7 @@ class PruningSummaries(callbacks.TensorBoard):
     del values[-1]
     del params[-1]
 
-    param_value_pairs = zip(params, values)
+    param_value_pairs = list(zip(params, values))
 
     for mask, mask_value in param_value_pairs[::2]:
       pruning_logs.update({
