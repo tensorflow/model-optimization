@@ -77,8 +77,8 @@ landing_page:
       - label: "Read on TensorFlow blog"
         path: https://medium.com/tensorflow/introducing-the-model-optimization-toolkit-for-tensorflow-254aca1ba0a3
     - heading: "Model Optimization Toolkit on GitHub"
-      path: https://github.com/tensorflow/model_optimization
+      path: https://github.com/tensorflow/model-optimization
       buttons:
       - label: "View on GitHub"
-        path: https://github.com/tensorflow/model_optimization
+        path: https://github.com/tensorflow/model-optimization
     - classname: devsite-landing-row-item-hidden
