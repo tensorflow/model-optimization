@@ -1,0 +1,110 @@
+package(default_visibility = [
+    "//tensorflow_model_optimization:__subpackages__",
+    "//third_party/tensorflow:__subpackages__",
+])
+
+licenses(["notice"])  # Apache 2.0
+
+py_library(
+    name = "quant_ops",
+    srcs = ["quant_ops.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        # python:array_ops tensorflow dep2,
+        # python:framework_ops tensorflow dep2,
+        # python:init_ops tensorflow dep2,
+        # python:math_ops tensorflow dep2,
+        # python:state_ops tensorflow dep2,
+        # python:training tensorflow dep2,
+        # python:variable_scope tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "quant_ops_test",
+    size = "small",
+    srcs = ["quant_ops_test.py"],
+    python_version = "PY2",
+    srcs_version = "PY2AND3",
+    deps = [
+        ":quant_ops",
+        # python:array_ops tensorflow dep2,
+        # python:dtypes tensorflow dep2,
+        # python:framework_ops tensorflow dep2,
+        # python:partitioned_variables tensorflow dep2,
+        # python:platform_test tensorflow dep2,
+        # python:session tensorflow dep2,
+        # python:variable_scope tensorflow dep2,
+        # python:variables tensorflow dep2,
+    ],
+)
+
+py_library(
+    name = "quantize_emulatable_layer",
+    srcs = [
+        "quantize_emulatable_layer.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_library(
+    name = "quantize_emulate_registry",
+    srcs = [
+        "quantize_emulate_registry.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_library(
+    name = "quantize_emulate_wrapper",
+    srcs = [
+        "quantize_emulate_wrapper.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quant_ops",
+        ":quantize_emulatable_layer",
+        ":quantize_emulate_registry",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_library(
+    name = "quantize_emulate",
+    srcs = [
+        "quantize_emulate.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_emulate_wrapper",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "quantize_emulate_test",
+    srcs = ["quantize_emulate_test.py"],
+    python_version = "PY2",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_emulate",
+        ":quantize_emulate_wrapper",
+        # absl/testing:parameterized dep1,
+        # tensorflow dep1,
+    ],
+)
