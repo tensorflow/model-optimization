@@ -71,6 +71,11 @@ landing_page:
 
   - classname: devsite-landing-row-cards
     items:
+    - heading: "TensorFlow Model Optimization Toolkit - Pruning API"
+      path: https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-pruning-api-42cac9157a6a
+      buttons:
+      - label: "Read on TensorFlow blog"
+        path: https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-pruning-api-42cac9157a6a
     - heading: "Introducing the Model Optimization Toolkit for TensorFlow"
       path: https://medium.com/tensorflow/introducing-the-model-optimization-toolkit-for-tensorflow-254aca1ba0a3
       buttons:
@@ -81,4 +86,3 @@ landing_page:
       buttons:
       - label: "View on GitHub"
         path: https://github.com/tensorflow/model-optimization
-    - classname: devsite-landing-row-item-hidden
