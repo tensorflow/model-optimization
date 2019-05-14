@@ -9,6 +9,7 @@ py_library(
     srcs = ["__init__.py"],
     deps = [
         ":version",
+        "//tensorflow_model_optimization/python/core/internal",
         "//tensorflow_model_optimization/python/core/sparsity",
     ],
 )
