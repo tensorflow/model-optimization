@@ -77,17 +77,15 @@ class SimpleEncoder(object):
     # These dictionaries are filled inside of the initial_state_fn and encode_fn
     # methods, to be used in encode_fn and decode_fn methods, respectively.
     # Decorated by tf.function, their necessary side effects are realized during
-    # call to get_concrete_function(). Because of fixed input_signatures, these
-    # are traced only once. See the tf.function tutorial for more details on
-    # the tracing semantics.
+    # call to get_concrete_function().
     state_py_structure = {}
     encoded_py_structure = {}
 
     @tf.function
     def initial_state_fn():
       state = encoder.initial_state()
-      assert not state_py_structure  # This should be traced only once.
-      state_py_structure['state'] = nest.map_structure(lambda _: None, state)
+      if not state_py_structure:
+        state_py_structure['state'] = nest.map_structure(lambda _: None, state)
       # Simplify the structure that needs to be manipulated by the user.
       return tuple(nest.flatten(state))
 
@@ -119,10 +117,10 @@ class SimpleEncoder(object):
       flat_encoded_py_structure, flat_encoded_tf_structure = (
           py_utils.split_dict_py_tf(flat_encoded_structure))
 
-      assert not encoded_py_structure  # This should be traced only once.
-      encoded_py_structure['full'] = nest.map_structure(lambda _: None,
-                                                        full_encoded_structure)
-      encoded_py_structure['flat_py'] = flat_encoded_py_structure
+      if not encoded_py_structure:
+        encoded_py_structure['full'] = nest.map_structure(
+            lambda _: None, full_encoded_structure)
+        encoded_py_structure['flat_py'] = flat_encoded_py_structure
       return flat_encoded_tf_structure, updated_flat_state
 
     @tf.function(input_signature=[
@@ -145,6 +143,12 @@ class SimpleEncoder(object):
     self._initial_state_fn = initial_state_fn
     self._encode_fn = encode_fn
     self._decode_fn = decode_fn
+    self._tensorspec = tensorspec
+
+  @property
+  def input_tensorspec(self):
+    """Returns `tf.TensorSpec` describing input expected by `SimpleEncoder`."""
+    return self._tensorspec
 
   def initial_state(self, name=None):
     """Returns the initial state.
@@ -182,8 +186,7 @@ class SimpleEncoder(object):
     """
     if state is None:
       state = self.initial_state()
-    with tf.name_scope(name, 'simple_encoder_encode',
-                       [x] + list(state)):
+    with tf.name_scope(name, 'simple_encoder_encode', [x] + list(state)):
       return self._encode_fn(x, state)
 
   def decode(self, encoded_x, name=None):
@@ -205,4 +208,3 @@ class SimpleEncoder(object):
     """
     with tf.name_scope(name, 'simple_encoder_decode', encoded_x.values()):
       return self._decode_fn(encoded_x)
-
