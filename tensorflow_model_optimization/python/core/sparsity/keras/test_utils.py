@@ -93,13 +93,6 @@ def build_mnist_model(model_type, pruning_params=None):
   }[model_type]
 
 
-def build_simple_dense_model():
-  return keras.Sequential([
-      l.Dense(8, activation='relu', input_shape=(10,)),
-      l.Dense(5, activation='sigmoid')
-  ])
-
-
 def model_type_keys():
   return ['sequential', 'functional', 'layer_list', 'layer_wise']
 

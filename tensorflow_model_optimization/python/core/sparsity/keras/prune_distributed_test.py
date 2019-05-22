@@ -23,6 +23,7 @@ from tensorflow.python.distribute import collective_all_reduce_strategy
 from tensorflow.python.distribute import mirrored_strategy
 from tensorflow.python.distribute import one_device_strategy
 from tensorflow.python.platform import test
+from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
@@ -53,7 +54,7 @@ class PruneDistributedTest(test.TestCase, parameterized.TestCase):
   def testPrunesSimpleDenseModel(self, distribution):
     with distribution.scope():
       model = prune.prune_low_magnitude(
-          test_utils.build_simple_dense_model(), **self.params)
+          keras_test_utils.build_simple_dense_model(), **self.params)
       model.compile(
           loss='categorical_crossentropy',
           optimizer='sgd',

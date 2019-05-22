@@ -21,6 +21,7 @@ from tensorflow.python import keras
 from tensorflow.python.framework import test_util as tf_test_util
 from tensorflow.python.keras import layers
 from tensorflow.python.platform import test
+from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
@@ -233,7 +234,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
         'block_pooling_type': 'AVG'
     }
     model = prune.prune_low_magnitude(
-        test_utils.build_simple_dense_model(), **params)
+        keras_test_utils.build_simple_dense_model(), **params)
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     # Model hasn't been trained yet. Sparsity 0.0
@@ -268,7 +269,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
         'block_pooling_type': 'AVG'
     }
     model = prune.prune_low_magnitude(
-        test_utils.build_simple_dense_model(), **params)
+        keras_test_utils.build_simple_dense_model(), **params)
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     # Model hasn't been trained yet. Sparsity 0.0
@@ -303,7 +304,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     self._check_strip_pruning_matches_original(model, 0.6)
 
   def testPrunesPreviouslyUnprunedModel(self):
-    model = test_utils.build_simple_dense_model()
+    model = keras_test_utils.build_simple_dense_model()
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     # Simple unpruned model. No sparsity.

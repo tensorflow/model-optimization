@@ -20,16 +20,17 @@ from tensorflow.python import keras
 from tensorflow.python.framework import test_util as tf_test_util
 from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import test
+from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
-from tensorflow_model_optimization.python.core.sparsity.keras import test_utils
 
 
 @tf_test_util.run_all_in_graph_and_eager_modes
 class PruneTest(test.TestCase):
 
   def testUpdatesPruningStep(self):
-    model = prune.prune_low_magnitude(test_utils.build_simple_dense_model())
+    model = prune.prune_low_magnitude(
+        keras_test_utils.build_simple_dense_model())
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     model.fit(
