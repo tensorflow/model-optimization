@@ -57,12 +57,12 @@ class QuantizeEmulateWrapper(Wrapper):
     else:
       raise ValueError("Unsupported Layer " + layer.__class__)
 
-    self.num_bits = num_bits
-    self.symmetric = symmetric
-    self.narrow_range = narrow_range
+    self._num_bits = num_bits
+    self._symmetric = symmetric
+    self._narrow_range = narrow_range
 
-    self.unquantized_kernels = []
-    self.quantized_kernels = []
+    self._unquantized_kernels = []
+    self._quantized_kernels = []
 
   def build(self, input_shape):
     self.layer.build(input_shape)
@@ -74,25 +74,29 @@ class QuantizeEmulateWrapper(Wrapper):
 
   def call(self, inputs, **kwargs):
     for unquantized_kernel in self.layer.get_quantizable_weights():
-      # Quantize the layer's weights and assign the resulting tensor to the
-      # layer. This ensures the results of the forward pass use the quantized
-      # tensor value. However, the internal _trainable_weights is not modified
-      # since the unquantized weights need to be updated.
+      # unquantized_kernel is the weight variable constructed by the wrapped
+      # layer which needs to be quantized. quantized_kernel is the resultant
+      # tensor when FakeQuant is applied to it.
       quantized_kernel = quant_ops.LastValueQuantize(
           unquantized_kernel,
           init_min=-6.0,
           init_max=6.0,
           is_training=True,
-          num_bits=self.num_bits,
-          symmetric=self.symmetric,
-          narrow_range=self.narrow_range,
+          num_bits=self._num_bits,
+          symmetric=self._symmetric,
+          narrow_range=self._narrow_range,
           vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
           name_prefix=self.layer.name)
 
-      self.unquantized_kernels.append(unquantized_kernel)
-      self.quantized_kernels.append(quantized_kernel)
+      # set_quantizable_weights on the wrapped layer removes unquantized_kernel
+      # from _trainable_weights. We add it to the wrappers _trainable_weights
+      # to ensure it gets gradient updates.
+      self._trainable_weights.append(unquantized_kernel)
 
-    self.layer.set_quantizable_weights(self.quantized_kernels)
+      self._unquantized_kernels.append(unquantized_kernel)
+      self._quantized_kernels.append(quantized_kernel)
+
+    self.layer.set_quantizable_weights(self._quantized_kernels)
 
     outputs = self.layer.call(inputs, **kwargs)
 
@@ -105,10 +109,34 @@ class QuantizeEmulateWrapper(Wrapper):
         init_max=6.0,
         ema_decay=0.999,
         is_training=True,
-        num_bits=self.num_bits,
-        symmetric=self.symmetric,
-        narrow_range=self.narrow_range,
+        num_bits=self._num_bits,
+        symmetric=self._symmetric,
+        narrow_range=self._narrow_range,
         vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
         name_prefix=self.layer.name)
 
     return outputs
+
+  @property
+  def trainable(self):
+    return self.layer.trainable
+
+  @trainable.setter
+  def trainable(self, value):
+    self.layer.trainable = value
+
+  @property
+  def trainable_weights(self):
+    return self.layer.trainable_weights + self._trainable_weights
+
+  @property
+  def non_trainable_weights(self):
+    return self.layer.non_trainable_weights + self._non_trainable_weights
+
+  @property
+  def updates(self):
+    return self.layer.updates + self._updates
+
+  @property
+  def losses(self):
+    return self.layer.losses + self._losses
