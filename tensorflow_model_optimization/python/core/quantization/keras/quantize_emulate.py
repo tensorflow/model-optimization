@@ -17,27 +17,11 @@ from tensorflow.python import keras
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
 
 
-# TODO(pulkitb): Update to include all quantization param types
-# Instead of lots of individual parameters symmetric, narrow_range etc.,
-# move to quantization schemes using a builder.
-class QuantizationParams(object):
-  """Parameters for quantization.
-
-  Arguments:
-      num_bits: Number of bits for quantization
-      narrow_range: Whether to use the narrow quantization range [1; 2^num_bits
-        - 1] or wide range [0; 2^num_bits - 1].
-      symmetric: If true, use symmetric quantization limits instead of training
-        the minimum and maximum of each quantization range separately.
-  """
-
-  def __init__(self, num_bits, symmetric=True, narrow_range=True):
-    self.num_bits = num_bits
-    self.symmetric = symmetric
-    self.narrow_range = narrow_range
-
-
-def QuantizeEmulate(to_quantize, quant_params, **kwargs):
+def QuantizeEmulate(to_quantize,
+                    num_bits,
+                    narrow_range=True,
+                    symmetric=True,
+                    **kwargs):
   """Use this function to emulate quantization on NN layers during training.
 
   The function accepts a single layer or multiple layers and handles them
@@ -46,19 +30,23 @@ def QuantizeEmulate(to_quantize, quant_params, **kwargs):
   Arguments:
       to_quantize: A single keras layer, list of keras layers, or a
         `tf.keras.Sequential` model.
-      quant_params: Quantization parameters
+      num_bits: Number of bits for quantization
+      narrow_range: Whether to use the narrow quantization range [1; 2^num_bits
+        - 1] or wide range [0; 2^num_bits - 1].
+      symmetric: If true, use symmetric quantization limits instead of training
+        the minimum and maximum of each quantization range separately.
       **kwargs: Additional keyword arguments.
 
   Returns:
       Wrapped layer with quantization applied.
   """
 
-  def _QuantizeList(layers, params):
+  def _QuantizeList(layers, **params):
     """Apply QuantizeEmulate wrapper to a list of layers.
 
     Args:
       layers: List of keras layers to apply QuantizeEmulate.
-      params: QuantizationParams for the entire list.
+      **params: QuantizationParams for the entire list.
 
     Returns:
       List of layers wrapped with QuantizeEmulate.
@@ -76,14 +64,20 @@ def QuantizeEmulate(to_quantize, quant_params, **kwargs):
         wrapped_layers.append(layer)
         continue
 
-      wrapped_layers.append(QuantizeEmulate(layer, params))
+      wrapped_layers.append(QuantizeEmulate(layer, **params))
 
     return wrapped_layers
 
+  params = {
+      'num_bits': num_bits,
+      'narrow_range': narrow_range,
+      'symmetric': symmetric
+  }
+  params.update(kwargs)
+
   if isinstance(to_quantize, list):
-    return _QuantizeList(to_quantize, quant_params)
+    return _QuantizeList(to_quantize, **params)
   elif isinstance(to_quantize, keras.Sequential):
-    return keras.models.Sequential(
-        _QuantizeList(to_quantize.layers, quant_params))
+    return keras.models.Sequential(_QuantizeList(to_quantize.layers, **params))
   elif isinstance(to_quantize, keras.layers.Layer):
-    return QuantizeEmulateWrapper(to_quantize, quant_params, **kwargs)
+    return QuantizeEmulateWrapper(to_quantize, **params)

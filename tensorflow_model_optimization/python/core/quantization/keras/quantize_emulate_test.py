@@ -20,7 +20,6 @@ from __future__ import print_function
 
 from tensorflow.python import keras
 from tensorflow.python.platform import test
-from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizationParams
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizeEmulate
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
 
@@ -30,6 +29,7 @@ class QuantizeEmulateTest(test.TestCase):
   def setUp(self):
     self.conv_layer = keras.layers.Conv2D(32, 4, input_shape=(28, 28, 1))
     self.dense_layer = keras.layers.Dense(10)
+    self.params = {'num_bits': 8}
 
   def _assert_quant_model(self, model_layers):
     self.assertIsInstance(model_layers[0], QuantizeEmulateWrapper)
@@ -44,14 +44,13 @@ class QuantizeEmulateTest(test.TestCase):
         self.dense_layer
     ])
 
-    quant_model = QuantizeEmulate(model, QuantizationParams(8))
+    quant_model = QuantizeEmulate(model, **self.params)
 
     self._assert_quant_model(quant_model.layers)
 
   def testQuantizeEmulateList(self):
-    quant_layers = QuantizeEmulate(
-        [self.conv_layer, self.dense_layer],
-        QuantizationParams(8))
+    quant_layers = QuantizeEmulate([self.conv_layer, self.dense_layer],
+                                   **self.params)
 
     self._assert_quant_model(quant_layers)
 

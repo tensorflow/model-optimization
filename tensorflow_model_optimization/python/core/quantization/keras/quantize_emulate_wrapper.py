@@ -30,7 +30,23 @@ from tensorflow_model_optimization.python.core.quantization.keras.quantize_emula
 class QuantizeEmulateWrapper(Wrapper):
   """Quantizes the weights/output of the keras layer it wraps."""
 
-  def __init__(self, layer, quant_params, **kwargs):
+  def __init__(self,
+               layer,
+               num_bits,
+               narrow_range=True,
+               symmetric=True,
+               **kwargs):
+    """Create a quantize emulate wrapper for a keras layer.
+
+    Args:
+      layer: The keras layer to be quantized.
+      num_bits: Number of bits for quantization
+      narrow_range: Whether to use the narrow quantization range [1; 2^num_bits
+        - 1] or wide range [0; 2^num_bits - 1].
+      symmetric: If true, use symmetric quantization limits instead of training
+        the minimum and maximum of each quantization range separately.
+      **kwargs: Additional keyword arguments to be passed to the keras layer.
+    """
     if isinstance(layer, QuantizeEmulatableLayer):
       # Custom layer in client code which supports quantization.
       super(QuantizeEmulateWrapper, self).__init__(layer, **kwargs)
@@ -41,7 +57,10 @@ class QuantizeEmulateWrapper(Wrapper):
     else:
       raise ValueError("Unsupported Layer " + layer.__class__)
 
-    self.quant_params = quant_params
+    self.num_bits = num_bits
+    self.symmetric = symmetric
+    self.narrow_range = narrow_range
+
     self.unquantized_kernels = []
     self.quantized_kernels = []
 
@@ -64,9 +83,9 @@ class QuantizeEmulateWrapper(Wrapper):
           init_min=-6.0,
           init_max=6.0,
           is_training=True,
-          num_bits=self.quant_params.num_bits,
-          symmetric=self.quant_params.symmetric,
-          narrow_range=self.quant_params.narrow_range,
+          num_bits=self.num_bits,
+          symmetric=self.symmetric,
+          narrow_range=self.narrow_range,
           vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
           name_prefix=self.layer.name)
 
@@ -86,9 +105,9 @@ class QuantizeEmulateWrapper(Wrapper):
         init_max=6.0,
         ema_decay=0.999,
         is_training=True,
-        num_bits=self.quant_params.num_bits,
-        symmetric=self.quant_params.symmetric,
-        narrow_range=self.quant_params.narrow_range,
+        num_bits=self.num_bits,
+        symmetric=self.symmetric,
+        narrow_range=self.narrow_range,
         vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
         name_prefix=self.layer.name)
 

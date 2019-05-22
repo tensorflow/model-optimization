@@ -22,7 +22,6 @@ from __future__ import print_function
 
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
-from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizationParams
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizeEmulate
 
 batch_size = 128
@@ -57,24 +56,21 @@ y_train = tf.keras.utils.to_categorical(y_train, num_classes)
 y_test = tf.keras.utils.to_categorical(y_test, num_classes)
 
 l = tf.keras.layers
-quant_params = QuantizationParams(8)
+quant_params = {'num_bits': 8}
 
 model = tf.keras.Sequential([
     QuantizeEmulate(
         l.Conv2D(32, 5, padding='same', activation='relu'),
-        quant_params=quant_params,
-        input_shape=input_shape),
+        input_shape=input_shape,
+        **quant_params),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
     QuantizeEmulate(
-        l.Conv2D(64, 5, padding='same', activation='relu'),
-        quant_params=quant_params),
+        l.Conv2D(64, 5, padding='same', activation='relu'), **quant_params),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
     l.Flatten(),
-    QuantizeEmulate(
-        l.Dense(1024, activation='relu'), quant_params=quant_params),
+    QuantizeEmulate(l.Dense(1024, activation='relu'), **quant_params),
     l.Dropout(0.4),
-    QuantizeEmulate(
-        l.Dense(num_classes, activation='softmax'), quant_params=quant_params)
+    QuantizeEmulate(l.Dense(num_classes, activation='softmax'), **quant_params)
 ])
 
 # Dump graph to /tmp for verification on tensorboard.
