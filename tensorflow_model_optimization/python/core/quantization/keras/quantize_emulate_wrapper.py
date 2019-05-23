@@ -22,7 +22,9 @@
 """
 
 from tensorflow.python.framework import ops
+from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.layers.wrappers import Wrapper
+from tensorflow.python.keras.utils import tf_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulatable_layer import QuantizeEmulatableLayer
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_registry import QuantizeEmulateRegistry
@@ -86,21 +88,37 @@ class QuantizeEmulateWrapper(Wrapper):
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(self.layer.input_shape)
 
-  def call(self, inputs, **kwargs):
+  def call(self, inputs, training=None):
+    if training is None:
+      training = K.learning_phase()
+
     for unquantized_kernel in self.layer.get_quantizable_weights():
-      # unquantized_kernel is the weight variable constructed by the wrapped
-      # layer which needs to be quantized. quantized_kernel is the resultant
-      # tensor when FakeQuant is applied to it.
-      quantized_kernel = quant_ops.LastValueQuantize(
-          unquantized_kernel,
-          init_min=-6.0,
-          init_max=6.0,
-          is_training=True,
-          num_bits=self._num_bits,
-          symmetric=self._symmetric,
-          narrow_range=self._narrow_range,
-          vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
-          name_prefix=self.layer.name)
+
+      def last_value_quantize_fn(is_training,
+                                 unquantized_kernel=unquantized_kernel):
+        """Wrapper around LastValueQuantize."""
+
+        def fn():
+          return quant_ops.LastValueQuantize(
+              unquantized_kernel,
+              init_min=-6.0,
+              init_max=6.0,
+              is_training=is_training,
+              num_bits=self._num_bits,
+              symmetric=self._symmetric,
+              narrow_range=self._narrow_range,
+              vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
+              name_prefix=self.layer.name)
+
+        return fn
+
+      # Quantize the layer's weights and assign the resulting tensor to the
+      # layer. This ensures the results of the forward pass use the quantized
+      # tensor value. However, the internal _trainable_weights is not modified
+      # since the unquantized weights need to be updated.
+      quantized_kernel = tf_utils.smart_cond(training,
+                                             last_value_quantize_fn(True),
+                                             last_value_quantize_fn(False))
 
       # set_quantizable_weights on the wrapped layer removes unquantized_kernel
       # from _trainable_weights. We add it to the wrappers _trainable_weights
@@ -112,22 +130,31 @@ class QuantizeEmulateWrapper(Wrapper):
 
     self.layer.set_quantizable_weights(self._quantized_kernels)
 
-    outputs = self.layer.call(inputs, **kwargs)
+    outputs = self.layer.call(inputs)
 
     if self.layer.activation is None:
       return outputs
 
-    outputs = quant_ops.MovingAvgQuantize(
-        outputs,
-        init_min=-6.0,
-        init_max=6.0,
-        ema_decay=0.999,
-        is_training=True,
-        num_bits=self._num_bits,
-        symmetric=self._symmetric,
-        narrow_range=self._narrow_range,
-        vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
-        name_prefix=self.layer.name)
+    def moving_avg_quantize_fn(is_training):
+      """Wrapper around MovingAvgQuantize."""
+
+      def fn():
+        return quant_ops.MovingAvgQuantize(
+            outputs,
+            init_min=-6.0,
+            init_max=6.0,
+            ema_decay=0.999,
+            is_training=is_training,
+            num_bits=self._num_bits,
+            symmetric=self._symmetric,
+            narrow_range=False,
+            vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
+            name_prefix=self.layer.name)
+
+      return fn
+
+    outputs = tf_utils.smart_cond(training, moving_avg_quantize_fn(True),
+                                  moving_avg_quantize_fn(False))
 
     return outputs
 
