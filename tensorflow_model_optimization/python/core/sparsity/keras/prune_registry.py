@@ -177,8 +177,8 @@ class PruneRegistry(object):
         if isinstance(cell, prunable_layer.PrunableLayer):
           return cell.get_prunable_weights()
 
-        raise ValueError(
-            cls._RNN_CELL_ERROR_MSG.format(layer.__class__, cell.__class__))
+        raise ValueError(cls._RNN_CELL_ERROR_MSG.format(
+            layer.__class__, cell.__class__, cls._RNN_CELLS_WEIGHTS_MAP.keys()))
 
       prunable_weights = []
       for rnn_cell in cls._get_rnn_cells(layer):
