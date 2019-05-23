@@ -97,3 +97,7 @@ model.fit(x_train, y_train,
 score = model.evaluate(x_test, y_test, verbose=0)
 print('Test loss:', score[0])
 print('Test accuracy:', score[1])
+
+# Export to Keras.
+keras_file = '/tmp/quantized_mnist.h5'
+tf.keras.models.save_model(model, keras_file)

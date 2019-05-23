@@ -108,3 +108,13 @@ py_test(
         # tensorflow dep1,
     ],
 )
+
+py_test(
+    name = "quantize_emulate_integration_test",
+    srcs = ["quantize_emulate_integration_test.py"],
+    deps = [
+        ":quantize_emulate",
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
+    ],
+)

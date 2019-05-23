@@ -12,6 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
+# pylint: disable=protected-access
 """Quantization Emulation Wrapper.
 
    The QuantizeEmulateWrapper keras layer wrapper simulates inference time
@@ -63,6 +64,19 @@ class QuantizeEmulateWrapper(Wrapper):
 
     self._unquantized_kernels = []
     self._quantized_kernels = []
+
+    self._track_trackable(layer, name='layer')
+
+    # TODO(yunluli): Work-around to handle the first layer of Sequential model
+    # properly. Can remove this when it is implemented in the Wrapper base
+    # class.
+    # The _batch_input_shape attribute in the first layer makes a Sequential
+    # model to be built. This change makes sure that when we apply the wrapper
+    # to the whole model, this attribute is pulled into the wrapper to preserve
+    # the 'built' state of the model.
+    if not hasattr(self, '_batch_input_shape') and hasattr(
+        layer, '_batch_input_shape'):
+      self._batch_input_shape = self.layer._batch_input_shape
 
   def build(self, input_shape):
     self.layer.build(input_shape)
@@ -116,6 +130,25 @@ class QuantizeEmulateWrapper(Wrapper):
         name_prefix=self.layer.name)
 
     return outputs
+
+  def get_config(self):
+    base_config = super(QuantizeEmulateWrapper, self).get_config()
+    config = {
+        'num_bits': self._num_bits,
+        'symmetric': self._symmetric,
+        'narrow_range': self._narrow_range
+    }
+    return dict(list(base_config.items()) + list(config.items()))
+
+  @classmethod
+  def from_config(cls, config):
+    config = config.copy()
+
+    from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
+    layer = deserialize_layer(config.pop('layer'))
+    config['layer'] = layer
+
+    return cls(**config)
 
   @property
   def trainable(self):
