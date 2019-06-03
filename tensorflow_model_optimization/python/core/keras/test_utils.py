@@ -12,15 +12,74 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Test utility to generate models for testing."""
+"""Test utilities for generating, saving, and evaluating models."""
+
+import numpy as np
+import tensorflow as tf
 
 from tensorflow.python import keras
-
 l = keras.layers
-
 
 def build_simple_dense_model():
   return keras.Sequential([
       l.Dense(8, activation='relu', input_shape=(10,)),
       l.Dense(5, activation='sigmoid')
   ])
+
+
+def get_preprocessed_mnist_data(img_rows=28,
+                                img_cols=28,
+                                num_classes=10,
+                                is_quantized_model=False):
+  """Get data for mnist training and evaluation."""
+  (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+
+  if tf.keras.backend.image_data_format() == 'channels_first':
+    x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
+    x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
+    input_shape = (1, img_rows, img_cols)
+  else:
+    x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
+    x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
+    input_shape = (img_rows, img_cols, 1)
+
+  if not is_quantized_model:
+    x_train = x_train.astype('float32')
+    x_test = x_test.astype('float32')
+    x_train /= 255
+    x_test /= 255
+
+  # convert class vectors to binary class matrices
+  y_train = tf.keras.utils.to_categorical(y_train, num_classes)
+  y_test = tf.keras.utils.to_categorical(y_test, num_classes)
+
+  return (x_train, y_train), (x_test, y_test), input_shape
+
+
+def eval_mnist_tflite(model_path, is_quantized=False):
+  """Evaluate mnist in TFLite for accuracy."""
+  interpreter = tf.lite.Interpreter(model_path=model_path)
+  interpreter.allocate_tensors()
+  input_index = interpreter.get_input_details()[0]['index']
+  output_index = interpreter.get_output_details()[0]['index']
+
+  _, test_data, _ = get_preprocessed_mnist_data(is_quantized_model=is_quantized)
+  x_test, y_test = test_data
+
+  total_seen = 0
+  num_correct = 0
+
+  for img, label in zip(x_test, y_test):
+    inp = img.reshape((1, 28, 28, 1))
+    total_seen += 1
+    interpreter.set_tensor(input_index, inp)
+    interpreter.invoke()
+    predictions = interpreter.get_tensor(output_index)
+    if np.argmax(predictions) == np.argmax(label):
+      num_correct += 1
+
+    if total_seen % 1000 == 0:
+      print('Accuracy after %i images: %f' %
+            (total_seen, float(num_correct) / float(total_seen)))
+
+  return float(num_correct) / float(total_seen)

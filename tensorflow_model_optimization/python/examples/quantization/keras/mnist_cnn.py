@@ -23,6 +23,7 @@ from __future__ import print_function
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizeEmulate
+from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
 
 batch_size = 128
 num_classes = 10
@@ -70,7 +71,9 @@ model = tf.keras.Sequential([
     l.Flatten(),
     QuantizeEmulate(l.Dense(1024, activation='relu'), **quant_params),
     l.Dropout(0.4),
-    QuantizeEmulate(l.Dense(num_classes, activation='softmax'), **quant_params)
+    QuantizeEmulate(l.Dense(num_classes), **quant_params),
+    # TODO(alanchiao): fuse softmax once we've handled it.
+    l.Softmax(),
 ])
 
 # Dump graph to /tmp for verification on tensorboard.
@@ -95,3 +98,13 @@ print('Test accuracy:', score[1])
 # Export to Keras.
 keras_file = '/tmp/quantized_mnist.h5'
 tf.keras.models.save_model(model, keras_file)
+
+# Convert to TFLite model.
+converter = tf.lite.TFLiteConverter.from_keras_model_file(
+    keras_file,
+    custom_objects={'QuantizeEmulateWrapper': QuantizeEmulateWrapper})
+converter.inference_type = tf.lite.constants.QUANTIZED_UINT8
+input_arrays = converter.get_input_arrays()
+converter.quantized_input_stats = {input_arrays[0]: (0., 255.)}  # mean, std_dev
+tflite_model = converter.convert()
+open('/tmp/quantized_mnist.tflite', 'wb').write(tflite_model)

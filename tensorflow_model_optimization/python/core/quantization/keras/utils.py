@@ -15,8 +15,26 @@
 # pylint: disable=protected-access
 """Quantization specific utilities for generating, saving, testing, and evaluating models."""
 
+import tensorflow as tf
+
 from tensorflow.python.keras import backend as K
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
+
+
+def convert_mnist_to_tflite(model_path, output_path):
+  """Convert Keras mnist model to TFLite."""
+  converter = tf.lite.TFLiteConverter.from_keras_model_file(
+      model_path,
+      custom_objects={'QuantizeEmulateWrapper': QuantizeEmulateWrapper})
+
+  converter.inference_type = tf.lite.constants.QUANTIZED_UINT8
+  input_arrays = converter.get_input_arrays()
+  converter.quantized_input_stats = {
+      input_arrays[0]: (0., 255.)
+  }  # mean, std_dev
+
+  tflite_model = converter.convert()
+  open(output_path, 'wb').write(tflite_model)
 
 
 def _get_fake_quant_values(layer):

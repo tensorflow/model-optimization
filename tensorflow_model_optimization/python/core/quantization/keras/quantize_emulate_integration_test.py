@@ -27,6 +27,7 @@ from tensorflow_model_optimization.python.core.keras import test_utils
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizeEmulate
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
 from tensorflow_model_optimization.python.core.quantization.keras.utils import assert_fake_quant_equivalence
+from tensorflow_model_optimization.python.core.quantization.keras.utils import convert_mnist_to_tflite
 
 
 class QuantizeEmulateIntegrationTest(test.TestCase):
@@ -86,6 +87,57 @@ class QuantizeEmulateIntegrationTest(test.TestCase):
         keras_file,
         custom_objects={'QuantizeEmulateWrapper': QuantizeEmulateWrapper})
     self._check_models_match(model, loaded_model)
+
+  def testMnistAccuracyinTFLite(self):
+    num_classes = 10
+    train_data, test_data, input_shape = test_utils.get_preprocessed_mnist_data(
+        num_classes=num_classes)
+    x_train, y_train = train_data
+    x_test, y_test = test_data
+
+    l = keras.layers
+    model = keras.Sequential([
+        QuantizeEmulate(
+            l.Conv2D(32, 5, padding='same', activation='relu'),
+            input_shape=input_shape,
+            **self.params),
+        l.MaxPooling2D((2, 2), (2, 2), padding='same'),
+        QuantizeEmulate(
+            l.Conv2D(64, 5, padding='same', activation='relu'), **self.params),
+        l.MaxPooling2D((2, 2), (2, 2), padding='same'),
+        l.Flatten(),
+        QuantizeEmulate(l.Dense(1024, activation='relu'), **self.params),
+        l.Dropout(0.4),
+        QuantizeEmulate(l.Dense(num_classes), **self.params),
+        # TODO(alanchiao): fuse softmax once we've handled it.
+        l.Softmax(),
+    ])
+
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
+    model.fit(
+        x_train,
+        y_train,
+        batch_size=128,
+        epochs=1,
+        validation_data=(x_test, y_test))
+
+    tf_accuracy = model.evaluate(x_test, y_test, verbose=0)[1]
+
+    # High enough to validate that training is happening, with significantly
+    # better than 0.1 random accuracy.
+    self.assertGreater(tf_accuracy, 0.4)
+
+    _, keras_file = tempfile.mkstemp('.h5')
+    _, tflite_file = tempfile.mkstemp('.h5')
+
+    keras.models.save_model(model, keras_file)
+    convert_mnist_to_tflite(keras_file, tflite_file)
+    tflite_accuracy = test_utils.eval_mnist_tflite(
+        tflite_file, is_quantized=True)
+
+    self.assertAlmostEqual(tf_accuracy, tflite_accuracy, delta=0.01)
 
 
 if __name__ == '__main__':
