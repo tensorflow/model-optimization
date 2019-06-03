@@ -24,7 +24,6 @@ py_test(
     name = "quant_ops_test",
     size = "small",
     srcs = ["quant_ops_test.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     deps = [
         ":quant_ops",
@@ -47,6 +46,7 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        # six dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
@@ -60,6 +60,7 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        # six dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
@@ -76,6 +77,7 @@ py_library(
         ":quant_ops",
         ":quantize_emulatable_layer",
         ":quantize_emulate_registry",
+        # six dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
@@ -111,7 +113,6 @@ py_library(
 py_test(
     name = "quantize_emulate_test",
     srcs = ["quantize_emulate_test.py"],
-    python_version = "PY2",
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [

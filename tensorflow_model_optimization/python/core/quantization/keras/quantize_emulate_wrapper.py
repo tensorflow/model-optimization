@@ -21,6 +21,10 @@
    the model to learn parameters to be more robust to them during training.
 """
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers

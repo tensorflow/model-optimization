@@ -14,6 +14,10 @@
 # ==============================================================================
 """Registry responsible for built-in keras classes."""
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
 from tensorflow.python.keras import layers
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulatable_layer
 
@@ -180,8 +184,10 @@ class QuantizeEmulateRegistry(object):
       if isinstance(cell, quantize_emulatable_layer.QuantizeEmulatableLayer):
         return cell.get_quantizable_weights()
 
-      raise ValueError(cls._RNN_CELL_ERROR_MSG.format(
-          layer.__class__, cell.__class__, cls._RNN_CELLS_WEIGHTS_MAP.keys()))
+      raise ValueError(
+          cls._RNN_CELL_ERROR_MSG.format(
+              layer.__class__, cell.__class__,
+              list(cls._RNN_CELLS_WEIGHTS_MAP.keys())))
 
     def get_quantizable_weights_rnn():  # pylint: disable=missing-docstring
       quantizable_weights = []
@@ -234,8 +240,10 @@ class QuantizeEmulateRegistry(object):
         cell.set_quantizable_weights(cell_weights)
         return
 
-      raise ValueError(cls._RNN_CELL_ERROR_MSG.format(
-          layer.__class__, cell.__class__, cls._RNN_CELLS_WEIGHTS_MAP.keys()))
+      raise ValueError(
+          cls._RNN_CELL_ERROR_MSG.format(
+              layer.__class__, cell.__class__,
+              list(cls._RNN_CELLS_WEIGHTS_MAP.keys())))
 
     def set_quantizable_weights_rnn(weights):
       """Sets and replaces quantizable weights for an RNN layer.

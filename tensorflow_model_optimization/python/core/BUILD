@@ -7,6 +7,7 @@ exports_files(["LICENSE"])
 py_library(
     name = "core",
     srcs = ["__init__.py"],
+    srcs_version = "PY2AND3",
     deps = [
         ":version",
         "//tensorflow_model_optimization/python/core/internal",

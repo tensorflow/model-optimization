@@ -19,6 +19,11 @@ import tensorflow_model_optimization as tfmot
 ```
 """
 
+from __future__ import absolute_import
+from __future__ import division
+from __future__ import print_function
+
+
 # We need to put some imports inside a function call below, and the function
 # call needs to come before the *actual* imports that populate the
 # tensorflow_model_optimization namespace. Hence, we disable this lint check
