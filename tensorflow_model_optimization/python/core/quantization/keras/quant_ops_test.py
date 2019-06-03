@@ -28,7 +28,6 @@ from tensorflow.python.ops import variables
 from tensorflow.python.platform import googletest
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 
-_MIN_MAX_VARS = 'min_max_vars'
 _SYMMETRIC_RANGE_RATIO = 0.9921875  # 127 / 128
 
 
@@ -60,14 +59,15 @@ class QuantOpsTest(googletest.TestCase):
   def testMovingAvgQuantizeTrainingAssign(self):
     min_value, max_value = self._GetMinMaxValues(quant_ops.MovingAvgQuantize,
                                                  [[-1, 1], [0, 0]])
-    self.assertAlmostEqual(min_value, -0.5, delta=1e-3)
-    self.assertAlmostEqual(max_value, 0.5, delta=1e-3)
+    self.assertAlmostEqual(min_value, -0.000999, delta=1e-6)
+    self.assertAlmostEqual(max_value, 0.000999, delta=1e-6)
 
   def testMovingAvgSymmetricQuantizeTrainingAssign(self):
     min_value, max_value = self._GetMinMaxValues(
         quant_ops.MovingAvgQuantize, [[-1, 0.5], [0, 0]], symmetric=True)
-    self.assertAlmostEqual(min_value, -0.5, delta=1e-3)
-    self.assertAlmostEqual(max_value, 0.5 * _SYMMETRIC_RANGE_RATIO, delta=1e-3)
+    self.assertAlmostEqual(min_value, -0.000999, delta=1e-6)
+    self.assertAlmostEqual(
+        max_value, 0.000999 * _SYMMETRIC_RANGE_RATIO, delta=1e-6)
     self.assertAlmostEqual(max_value, min_value * -_SYMMETRIC_RANGE_RATIO)
 
   def testMovingAvgSymmetricQuantizeNarrowRangeTrainingAssign(self):
@@ -75,8 +75,8 @@ class QuantOpsTest(googletest.TestCase):
         quant_ops.MovingAvgQuantize, [[-1, 0.5], [0, 0]],
         symmetric=True,
         narrow_range=True)
-    self.assertAlmostEqual(min_value, -0.5, delta=1e-3)
-    self.assertAlmostEqual(max_value, 0.5, delta=1e-3)
+    self.assertAlmostEqual(min_value, -0.000999, delta=1e-6)
+    self.assertAlmostEqual(max_value, 0.000999, delta=1e-6)
     self.assertAlmostEqual(max_value, -min_value)
 
   def testVariablesNotPartitioned_LastValue(self):
@@ -87,12 +87,9 @@ class QuantOpsTest(googletest.TestCase):
       with variable_scope.variable_scope(
           'part', partitioner=partitioned_variables.fixed_size_partitioner(2)):
         x = array_ops.placeholder(dtypes.float32, shape=[2])
-        _ = quant_ops.LastValueQuantize(
-            x,
-            init_min=0.0,
-            init_max=0.0,
-            is_training=True,
-            vars_collection=_MIN_MAX_VARS)
+        min_var = variables.Variable(0.0)
+        max_var = variables.Variable(0.0)
+        _ = quant_ops.LastValueQuantize(x, min_var, max_var, is_training=True)
 
   def testVariablesNotPartitioned_MovingAvg(self):
     # Variables added should not use a default partiioner since they are
@@ -102,24 +99,17 @@ class QuantOpsTest(googletest.TestCase):
       with variable_scope.variable_scope(
           'part', partitioner=partitioned_variables.fixed_size_partitioner(2)):
         x = array_ops.placeholder(dtypes.float32, shape=[2])
-        _ = quant_ops.MovingAvgQuantize(
-            x,
-            init_min=0.0,
-            init_max=0.0,
-            is_training=True,
-            vars_collection=_MIN_MAX_VARS)
+        min_var = variables.Variable(0.0)
+        max_var = variables.Variable(0.0)
+        _ = quant_ops.MovingAvgQuantize(x, min_var, max_var, is_training=True)
 
   def _GetMinMaxValues(self, quantize_fn, input_values, **kwds):
     g = ops.Graph()
     with session.Session(graph=g) as sess:
       x = array_ops.placeholder(dtypes.float32, shape=[2])
-      y = quantize_fn(
-          x,
-          init_min=0.0,
-          init_max=0.0,
-          is_training=True,
-          vars_collection=_MIN_MAX_VARS,
-          **kwds)
+      min_var = variables.Variable(0.0)
+      max_var = variables.Variable(0.0)
+      y = quantize_fn(x, min_var, max_var, is_training=True, **kwds)
 
       # Run the step.
       sess.run(variables.global_variables_initializer())
@@ -127,11 +117,6 @@ class QuantOpsTest(googletest.TestCase):
         sess.run(y, feed_dict={x: input_elem})
 
       # Now check that the min_max_vars were, in fact, updated.
-      min_max_vars = ops.get_collection(_MIN_MAX_VARS)
-      self.assertEqual(len(min_max_vars), 2)
-      min_idx = 0 if 'min' in min_max_vars[0].name else 1
-      max_idx = (min_idx + 1) % 2
-      min_var, max_var = min_max_vars[min_idx], min_max_vars[max_idx]
       min_max_values = sess.run([min_var, max_var])
       return min_max_values[0], min_max_values[1]
 

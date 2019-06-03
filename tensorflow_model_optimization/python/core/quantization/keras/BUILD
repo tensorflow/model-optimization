@@ -95,6 +95,19 @@ py_library(
     ],
 )
 
+py_library(
+    name = "utils",
+    srcs = [
+        "utils.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_emulate_wrapper",
+        # tensorflow dep1,
+    ],
+)
+
 py_test(
     name = "quantize_emulate_test",
     srcs = ["quantize_emulate_test.py"],
@@ -114,6 +127,9 @@ py_test(
     srcs = ["quantize_emulate_integration_test.py"],
     deps = [
         ":quantize_emulate",
+        ":quantize_emulate_wrapper",
+        ":utils",
+        # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],

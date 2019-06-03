@@ -43,26 +43,10 @@ def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
         inputs, min=init_min, max=init_max)
 
 
-def _ModelVariable(name,
-                   shape=None,
-                   initializer=None,
-                   collections=None,
-                   trainable=None):
-  collections = list(collections or [])
-  collections += [ops.GraphKeys.GLOBAL_VARIABLES]
-  return variable_scope.get_variable(
-      name,
-      shape=shape,
-      initializer=initializer,
-      collections=collections,
-      trainable=trainable)
-
-
 def LastValueQuantize(inputs,
+                      min_var,
+                      max_var,
                       per_channel=False,
-                      init_min=-6.0,
-                      init_max=6.0,
-                      vars_collection=None,
                       name_prefix='LastValueQuant',
                       reuse=None,
                       is_training=True,
@@ -80,8 +64,6 @@ def LastValueQuantize(inputs,
       quantization ranges per output channel.
     init_min: a float scalar, the initial value for variable min.
     init_max: a float scalar, the initial value for variable max.
-    vars_collection: (Optional) collection where to store variables for
-      quantization interval ends.
     name_prefix: name_prefix for created nodes.
     reuse: whether or not the layer and its variables should be reused. To be
       able to reuse the layer scope must be given.
@@ -99,27 +81,7 @@ def LastValueQuantize(inputs,
     scope.set_partitioner(None)
     input_shape = inputs.get_shape()
     input_dim = len(input_shape)
-    if per_channel:
-      # Only support quantizing 1-, 2- and 4-dimensional tensors.
-      assert input_dim in [1, 2, 4], ('Expected 1D, 2D or 4D input, was: %s in '
-                                      ' scope: %s' % (input_shape, name_prefix))
-      min_max_shape = [input_shape[-1]]
-    else:
-      min_max_shape = []
 
-    vars_collections = [vars_collection] if vars_collection else []
-    min_var = _ModelVariable(
-        'min',
-        shape=min_max_shape,
-        initializer=init_ops.constant_initializer(init_min),
-        collections=vars_collections,
-        trainable=False)
-    max_var = _ModelVariable(
-        'max',
-        shape=min_max_shape,
-        initializer=init_ops.constant_initializer(init_max),
-        collections=vars_collections,
-        trainable=False)
     if not is_training:
       return _FakeQuantWithMinMaxVars(
           inputs,
@@ -183,11 +145,10 @@ def LastValueQuantize(inputs,
 
 
 def MovingAvgQuantize(inputs,
+                      min_var,
+                      max_var,
                       per_channel=False,
-                      init_min=-6.0,
-                      init_max=6.0,
                       ema_decay=0.999,
-                      vars_collection=ops.GraphKeys.MOVING_AVERAGE_VARIABLES,
                       name_prefix='MovingAvgQuantize',
                       reuse=None,
                       is_training=True,
@@ -206,8 +167,6 @@ def MovingAvgQuantize(inputs,
     init_min: a float scalar, the initial value for variable min.
     init_max: a float scalar, the initial value for variable max.
     ema_decay: EMA decay parameter.
-    vars_collection: (Optional) collection where to store variables for
-      quantization interval ends.
     name_prefix: name_prefix for created nodes.
     reuse: whether or not the layer and its variables should be reused. To be
       able to reuse the layer scope must be given.
@@ -225,27 +184,7 @@ def MovingAvgQuantize(inputs,
     scope.set_partitioner(None)
     input_shape = inputs.get_shape()
     input_dim = len(input_shape)
-    if per_channel:
-      # Only support quantizing 1-, 2- and 4-dimensional tensors.
-      assert input_dim in [1, 2, 4], ('Expected 1D, 2D or 4D input, was: %s in '
-                                      ' scope: %s' % (input_shape, name_prefix))
-      min_max_shape = [input_shape[-1]]
-    else:
-      min_max_shape = []
 
-    vars_collections = [vars_collection] if vars_collection else []
-    min_var = _ModelVariable(
-        'min',
-        shape=min_max_shape,
-        initializer=init_ops.constant_initializer(init_min),
-        collections=vars_collections,
-        trainable=False)
-    max_var = _ModelVariable(
-        'max',
-        shape=min_max_shape,
-        initializer=init_ops.constant_initializer(init_max),
-        collections=vars_collections,
-        trainable=False)
     if not is_training:
       return _FakeQuantWithMinMaxVars(
           inputs,
@@ -296,9 +235,9 @@ def MovingAvgQuantize(inputs,
       range_max = math_ops.maximum(batch_max, 0.0)
 
     assign_min = moving_averages.assign_moving_average(
-        min_var, range_min, ema_decay, name='AssignMinEma')
+        min_var, range_min, ema_decay, zero_debias=False, name='AssignMinEma')
     assign_max = moving_averages.assign_moving_average(
-        max_var, range_max, ema_decay, name='AssignMaxEma')
+        max_var, range_max, ema_decay, zero_debias=False, name='AssignMaxEma')
 
     return _FakeQuantWithMinMaxVars(
         inputs,

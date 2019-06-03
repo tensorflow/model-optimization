@@ -83,12 +83,6 @@ model.compile(
     optimizer=tf.keras.optimizers.Adadelta(),
     metrics=['accuracy'])
 
-# QuantizeEmulateWrapper creates internal tf variables to keep track of
-# the min/max state while applying quantization. These variables are not
-# tracked by keras and hence the keras variable initialize step is unable to
-# initialize them. Until that is fixed, explicitly initializing variables here.
-tf.keras.backend.get_session().run(tf.global_variables_initializer())
-
 model.fit(x_train, y_train,
           batch_size=batch_size,
           epochs=epochs,

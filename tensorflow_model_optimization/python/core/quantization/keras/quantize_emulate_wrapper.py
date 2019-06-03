@@ -23,6 +23,7 @@
 
 from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers.wrappers import Wrapper
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
@@ -81,9 +82,38 @@ class QuantizeEmulateWrapper(Wrapper):
       self._batch_input_shape = self.layer._batch_input_shape
 
   def build(self, input_shape):
-    self.layer.build(input_shape)
-
     super(QuantizeEmulateWrapper, self).build(input_shape)
+
+    min_weights, max_weights = [], []
+    # For each of the quantizable_weights, construct the necessary variables.
+    # TODO(alanchiao): when validated, add per-channel as parameter, which
+    # affects shape and other factors.
+    for weight in self.layer.get_quantizable_weights():
+      min_var = self.add_variable(
+          'weight_min',
+          initializer=initializers.Constant(-6.0),
+          trainable=False)
+      max_var = self.add_variable(
+          'weight_max', initializer=initializers.Constant(6.0), trainable=False)
+      self._unquantized_kernels.append(weight)
+      min_weights.append(min_var)
+      max_weights.append(max_var)
+
+      # set_quantizable_weights on the wrapped layer removes unquantized_kernel
+      # from _trainable_weights. We add it to the wrappers _trainable_weights
+      # to ensure it gets gradient updates.
+      self._trainable_weights.append(weight)
+
+    self._weight_vars = list(
+        zip(self._unquantized_kernels, min_weights, max_weights))
+    self._min_activation = self.add_variable(
+        'activation_min',
+        initializer=initializers.Constant(-6.0),
+        trainable=False)
+    self._max_activation = self.add_variable(
+        'activation_max',
+        initializer=initializers.Constant(6.0),
+        trainable=False)
 
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(self.layer.input_shape)
@@ -92,22 +122,23 @@ class QuantizeEmulateWrapper(Wrapper):
     if training is None:
       training = K.learning_phase()
 
-    for unquantized_kernel in self.layer.get_quantizable_weights():
+    for unquantized_kernel, min_var, max_var in self._weight_vars:
 
       def last_value_quantize_fn(is_training,
-                                 unquantized_kernel=unquantized_kernel):
+                                 unquantized_kernel=unquantized_kernel,
+                                 min_var=min_var,
+                                 max_var=max_var):
         """Wrapper around LastValueQuantize."""
 
         def fn():
           return quant_ops.LastValueQuantize(
               unquantized_kernel,
-              init_min=-6.0,
-              init_max=6.0,
+              min_var,
+              max_var,
               is_training=is_training,
               num_bits=self._num_bits,
               symmetric=self._symmetric,
               narrow_range=self._narrow_range,
-              vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
               name_prefix=self.layer.name)
 
         return fn
@@ -120,12 +151,6 @@ class QuantizeEmulateWrapper(Wrapper):
                                              last_value_quantize_fn(True),
                                              last_value_quantize_fn(False))
 
-      # set_quantizable_weights on the wrapped layer removes unquantized_kernel
-      # from _trainable_weights. We add it to the wrappers _trainable_weights
-      # to ensure it gets gradient updates.
-      self._trainable_weights.append(unquantized_kernel)
-
-      self._unquantized_kernels.append(unquantized_kernel)
       self._quantized_kernels.append(quantized_kernel)
 
     self.layer.set_quantizable_weights(self._quantized_kernels)
@@ -141,14 +166,13 @@ class QuantizeEmulateWrapper(Wrapper):
       def fn():
         return quant_ops.MovingAvgQuantize(
             outputs,
-            init_min=-6.0,
-            init_max=6.0,
+            self._min_activation,
+            self._max_activation,
             ema_decay=0.999,
             is_training=is_training,
             num_bits=self._num_bits,
             symmetric=self._symmetric,
             narrow_range=False,
-            vars_collection=ops.GraphKeys.GLOBAL_VARIABLES,
             name_prefix=self.layer.name)
 
       return fn
