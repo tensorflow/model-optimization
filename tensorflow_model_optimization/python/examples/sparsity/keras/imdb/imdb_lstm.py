@@ -88,7 +88,7 @@ model.add(keras.layers.Dropout(0.5))
 model.add(keras.layers.Dense(1))
 model.add(keras.layers.Activation("sigmoid"))
 
-model = prune.Prune(model, pruning_schedule.PolynomialDecay(
+model = prune.prune_low_magnitude(model, pruning_schedule.PolynomialDecay(
     initial_sparsity=0.3, final_sparsity=0.7, begin_step=1000, end_step=3000))
 
 # try using different optimizers and different optimizer configs

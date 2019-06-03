@@ -14,7 +14,8 @@ py_binary(
     srcs = [
         "imdb_lstm.py",
     ],
-    python_version = "PY2",
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
     deps = [
         # absl:app dep1,
         # absl/flags dep1,
