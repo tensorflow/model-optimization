@@ -36,6 +36,9 @@ upper_tabs:
       - title: Post-training quantization
         path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/tutorials/post_training_quant.ipynb
         status: external
+      - title: Post-training integer quantization
+        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/tutorials/post_training_integer_quant.ipynb
+        status: external
 
     - name: API
       skip_translation: true
