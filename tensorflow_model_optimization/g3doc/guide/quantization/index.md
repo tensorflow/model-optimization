@@ -45,3 +45,7 @@ tflite_quant_model = converter.convert()
 ```
 
 The resulting model will still take float input and output for convenience.
+
+For more information, see the TensorFlow Lite
+[post-training quantization](https://www.tensorflow.org/lite/performance/post_training_quantization#full_integer_quantization_of_weights_and_activations)
+guide.
