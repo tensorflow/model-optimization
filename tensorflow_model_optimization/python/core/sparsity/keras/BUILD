@@ -52,7 +52,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
-        # python/keras:layers tensorflow dep2,
+        # python/keras:layers_base tensorflow dep2,
     ],
 )
 
@@ -103,7 +103,7 @@ py_library(
         # python/keras:engine tensorflow dep2,
         # python/keras:generic_utils tensorflow dep2,
         # python/keras:initializers tensorflow dep2,
-        # python/keras:layers tensorflow dep2,
+        # python/keras:layers_base tensorflow dep2,
         # python/keras:tf_utils tensorflow dep2,
     ],
 )
