@@ -356,6 +356,200 @@ class StatefulSimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
       decode_fn({})
 
 
+class SimpleEncoderV2Test(tf.test.TestCase, parameterized.TestCase):
+
+  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  def test_basic_encode_decode(self):
+    """Tests basic encoding and decoding works as expected."""
+    x = tf.constant(1.0, tf.float32)
+    encoder = simple_encoder.SimpleEncoderV2(
+        core_encoder.EncoderComposer(
+            test_utils.PlusOneOverNEncodingStage()).make(),
+        tf.TensorSpec.from_tensor(x))
+
+    state = encoder.initial_state()
+    iteration = _make_iteration_function(encoder)
+    for i in range(1, 10):
+      x, encoded_x, decoded_x, state = self.evaluate(iteration(x, state))
+      self.assertAllClose(x, decoded_x)
+      self.assertAllClose(1.0 + 1 / i,
+                          _encoded_x_field(encoded_x, [TENSORS, PN_VALS]))
+
+  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  def test_composite_encoder(self):
+    """Tests functionality with a general, composite `Encoder`."""
+    x = tf.constant(1.2)
+    encoder = core_encoder.EncoderComposer(
+        test_utils.SignIntFloatEncodingStage())
+    encoder.add_child(test_utils.TimesTwoEncodingStage(), SIF_SIGNS)
+    encoder.add_child(test_utils.PlusOneEncodingStage(), SIF_INTS)
+    encoder.add_child(test_utils.TimesTwoEncodingStage(), SIF_FLOATS).add_child(
+        test_utils.PlusOneOverNEncodingStage(), T2_VALS)
+    encoder = simple_encoder.SimpleEncoderV2(encoder.make(),
+                                             tf.TensorSpec.from_tensor(x))
+
+    state = encoder.initial_state()
+    iteration = _make_iteration_function(encoder)
+    for i in range(1, 10):
+      x, encoded_x, decoded_x, state = self.evaluate(iteration(x, state))
+      self.assertAllClose(x, decoded_x)
+      self.assertAllClose(
+          2.0, _encoded_x_field(encoded_x, [TENSORS, SIF_SIGNS, T2_VALS]))
+      self.assertAllClose(
+          2.0, _encoded_x_field(encoded_x, [TENSORS, SIF_INTS, P1_VALS]))
+      self.assertAllClose(
+          0.4 + 1 / i,
+          _encoded_x_field(encoded_x, [TENSORS, SIF_FLOATS, T2_VALS, PN_VALS]))
+
+  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  def test_none_state_equal_to_initial_state(self):
+    """Tests that not providing state is the same as initial_state."""
+    x = tf.constant(1.0)
+    encoder = simple_encoder.SimpleEncoderV2(
+        core_encoder.EncoderComposer(
+            test_utils.PlusOneOverNEncodingStage()).make(),
+        tf.TensorSpec.from_tensor(x))
+
+    state = encoder.initial_state()
+    stateful_iteration = _make_iteration_function(encoder)
+
+    @tf.function
+    def stateless_iteration(x):
+      encoded_x, _ = encoder.encode(x)
+      decoded_x = encoder.decode(encoded_x)
+      return encoded_x, decoded_x
+
+    _, encoded_x_stateful, decoded_x_stateful, _ = self.evaluate(
+        stateful_iteration(x, state))
+    encoded_x_stateless, decoded_x_stateless = self.evaluate(
+        stateless_iteration(x))
+
+    self.assertAllClose(encoded_x_stateful, encoded_x_stateless)
+    self.assertAllClose(decoded_x_stateful, decoded_x_stateless)
+
+  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  def test_python_constants_not_exposed(self):
+    """Tests that only TensorFlow values are exposed to users."""
+    x = tf.constant(1.0)
+    tensorspec = tf.TensorSpec.from_tensor(x)
+    encoder_py = simple_encoder.SimpleEncoderV2(
+        core_encoder.EncoderComposer(
+            test_utils.SimpleLinearEncodingStage(2.0, 3.0)).make(), tensorspec)
+    a_var = tf.compat.v1.get_variable('a_var', initializer=2.0)
+    b_var = tf.compat.v1.get_variable('b_var', initializer=3.0)
+    encoder_tf = simple_encoder.SimpleEncoderV2(
+        core_encoder.EncoderComposer(
+            test_utils.SimpleLinearEncodingStage(a_var, b_var)).make(),
+        tensorspec)
+
+    state_py = encoder_py.initial_state()
+    state_tf = encoder_tf.initial_state()
+    iteration_py = _make_iteration_function(encoder_py)
+    iteration_tf = _make_iteration_function(encoder_tf)
+
+    self.evaluate(tf.compat.v1.global_variables_initializer())
+    _, encoded_x_py, decoded_x_py, _ = self.evaluate(iteration_py(x, state_py))
+    _, encoded_x_tf, decoded_x_tf, _ = self.evaluate(iteration_tf(x, state_tf))
+
+    # The encoded_x_tf should have two elements that encoded_x_py does not.
+    # These correspond to the two variables created passed on to constructor of
+    # encoder_tf, which are exposed as params. For encoder_py, these are python
+    # integers, and should thus be hidden from users.
+    self.assertLen(encoded_x_tf, len(encoded_x_py) + 2)
+
+    # Make sure functionality is still the same.
+    self.assertAllClose(x, decoded_x_tf)
+    self.assertAllClose(x, decoded_x_py)
+
+  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  def test_decode_needs_input_shape_static(self):
+    """Tests that mechanism for passing input shape works with static shape."""
+    x = tf.reshape(list(range(15)), [3, 5])
+    encoder = simple_encoder.SimpleEncoderV2(
+        core_encoder.EncoderComposer(
+            test_utils.ReduceMeanEncodingStage()).make(),
+        tf.TensorSpec.from_tensor(x))
+
+    state = encoder.initial_state()
+    iteration = _make_iteration_function(encoder)
+    _, _, decoded_x, _ = self.evaluate(iteration(x, state))
+    self.assertAllEqual([[7.0] * 5] * 3, decoded_x)
+
+  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  def test_decode_needs_input_shape_dynamic(self):
+    """Tests that mechanism for passing input shape works with dynamic shape."""
+    if tf.executing_eagerly():
+      fn = tf.function(test_utils.get_tensor_with_random_shape)
+      tensorspec = tf.TensorSpec.from_tensor(
+          fn.get_concrete_function().structured_outputs)
+      x = fn()
+    else:
+      x = test_utils.get_tensor_with_random_shape()
+      tensorspec = tf.TensorSpec.from_tensor(x)
+    encoder = simple_encoder.SimpleEncoderV2(
+        core_encoder.EncoderComposer(
+            test_utils.ReduceMeanEncodingStage()).make(), tensorspec)
+
+    # Validate the premise of the test - that encode mehtod expects an unknown
+    # shape. This should be true both for graph and eager mode.
+    assert (encoder._encode_fn.get_concrete_function().inputs[0].shape.as_list(
+    ) == [None])
+
+    state = encoder.initial_state()
+    iteration = _make_iteration_function(encoder)
+    x, _, decoded_x, _ = self.evaluate(iteration(x, state))
+    self.assertAllEqual(x.shape, decoded_x.shape)
+
+  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  def test_input_signature_enforced(self):
+    """Tests that encode/decode input signature is enforced."""
+    x = tf.constant(1.0)
+    encoder = simple_encoder.SimpleEncoderV2(
+        core_encoder.EncoderComposer(
+            test_utils.PlusOneOverNEncodingStage()).make(),
+        tf.TensorSpec.from_tensor(x))
+
+    state = encoder.initial_state()
+    with self.assertRaises(ValueError):
+      bad_x = tf.stack([x, x])
+      encoder.encode(bad_x, state)
+    with self.assertRaises(ValueError):
+      bad_state = state + (x,)
+      encoder.encode(x, bad_state)
+    encoded_x = encoder.encode(x, state)
+    with self.assertRaises(ValueError):
+      bad_encoded_x = dict(encoded_x)
+      bad_encoded_x.update({'x': x})
+      encoder.decode(bad_encoded_x)
+
+  @parameterized.parameters([1.0, 'str', object])
+  def test_not_an_encoder_raises(self, not_an_encoder):
+    """Tests invalid encoder argument."""
+    tensorspec = tf.TensorSpec((1,), tf.float32)
+    with self.assertRaisesRegex(TypeError, 'Encoder'):
+      simple_encoder.SimpleEncoderV2(not_an_encoder, tensorspec)
+
+  @parameterized.parameters([1.0, 'str', object])
+  def test_not_a_tensorspec_raises(self, bad_tensorspec):
+    """Tests invalid type of tensorspec argument."""
+    encoder = core_encoder.EncoderComposer(
+        test_utils.PlusOneOverNEncodingStage()).make()
+    with self.assertRaisesRegex(TypeError, 'TensorSpec'):
+      simple_encoder.SimpleEncoderV2(encoder, bad_tensorspec)
+
+
+def _make_iteration_function(encoder):
+  assert isinstance(encoder, simple_encoder.SimpleEncoderV2)
+
+  @tf.function
+  def iteration(x, state):
+    encoded_x, new_state = encoder.encode(x, state)
+    decoded_x = encoder.decode(encoded_x)
+    return x, encoded_x, decoded_x, new_state
+
+  return iteration
+
+
 def _encoded_x_field(encoded_x, path):
   """Returns a field from `encoded_x` returned by the `encode` method.
 
