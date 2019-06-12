@@ -27,4 +27,5 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.enc
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.encoding_stage import tf_style_encoding_stage
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.simple_encoder import SimpleEncoder
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.simple_encoder import SimpleEncoderV2
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.simple_encoder import StatefulSimpleEncoder

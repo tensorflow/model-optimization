@@ -20,6 +20,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import enum
 import numpy as np
 import six
@@ -98,7 +99,7 @@ def split_dict_py_tf(dictionary):
   """
   if not isinstance(dictionary, dict):
     raise TypeError
-  d_py, d_tf = {}, {}
+  d_py, d_tf = collections.OrderedDict(), collections.OrderedDict()
   for k, v in six.iteritems(dictionary):
     if isinstance(v, dict):
       d_py[k], d_tf[k] = split_dict_py_tf(v)
@@ -133,7 +134,7 @@ def merge_dicts(dict1, dict2):
     ValueError:
       If the input dictionaries do not have corresponding structure.
   """
-  merged_dict = {}
+  merged_dict = collections.OrderedDict()
   if not (isinstance(dict1, dict) and isinstance(dict2, dict)):
     raise TypeError
 

@@ -242,7 +242,9 @@ class SimpleEncoderV2(object):
       state = self.initial_state()
     with tf.name_scope(name, 'simple_encoder_encode',
                        [x] + list(state)):
-      return self._encode_fn(x, state)
+      return nest.map_structure(
+          lambda t: tf.identity(t, name=t.op.inputs[0].op.name),
+          self._encode_fn(x, state))
 
   def decode(self, encoded_x, name=None):
     """Decodes the encoded value.
