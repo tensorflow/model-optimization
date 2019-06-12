@@ -71,6 +71,11 @@ landing_page:
 
   - classname: devsite-landing-row-cards
     items:
+    - heading: "TensorFlow Model Optimization Toolkit - Post Training Integer Quantization"
+      path: https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-post-training-integer-quantization-b4964a1ea9ba
+      buttons:
+      - label: "Read on TensorFlow blog"
+        path: https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-post-training-integer-quantization-b4964a1ea9ba
     - heading: "TensorFlow Model Optimization Toolkit - Pruning API"
       path: https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-pruning-api-42cac9157a6a
       buttons:
