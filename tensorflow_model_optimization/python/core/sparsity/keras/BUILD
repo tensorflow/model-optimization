@@ -100,7 +100,7 @@ py_library(
         # python:framework_ops tensorflow dep2,
         # python:variables tensorflow dep2,
         # python/keras:backend tensorflow dep2,
-        # python/keras:engine tensorflow dep2,
+        # python/keras:base_layer tensorflow dep2,
         # python/keras:generic_utils tensorflow dep2,
         # python/keras:initializers tensorflow dep2,
         # python/keras:layers_base tensorflow dep2,
