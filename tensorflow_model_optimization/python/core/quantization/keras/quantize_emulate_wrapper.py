@@ -175,7 +175,7 @@ class QuantizeEmulateWrapper(Wrapper):
             is_training=is_training,
             num_bits=self._num_bits,
             symmetric=self._symmetric,
-            narrow_range=False,
+            narrow_range=self._narrow_range,
             name_prefix=self.layer.name)
 
       return fn
