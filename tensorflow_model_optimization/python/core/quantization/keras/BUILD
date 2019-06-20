@@ -98,6 +98,34 @@ py_library(
 )
 
 py_library(
+    name = "quantize_annotate",
+    srcs = [
+        "quantize_annotate.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "quantize_annotate_test",
+    srcs = [
+        "quantize_annotate_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_annotate",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_library(
     name = "utils",
     srcs = [
         "utils.py",
