@@ -25,7 +25,6 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.framework import ops
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers.wrappers import Wrapper
@@ -63,7 +62,7 @@ class QuantizeEmulateWrapper(Wrapper):
       super(QuantizeEmulateWrapper, self).__init__(
           QuantizeEmulateRegistry.make_quantizable(layer), **kwargs)
     else:
-      raise ValueError("Unsupported Layer " + layer.__class__)
+      raise ValueError('Unsupported Layer ' + layer.__class__)
 
     self._num_bits = num_bits
     self._symmetric = symmetric
