@@ -17,6 +17,7 @@ py_library(
     name = "common_encoders",
     srcs = ["common_encoders.py"],
     deps = [
+        # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:core_encoder",
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:simple_encoder",
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/stages:stages_impl",

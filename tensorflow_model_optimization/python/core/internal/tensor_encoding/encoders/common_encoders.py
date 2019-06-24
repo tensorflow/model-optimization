@@ -21,27 +21,33 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import tensorflow as tf
+
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import simple_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages import stages_impl
 
 
-def as_simple_encoder(encoder):
-  """Wraps an `Encoder` object as a `SimpleEncoder`."""
-  if isinstance(encoder, simple_encoder.SimpleEncoder):
-    return encoder
+def as_simple_encoder(encoder, tensorspec):
+  """Wraps an `Encoder` object as a `SimpleEncoder`.
+
+  Args:
+    encoder: An `Encoder` object to be used to encoding.
+    tensorspec: A `TensorSpec`. The created `SimpleEncoderV2` will be
+      constrained to only encode input values compatible with `tensorspec`.
+
+  Returns:
+    A `SimpleEncoder`.
+
+  Raises:
+    TypeError:
+      If `encoder` is not an `Encoder` or `tensorspec` is not a `TensorSpec`.
+  """
   if not isinstance(encoder, core_encoder.Encoder):
     raise TypeError('The encoder must be an instance of `Encoder`.')
-  return simple_encoder.SimpleEncoder(encoder)
-
-
-def as_stateful_simple_encoder(encoder):
-  """Wraps an `Encoder` object as a `StatefulSimpleEncoder`."""
-  if isinstance(encoder, simple_encoder.StatefulSimpleEncoder):
-    return encoder
-  if not isinstance(encoder, core_encoder.Encoder):
-    raise TypeError('The encoder must be an instance of `Encoder`.')
-  return simple_encoder.StatefulSimpleEncoder(encoder)
+  if not isinstance(tensorspec, tf.TensorSpec):
+    raise TypeError('The tensorspec must be a tf.TensorSpec.')
+  return simple_encoder.SimpleEncoder(encoder, tensorspec)
 
 
 def identity():

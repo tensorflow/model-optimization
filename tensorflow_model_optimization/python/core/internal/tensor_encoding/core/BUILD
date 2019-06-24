@@ -81,7 +81,6 @@ py_test(
         ":core_encoder",
         ":simple_encoder",
         # absl/testing:parameterized dep1,
-        # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
     ],

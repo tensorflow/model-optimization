@@ -38,23 +38,21 @@ class EncoderLibraryTest(parameterized.TestCase):
 
   @parameterized.parameters(_ENCODER_FNS)
   def test_as_simple_encoder(self, encoder_fn):
-    encoder = common_encoders.as_simple_encoder(encoder_fn())
+    encoder = common_encoders.as_simple_encoder(encoder_fn(),
+                                                tf.TensorSpec((2,), tf.float32))
     self.assertIsInstance(encoder, simple_encoder.SimpleEncoder)
 
   @parameterized.parameters(None, [[]], 2.0, 'string')
-  def test_as_simple_encoder_raises(self, bad_input):
+  def test_as_simple_encoder_raises_encoder(self, not_an_encoder):
     with self.assertRaises(TypeError):
-      common_encoders.as_simple_encoder(bad_input)
-
-  @parameterized.parameters(_ENCODER_FNS)
-  def test_as_stateful_simple_encoder(self, encoder_fn):
-    encoder = common_encoders.as_stateful_simple_encoder(encoder_fn())
-    self.assertIsInstance(encoder, simple_encoder.StatefulSimpleEncoder)
+      common_encoders.as_simple_encoder(not_an_encoder,
+                                        tf.TensorSpec((2,), tf.float32))
 
   @parameterized.parameters(None, [[]], 2.0, 'string')
-  def test_as_stateful_simple_encoder_raises(self, bad_input):
+  def test_as_simple_encoder_raises_tensorspec(self, not_a_tensorspec):
     with self.assertRaises(TypeError):
-      common_encoders.as_stateful_simple_encoder(bad_input)
+      common_encoders.as_simple_encoder(common_encoders.identity(),
+                                        not_a_tensorspec)
 
   def test_identity(self):
     encoder = common_encoders.identity()

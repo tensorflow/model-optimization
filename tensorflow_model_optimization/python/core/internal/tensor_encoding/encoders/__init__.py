@@ -18,7 +18,6 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import as_simple_encoder
-from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import as_stateful_simple_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import hadamard_quantization
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import identity
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import uniform_quantization
