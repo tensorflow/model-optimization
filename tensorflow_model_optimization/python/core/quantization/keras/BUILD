@@ -126,6 +126,35 @@ py_test(
 )
 
 py_library(
+    name = "quantize_aware_activation",
+    srcs = [
+        "quantize_aware_activation.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quant_ops",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "quantize_aware_activation_test",
+    srcs = [
+        "quantize_aware_activation_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_aware_activation",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_library(
     name = "utils",
     srcs = [
         "utils.py",
