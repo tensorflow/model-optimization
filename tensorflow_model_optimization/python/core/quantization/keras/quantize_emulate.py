@@ -13,7 +13,10 @@
 # limitations under the License.
 # ==============================================================================
 """Entry point for quantize emulation during training of models."""
+
 from tensorflow.python import keras
+
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quant_annotate
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
 
 
@@ -81,3 +84,51 @@ def QuantizeEmulate(to_quantize,
     return keras.models.Sequential(_QuantizeList(to_quantize.layers, **params))
   elif isinstance(to_quantize, keras.layers.Layer):
     return QuantizeEmulateWrapper(to_quantize, **params)
+
+
+# TODO(pulkitb): Enable lint naming is fixed and made consistent.
+def quantize_annotate(
+    to_quantize,
+    num_bits,
+    narrow_range=True,
+    symmetric=True,
+    **kwargs):  # pylint: disable=invalid-name
+  """Specify a layer or model to be quantized.
+
+  This function does not apply an quantization emulation operations. It merely
+  wraps the keras layer (or each layer in the model) with `QuantizeAnnotate`
+  to note which layers need to be quantized.
+
+  Args:
+    to_quantize: Keras layer or model to be quantized.
+    num_bits: Number of bits for quantization
+    narrow_range: Whether to use the narrow quantization range [1; 2^num_bits
+      - 1] or wide range [0; 2^num_bits - 1].
+    symmetric: If true, use symmetric quantization limits instead of training
+      the minimum and maximum of each quantization range separately.
+    **kwargs: Additional keyword arguments to be passed to the keras layer.
+
+  Returns:
+    Keras layer wrapped with `QuantizeAnnotate` if layer is passed. Else,
+    a new keras model with each layer in the model wrapped with
+    `QuantizeAnnotate`.
+  """
+
+  def _add_quant_wrapper(layer):
+    if isinstance(layer, quant_annotate.QuantizeAnnotate):
+      return layer
+
+    return quant_annotate.QuantizeAnnotate(layer, **quant_params)
+
+  quant_params = {
+      'num_bits': num_bits,
+      'narrow_range': narrow_range,
+      'symmetric': symmetric
+  }
+
+  if isinstance(to_quantize, keras.Model):
+    return keras.models.clone_model(
+        to_quantize, input_tensors=None, clone_function=_add_quant_wrapper)
+  elif isinstance(to_quantize, keras.layers.Layer):
+    quant_params.update(**kwargs)
+    return quant_annotate.QuantizeAnnotate(to_quantize, **quant_params)

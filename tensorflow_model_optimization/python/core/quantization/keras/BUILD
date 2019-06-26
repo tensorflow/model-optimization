@@ -91,6 +91,7 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        ":quantize_annotate",
         ":quantize_emulate_wrapper",
         # tensorflow dep1,
         # python/keras tensorflow dep2,
