@@ -202,6 +202,14 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
       bad_encoded_x.update({'x': x})
       encoder.decode(bad_encoded_x)
 
+  def test_input_tensorspec(self):
+    x = tf.constant([[1.0, 2.0], [3.0, 4.0]])
+    encoder = simple_encoder.SimpleEncoder(
+        core_encoder.EncoderComposer(
+            test_utils.PlusOneOverNEncodingStage()).make(),
+        tf.TensorSpec.from_tensor(x))
+    self.assertTrue(encoder.input_tensorspec.is_compatible_with(x))
+
   @parameterized.parameters([1.0, 'str', object])
   def test_not_an_encoder_raises(self, not_an_encoder):
     """Tests invalid encoder argument."""
