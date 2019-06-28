@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for keras pruning wrapper."""
+"""Tests for quantize API functions."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -23,11 +23,14 @@ import numpy as np
 from tensorflow.python import keras
 from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quant_annotate
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulate
-from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizeEmulate
-from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulate_wrapper
 
 quantize_annotate = quantize_emulate.quantize_annotate
+QuantizeEmulate = quantize_emulate.QuantizeEmulate
+QuantizeEmulateWrapper = quantize_emulate_wrapper.QuantizeEmulateWrapper
+QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 
 
 class QuantizeEmulateTest(test.TestCase):
@@ -129,6 +132,156 @@ class QuantizeAnnotateTest(test.TestCase):
 
     inputs = np.random.rand(1, 5)
     self.assertAllEqual(model.predict(inputs), annotated_model.predict(inputs))
+
+
+class QuantizeApplyTest(test.TestCase):
+
+  def setUp(self):
+    self.quant_params1 = {
+        'num_bits': 8,
+        'narrow_range': True,
+        'symmetric': True
+    }
+    self.quant_params2 = {
+        'num_bits': 4,
+        'narrow_range': False,
+        'symmetric': False
+    }
+
+  # Validation tests
+
+  def testRaisesErrorIfNotKerasModel(self):
+    with self.assertRaises(ValueError):
+      quantize_emulate.quantize_apply(keras.layers.Dense(32))
+
+  def testRaisesErrorIfKerasSubclassedModel(self):
+    class MyModel(keras.Model):
+      def call(self, inputs, training=None, mask=None):  # pylint: disable=g-wrong-blank-lines
+        return inputs
+
+    with self.assertRaises(ValueError):
+      quantize_emulate.quantize_apply(MyModel())
+
+  def testRaisesErrorNoAnnotatedLayers_Sequential(self):
+    model = keras.Sequential([
+        keras.layers.Dense(10), keras.layers.Dropout(0.4)])
+
+    with self.assertRaises(ValueError):
+      quantize_emulate.quantize_apply(model)
+
+  def testRaisesErrorNoAnnotatedLayers_Functional(self):
+    inputs = keras.Input(shape=(10,))
+    x = keras.layers.Dense(32, activation='relu')(inputs)
+    results = keras.layers.Dense(5, activation='softmax')(x)
+    model = keras.Model(inputs=inputs, outputs=results)
+
+    with self.assertRaises(ValueError):
+      quantize_emulate.quantize_apply(model)
+
+  # Quantization Apply Tests
+
+  def _get_annotated_sequential_model(self):
+    return keras.Sequential([
+        quantize_annotate(keras.layers.Conv2D(32, 5), input_shape=(28, 28, 1),
+                          **self.quant_params1),
+        quantize_annotate(keras.layers.Dense(10), **self.quant_params2)
+    ])
+
+  def _get_annotated_functional_model(self):
+    inputs = keras.Input(shape=(28, 28, 1))
+    x = quantize_annotate(
+        keras.layers.Conv2D(32, 5), **self.quant_params1)(inputs)
+    results = quantize_annotate(keras.layers.Dense(10), **self.quant_params2)(x)
+
+    return keras.Model(inputs=inputs, outputs=results)
+
+  def _assert_layer_emulated(
+      self, annotated_layer, emulated_layer, exclude_keys=None):
+    self.assertIsInstance(emulated_layer, QuantizeEmulateWrapper)
+
+    self.assertEqual(annotated_layer.get_quantize_params(),
+                     emulated_layer.get_quantize_params())
+
+    # Extract configs of the inner layers they wrap.
+    annotated_config = annotated_layer.layer.get_config()
+    emulated_config = emulated_layer.layer.get_config()
+
+    # The underlying layers aren't always exactly the same. For example,
+    # activations in the underlying layers might be replaced. Exclude keys
+    # if required.
+    if exclude_keys:
+      for key in exclude_keys:
+        annotated_config.pop(key)
+        emulated_config.pop(key)
+
+    self.assertEqual(annotated_config, emulated_config)
+
+  def _assert_model_emulated(
+      self, annotated_model, emulated_model, exclude_keys=None):
+    for annotated_layer, emulated_layer in zip(annotated_model.layers,
+                                               emulated_model.layers):
+      if isinstance(emulated_layer, keras.layers.InputLayer):
+        continue
+
+      self._assert_layer_emulated(annotated_layer, emulated_layer, exclude_keys)
+
+  def testAppliesQuantizationToAnnotatedModel_Sequential(self):
+    model = self._get_annotated_sequential_model()
+
+    quantized_model = quantize_emulate.quantize_apply(model)
+
+    self._assert_model_emulated(model, quantized_model)
+
+  def testAppliesQuantizationToAnnotatedModel_Functional(self):
+    model = self._get_annotated_functional_model()
+
+    quantized_model = quantize_emulate.quantize_apply(model)
+
+    self._assert_model_emulated(model, quantized_model)
+
+  # Transformation Tests
+
+  def testQuantizesActivationsWithinLayer_Sequential(self):
+    quant_params = {'num_bits': 8, 'symmetric': True}
+    model = keras.Sequential([
+        quantize_annotate(
+            keras.layers.Conv2D(32, 5, activation='relu'),
+            input_shape=(28, 28, 1),
+            **quant_params)
+    ])
+
+    quantized_model = quantize_emulate.quantize_apply(model)
+
+    # We expect activation to be modified.
+    self._assert_model_emulated(model, quantized_model, ['activation'])
+
+    conv_layer = quantized_model.layers[0].layer
+    self.assertIsInstance(conv_layer.activation, QuantizeAwareActivation)
+    self.assertEqual(
+        keras.activations.get('relu'), conv_layer.activation.activation)
+    self.assertEqual(keras.layers.Conv2D, conv_layer.activation.parent_layer)
+    self.assertEqual(quant_params, conv_layer.activation.get_quantize_params())
+
+  def testQuantizesActivationsWithinLayer_Functional(self):
+    quant_params = {'num_bits': 8, 'symmetric': True}
+
+    inputs = keras.Input(shape=(28, 28, 1))
+    results = quantize_annotate(
+        keras.layers.Conv2D(32, 5, activation='relu'),
+        **self.quant_params1)(inputs)
+    model = keras.Model(inputs=inputs, outputs=results)
+
+    quantized_model = quantize_emulate.quantize_apply(model)
+
+    # We expect activation to be modified.
+    self._assert_model_emulated(model, quantized_model, ['activation'])
+
+    conv_layer = quantized_model.layers[1].layer
+    self.assertIsInstance(conv_layer.activation, QuantizeAwareActivation)
+    self.assertEqual(
+        keras.activations.get('relu'), conv_layer.activation.activation)
+    self.assertEqual(keras.layers.Conv2D, conv_layer.activation.parent_layer)
+    self.assertEqual(quant_params, conv_layer.activation.get_quantize_params())
 
 
 if __name__ == '__main__':

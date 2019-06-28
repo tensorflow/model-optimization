@@ -137,6 +137,12 @@ class QuantizeAwareActivation(Layer):
 
     return x
 
+  def get_quantize_params(self):
+    return {
+        'num_bits': self.num_bits,
+        'symmetric': self.symmetric,
+    }
+
   def compute_output_shape(self, input_shape):
     return input_shape
 

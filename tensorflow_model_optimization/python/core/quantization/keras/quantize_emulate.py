@@ -17,6 +17,7 @@
 from tensorflow.python import keras
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quant_annotate
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
 
 
@@ -132,3 +133,105 @@ def quantize_annotate(
   elif isinstance(to_quantize, keras.layers.Layer):
     quant_params.update(**kwargs)
     return quant_annotate.QuantizeAnnotate(to_quantize, **quant_params)
+
+
+def quantize_apply(model):
+  """Apply quantization operations to a keras model.
+
+  This function takes a keras model which has been annotated with
+  `quantize_annotate` and constructs a new keras model in which each of the
+  annotated layers have been quantized. The quantization process introduces
+  new quantization ops in the Tensorflow graph to appropriately emulate
+  quantization loss.
+
+  Note that to exactly emulate quantization loss, certain graph/model
+  transformations may be applied. This is required since the actual quantized
+  kernel implementations may apply similar transformations.
+
+  Args:
+    model: A keras Sequential or Functional model which has been annotated
+    with `quantize_annotate`.
+
+  Returns:
+    Returns a new cloned keras model in which the annotated layers have been
+    quantized. All the existing layers are cloned.
+  """
+
+  if not isinstance(model, keras.Model):
+    raise ValueError('Only a keras `Model` instance can be used.')
+
+  if not isinstance(model, keras.Sequential) \
+      and not model._is_graph_network:  # pylint: disable=protected-access
+    raise ValueError('model should be either a keras.Sequential or a '
+                     'keras functional model.')
+
+  # Have at least 1 layer annotated with QuantizeAnnotate
+  if not any(isinstance(layer, quant_annotate.QuantizeAnnotate)
+             for layer in model.layers):
+    raise ValueError('model does not contain any layers which have been '
+                     'annotated with `quantize_annotate`. There are no layers '
+                     'to quantize.')
+
+  def _clone_layer(layer):
+    return layer.__class__.from_config(layer.get_config())
+
+  def _quantize_activation(activation, parent_class, quantize_params):
+    try:
+      return quantize_aware_activation.QuantizeAwareActivation(
+          activation.__name__, parent_class, **quantize_params)
+    except TypeError:
+      # Non-standard activation. Could be a custom callable, or an advanced
+      # activation. Simply return the original activation for now.
+      # TODO(pulkitb): Determine how to handle custom activations and advanced
+      # activations.
+      return activation
+
+  def _get_quantize_activation_params(layer):
+    quant_params = layer.get_quantize_params()
+    # narrow_range is not relevant to quantizing activations.
+    quant_params.pop('narrow_range')
+
+    return quant_params
+
+  def _apply_quantization(quant_annotate_layer):
+    layer_to_quantize = _clone_layer(quant_annotate_layer.layer)
+    quantize_params = quant_annotate_layer.get_quantize_params()
+
+    return QuantizeEmulateWrapper(layer_to_quantize, **quantize_params)
+
+  # Apply all graph level transformations.
+  replace_map = {}
+
+  # Replace activations in layers with QuantAwareActivation.
+  # Dense(activation='relu') -> Dense(activation=QuantAwareActivation('relu'))
+  # TODO(pulkitb): Not all layers (LSTMs) have just activation. Add
+  # generic handling for all layers.
+  for layer in model.layers:
+    if isinstance(layer, quant_annotate.QuantizeAnnotate) and \
+        (layer.layer.activation is not None and
+         layer.layer.activation != keras.activations.linear):
+      quantized_layer = _apply_quantization(layer)
+
+      quantized_layer.layer.activation = _quantize_activation(
+          layer.layer.activation, layer.layer.__class__,
+          _get_quantize_activation_params(layer))
+
+      replace_map[layer] = quantized_layer
+
+  # TODO(pulkitb): Transform [Dense(), ReLU()] to be quant aware.
+
+  def _add_quant_emulate_wrapper(layer):  # pylint: disable=missing-docstring
+    # Quantized layer has been constructed during graph transformation. Return.
+    if layer in replace_map:
+      return replace_map[layer]
+
+    # No need to quantize layer. Simply clone and return.
+    if not isinstance(layer, quant_annotate.QuantizeAnnotate):
+      return _clone_layer(layer)
+
+    # Use QuantizeEmulate wrapper on annotated layer which actually
+    # quantization ops.
+    return _apply_quantization(layer)
+
+  return keras.models.clone_model(
+      model, input_tensors=None, clone_function=_add_quant_emulate_wrapper)

@@ -61,13 +61,16 @@ class QuantizeAnnotate(Wrapper):
   def call(self, inputs, training=None):
     return self.layer.call(inputs)
 
-  def get_config(self):
-    base_config = super(QuantizeAnnotate, self).get_config()
-    config = {
+  def get_quantize_params(self):
+    return {
         'num_bits': self._num_bits,
         'symmetric': self._symmetric,
         'narrow_range': self._narrow_range
     }
+
+  def get_config(self):
+    base_config = super(QuantizeAnnotate, self).get_config()
+    config = self.get_quantize_params()
     return dict(list(base_config.items()) + list(config.items()))
 
   @classmethod

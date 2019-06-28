@@ -92,6 +92,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
+        ":quantize_aware_activation",
         ":quantize_emulate_wrapper",
         # tensorflow dep1,
         # python/keras tensorflow dep2,
@@ -174,6 +175,7 @@ py_test(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        ":quantize_aware_activation",
         ":quantize_emulate",
         ":quantize_emulate_wrapper",
         # absl/testing:parameterized dep1,
