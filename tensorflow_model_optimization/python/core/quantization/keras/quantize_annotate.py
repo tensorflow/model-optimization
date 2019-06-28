@@ -20,6 +20,11 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow.python.keras.layers.wrappers import Wrapper
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulatable_layer
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulate_registry
+
+QuantizeEmulatableLayer = quantize_emulatable_layer.QuantizeEmulatableLayer
+QuantizeEmulateRegistry = quantize_emulate_registry.QuantizeEmulateRegistry
 
 
 class QuantizeAnnotate(Wrapper):
@@ -34,6 +39,10 @@ class QuantizeAnnotate(Wrapper):
   which actually applies quantization to determine which layers should be
   modified.
   """
+
+  _UNSUPPORTED_LAYER_ERROR_MSG = (
+      'Layer {} not supported for quantization. Layer should either inherit '
+      'QuantizeEmulatableLayer or be a supported keras built-in layer.')
 
   def __init__(self,
                layer,
@@ -52,6 +61,12 @@ class QuantizeAnnotate(Wrapper):
         the minimum and maximum of each quantization range separately.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
+
+    if not isinstance(layer, QuantizeEmulatableLayer) and \
+        not QuantizeEmulateRegistry.supports(layer):
+      raise ValueError(
+          self._UNSUPPORTED_LAYER_ERROR_MSG.format(layer.__class__))
+
     super(QuantizeAnnotate, self).__init__(layer, **kwargs)
 
     self._num_bits = num_bits
