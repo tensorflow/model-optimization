@@ -83,6 +83,22 @@ py_library(
     ],
 )
 
+py_test(
+    name = "quantize_emulate_wrapper_test",
+    srcs = [
+        "quantize_emulate_wrapper_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_emulate_wrapper",
+        # numpy dep1,
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
 py_library(
     name = "quantize_emulate",
     srcs = [
