@@ -21,6 +21,7 @@ from __future__ import print_function
 import numpy as np
 
 from tensorflow.python import keras
+from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quant_annotate
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
@@ -195,6 +196,20 @@ class QuantizeApplyTest(test.TestCase):
 
     return keras.Model(inputs=inputs, outputs=results)
 
+  def _assert_weights_equal_value(self, annotated_weights, emulated_weights):
+    annotated_weight_values = K.batch_get_value(annotated_weights)
+    emulated_weight_values = K.batch_get_value(emulated_weights)
+
+    self.assertEqual(len(annotated_weight_values), len(emulated_weight_values))
+    for aw, ew in zip(annotated_weight_values, emulated_weight_values):
+      self.assertAllClose(aw, ew)
+
+  def _assert_weights_different_objects(
+      self, annotated_weights, emulated_weights):
+    self.assertEqual(len(annotated_weights), len(emulated_weights))
+    for aw, ew in zip(annotated_weights, emulated_weights):
+      self.assertNotEqual(id(aw), id(ew))
+
   def _assert_layer_emulated(
       self, annotated_layer, emulated_layer, exclude_keys=None):
     self.assertIsInstance(emulated_layer, QuantizeEmulateWrapper)
@@ -215,6 +230,20 @@ class QuantizeApplyTest(test.TestCase):
         emulated_config.pop(key)
 
     self.assertEqual(annotated_config, emulated_config)
+
+    def _sort_weights(weights):
+      # Variables are named `quantize_annotate0/kernel:0` and
+      # `quantize_emulate0/kernel:0`. Strip layer name to sort.
+      return sorted(weights, key=lambda w: w.name.split('/')[1])
+
+    annotated_weights = _sort_weights(annotated_layer.trainable_weights)
+    emulated_weights = _sort_weights(emulated_layer.trainable_weights)
+
+    # Quantized model should pick the same weight values from the original
+    # model. However, they should not be the same weight objects. We don't
+    # want training the quantized model to change weights in the original model.
+    self._assert_weights_different_objects(annotated_weights, emulated_weights)
+    self._assert_weights_equal_value(annotated_weights, emulated_weights)
 
   def _assert_model_emulated(
       self, annotated_model, emulated_model, exclude_keys=None):

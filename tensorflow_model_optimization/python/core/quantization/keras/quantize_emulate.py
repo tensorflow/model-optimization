@@ -172,8 +172,11 @@ def quantize_apply(model):
                      'annotated with `quantize_annotate`. There are no layers '
                      'to quantize.')
 
-  def _clone_layer(layer):
-    return layer.__class__.from_config(layer.get_config())
+  def _clone_model_with_weights(model_to_clone):
+    cloned_model = keras.models.clone_model(model_to_clone)
+    cloned_model.set_weights(model_to_clone.get_weights())
+
+    return cloned_model
 
   def _quantize_activation(activation, parent_class, quantize_params):
     try:
@@ -194,10 +197,13 @@ def quantize_apply(model):
     return quant_params
 
   def _apply_quantization(quant_annotate_layer):
-    layer_to_quantize = _clone_layer(quant_annotate_layer.layer)
-    quantize_params = quant_annotate_layer.get_quantize_params()
+    return QuantizeEmulateWrapper(
+        quant_annotate_layer.layer,
+        **(quant_annotate_layer.get_quantize_params()))
 
-    return QuantizeEmulateWrapper(layer_to_quantize, **quantize_params)
+  # Create a copy of the model with the same weights. We can then quantize this
+  # model without modifying the weights of the original model.
+  model_copy = _clone_model_with_weights(model)
 
   # Apply all graph level transformations.
   replace_map = {}
@@ -206,7 +212,7 @@ def quantize_apply(model):
   # Dense(activation='relu') -> Dense(activation=QuantAwareActivation('relu'))
   # TODO(pulkitb): Not all layers (LSTMs) have just activation. Add
   # generic handling for all layers.
-  for layer in model.layers:
+  for layer in model_copy.layers:
     if isinstance(layer, quant_annotate.QuantizeAnnotate) and \
         (layer.layer.activation is not None and
          layer.layer.activation != keras.activations.linear):
@@ -225,13 +231,12 @@ def quantize_apply(model):
     if layer in replace_map:
       return replace_map[layer]
 
-    # No need to quantize layer. Simply clone and return.
     if not isinstance(layer, quant_annotate.QuantizeAnnotate):
-      return _clone_layer(layer)
+      return layer
 
     # Use QuantizeEmulate wrapper on annotated layer which actually
     # quantization ops.
     return _apply_quantization(layer)
 
   return keras.models.clone_model(
-      model, input_tensors=None, clone_function=_add_quant_emulate_wrapper)
+      model_copy, input_tensors=None, clone_function=_add_quant_emulate_wrapper)
