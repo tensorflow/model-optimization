@@ -139,7 +139,7 @@ class PruneLowMagnitude(Wrapper):
     # Name the layer using the wrapper and underlying layer name.
     # Prune(Dense) becomes prune_dense_1
     kwargs.update({'name': '{}_{}'.format(
-        generic_utils.to_snake_case(self.__class__.__name__), layer.name)})
+        'prune', layer.name)})
 
     if isinstance(layer, prunable_layer.PrunableLayer):
       # Custom layer in client code which supports pruning.
