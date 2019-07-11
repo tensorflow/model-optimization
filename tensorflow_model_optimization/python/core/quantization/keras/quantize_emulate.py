@@ -172,6 +172,11 @@ def quantize_apply(model):
                      'annotated with `quantize_annotate`. There are no layers '
                      'to quantize.')
 
+  if not model.built:
+    raise ValueError('quantization cannot be applied to a model which has not'
+                     'been built yet. Please call `model.build(input_shape)`'
+                     'before quantizing your model.')
+
   def _clone_model_with_weights(model_to_clone):
     cloned_model = keras.models.clone_model(model_to_clone)
     cloned_model.set_weights(model_to_clone.get_weights())

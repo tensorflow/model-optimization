@@ -179,6 +179,14 @@ class QuantizeApplyTest(test.TestCase):
     with self.assertRaises(ValueError):
       quantize_emulate.quantize_apply(model)
 
+  def testRaisesErrorModelNotBuilt(self):
+    model = keras.Sequential([
+        quantize_annotate(keras.layers.Dense(10), **self.quant_params1)])
+
+    self.assertFalse(model.built)
+    with self.assertRaises(ValueError):
+      quantize_emulate.quantize_apply(model)
+
   # Quantization Apply Tests
 
   def _get_annotated_sequential_model(self):
