@@ -62,7 +62,7 @@ def _ensure_tf_install():  # pylint: disable=g-statement-before-imports
   #
   required_tensorflow_version = '1.14.0'
 
-  if (distutils.version.LooseVersion(tf.__version__) <
+  if (distutils.version.LooseVersion(tf.version.VERSION) <
       distutils.version.LooseVersion(required_tensorflow_version)):
     raise ImportError(
         'This version of TensorFlow Model Optimization requires TensorFlow '
