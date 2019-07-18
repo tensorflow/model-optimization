@@ -166,5 +166,27 @@ class RandomSignsTests(tf.test.TestCase, parameterized.TestCase):
                         np.logical_or(np.isclose(1.0, x), np.isclose(-1.0, x)))
 
 
+class RandomFloatsTests(tf.test.TestCase, parameterized.TestCase):
+  """Tests for `random_floats` method."""
+
+  @parameterized.parameters([tf.float32, tf.float64])
+  def test_expected_dtype(self, dtype):
+    floats = tf_utils.random_floats(10, tf.constant(456, tf.int64), dtype)
+    self.assertEqual(dtype, floats.dtype)
+
+  @parameterized.parameters([tf.int32, tf.int64])
+  def test_type_error_raises(self, dtype):
+    with self.assertRaisesRegexp(TypeError,
+                                 'Supported types are tf.float32 and '
+                                 'tf.float64 values'):
+      tf_utils.random_floats(10, tf.constant(456, tf.int64), dtype)
+
+  def test_differs_given_different_seed(self):
+    floats_1 = tf_utils.random_floats(100, tf.constant(123, tf.int64))
+    floats_2 = tf_utils.random_floats(100, tf.constant(122, tf.int64))
+    floats_1, floats_2 = self.evaluate([floats_1, floats_2])
+    self.assertFalse(np.array_equal(floats_1, floats_2))
+
+
 if __name__ == '__main__':
   tf.test.main()

@@ -24,3 +24,4 @@ from __future__ import print_function
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.research.clipping import ClipByNormEncodingStage
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.research.clipping import ClipByValueEncodingStage
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.research.kashin import KashinHadamardEncodingStage
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.research.quantization import PRNGUniformQuantizationEncodingStage

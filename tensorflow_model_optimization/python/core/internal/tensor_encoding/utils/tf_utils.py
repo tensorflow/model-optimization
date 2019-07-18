@@ -184,6 +184,15 @@ def _cmwc_random_sequence(num_elements, seed):
 
 
 def random_signs(num_elements, seed, dtype=tf.float32):
-  """Returns a Tensor of `num_elemnts` random +1/-1 values as `dtype`."""
+  """Returns a Tensor of `num_elements` random +1/-1 values as `dtype`."""
   return tf.cast(
       tf.sign(_cmwc_random_sequence(num_elements, seed) - 0.5), dtype)
+
+
+def random_floats(num_elements, seed, dtype=tf.float32):
+  """Returns a Tensor of `num_elements` random values in [0, 1) as `dtype`."""
+  if dtype not in [tf.float32, tf.float64]:
+    raise TypeError(
+        'Unsupported type: %s. Supported types are tf.float32 and '
+        'tf.float64 values' % dtype)
+  return tf.cast(_cmwc_random_sequence(num_elements, seed), dtype)
