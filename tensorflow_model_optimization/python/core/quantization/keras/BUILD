@@ -205,6 +205,7 @@ py_test(
 py_test(
     name = "quantize_emulate_integration_test",
     srcs = ["quantize_emulate_integration_test.py"],
+    python_version = "PY2",
     deps = [
         ":quantize_emulate",
         ":quantize_emulate_wrapper",
