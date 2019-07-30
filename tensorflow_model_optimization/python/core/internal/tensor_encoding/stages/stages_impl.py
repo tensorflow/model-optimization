@@ -178,7 +178,7 @@ class HadamardEncodingStage(encoding_stage.EncodingStageInterface):
     """See base class."""
     params = {
         self.SEED_PARAMS_KEY:
-            tf.random.uniform((), maxval=tf.int64.max, dtype=tf.int64)
+            tf.random.uniform((2,), maxval=tf.int64.max, dtype=tf.int64),
     }
     return params, params
 

@@ -87,8 +87,8 @@ class PRNGUniformQuantizationEncodingStageTest(test_utils.BaseEncodingStageTest
     self.assertGreater(mean_of_errors, error_of_mean * 10)
 
   @parameterized.parameters(
-      itertools.product([tf.float32, tf.float64], [tf.float32, tf.float64]))
-  def test_input_types(self, x_dtype, min_max_dtype):
+      itertools.product([tf.float32, tf.float64]))
+  def test_input_types(self, x_dtype):
     # Tests combinations of input dtypes.
     stage = quantization.PRNGUniformQuantizationEncodingStage(bits=8)
     x = tf.random.normal([50], dtype=x_dtype)
@@ -97,9 +97,6 @@ class PRNGUniformQuantizationEncodingStageTest(test_utils.BaseEncodingStageTest
                                                 decode_params)
     test_data = test_utils.TestData(x, encoded_x, decoded_x)
     test_data = self.evaluate_test_data(test_data)
-
-    self.assertAllGreaterEqual(test_data.decoded_x, np.amin(test_data.x))
-    self.assertAllLessEqual(test_data.decoded_x, np.amax(test_data.x))
 
   def test_all_zero_input_works(self):
     # Tests that encoding does not blow up with all-zero input. With

@@ -144,7 +144,7 @@ class KashinHadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
     # Set delta large, to measure the effect of changing num_iters on accuracy.
     x = np.random.randn(3, 12).astype(np.float32)
     errors = []
-    seed = tf.constant(1, tf.int64)
+    seed = tf.constant([1, 2], tf.int64)
     for num_iters in [2, 3, 4, 5]:
       stage = kashin.KashinHadamardEncodingStage(
           num_iters=num_iters, eta=0.9, delta=100.0, last_iter_clip=True)

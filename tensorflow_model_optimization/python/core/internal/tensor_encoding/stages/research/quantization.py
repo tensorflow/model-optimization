@@ -108,7 +108,7 @@ class PRNGUniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface
 
     # Randomized rounding.
     floored_x = tf.floor(x)
-    random_seed = tf.random.uniform((), maxval=tf.int64.max, dtype=tf.int64)
+    random_seed = tf.random.uniform((2,), maxval=tf.int64.max, dtype=tf.int64)
     num_elements = x.shape.num_elements()
     rounding_floats = tf_utils.random_floats(num_elements, random_seed, x.dtype)
 

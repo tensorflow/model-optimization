@@ -184,12 +184,58 @@ def _cmwc_random_sequence(num_elements, seed):
 
 
 def random_signs(num_elements, seed, dtype=tf.float32):
+  """Returns a Tensor of `num_elements` random +1/-1 values as `dtype`.
+
+  If run twice with the same seeds, it will produce the same pseudorandom
+  numbers. The output is consistent across multiple runs on the same hardware
+  (and between CPU and GPU), but may change between versions of TensorFlow or
+  on non-CPU/GPU hardware.
+
+  If consistency is required, use random_signs_cmwc instead.
+
+  Args:
+    num_elements: A Python integer. The number of random values to be generated.
+    seed: A shape [2] integer Tensor of seeds to the random number generator.
+    dtype: The type of the output.
+
+  Returns:
+    A Tensor of `num_elements` random +1/-1 values as `dtype`.
+  """
+  return tf.cast(
+      tf.sign(tf.random.stateless_uniform([num_elements], seed) - 0.5), dtype)
+
+
+def random_floats(num_elements, seed, dtype=tf.float32):
+  """Returns a Tensor of `num_elements` random values in [0, 1) as `dtype`.
+
+  If run twice with the same seeds, it will produce the same pseudorandom
+  numbers. The output is consistent across multiple runs on the same hardware
+  (and between CPU and GPU), but may change between versions of TensorFlow or
+  on non-CPU/GPU hardware.
+
+  If consistency is required, use random_floats_cmwc instead.
+
+  Args:
+    num_elements: A Python integer. The number of random values to be generated.
+    seed: A shape [2] integer Tensor of seeds to the random number generator.
+    dtype: The type of the output.
+
+  Returns:
+    A Tensor of `num_elements` random values in [0, 1) as `dtype`.
+  """
+  if dtype not in [tf.float32, tf.float64]:
+    raise TypeError('Unsupported type: %s. Supported types are tf.float32 and '
+                    'tf.float64 values' % dtype)
+  return tf.random.stateless_uniform([num_elements], seed, dtype=dtype)
+
+
+def random_signs_cmwc(num_elements, seed, dtype=tf.float32):
   """Returns a Tensor of `num_elements` random +1/-1 values as `dtype`."""
   return tf.cast(
       tf.sign(_cmwc_random_sequence(num_elements, seed) - 0.5), dtype)
 
 
-def random_floats(num_elements, seed, dtype=tf.float32):
+def random_floats_cmwc(num_elements, seed, dtype=tf.float32):
   """Returns a Tensor of `num_elements` random values in [0, 1) as `dtype`."""
   if dtype not in [tf.float32, tf.float64]:
     raise TypeError(

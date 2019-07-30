@@ -131,17 +131,17 @@ class CMWCRandomSequenceTests(tf.test.TestCase, parameterized.TestCase):
       tf_utils._cmwc_random_sequence(10, tf.constant(123, tf.int32))
 
 
-class RandomSignsTests(tf.test.TestCase, parameterized.TestCase):
-  """Tests for `random_signs` method."""
+class RandomSignsCMWCTests(tf.test.TestCase, parameterized.TestCase):
+  """Tests for `random_signs_cmwc` method."""
 
   @parameterized.parameters([1, 10, 101])
   def test_expected_output_values(self, num_elements):
-    signs = tf_utils.random_signs(num_elements, tf.constant(123, tf.int64))
+    signs = tf_utils.random_signs_cmwc(num_elements, tf.constant(123, tf.int64))
     signs = self.evaluate(signs)
     self._assert_signs(signs)
 
   def test_both_values_present(self):
-    signs = tf_utils.random_signs(1000, tf.constant(123, tf.int64))
+    signs = tf_utils.random_signs_cmwc(1000, tf.constant(123, tf.int64))
     signs = self.evaluate(signs)
     self._assert_signs(signs)
     self.assertGreater(sum(np.isclose(1.0, signs)), 400)
@@ -149,14 +149,72 @@ class RandomSignsTests(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters([tf.float32, tf.float64, tf.int32, tf.int64])
   def test_expected_dtype(self, dtype):
-    signs = tf_utils.random_signs(10, tf.constant(123, tf.int64), dtype)
+    signs = tf_utils.random_signs_cmwc(10, tf.constant(123, tf.int64), dtype)
     self.assertEqual(dtype, signs.dtype)
     signs = self.evaluate(signs)
     self._assert_signs(signs)
 
   def test_differs_given_different_seed(self):
-    signs_1 = tf_utils.random_signs(100, tf.constant(123, tf.int64))
-    signs_2 = tf_utils.random_signs(100, tf.constant(1234, tf.int64))
+    signs_1 = tf_utils.random_signs_cmwc(100, tf.constant(123, tf.int64))
+    signs_2 = tf_utils.random_signs_cmwc(100, tf.constant(1234, tf.int64))
+    signs_1, signs_2 = self.evaluate([signs_1, signs_2])
+    self.assertFalse(np.array_equal(signs_1, signs_2))
+
+  def _assert_signs(self, x):
+    size = len(x)
+    self.assertAllEqual([True] * size,
+                        np.logical_or(np.isclose(1.0, x), np.isclose(-1.0, x)))
+
+
+class RandomFloatsCMWCTests(tf.test.TestCase, parameterized.TestCase):
+  """Tests for `random_floats_cmwc` method."""
+
+  @parameterized.parameters([tf.float32, tf.float64])
+  def test_expected_dtype(self, dtype):
+    floats = tf_utils.random_floats_cmwc(10, tf.constant(456, tf.int64), dtype)
+    self.assertEqual(dtype, floats.dtype)
+
+  @parameterized.parameters([tf.int32, tf.int64])
+  def test_type_error_raises(self, dtype):
+    with self.assertRaisesRegexp(
+        TypeError, 'Supported types are tf.float32 and '
+        'tf.float64 values'):
+      tf_utils.random_floats_cmwc(10, tf.constant(456, tf.int64), dtype)
+
+  def test_differs_given_different_seed(self):
+    floats_1 = tf_utils.random_floats_cmwc(100, tf.constant(123, tf.int64))
+    floats_2 = tf_utils.random_floats_cmwc(100, tf.constant(122, tf.int64))
+    floats_1, floats_2 = self.evaluate([floats_1, floats_2])
+    self.assertFalse(np.array_equal(floats_1, floats_2))
+
+
+class RandomSignsTests(tf.test.TestCase, parameterized.TestCase):
+  """Tests for `random_signs` method."""
+
+  @parameterized.parameters([1, 10, 101])
+  def test_expected_output_values(self, num_elements):
+    signs = tf_utils.random_signs(num_elements, tf.constant([123, 456],
+                                                            tf.int64))
+    signs = self.evaluate(signs)
+    self._assert_signs(signs)
+
+  def test_both_values_present(self):
+    signs = tf_utils.random_signs(1000, tf.constant([123, 456], tf.int64))
+    signs = self.evaluate(signs)
+    self._assert_signs(signs)
+    self.assertGreater(sum(np.isclose(1.0, signs)), 400)
+    self.assertGreater(sum(np.isclose(-1.0, signs)), 400)
+
+  @parameterized.parameters([tf.float32, tf.float64, tf.int32, tf.int64])
+  def test_expected_dtype(self, dtype):
+    signs = tf_utils.random_signs(10, tf.constant([123, 456], tf.int64), dtype)
+    self.assertEqual(dtype, signs.dtype)
+    signs = self.evaluate(signs)
+    self._assert_signs(signs)
+
+  def test_differs_given_different_seed(self):
+    signs_1 = tf_utils.random_signs(100, tf.constant([123, 456], tf.int64))
+    signs_2 = tf_utils.random_signs(100, tf.constant([1234, 456], tf.int64))
     signs_1, signs_2 = self.evaluate([signs_1, signs_2])
     self.assertFalse(np.array_equal(signs_1, signs_2))
 
@@ -171,7 +229,8 @@ class RandomFloatsTests(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters([tf.float32, tf.float64])
   def test_expected_dtype(self, dtype):
-    floats = tf_utils.random_floats(10, tf.constant(456, tf.int64), dtype)
+    floats = tf_utils.random_floats(10, tf.constant([456, 123], tf.int64),
+                                    dtype)
     self.assertEqual(dtype, floats.dtype)
 
   @parameterized.parameters([tf.int32, tf.int64])
@@ -179,11 +238,11 @@ class RandomFloatsTests(tf.test.TestCase, parameterized.TestCase):
     with self.assertRaisesRegexp(TypeError,
                                  'Supported types are tf.float32 and '
                                  'tf.float64 values'):
-      tf_utils.random_floats(10, tf.constant(456, tf.int64), dtype)
+      tf_utils.random_floats(10, tf.constant([456, 123], tf.int64), dtype)
 
   def test_differs_given_different_seed(self):
-    floats_1 = tf_utils.random_floats(100, tf.constant(123, tf.int64))
-    floats_2 = tf_utils.random_floats(100, tf.constant(122, tf.int64))
+    floats_1 = tf_utils.random_floats(100, tf.constant([123, 456], tf.int64))
+    floats_2 = tf_utils.random_floats(100, tf.constant([122, 456], tf.int64))
     floats_1, floats_2 = self.evaluate([floats_1, floats_2])
     self.assertFalse(np.array_equal(floats_1, floats_2))
 
