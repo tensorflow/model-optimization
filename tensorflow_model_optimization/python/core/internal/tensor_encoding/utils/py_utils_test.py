@@ -164,5 +164,41 @@ class SplitMergeDictTest(parameterized.TestCase):
       py_utils.merge_dicts(bad_dict2, bad_dict1)
 
 
+class AssertionsTest(parameterized.TestCase):
+  """Tests for custom assertions."""
+
+  def test_assert_compatible(self):
+    spec = [
+        tf.TensorSpec((2,), tf.int32),
+        (tf.TensorSpec((2, 3), tf.float64), tf.TensorSpec((), tf.float32))
+    ]
+    value = [
+        tf.zeros((2,), tf.int32),
+        (tf.zeros((2, 3), tf.float64), tf.zeros((), tf.float32))
+    ]
+    py_utils.assert_compatible(spec, value)
+    py_utils.assert_compatible(
+        tf.TensorSpec(None, tf.int32), tf.zeros((2,), tf.int32))
+
+  @parameterized.parameters([(2,), (2, 3), (2, 3, 4)])
+  def test_assert_compatible_raises_incompatible_dtype(self, *shape):
+    spec = tf.TensorSpec(shape, tf.float32)
+    value = tf.zeros(shape, tf.float64)
+    with self.assertRaises(ValueError):  # pylint: disable=g-error-prone-assert-raises
+      py_utils.assert_compatible(spec, value)
+
+  @parameterized.parameters([tf.float32, tf.float64, tf.int32, tf.int64])
+  def test_assert_compatible_raises_incompatible_shapes(self, dtype):
+    spec = tf.TensorSpec((2,), dtype)
+    value = tf.zeros((3,), dtype)
+    with self.assertRaises(ValueError):  # pylint: disable=g-error-prone-assert-raises
+      py_utils.assert_compatible(spec, value)
+
+  @parameterized.parameters([1.0, 'str', object])
+  def test_assert_compatible_raises_type_error(self, not_a_spec):
+    with self.assertRaises(TypeError):  # pylint: disable=g-error-prone-assert-raises
+      py_utils.assert_compatible(not_a_spec, None)
+
+
 if __name__ == '__main__':
   tf.test.main()

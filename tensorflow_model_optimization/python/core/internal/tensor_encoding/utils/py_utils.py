@@ -157,3 +157,26 @@ def merge_dicts(dict1, dict2):
       merged_dict[k] = v
 
   return merged_dict
+
+
+def assert_compatible(spec, value):
+  """Asserts that values are compatible with given specs.
+
+  Args:
+    spec: A structure compatible with tf.nest, with `tf.TensorSpec` values.
+    value: A collection of values that should be compatible with `spec`. Must be
+      the same structure as `spec`.
+
+  Raises:
+    TypeError: If `spec` does not contain only `tf.TensorSpec` objects.
+    ValueError: If the provided `value` is not compatible with `spec`.
+  """
+
+  def validate_spec(s, v):
+    if not isinstance(s, tf.TensorSpec):
+      raise TypeError('Each value in `spec` must be a tf.TensorSpec.')
+    return s.is_compatible_with(v)
+
+  compatible = tf.nest.map_structure(validate_spec, spec, value)
+  if not all(tf.nest.flatten(compatible)):
+    raise ValueError('The provided value is not compatible with spec.')

@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.py_utils import assert_compatible
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.py_utils import merge_dicts
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.py_utils import OrderedEnum
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.py_utils import split_dict_py_tf
