@@ -31,6 +31,7 @@ PARAMS = core_encoder.EncoderKeys.PARAMS
 SHAPE = core_encoder.EncoderKeys.SHAPE
 STATE = core_encoder.EncoderKeys.STATE
 TENSORS = core_encoder.EncoderKeys.TENSORS
+COMMUTE = core_encoder.EncoderKeys.COMMUTE
 
 P1_VALS = test_utils.PlusOneEncodingStage.ENCODED_VALUES_KEY
 P1_ADD_PARAM = test_utils.PlusOneEncodingStage.ADD_PARAM_KEY
@@ -85,35 +86,37 @@ class EncoderTest(tf.test.TestCase):
         x, encode_params)
     decoded_x = encoder.decode(encoded_x, decode_params, input_shapes)
     updated_state = encoder.update_state(initial_state, state_update_tensors)
+    commuting_structure = encoder.commuting_structure
 
     # Verify the structure and naming of those objects is as expected.
     for state in [initial_state, updated_state]:
-      tf.contrib.framework.nest.assert_same_structure({
-          STATE: {},
-          CHILDREN: {
-              SIF_INTS: {
-                  STATE: {},
-                  CHILDREN: {}
-              },
-              SIF_SIGNS: {
-                  STATE: {},
-                  CHILDREN: {}
-              },
-              SIF_FLOATS: {
-                  STATE: {
-                      PN_ITER_STATE: None
+      tf.nest.assert_same_structure(
+          {
+              STATE: {},
+              CHILDREN: {
+                  SIF_INTS: {
+                      STATE: {},
+                      CHILDREN: {}
                   },
-                  CHILDREN: {
-                      PN_VALS: {
-                          STATE: {
-                              AN_FACTOR_STATE: None
-                          },
-                          CHILDREN: {}
+                  SIF_SIGNS: {
+                      STATE: {},
+                      CHILDREN: {}
+                  },
+                  SIF_FLOATS: {
+                      STATE: {
+                          PN_ITER_STATE: None
+                      },
+                      CHILDREN: {
+                          PN_VALS: {
+                              STATE: {
+                                  AN_FACTOR_STATE: None
+                              },
+                              CHILDREN: {}
+                          }
                       }
                   }
               }
-          }
-      }, state)
+          }, state)
     self.assertIn(
         'encoder_initial_state/' + sif_stage.name + '/' + SIF_FLOATS + '/' +
         plus_n_squared_stage.name + encoding_stage.INITIAL_STATE_SCOPE_SUFFIX,
@@ -136,36 +139,37 @@ class EncoderTest(tf.test.TestCase):
         [SIF_FLOATS][CHILDREN][PN_VALS][STATE][AN_FACTOR_STATE].name)
 
     for params in [encode_params, decode_params]:
-      tf.contrib.framework.nest.assert_same_structure({
-          PARAMS: {},
-          CHILDREN: {
-              SIF_INTS: {
-                  PARAMS: {
-                      P1_ADD_PARAM: None
+      tf.nest.assert_same_structure(
+          {
+              PARAMS: {},
+              CHILDREN: {
+                  SIF_INTS: {
+                      PARAMS: {
+                          P1_ADD_PARAM: None
+                      },
+                      CHILDREN: {}
                   },
-                  CHILDREN: {}
-              },
-              SIF_SIGNS: {
-                  PARAMS: {
-                      T2_FACTOR_PARAM: None
+                  SIF_SIGNS: {
+                      PARAMS: {
+                          T2_FACTOR_PARAM: None
+                      },
+                      CHILDREN: {}
                   },
-                  CHILDREN: {}
-              },
-              SIF_FLOATS: {
-                  PARAMS: {
-                      PN_ADD_PARAM: None
-                  },
-                  CHILDREN: {
-                      PN_VALS: {
-                          PARAMS: {
-                              AN_FACTOR_PARAM: None
-                          },
-                          CHILDREN: {}
+                  SIF_FLOATS: {
+                      PARAMS: {
+                          PN_ADD_PARAM: None
+                      },
+                      CHILDREN: {
+                          PN_VALS: {
+                              PARAMS: {
+                                  AN_FACTOR_PARAM: None
+                              },
+                              CHILDREN: {}
+                          }
                       }
                   }
               }
-          }
-      }, params)
+          }, params)
       self.assertIn(
           'encoder_get_params/' + sif_stage.name + '/' + SIF_INTS + '/' +
           plus_one_stage.name + encoding_stage.GET_PARAMS_SCOPE_SUFFIX,
@@ -183,19 +187,20 @@ class EncoderTest(tf.test.TestCase):
       # because the get_params method of adaptive_normalize_stage does not
       # modify the graph, only passes through the provided state tensor.
 
-    tf.contrib.framework.nest.assert_same_structure({
-        SIF_INTS: {
-            P1_VALS: None
-        },
-        SIF_SIGNS: {
-            T2_VALS: None
-        },
-        SIF_FLOATS: {
-            PN_VALS: {
-                AN_VALS: None
+    tf.nest.assert_same_structure(
+        {
+            SIF_INTS: {
+                P1_VALS: None
+            },
+            SIF_SIGNS: {
+                T2_VALS: None
+            },
+            SIF_FLOATS: {
+                PN_VALS: {
+                    AN_VALS: None
+                }
             }
-        }
-    }, encoded_x)
+        }, encoded_x)
     self.assertIn(
         'encoder_encode/' + sif_stage.name + '/' + SIF_INTS + '/' +
         plus_one_stage.name + encoding_stage.ENCODE_SCOPE_SUFFIX,
@@ -210,30 +215,33 @@ class EncoderTest(tf.test.TestCase):
         adaptive_normalize_stage.name + encoding_stage.ENCODE_SCOPE_SUFFIX,
         encoded_x[SIF_FLOATS][PN_VALS][AN_VALS].name)
 
-    tf.contrib.framework.nest.assert_same_structure({
-        TENSORS: {},
-        CHILDREN: {
-            SIF_INTS: {
-                TENSORS: {},
-                CHILDREN: {}
-            },
-            SIF_SIGNS: {
-                TENSORS: {},
-                CHILDREN: {}
-            },
-            SIF_FLOATS: {
-                TENSORS: {},
-                CHILDREN: {
-                    PN_VALS: {
-                        TENSORS: {
-                            AN_NORM_UPDATE: None
-                        },
-                        CHILDREN: {}
+    tf.nest.assert_same_structure(
+        {
+            TENSORS: {},
+            CHILDREN: {
+                SIF_INTS: {
+                    TENSORS: {},
+                    CHILDREN: {}
+                },
+                SIF_SIGNS: {
+                    TENSORS: {},
+                    CHILDREN: {}
+                },
+                SIF_FLOATS: {
+                    TENSORS: {},
+                    CHILDREN: {
+                        PN_VALS: {
+                            TENSORS: {
+                                AN_NORM_UPDATE: None
+                            },
+                            CHILDREN: {}
+                        }
                     }
                 }
             }
-        }
-    }, state_update_tensors)
+        }, state_update_tensors)
+    tf.nest.assert_same_structure(state_update_tensors,
+                                  encoder.state_update_aggregation_modes)
     self.assertIn(
         'encoder_encode/' + sif_stage.name + '/' + SIF_FLOATS + '/' +
         plus_n_squared_stage.name + '/' + PN_VALS + '/' +
@@ -241,30 +249,57 @@ class EncoderTest(tf.test.TestCase):
         state_update_tensors[CHILDREN][SIF_FLOATS][CHILDREN][PN_VALS][TENSORS]
         [AN_NORM_UPDATE].name)
 
-    tf.contrib.framework.nest.assert_same_structure({
-        SHAPE: None,
-        CHILDREN: {
-            SIF_INTS: {
-                SHAPE: None,
-                CHILDREN: {}
-            },
-            SIF_SIGNS: {
-                SHAPE: None,
-                CHILDREN: {}
-            },
-            SIF_FLOATS: {
-                SHAPE: None,
-                CHILDREN: {
-                    PN_VALS: {
-                        SHAPE: None,
-                        CHILDREN: {}
+    tf.nest.assert_same_structure(
+        {
+            SHAPE: None,
+            CHILDREN: {
+                SIF_INTS: {
+                    SHAPE: None,
+                    CHILDREN: {}
+                },
+                SIF_SIGNS: {
+                    SHAPE: None,
+                    CHILDREN: {}
+                },
+                SIF_FLOATS: {
+                    SHAPE: None,
+                    CHILDREN: {
+                        PN_VALS: {
+                            SHAPE: None,
+                            CHILDREN: {}
+                        }
                     }
                 }
             }
-        }
-    }, input_shapes)
+        }, input_shapes)
     self.assertTrue(tf.contrib.framework.is_tensor(decoded_x))
     self.assertIn('encoder_decode/', decoded_x.name)
+
+    tf.nest.assert_same_structure(
+        {
+            COMMUTE: None,
+            CHILDREN: {
+                SIF_INTS: {
+                    COMMUTE: None,
+                    CHILDREN: {}
+                },
+                SIF_SIGNS: {
+                    COMMUTE: None,
+                    CHILDREN: {}
+                },
+                SIF_FLOATS: {
+                    COMMUTE: None,
+                    CHILDREN: {
+                        PN_VALS: {
+                            COMMUTE: None,
+                            CHILDREN: {}
+                        }
+                    }
+                }
+            }
+        }, commuting_structure)
+    for item in tf.nest.flatten(commuting_structure):
+      self.assertEqual(False, item)
 
   # A utility for tests testing commutation with sum works as expected.
   commutation_test_data = collections.namedtuple(
@@ -304,6 +339,16 @@ class EncoderTest(tf.test.TestCase):
     }, data.encoded_x)
     # Nothing commutes with sum - decoded_x_before_sum should be fully decoded.
     self.assertEqual(data.x, data.decoded_x_before_sum)
+    self.assertEqual(
+        {
+            COMMUTE: False,
+            CHILDREN: {
+                P1_VALS: {
+                    COMMUTE: False,
+                    CHILDREN: {}
+                }
+            }
+        }, encoder.commuting_structure)
 
   def test_decode_split_commutes_with_sum_false_true(self):
     """Tests that splitting decode works as expected with commutes_with_sum.
@@ -326,6 +371,16 @@ class EncoderTest(tf.test.TestCase):
     }, data.encoded_x)
     # Nothing commutes with sum - decoded_x_before_sum should be fully decoded.
     self.assertEqual(data.x, data.decoded_x_before_sum)
+    self.assertEqual(
+        {
+            COMMUTE: False,
+            CHILDREN: {
+                P1_VALS: {
+                    COMMUTE: False,
+                    CHILDREN: {}
+                }
+            }
+        }, encoder.commuting_structure)
 
   def test_decode_split_commutes_with_sum_true_true(self):
     """Tests that splitting decode works as expected with commutes_with_sum.
@@ -348,6 +403,16 @@ class EncoderTest(tf.test.TestCase):
     }, data.encoded_x)
     # Everyting commutes with sum - decoded_x_before_sum should be intact.
     self.assertAllEqual(data.encoded_x, data.decoded_x_before_sum)
+    self.assertEqual(
+        {
+            COMMUTE: True,
+            CHILDREN: {
+                T2_VALS: {
+                    COMMUTE: True,
+                    CHILDREN: {}
+                }
+            }
+        }, encoder.commuting_structure)
 
   def test_decode_split_commutes_with_sum_true_false(self):
     """Tests that splitting decode works as expected with commutes_with_sum.
@@ -370,6 +435,16 @@ class EncoderTest(tf.test.TestCase):
     }, data.encoded_x)
     # Only first part commutes with sum.
     self.assertAllEqual({T2_VALS: data.x * 2.0}, data.decoded_x_before_sum)
+    self.assertEqual(
+        {
+            COMMUTE: True,
+            CHILDREN: {
+                T2_VALS: {
+                    COMMUTE: False,
+                    CHILDREN: {}
+                }
+            }
+        }, encoder.commuting_structure)
 
   def test_decode_split_commutes_with_sum_true_false_true(self):
     """Tests that splitting decode works as expected with commutes_with_sum.
@@ -396,6 +471,21 @@ class EncoderTest(tf.test.TestCase):
     }, data.encoded_x)
     # Only first part commutes with sum.
     self.assertAllEqual({T2_VALS: data.x * 2.0}, data.decoded_x_before_sum)
+    self.assertEqual(
+        {
+            COMMUTE: True,
+            CHILDREN: {
+                T2_VALS: {
+                    COMMUTE: False,
+                    CHILDREN: {
+                        P1_VALS: {
+                            COMMUTE: False,
+                            CHILDREN: {}
+                        },
+                    }
+                }
+            }
+        }, encoder.commuting_structure)
 
   def test_commutes_with_sum(self):
     """Tests that commutativity works, provided appropriate num_summands."""
@@ -409,8 +499,8 @@ class EncoderTest(tf.test.TestCase):
     decoded_x_before_sum = encoder.decode_before_sum(encoded_x, decode_params,
                                                      input_shapes)
     # Trivial summing of the encoded - and partially decoded - values.
-    part_decoded_and_summed_x = tf.contrib.framework.nest.map_structure(
-        lambda x: x + x + x, decoded_x_before_sum)
+    part_decoded_and_summed_x = tf.nest.map_structure(lambda x: x + x + x,
+                                                      decoded_x_before_sum)
     num_summands = 3
     decoded_x_after_sum = encoder.decode_after_sum(part_decoded_and_summed_x,
                                                    decode_params, num_summands,
@@ -530,8 +620,7 @@ class EncoderTest(tf.test.TestCase):
           test_utils.TestData(x, encoded_x, decoded_x, initial_state,
                               state_update_tensors, state))
 
-      self.assertAllClose(data.x, data.decoded_x)
-      self.assertAllEqual({
+      expected_initial_state = {
           STATE: {
               PN_ITER_STATE: i
           },
@@ -543,8 +632,8 @@ class EncoderTest(tf.test.TestCase):
                   CHILDREN: {}
               }
           }
-      }, data.initial_state)
-      self.assertDictEqual({
+      }
+      expected_state_update_tensors = {
           TENSORS: {},
           CHILDREN: {
               PN_VALS: {
@@ -552,7 +641,12 @@ class EncoderTest(tf.test.TestCase):
                   CHILDREN: {}
               }
           }
-      }, data.state_update_tensors)
+      }
+
+      self.assertAllClose(data.x, data.decoded_x)
+      self.assertAllEqual(expected_initial_state, data.initial_state)
+      self.assertDictEqual(expected_state_update_tensors,
+                           data.state_update_tensors)
       self.assertAllClose(data.x + 2 * 1 / i, data.encoded_x[PN_VALS][PN_VALS])
 
   def test_adaptive_stage_using_state_update_tensors(self):
@@ -649,6 +743,212 @@ class EncoderComposerTest(tf.test.TestCase):
     encoder.add_child(test_utils.PlusOneEncodingStage(), T2_VALS)
     with self.assertRaises(KeyError):
       encoder.add_child(test_utils.PlusOneEncodingStage(), T2_VALS)
+
+
+def _get_test_commuting_structure():
+  return {
+      COMMUTE: True,
+      CHILDREN: {
+          'key_1': {
+              COMMUTE: True,
+              CHILDREN: {
+                  'key_4': {
+                      COMMUTE: False,
+                      CHILDREN: {}
+                  }
+              }
+          },
+          'key_2': {
+              COMMUTE: False,
+              CHILDREN: {},
+          },
+          'key_3': {
+              COMMUTE: True,
+              CHILDREN: {},
+          }
+      }
+  }
+
+
+class UtilsTest(tf.test.TestCase):
+  """Test for utilities created in core_encoder.py."""
+
+  def test_split_params_by_commuting_structure(self):
+    commuting_structure = _get_test_commuting_structure()
+    params = {
+        PARAMS: {
+            'param_a': 0.0,
+            'param_b': (-1.0, 1.0)
+        },
+        CHILDREN: {
+            'key_1': {
+                PARAMS: {
+                    'param_c': None
+                },
+                CHILDREN: {
+                    'key_4': {
+                        PARAMS: {
+                            'param_e': (-1.0, 1.0)
+                        },
+                        CHILDREN: {}
+                    }
+                }
+            },
+            'key_2': {
+                PARAMS: {},
+                CHILDREN: {},
+            },
+            'key_3': {
+                PARAMS: {
+                    'param_d': [1, 2]
+                },
+                CHILDREN: {},
+            }
+        }
+    }
+    expected_before_sum_params = {
+        PARAMS: {
+            'param_a': None,
+            'param_b': None
+        },
+        CHILDREN: {
+            'key_1': {
+                PARAMS: {
+                    'param_c': None
+                },
+                CHILDREN: {
+                    'key_4': {
+                        PARAMS: {
+                            'param_e': (-1.0, 1.0)
+                        },
+                        CHILDREN: {}
+                    }
+                }
+            },
+            'key_2': {
+                PARAMS: {},
+                CHILDREN: {},
+            },
+            'key_3': {
+                PARAMS: {
+                    'param_d': None
+                },
+                CHILDREN: {},
+            }
+        }
+    }
+    expected_after_sum_params = {
+        PARAMS: {
+            'param_a': 0.0,
+            'param_b': (-1.0, 1.0)
+        },
+        CHILDREN: {
+            'key_1': {
+                PARAMS: {
+                    'param_c': None
+                },
+                CHILDREN: {
+                    'key_4': {
+                        PARAMS: {
+                            'param_e': None
+                        },
+                        CHILDREN: {}
+                    }
+                }
+            },
+            'key_2': {
+                PARAMS: {},
+                CHILDREN: {},
+            },
+            'key_3': {
+                PARAMS: {
+                    'param_d': [1, 2]
+                },
+                CHILDREN: {},
+            }
+        }
+    }
+
+    before_sum_params, after_sum_params = (
+        core_encoder.split_params_by_commuting_structure(
+            params, commuting_structure))
+    self.assertEqual(expected_before_sum_params, before_sum_params)
+    self.assertEqual(expected_after_sum_params, after_sum_params)
+
+  def test_split_shapes_by_commuting_structure(self):
+    commuting_structure = _get_test_commuting_structure()
+    shapes = {
+        SHAPE: (5, 5),
+        CHILDREN: {
+            'key_1': {
+                SHAPE: None,
+                CHILDREN: {
+                    'key_4': {
+                        SHAPE: (1, 4),
+                        CHILDREN: {}
+                    }
+                }
+            },
+            'key_2': {
+                SHAPE: (1, 2),
+                CHILDREN: {},
+            },
+            'key_3': {
+                SHAPE: (1, 3),
+                CHILDREN: {},
+            }
+        }
+    }
+    expected_before_sum_shapes = {
+        SHAPE: None,
+        CHILDREN: {
+            'key_1': {
+                SHAPE: None,
+                CHILDREN: {
+                    'key_4': {
+                        SHAPE: (1, 4),
+                        CHILDREN: {}
+                    }
+                }
+            },
+            'key_2': {
+                SHAPE: (1, 2),
+                CHILDREN: {},
+            },
+            'key_3': {
+                SHAPE: None,
+                CHILDREN: {},
+            }
+        }
+    }
+    expected_after_sum_shapes = {
+        SHAPE: (5, 5),
+        CHILDREN: {
+            'key_1': {
+                SHAPE: None,
+                CHILDREN: {
+                    'key_4': {
+                        SHAPE: None,
+                        CHILDREN: {}
+                    }
+                }
+            },
+            'key_2': {
+                SHAPE: None,
+                CHILDREN: {},
+            },
+            'key_3': {
+                SHAPE: (1, 3),
+                CHILDREN: {},
+            }
+        }
+    }
+
+    before_sum_shapes, after_sum_shapes = (
+        core_encoder.split_shapes_by_commuting_structure(
+            shapes, commuting_structure))
+    self.assertEqual(expected_before_sum_shapes, before_sum_shapes)
+    self.assertEqual(expected_after_sum_shapes, after_sum_shapes)
 
 
 if __name__ == '__main__':

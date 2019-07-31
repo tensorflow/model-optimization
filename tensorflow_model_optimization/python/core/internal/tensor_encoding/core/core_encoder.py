@@ -24,10 +24,10 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.core imp
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import py_utils
 
 
-nest = tf.contrib.framework.nest
+nest = tf.nest
 
 
-# OrderedEnum necessary for compatibility with tf.contrib.framework.nest.
+# OrderedEnum necessary for compatibility with tf.nest.
 class EncoderKeys(py_utils.OrderedEnum):
   """Constants for keys in nested structures in the `Encoder` class."""
   CHILDREN = 1
@@ -35,6 +35,7 @@ class EncoderKeys(py_utils.OrderedEnum):
   SHAPE = 3
   STATE = 4
   TENSORS = 5
+  COMMUTE = 6
 
 
 class Encoder(object):
@@ -73,6 +74,7 @@ class Encoder(object):
     stage = encoding_stage.as_adaptive_encoding_stage(stage)
     self.stage = stage
     self.children = children
+    self._commuting_structure = None
     super(Encoder, self).__init__()
 
   @property
@@ -91,6 +93,51 @@ class Encoder(object):
     for encoder in six.itervalues(self.children):
       result &= encoder.fully_commutes_with_sum
     return result & self.stage.commutes_with_sum
+
+  @property
+  def commuting_structure(self):
+    """Represents the structure of the `Encoder` which commutes with sum.
+
+    Returns:
+      A dictionary with two keys: `EncoderKeys.COMMUTE` and
+      `EncoderKeys.CHILDREN`. The `EncoderKeys.STATE` key maps to `True` or
+      `False`, based on whether the encoding stage controlled by this class
+      comutes with sum. The `EncoderKeys.CHILDREN` key maps to a dictionary with
+      the same keys as `self.children`, each of which maps to an object like
+      this one, recursively.
+    """
+    if not self._commuting_structure:
+      self._commuting_structure = self._commuting_structure_impl(True)
+    return self._commuting_structure
+
+  def _commuting_structure_impl(self, previous):
+    """Implementation for the `commuting_structure` property."""
+    current = previous & self.stage.commutes_with_sum
+    commuting_structure = {
+        EncoderKeys.COMMUTE: current,
+        EncoderKeys.CHILDREN: {}
+    }
+    for key, encoder in six.iteritems(self.children):
+      commuting_structure[EncoderKeys.CHILDREN][key] = (
+          encoder._commuting_structure_impl(current))  # pylint: disable=protected-access
+    return commuting_structure
+
+  @property
+  def state_update_aggregation_modes(self):
+    """State aggregation modes of the Encoder.
+
+    Returns:
+      An object of the same structure as `state_update_tensors` returned by the
+      `encode` method, with values replaced by their corresponding
+      `StateAggregationMode` keys.
+    """
+    children_aggregation_modes = {}
+    for key, encoder in six.iteritems(self.children):
+      children_aggregation_modes[key] = encoder.state_update_aggregation_modes
+    return {
+        EncoderKeys.CHILDREN: children_aggregation_modes,
+        EncoderKeys.TENSORS: self.stage.state_update_aggregation_modes
+    }
 
   def initial_state(self, name=None):
     """Creates an initial state for the Encoder.
@@ -501,3 +548,71 @@ class EncoderComposer(object):
     for k, v in six.iteritems(self._children):
       children[k] = v.make()
     return Encoder(self._stage, children)
+
+
+def split_params_by_commuting_structure(params, commuting_structure):
+  """Splits params by commuting_structure.
+
+  Args:
+    params: A structure to be split. This should be the value returned by the
+      `get_params` method of the `Encoder`.
+    commuting_structure: A structure describing the part of `Encoder` that
+      commutes with sum. This should be value returned by the
+      `commuting_structure` property of `Encoder`.
+
+  Returns:
+    A tuple `(before_sum_params, after_sum_params)`, where both values have the
+    same structure as `params`, with fields not relevant before/after summation
+    replaced by `None`.
+  """
+  return _split_value_by_commuting_structure(params, EncoderKeys.PARAMS,
+                                             commuting_structure)
+
+
+def split_shapes_by_commuting_structure(shapes, commuting_structure):
+  """Splits shapes by commuting_structure.
+
+  Args:
+    shapes: A structure to be split. This should be the value returned as
+      `input_shapes` by the `encode` method of the `Encoder`.
+    commuting_structure: A structure describing the part of `Encoder` that
+      commutes with sum. This should be value returned by the
+      `commuting_structure` property of `Encoder`.
+
+  Returns:
+    A tuple `(before_sum_shapes, after_sum_shapes)`, where both values have the
+    same structure as `shapes`, with fields not relevant before/after summation
+    replaced by `None`.
+  """
+  return _split_value_by_commuting_structure(shapes, EncoderKeys.SHAPE,
+                                             commuting_structure)
+
+
+def _split_value_by_commuting_structure(value, encoder_key,
+                                        commuting_structure):
+  """Utility for splitting value along commuting_structure of Encoder."""
+  before_sum_value = {}
+  after_sum_value = {}
+
+  if isinstance(value[encoder_key], dict):
+    empty_value = {k: None for k in value[encoder_key]}
+  else:
+    empty_value = None
+  full_value = value[encoder_key]
+  if commuting_structure[EncoderKeys.COMMUTE]:
+    before_sum_value[encoder_key] = empty_value
+    after_sum_value[encoder_key] = full_value
+  else:
+    before_sum_value[encoder_key] = full_value
+    after_sum_value[encoder_key] = empty_value
+
+  children_before_sum_value = {}
+  children_after_sum_value = {}
+  for key, val in six.iteritems(value[EncoderKeys.CHILDREN]):
+    children_before_sum_value[key], children_after_sum_value[key] = (
+        _split_value_by_commuting_structure(
+            val, encoder_key, commuting_structure[EncoderKeys.CHILDREN][key]))
+  before_sum_value[EncoderKeys.CHILDREN] = children_before_sum_value
+  after_sum_value[EncoderKeys.CHILDREN] = children_after_sum_value
+
+  return before_sum_value, after_sum_value
