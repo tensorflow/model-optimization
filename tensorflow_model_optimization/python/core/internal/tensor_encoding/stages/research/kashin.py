@@ -169,7 +169,7 @@ class KashinHadamardEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    seed = tf.random.uniform((), maxval=tf.int64.max, dtype=tf.int64)
+    seed = tf.random.uniform((2,), maxval=tf.int64.max, dtype=tf.int64)
     encode_params = {
         self.ETA_PARAMS_KEY: self._eta,
         self.DELTA_PARAMS_KEY: self._delta,
