@@ -106,12 +106,14 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
   # TODO(pulkitb): Also assert correct weights are pruned.
 
-  def _check_strip_pruning_matches_original(self, model, sparsity):
+  def _check_strip_pruning_matches_original(
+      self, model, sparsity, input_data=None):
     stripped_model = prune.strip_pruning(model)
     test_utils.assert_model_sparsity(self, sparsity, stripped_model)
 
-    input_data = np.random.randn(
-        *self._batch(model.input.get_shape().as_list(), 1))
+    if input_data is None:
+      input_data = np.random.randn(
+          *self._batch(model.input.get_shape().as_list(), 1))
 
     model_result = model.predict(input_data)
     stripped_model_result = stripped_model.predict(input_data)
@@ -203,7 +205,8 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     test_utils.assert_model_sparsity(self, 0.5, model)
 
-    self._check_strip_pruning_matches_original(model, 0.5)
+    input_data = np.random.randint(10, size=(32, 5))
+    self._check_strip_pruning_matches_original(model, 0.5, input_data)
 
   @parameterized.parameters(test_utils.model_type_keys())
   def testPrunesModel(self, model_type):
