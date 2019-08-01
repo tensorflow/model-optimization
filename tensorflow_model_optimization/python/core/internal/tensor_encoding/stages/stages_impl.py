@@ -280,13 +280,12 @@ class UniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface):
     Raises:
       ValueError: The inputs do not satisfy the above constraints.
     """
-    if (not tf.contrib.framework.is_tensor(bits) and
-        bits not in self._ALLOWED_BITS_ARG):
+    if (not tf.is_tensor(bits) and bits not in self._ALLOWED_BITS_ARG):
       raise ValueError('The bits argument must be an integer between 1 and 16.')
     self._bits = bits
 
     if min_max is not None:
-      if tf.contrib.framework.is_tensor(min_max):
+      if tf.is_tensor(min_max):
         if min_max.shape.as_list() != [2]:
           raise ValueError(
               'The min_max argument must be Tensor with shape (2).')
@@ -419,7 +418,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
       TypeError: If `input_bits` is a TensorFlow value.
       ValueError: If `input_bits` is not between 1 and 16.
     """
-    if tf.contrib.framework.is_tensor(input_bits):
+    if tf.is_tensor(input_bits):
       raise TypeError('The input_bits argument cannot be a TensorFlow value.')
     if input_bits not in self._ALLOWED_INPUT_BITS_ARG:
       raise ValueError(

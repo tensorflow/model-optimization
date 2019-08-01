@@ -440,9 +440,7 @@ class TestUtilsTest(tf.test.TestCase, parameterized.TestCase):
 
   def test_dummy_rng_source(self):
     default_seed = 1
-    self.assertTrue(
-        tf.contrib.framework.is_tensor(
-            test_utils.dummy_rng_source(default_seed, 1)))
+    self.assertTrue(tf.is_tensor(test_utils.dummy_rng_source(default_seed, 1)))
 
     # Test that the outputs are different given different seeds.
     val_1 = self.evaluate(test_utils.dummy_rng_source(default_seed, 1))

@@ -19,6 +19,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 import tensorflow as tf
 
+from tensorflow.python.framework import test_util as tf_test_util
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import simple_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing import test_utils
@@ -38,7 +39,7 @@ PN_VALS = test_utils.PlusOneOverNEncodingStage.ENCODED_VALUES_KEY
 
 class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
 
-  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_basic_encode_decode(self):
     """Tests basic encoding and decoding works as expected."""
     x = tf.constant(1.0, tf.float32)
@@ -55,7 +56,7 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
       self.assertAllClose(1.0 + 1 / i,
                           _encoded_x_field(encoded_x, [TENSORS, PN_VALS]))
 
-  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_composite_encoder(self):
     """Tests functionality with a general, composite `Encoder`."""
     x = tf.constant(1.2)
@@ -81,7 +82,7 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
           0.4 + 1 / i,
           _encoded_x_field(encoded_x, [TENSORS, SIF_FLOATS, T2_VALS, PN_VALS]))
 
-  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_none_state_equal_to_initial_state(self):
     """Tests that not providing state is the same as initial_state."""
     x = tf.constant(1.0)
@@ -107,7 +108,7 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(encoded_x_stateful, encoded_x_stateless)
     self.assertAllClose(decoded_x_stateful, decoded_x_stateless)
 
-  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_python_constants_not_exposed(self):
     """Tests that only TensorFlow values are exposed to users."""
     x = tf.constant(1.0)
@@ -141,7 +142,7 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(x, decoded_x_tf)
     self.assertAllClose(x, decoded_x_py)
 
-  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_decode_needs_input_shape_static(self):
     """Tests that mechanism for passing input shape works with static shape."""
     x = tf.reshape(list(range(15)), [3, 5])
@@ -155,7 +156,7 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
     _, _, decoded_x, _ = self.evaluate(iteration(x, state))
     self.assertAllEqual([[7.0] * 5] * 3, decoded_x)
 
-  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_decode_needs_input_shape_dynamic(self):
     """Tests that mechanism for passing input shape works with dynamic shape."""
     if tf.executing_eagerly():
@@ -180,7 +181,7 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
     x, _, decoded_x, _ = self.evaluate(iteration(x, state))
     self.assertAllEqual(x.shape, decoded_x.shape)
 
-  @tf.contrib.eager.run_test_in_graph_and_eager_modes
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_input_signature_enforced(self):
     """Tests that encode/decode input signature is enforced."""
     x = tf.constant(1.0)

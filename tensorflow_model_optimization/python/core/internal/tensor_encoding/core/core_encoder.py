@@ -447,7 +447,7 @@ class Encoder(object):
     """Implementation for the `decode_after_sum` method."""
     if not self.stage.commutes_with_sum:
       # This should have been decoded earlier in the decode_before_sum method.
-      assert tf.contrib.framework.is_tensor(encoded_tensors)
+      assert tf.is_tensor(encoded_tensors)
       return encoded_tensors
 
     temp_encoded_tensors = {}

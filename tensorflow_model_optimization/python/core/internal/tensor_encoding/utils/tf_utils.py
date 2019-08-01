@@ -102,7 +102,7 @@ def _cmwc_random_sequence(num_elements, seed):
     raise TypeError('The num_elements argument must be a Python integer.')
   if num_elements <= 0:
     raise ValueError('The num_elements argument must be positive.')
-  if not tf.contrib.framework.is_tensor(seed) or seed.dtype != tf.int64:
+  if not tf.is_tensor(seed) or seed.dtype != tf.int64:
     raise TypeError('The seed argument must be a tf.int64 Tensor.')
 
   # For better efficiency of tf.while_loop, we generate `parallelism` random

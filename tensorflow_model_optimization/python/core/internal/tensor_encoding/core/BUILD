@@ -69,6 +69,7 @@ py_library(
     deps = [
         ":core_encoder",
         # tensorflow dep1,
+        # python:util tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/utils:py_utils",
     ],
 )
@@ -82,6 +83,7 @@ py_test(
         ":simple_encoder",
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
+        # python:framework_test_lib tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
     ],
 )

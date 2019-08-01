@@ -37,8 +37,7 @@ import enum
 import six
 import tensorflow as tf
 
-
-nest = tf.contrib.framework.nest
+nest = tf.nest
 
 INITIAL_STATE_SCOPE_SUFFIX = '_initial_state'
 UPDATE_STATE_SCOPE_SUFFIX = '_update_state'

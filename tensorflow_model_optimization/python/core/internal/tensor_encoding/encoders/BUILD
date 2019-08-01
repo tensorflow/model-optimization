@@ -32,6 +32,7 @@ py_test(
         ":common_encoders",
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
+        # python:util tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:core_encoder",
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:simple_encoder",
     ],

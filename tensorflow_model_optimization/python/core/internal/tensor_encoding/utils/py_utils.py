@@ -70,7 +70,7 @@ def static_or_dynamic_shape(value):
     TypeError:
       If the input is not a `Tensor` or a `np.ndarray` object.
   """
-  if tf.contrib.framework.is_tensor(value):
+  if tf.is_tensor(value):
     return value.shape if value.shape.is_fully_defined() else tf.shape(value)
   elif isinstance(value, np.ndarray):
     return value.shape
@@ -103,7 +103,7 @@ def split_dict_py_tf(dictionary):
     if isinstance(v, dict):
       d_py[k], d_tf[k] = split_dict_py_tf(v)
     else:
-      if tf.contrib.framework.is_tensor(v):
+      if tf.is_tensor(v):
         d_tf[k] = v
       else:
         d_py[k] = v

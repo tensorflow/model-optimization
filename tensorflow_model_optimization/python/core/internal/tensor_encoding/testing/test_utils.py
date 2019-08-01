@@ -504,7 +504,7 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
         d_py, d_tf = py_utils.split_dict_py_tf(fetch)
         py_fetches.append(d_py)
         tf_fetches.append(d_tf)
-      elif tf.contrib.framework.is_tensor(fetch):
+      elif tf.is_tensor(fetch):
         py_fetches.append(None)
         tf_fetches.append(fetch)
       else:
@@ -548,15 +548,15 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
     """Evaluates `fetches`, if containing any `Tensor` objects.
 
     Args:
-      fetches: Any nested structure compatible with `tf.contrib.framework.nest`.
+      fetches: Any nested structure compatible with
+        `tensorflow.python.util.nest` (tf.nest).
       session: Optional. A `tf.Session` object in the context of which the
         evaluation is to happen.
 
     Returns:
       `fetches` with any `Tensor` objects replaced by numpy values.
     """
-    if any((tf.contrib.framework.is_tensor(t)
-            for t in tf.contrib.framework.nest.flatten(fetches))):
+    if any((tf.is_tensor(t) for t in tf.nest.flatten(fetches))):
       if session:
         fetches = session.run(fetches)
       else:
@@ -607,11 +607,11 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
         self.assertIn(mode, encoding_stage.StateAggregationMode)
 
       for tensor in six.itervalues(test_data.initial_state):
-        self.assertTrue(tf.contrib.framework.is_tensor(tensor))
+        self.assertTrue(tf.is_tensor(tensor))
       for tensor in six.itervalues(test_data.state_update_tensors):
-        self.assertTrue(tf.contrib.framework.is_tensor(tensor))
+        self.assertTrue(tf.is_tensor(tensor))
       for tensor in six.itervalues(test_data.updated_state):
-        self.assertTrue(tf.contrib.framework.is_tensor(tensor))
+        self.assertTrue(tf.is_tensor(tensor))
 
       # The state related Tensors should have appropriate substrings in their
       # names.

@@ -272,7 +272,7 @@ class EncoderTest(tf.test.TestCase):
                 }
             }
         }, input_shapes)
-    self.assertTrue(tf.contrib.framework.is_tensor(decoded_x))
+    self.assertTrue(tf.is_tensor(decoded_x))
     self.assertIn('encoder_decode/', decoded_x.name)
 
     tf.nest.assert_same_structure(

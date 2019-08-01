@@ -119,30 +119,30 @@ class KashinHadamardEncodingStage(encoding_stage.EncodingStageInterface):
     Raises:
       ValueError: The inputs do not satisfy the above constraints.
     """
-    if tf.contrib.framework.is_tensor(num_iters):
+    if tf.is_tensor(num_iters):
       raise ValueError('Parameter num_iters cannot be a TensorFlow value.')
     if not isinstance(num_iters, int) or num_iters <= 0:
       raise ValueError('Number of iterations must be a positive integer.'
                        'num_iters provided: %s' % num_iters)
     self._num_iters = num_iters
 
-    if not tf.contrib.framework.is_tensor(eta) and not 0.0 < eta < 1.0:
+    if not tf.is_tensor(eta) and not 0.0 < eta < 1.0:
       raise ValueError('Parameter eta must be between 0 and 1. '
                        'Provided eta: %s' % eta)
     self._eta = eta
 
-    if not tf.contrib.framework.is_tensor(delta) and delta <= 0.0:
+    if not tf.is_tensor(delta) and delta <= 0.0:
       raise ValueError('Parameter delta must be greater than 0. '
                        'Provided delta: %s' % delta)
     self._delta = delta
 
-    if tf.contrib.framework.is_tensor(last_iter_clip):
+    if tf.is_tensor(last_iter_clip):
       raise ValueError('Parameter last_iter_clip cannot be a TensorFlow value.')
     if not isinstance(last_iter_clip, bool):
       raise ValueError('Parameter last_iter_clip must be a bool.')
     self._last_iter_clip = last_iter_clip
 
-    if tf.contrib.framework.is_tensor(pad_extra_level_threshold):
+    if tf.is_tensor(pad_extra_level_threshold):
       raise ValueError(
           'Parameter pad_extra_level_threshold cannot be a TensorFlow value.')
     self._pad_extra_level_threshold = pad_extra_level_threshold

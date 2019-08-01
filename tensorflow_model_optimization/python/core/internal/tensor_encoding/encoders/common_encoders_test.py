@@ -19,12 +19,10 @@ from __future__ import print_function
 from absl.testing import parameterized
 import tensorflow as tf
 
+from tensorflow.python.util import nest
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import simple_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders import common_encoders
-
-
-nest = tf.contrib.framework.nest
 
 _ENCODER_FNS = [
     common_encoders.identity,

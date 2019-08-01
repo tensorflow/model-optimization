@@ -19,11 +19,9 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from tensorflow.python.util import nest
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import py_utils
-
-
-nest = tf.contrib.framework.nest
 
 _TENSORS = 'encoded_tensors'
 _PARAMS = 'params'
