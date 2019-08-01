@@ -194,7 +194,10 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     model.add(keras.layers.Dense(1, activation='sigmoid'))
 
     model.compile(
-        loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
+        loss='binary_crossentropy',
+        optimizer='sgd',
+        metrics=['accuracy'],
+        experimental_run_tf_function=False)
     test_utils.assert_model_sparsity(self, 0.0, model)
     model.fit(
         np.random.randint(10, size=(32, 5)),
