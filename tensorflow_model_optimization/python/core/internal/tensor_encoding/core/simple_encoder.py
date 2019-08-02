@@ -19,7 +19,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow.python.util import nest
+from tensorflow.python.util import nest as core_nest
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import py_utils
 
@@ -83,23 +83,24 @@ class SimpleEncoder(object):
     def initial_state_fn():
       state = encoder.initial_state()
       if not state_py_structure:
-        state_py_structure['state'] = nest.map_structure(lambda _: None, state)
+        state_py_structure['state'] = tf.nest.map_structure(
+            lambda _: None, state)
       # Simplify the structure that needs to be manipulated by the user.
-      return tuple(nest.flatten(state))
+      return tuple(tf.nest.flatten(state))
 
     @tf.function(input_signature=[
         tensorspec,
-        nest.map_structure(
+        tf.nest.map_structure(
             tf.TensorSpec.from_tensor,
             initial_state_fn.get_concrete_function().structured_outputs)
     ])  # pylint: disable=missing-docstring
     def encode_fn(x, flat_state):
-      state = nest.pack_sequence_as(state_py_structure['state'], flat_state)
+      state = tf.nest.pack_sequence_as(state_py_structure['state'], flat_state)
       encode_params, decode_params = encoder.get_params(state)
       encoded_x, state_update_tensors, input_shapes = encoder.encode(
           x, encode_params)
       updated_flat_state = tuple(
-          nest.flatten(encoder.update_state(state, state_update_tensors)))
+          tf.nest.flatten(encoder.update_state(state, state_update_tensors)))
 
       # The following code converts the nested structres necessary for the
       # underlying encoder, to a single flat dictionary, which is simpler to
@@ -110,27 +111,27 @@ class SimpleEncoder(object):
           _SHAPES: input_shapes
       }
       flat_encoded_structure = dict(
-          nest.flatten_with_joined_string_paths(
+          core_nest.flatten_with_joined_string_paths(
               full_encoded_structure, separator='/'))
       flat_encoded_py_structure, flat_encoded_tf_structure = (
           py_utils.split_dict_py_tf(flat_encoded_structure))
 
       if not encoded_py_structure:
-        encoded_py_structure['full'] = nest.map_structure(
+        encoded_py_structure['full'] = tf.nest.map_structure(
             lambda _: None, full_encoded_structure)
         encoded_py_structure['flat_py'] = flat_encoded_py_structure
       return flat_encoded_tf_structure, updated_flat_state
 
     @tf.function(input_signature=[
-        nest.map_structure(
+        tf.nest.map_structure(
             tf.TensorSpec.from_tensor,
             encode_fn.get_concrete_function().structured_outputs[0])
     ])  # pylint: disable=missing-docstring
     def decode_fn(encoded_structure):
       encoded_structure = py_utils.merge_dicts(encoded_structure,
                                                encoded_py_structure['flat_py'])
-      encoded_structure = nest.pack_sequence_as(encoded_py_structure['full'],
-                                                nest.flatten(encoded_structure))
+      encoded_structure = tf.nest.pack_sequence_as(
+          encoded_py_structure['full'], tf.nest.flatten(encoded_structure))
       return encoder.decode(encoded_structure[_TENSORS],
                             encoded_structure[_PARAMS],
                             encoded_structure[_SHAPES])

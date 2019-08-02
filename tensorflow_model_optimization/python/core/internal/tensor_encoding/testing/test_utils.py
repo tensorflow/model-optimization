@@ -548,8 +548,7 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
     """Evaluates `fetches`, if containing any `Tensor` objects.
 
     Args:
-      fetches: Any nested structure compatible with
-        `tensorflow.python.util.nest` (tf.nest).
+      fetches: Any nested structure compatible with `tf.nest`.
       session: Optional. A `tf.Session` object in the context of which the
         evaluation is to happen.
 

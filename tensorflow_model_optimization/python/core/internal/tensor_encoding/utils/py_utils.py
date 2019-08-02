@@ -163,7 +163,7 @@ def assert_compatible(spec, value):
   """Asserts that values are compatible with given specs.
 
   Args:
-    spec: A structure compatible with tf.nest, with `tf.TensorSpec` values.
+    spec: A structure compatible with `tf.nest`, with `tf.TensorSpec` values.
     value: A collection of values that should be compatible with `spec`. Must be
       the same structure as `spec`.
 

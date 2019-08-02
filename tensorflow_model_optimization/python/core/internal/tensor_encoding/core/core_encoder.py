@@ -24,9 +24,6 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.core imp
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import py_utils
 
 
-nest = tf.nest
-
-
 # OrderedEnum necessary for compatibility with tf.nest.
 class EncoderKeys(py_utils.OrderedEnum):
   """Constants for keys in nested structures in the `Encoder` class."""
@@ -187,7 +184,7 @@ class Encoder(object):
       keys as `self.children`, each of which maps to an object like this one,
       recursively.
     """
-    values = nest.flatten(state) + nest.flatten(state_update_tensors)
+    values = tf.nest.flatten(state) + tf.nest.flatten(state_update_tensors)
     with tf.name_scope(name, 'encoder_update_state', values):
       return self._update_state_impl(state, state_update_tensors)
 
@@ -225,7 +222,7 @@ class Encoder(object):
       `self.children`, each of which maps to an object like this one,
       recursively.
     """
-    with tf.name_scope(name, 'encoder_get_params', nest.flatten(state)):
+    with tf.name_scope(name, 'encoder_get_params', tf.nest.flatten(state)):
       return self._get_params_impl(state)
 
   def _get_params_impl(self, state):
@@ -276,7 +273,7 @@ class Encoder(object):
         as a `list` or numpy value, or `None`, if the shape is not needed.
     """
     with tf.name_scope(name, 'encoder_encode',
-                       [x] + nest.flatten(encode_params)):
+                       [x] + tf.nest.flatten(encode_params)):
       return self._encode_impl(x, encode_params)
 
   def _encode_impl(self, x, encode_params):
@@ -320,8 +317,8 @@ class Encoder(object):
       A single decoded `Tensor`.
     """
     values = (
-        nest.flatten(shape) + nest.flatten(decode_params) +
-        nest.flatten(encoded_tensors))
+        tf.nest.flatten(shape) + tf.nest.flatten(decode_params) +
+        tf.nest.flatten(encoded_tensors))
     with tf.name_scope(name, 'encoder_decode', values):
       # Calling _decode_before_sum_impl with force_decode=True will decode the
       # entire tree, regardless of potential commutativity with sum.
@@ -355,8 +352,8 @@ class Encoder(object):
       `decode_after_sum` method.
     """
     values = (
-        nest.flatten(shape) + nest.flatten(decode_params) +
-        nest.flatten(encoded_tensors))
+        tf.nest.flatten(shape) + tf.nest.flatten(decode_params) +
+        tf.nest.flatten(encoded_tensors))
     with tf.name_scope(name, 'encoder_decode_before_sum', values):
       return self._decode_before_sum_impl(
           encoded_tensors, decode_params, shape, force_decode=False)
@@ -435,8 +432,8 @@ class Encoder(object):
       A single decoded `Tensor`.
     """
     values = (
-        nest.flatten(shape) + nest.flatten(decode_params) +
-        nest.flatten(encoded_tensors) + [num_summands])
+        tf.nest.flatten(shape) + tf.nest.flatten(decode_params) +
+        tf.nest.flatten(encoded_tensors) + [num_summands])
     num_summands = tf.convert_to_tensor(num_summands)
     with tf.name_scope(name, 'encoder_decode_after_sum', values):
       return self._decode_after_sum_impl(encoded_tensors, decode_params,

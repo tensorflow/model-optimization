@@ -19,7 +19,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 import tensorflow as tf
 
-from tensorflow.python.util import nest
+from tensorflow.python.util import nest as core_nest
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import simple_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders import common_encoders
@@ -58,7 +58,7 @@ class EncoderLibraryTest(parameterized.TestCase):
 
     params, _ = encoder.get_params(encoder.initial_state())
     encoded_x, _, _ = encoder.encode(tf.constant(1.0), params)
-    keys = [k for k, _ in nest.flatten_with_joined_string_paths(encoded_x)]
+    keys = [k for k, _ in core_nest.flatten_with_joined_string_paths(encoded_x)]
     self.assertSameElements(['identity_values'], keys)
 
   def test_uniform_quantization(self):
@@ -67,7 +67,7 @@ class EncoderLibraryTest(parameterized.TestCase):
 
     params, _ = encoder.get_params(encoder.initial_state())
     encoded_x, _, _ = encoder.encode(tf.constant(1.0), params)
-    keys = [k for k, _ in nest.flatten_with_joined_string_paths(encoded_x)]
+    keys = [k for k, _ in core_nest.flatten_with_joined_string_paths(encoded_x)]
     self.assertSameElements([
         'flattened_values/min_max',
         'flattened_values/quantized_values/bitpacked_values'
@@ -79,7 +79,7 @@ class EncoderLibraryTest(parameterized.TestCase):
 
     params, _ = encoder.get_params(encoder.initial_state())
     encoded_x, _, _ = encoder.encode(tf.constant(1.0), params)
-    keys = [k for k, _ in nest.flatten_with_joined_string_paths(encoded_x)]
+    keys = [k for k, _ in core_nest.flatten_with_joined_string_paths(encoded_x)]
     self.assertSameElements([
         'flattened_values/hadamard_values/min_max',
         'flattened_values/hadamard_values/quantized_values/bitpacked_values'

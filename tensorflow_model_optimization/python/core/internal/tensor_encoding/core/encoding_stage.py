@@ -37,8 +37,6 @@ import enum
 import six
 import tensorflow as tf
 
-nest = tf.nest
-
 INITIAL_STATE_SCOPE_SUFFIX = '_initial_state'
 UPDATE_STATE_SCOPE_SUFFIX = '_update_state'
 GET_PARAMS_SCOPE_SUFFIX = '_get_params'
@@ -646,9 +644,9 @@ def _tf_style_update_state(update_state_fn):
     """Modified `update_state` method."""
     values = list(state.values()) + list(state_update_tensors.values())
     with tf.name_scope(name, self.name + UPDATE_STATE_SCOPE_SUFFIX, values):
-      state = nest.map_structure(tf.convert_to_tensor, state)
-      state_update_tensors = nest.map_structure(tf.convert_to_tensor,
-                                                state_update_tensors)
+      state = tf.nest.map_structure(tf.convert_to_tensor, state)
+      state_update_tensors = tf.nest.map_structure(tf.convert_to_tensor,
+                                                   state_update_tensors)
       return update_state_fn(self, state, state_update_tensors, name=name)
 
   return actual_initial_state_fn
@@ -672,7 +670,7 @@ def _tf_style_adaptive_get_params(get_params_fn):
     """Modified `get_params` method."""
     with tf.name_scope(name, self.name + GET_PARAMS_SCOPE_SUFFIX,
                        state.values()):
-      state = nest.map_structure(tf.convert_to_tensor, state)
+      state = tf.nest.map_structure(tf.convert_to_tensor, state)
       return get_params_fn(self, state, name=name)
 
   return actual_get_params_fn
@@ -686,7 +684,7 @@ def _tf_style_encode(encode_fn):
     values = list(encode_params.values()) + [x]
     with tf.variable_scope(name, self.name + ENCODE_SCOPE_SUFFIX, values):
       x = tf.convert_to_tensor(x)
-      encode_params = nest.map_structure(tf.convert_to_tensor, encode_params)
+      encode_params = tf.nest.map_structure(tf.convert_to_tensor, encode_params)
       return encode_fn(self, x, encode_params, name=name)
 
   return actual_encode_fn
@@ -704,9 +702,9 @@ def _tf_style_decode(decode_fn):
     """Modified `decode` method."""
     values = list(encoded_tensors.values()) + list(decode_params.values())
     with tf.variable_scope(name, self.name + DECODE_SCOPE_SUFFIX, values):
-      encoded_tensors = nest.map_structure(tf.convert_to_tensor,
+      encoded_tensors = tf.nest.map_structure(tf.convert_to_tensor,
                                            encoded_tensors)
-      decode_params = nest.map_structure(tf.convert_to_tensor, decode_params)
+      decode_params = tf.nest.map_structure(tf.convert_to_tensor, decode_params)
       if shape is not None:
         shape = tf.convert_to_tensor(shape)
       if num_summands is not None:
