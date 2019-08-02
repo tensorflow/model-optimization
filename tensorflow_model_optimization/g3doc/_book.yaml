@@ -34,10 +34,13 @@ upper_tabs:
       - title: Overview
         path: /model_optimization/guide/quantization
       - title: Post-training quantization
-        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/tutorials/post_training_quant.ipynb
+        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_quant.ipynb
         status: external
       - title: Post-training integer quantization
-        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/tutorials/post_training_integer_quant.ipynb
+        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_integer_quant.ipynb
+        status: external
+      - title: Post-training float16 quantization
+        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_float16_quant.ipynb
         status: external
 
     - name: API

@@ -9,6 +9,12 @@ conversion. These techniques are enabled as options in the
 
 ## Quantizing weights
 
+Weights can be converted to types with reduced precision, such as 16 bit floats
+or 8 bit integers. We generally recommend 16-bit floats for GPU acceleration and
+8-bit integer for CPU execution.
+
+For example, here is how to specify 8 bit integer weight quantization:
+
 ```
 import tensorflow as tf
 converter = tf.lite.TFLiteConverter.from_saved_model(saved_model_dir)
