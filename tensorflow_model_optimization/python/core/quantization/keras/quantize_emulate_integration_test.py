@@ -95,6 +95,9 @@ class QuantizeEmulateIntegrationTest(test.TestCase):
     x_train, y_train = train_data
     x_test, y_test = test_data
 
+    def linear(x):
+      return x
+
     l = keras.layers
     model = keras.Sequential([
         QuantizeEmulate(
@@ -108,8 +111,12 @@ class QuantizeEmulateIntegrationTest(test.TestCase):
         l.Flatten(),
         QuantizeEmulate(l.Dense(1024, activation='relu'), **self.params),
         l.Dropout(0.4),
-        QuantizeEmulate(l.Dense(num_classes), **self.params),
         # TODO(alanchiao): fuse softmax once we've handled it.
+        # Once we use QuantizeAwareActivation, pre/post activation should be
+        # handled. Adding dummy activation to force adding of quant operator.
+        QuantizeEmulate(
+            l.Dense(num_classes, activation=linear),
+            **self.params),
         l.Softmax(),
     ])
 
@@ -133,7 +140,7 @@ class QuantizeEmulateIntegrationTest(test.TestCase):
     _, tflite_file = tempfile.mkstemp('.h5')
 
     keras.models.save_model(model, keras_file)
-    convert_mnist_to_tflite(keras_file, tflite_file)
+    convert_mnist_to_tflite(keras_file, tflite_file, {'linear': linear})
     tflite_accuracy = test_utils.eval_mnist_tflite(
         tflite_file, is_quantized=True)
 

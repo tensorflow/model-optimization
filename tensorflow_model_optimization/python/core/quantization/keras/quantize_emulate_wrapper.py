@@ -25,6 +25,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers.wrappers import Wrapper
@@ -160,7 +161,10 @@ class QuantizeEmulateWrapper(Wrapper):
 
     outputs = self.layer.call(inputs)
 
-    if self.layer.activation is None:
+    # TODO(pulkitb): Currently, we just ignore output quantization if
+    # activation isn't present. Add support for edge cases from this.
+    if self.layer.activation is None \
+        or self.layer.activation == activations.linear:
       return outputs
 
     def moving_avg_quantize_fn(is_training):
