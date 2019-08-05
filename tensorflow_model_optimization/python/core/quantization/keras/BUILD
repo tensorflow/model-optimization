@@ -86,6 +86,19 @@ py_library(
 )
 
 py_library(
+    name = "quantize_registry",
+    srcs = [
+        "quantize_registry.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # six dep1,
+        # tensorflow dep1,
+    ],
+)
+
+py_library(
     name = "quantize_emulatable_layer",
     srcs = [
         "quantize_emulatable_layer.py",
