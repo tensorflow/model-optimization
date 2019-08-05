@@ -73,6 +73,19 @@ py_test(
 )
 
 py_library(
+    name = "quantize_provider",
+    srcs = [
+        "quantize_provider.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # six dep1,
+        # tensorflow dep1,
+    ],
+)
+
+py_library(
     name = "quantize_emulatable_layer",
     srcs = [
         "quantize_emulatable_layer.py",
