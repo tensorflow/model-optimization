@@ -39,6 +39,40 @@ py_test(
 )
 
 py_library(
+    name = "quantizers",
+    srcs = [
+        "quantizers.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quant_ops",
+        # six dep1,
+        # tensorflow dep1,
+    ],
+)
+
+py_test(
+    name = "quantizers_test",
+    srcs = [
+        "quantizers_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantizers",
+        # numpy dep1,
+        # tensorflow dep1,
+        # python:dtypes tensorflow dep2,
+        # python:framework_ops tensorflow dep2,
+        # python:platform_test tensorflow dep2,
+        # python:session tensorflow dep2,
+        # python:variables tensorflow dep2,
+    ],
+)
+
+py_library(
     name = "quantize_emulatable_layer",
     srcs = [
         "quantize_emulatable_layer.py",
