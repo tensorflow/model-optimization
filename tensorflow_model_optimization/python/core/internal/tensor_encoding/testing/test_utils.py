@@ -1294,6 +1294,106 @@ class AdaptiveNormalizeEncodingStage(
                               shape)
 
 
+@encoding_stage.tf_style_adaptive_encoding_stage
+class StateUpdateTensorsEncodingStage(
+    encoding_stage.AdaptiveEncodingStageInterface):
+  """[Example] encoding stage, using all `state_update_aggregation_modes`."""
+
+  ENCODED_VALUES_KEY = 'state_update_tensors_identity'
+  SUM_STATE_UPDATE_KEY = 'state_update_tensors_update_sum'
+  MIN_STATE_UPDATE_KEY = 'state_update_tensors_update_min'
+  MAX_STATE_UPDATE_KEY = 'state_update_tensors_update_max'
+  STACK_STATE_UPDATE_KEY = 'state_update_tensors_update_stack'
+  LAST_SUM_STATE_KEY = 'state_update_tensors_state_sum'
+  LAST_MIN_STATE_KEY = 'state_update_tensors_state_min'
+  LAST_MAX_STATE_KEY = 'state_update_tensors_state_max'
+  LAST_COUNT_STATE_KEY = 'state_update_tensors_state_stack'
+
+  def __init__(self):
+    self._stage = TimesTwoEncodingStage()
+
+  @property
+  def name(self):
+    """See base class."""
+    return 'state_update_tensors'
+
+  @property
+  def compressible_tensors_keys(self):
+    """See base class."""
+    return [self.ENCODED_VALUES_KEY]
+
+  @property
+  def commutes_with_sum(self):
+    """See base class."""
+    return True
+
+  @property
+  def decode_needs_input_shape(self):
+    """See base class."""
+    return False
+
+  @property
+  def state_update_aggregation_modes(self):
+    """See base class."""
+    return {
+        self.SUM_STATE_UPDATE_KEY: encoding_stage.StateAggregationMode.SUM,
+        self.MIN_STATE_UPDATE_KEY: encoding_stage.StateAggregationMode.MIN,
+        self.MAX_STATE_UPDATE_KEY: encoding_stage.StateAggregationMode.MAX,
+        self.STACK_STATE_UPDATE_KEY: encoding_stage.StateAggregationMode.STACK
+    }
+
+  def initial_state(self):
+    """See base class."""
+    return {
+        self.LAST_SUM_STATE_KEY: tf.constant(0.0),
+        self.LAST_MIN_STATE_KEY: tf.constant(0.0),
+        self.LAST_MAX_STATE_KEY: tf.constant(0.0),
+        self.LAST_COUNT_STATE_KEY: tf.constant(0, tf.int32)
+    }
+
+  def update_state(self, state, state_update_tensors):
+    """See base class."""
+    del state  # Unused.
+    return {
+        self.LAST_SUM_STATE_KEY:
+            tf.reduce_sum(state_update_tensors[self.SUM_STATE_UPDATE_KEY]),
+        self.LAST_MIN_STATE_KEY:
+            tf.reduce_min(state_update_tensors[self.MIN_STATE_UPDATE_KEY]),
+        self.LAST_MAX_STATE_KEY:
+            tf.reduce_max(state_update_tensors[self.MAX_STATE_UPDATE_KEY]),
+        self.LAST_COUNT_STATE_KEY:
+            tf.reduce_prod(
+                tf.shape(state_update_tensors[self.STACK_STATE_UPDATE_KEY]))
+    }
+
+  def get_params(self, state):
+    """See base class."""
+    del state  # Unused.
+    return {}, {}
+
+  def encode(self, x, encode_params):
+    """See base class."""
+    del encode_params  # Unused.
+    x = tf.identity(x)
+    return {
+        self.ENCODED_VALUES_KEY: x
+    }, {
+        self.SUM_STATE_UPDATE_KEY: x,
+        self.MIN_STATE_UPDATE_KEY: x,
+        self.MAX_STATE_UPDATE_KEY: x,
+        self.STACK_STATE_UPDATE_KEY: x
+    }
+
+  def decode(self,
+             encoded_tensors,
+             decode_params,
+             num_summands=None,
+             shape=None):
+    """See base class."""
+    del decode_params, num_summands, shape  # Unused.
+    return tf.identity(encoded_tensors[self.ENCODED_VALUES_KEY])
+
+
 def get_tensor_with_random_shape(expected_num_elements=10,
                                  source_fn=tf.random.uniform):
   """Returns a 1-D `Tensor` with random shape.

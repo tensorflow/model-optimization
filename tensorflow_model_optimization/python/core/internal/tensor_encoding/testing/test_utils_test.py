@@ -435,6 +435,75 @@ class AdaptiveNormalizeEncodingStageTest(test_utils.BaseEncodingStageTest):
       self.assertAllClose(1.0, encoded_norm, atol=0.002)
 
 
+class StateUpdateTensorsEncodingStageTest(test_utils.BaseEncodingStageTest):
+
+  def default_encoding_stage(self):
+    """See base class."""
+    return test_utils.StateUpdateTensorsEncodingStage()
+
+  def default_input(self):
+    """See base class."""
+    return tf.random.uniform([5])
+
+  @property
+  def is_lossless(self):
+    """See base class."""
+    return True
+
+  def common_asserts_for_test_data(self, data):
+    """See base class."""
+    self.assertAllClose(data.x, data.decoded_x)
+    self.assertAllClose(
+        data.x, data.encoded_x[
+            test_utils.StateUpdateTensorsEncodingStage.ENCODED_VALUES_KEY])
+
+  def test_state_aggregation(self):
+    stage = self.default_encoding_stage()
+    # If a new StateAggregationMode is added, this test class should be updated.
+    self.assertSetEqual(
+        set(stage.state_update_aggregation_modes.values()),
+        set(encoding_stage.StateAggregationMode))
+
+    state = self.evaluate(stage.initial_state())
+    input_values = [
+        np.array([1.0, 5.0, 0.0]),
+        np.array([0.0, 0.0, 0.0]),
+        np.array([-3.0, 12.0, 0.1])
+    ]
+
+    data, _ = self.run_many_to_one_encode_decode(stage, input_values, state)
+    updated_state = data[0].updated_state
+    self.assertEqual(
+        15.1, updated_state[
+            test_utils.StateUpdateTensorsEncodingStage.LAST_SUM_STATE_KEY])
+    self.assertEqual(
+        -3.0, updated_state[
+            test_utils.StateUpdateTensorsEncodingStage.LAST_MIN_STATE_KEY])
+    self.assertEqual(
+        12.0, updated_state[
+            test_utils.StateUpdateTensorsEncodingStage.LAST_MAX_STATE_KEY])
+    self.assertEqual(
+        9, updated_state[
+            test_utils.StateUpdateTensorsEncodingStage.LAST_COUNT_STATE_KEY])
+
+    data, _ = self.run_many_to_one_encode_decode(stage,
+                                                 input_values + input_values,
+                                                 state)
+    updated_state = data[0].updated_state
+    self.assertEqual(
+        30.2, updated_state[
+            test_utils.StateUpdateTensorsEncodingStage.LAST_SUM_STATE_KEY])
+    self.assertEqual(
+        -3.0, updated_state[
+            test_utils.StateUpdateTensorsEncodingStage.LAST_MIN_STATE_KEY])
+    self.assertEqual(
+        12.0, updated_state[
+            test_utils.StateUpdateTensorsEncodingStage.LAST_MAX_STATE_KEY])
+    self.assertEqual(
+        18, updated_state[
+            test_utils.StateUpdateTensorsEncodingStage.LAST_COUNT_STATE_KEY])
+
+
 class TestUtilsTest(tf.test.TestCase, parameterized.TestCase):
   """Tests for other utilities in `test_utils.py`."""
 
