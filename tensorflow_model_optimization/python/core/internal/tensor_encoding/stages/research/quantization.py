@@ -205,8 +205,7 @@ class PerChannelUniformQuantizationEncodingStage(
     Raises:
       ValueError: The inputs do not satisfy the above constraints.
     """
-    if (not tf.contrib.framework.is_tensor(bits) and
-        bits not in self._ALLOWED_BITS_ARG):
+    if (not tf.is_tensor(bits) and bits not in self._ALLOWED_BITS_ARG):
       raise ValueError('The bits argument must be an integer between 1 and 16.')
     self._bits = bits
 
@@ -333,8 +332,7 @@ class PerChannelPRNGUniformQuantizationEncodingStage(
     Raises:
       ValueError: The inputs do not satisfy the above constraints.
     """
-    if (not tf.contrib.framework.is_tensor(bits) and
-        bits not in self._ALLOWED_BITS_ARG):
+    if (not tf.is_tensor(bits) and bits not in self._ALLOWED_BITS_ARG):
       raise ValueError('The bits argument must be an integer between 1 and 16.')
     self._bits = bits
 
