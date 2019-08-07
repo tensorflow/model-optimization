@@ -211,7 +211,7 @@ class HadamardEncodingStage(encoding_stage.EncodingStageInterface):
     decoded_x = decoded_x * signs
     if shape.shape.num_elements() == 1:
       decoded_x = tf.squeeze(decoded_x, [0])
-    return decoded_x
+    return tf.identity(decoded_x)
 
   def _validate_and_expand_encode_input(self, x):
     """Validates the input to encode and modifies it if necessary."""
