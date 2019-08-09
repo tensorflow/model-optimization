@@ -65,9 +65,7 @@ class IdentityEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del decode_params  # Unused.
-    del num_summands  # Unused.
-    del shape  # Unused.
+    del decode_params, num_summands, shape  # Unused.
     return tf.identity(encoded_tensors[self.ENCODED_VALUES_KEY])
 
 
@@ -112,8 +110,7 @@ class FlattenEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del decode_params  # Unused.
-    del num_summands  # Unused.
+    del decode_params, num_summands  # Unused.
     return tf.reshape(encoded_tensors[self.ENCODED_VALUES_KEY], shape)
 
 
@@ -479,8 +476,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del decode_params  # Unused.
-    del num_summands  # Unused.
+    del decode_params, num_summands  # Unused.
     unpacked_x = self._unpack_from_int32(
         encoded_tensors[self.ENCODED_VALUES_KEY],
         self._input_bits,

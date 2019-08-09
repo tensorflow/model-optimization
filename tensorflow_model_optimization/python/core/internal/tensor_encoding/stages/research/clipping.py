@@ -82,9 +82,7 @@ class ClipByNormEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del decode_params  # Unused.
-    del num_summands  # Unused.
-    del shape  # Unused.
+    del decode_params, num_summands, shape  # Unused.
     return tf.identity(encoded_tensors[self.ENCODED_VALUES_KEY])
 
 
@@ -151,7 +149,5 @@ class ClipByValueEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del decode_params  # Unused.
-    del num_summands  # Unused.
-    del shape  # Unused.
+    del decode_params, num_summands, shape  # Unused.
     return tf.identity(encoded_tensors[self.ENCODED_VALUES_KEY])

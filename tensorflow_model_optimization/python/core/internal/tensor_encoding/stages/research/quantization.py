@@ -131,7 +131,7 @@ class PRNGUniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface
              num_summands=None,
              shape=None):
     """See base class."""
-    del shape  # Unused.
+    del num_summands, shape  # Unused.
     quantized_x = encoded_tensors[self.ENCODED_VALUES_KEY]
     random_seed = encoded_tensors[self.SEED_PARAMS_KEY]
     min_max = encoded_tensors[self.MIN_MAX_VALUES_KEY]
@@ -272,6 +272,7 @@ class PerChannelUniformQuantizationEncodingStage(
              num_summands=None,
              shape=None):
     """See base class."""
+    del num_summands  # Unused.
     quantized_x = encoded_tensors[self.ENCODED_VALUES_KEY]
     min_max = encoded_tensors[self.MIN_MAX_VALUES_KEY]
     min_x, max_x = min_max[0], min_max[1]
@@ -401,6 +402,7 @@ class PerChannelPRNGUniformQuantizationEncodingStage(
              num_summands=None,
              shape=None):
     """See base class."""
+    del num_summands  # Unused.
     quantized_x = encoded_tensors[self.ENCODED_VALUES_KEY]
     random_seed = encoded_tensors[self.SEED_PARAMS_KEY]
     min_max = encoded_tensors[self.MIN_MAX_VALUES_KEY]

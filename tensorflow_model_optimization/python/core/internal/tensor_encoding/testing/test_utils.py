@@ -722,8 +722,7 @@ class PlusOneEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del num_summands  # Unused.
-    del shape  # Unused.
+    del num_summands, shape  # Unused.
     decoded_x = (
         encoded_tensors[self.ENCODED_VALUES_KEY] -
         decode_params[self.ADD_PARAM_KEY])
@@ -776,8 +775,7 @@ class TimesTwoEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del num_summands  # Unused.
-    del shape  # Unused.
+    del num_summands, shape  # Unused.
     decoded_x = (
         encoded_tensors[self.ENCODED_VALUES_KEY] /
         decode_params[self.FACTOR_PARAM_KEY])
@@ -898,8 +896,7 @@ class ReduceMeanEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del num_summands  # Unused.
-    del decode_params  # Unused.
+    del num_summands, decode_params  # Unused.
     return tf.tile(encoded_tensors[self.ENCODED_VALUES_KEY], shape)
 
 
@@ -950,9 +947,7 @@ class RandomAddSubtractOneEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del decode_params  # Unused.
-    del num_summands  # Unused.
-    del shape  # Unused.
+    del decode_params, num_summands, shape  # Unused.
     return encoded_tensors[self.ENCODED_VALUES_KEY]
 
 
@@ -1014,9 +1009,7 @@ class SignIntFloatEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del decode_params  # Unused.
-    del num_summands  # Unused.
-    del shape  # Unused.
+    del decode_params, num_summands, shape  # Unused.
     signs = encoded_tensors[self.ENCODED_SIGNS_KEY]
     ints = encoded_tensors[self.ENCODED_INTS_KEY]
     floats = encoded_tensors[self.ENCODED_FLOATS_KEY]
@@ -1106,8 +1099,7 @@ class PlusRandomNumEncodingStage(encoding_stage.EncodingStageInterface):
              num_summands=None,
              shape=None):
     """See base class."""
-    del num_summands  # Unused.
-    del shape  # Unused.
+    del num_summands, shape  # Unused.
     x = encoded_tensors[self.ENCODED_VALUES_KEY]
     addend = dummy_rng_source(decode_params[self.SEED_PARAM_KEY],
                               x.shape.num_elements())
