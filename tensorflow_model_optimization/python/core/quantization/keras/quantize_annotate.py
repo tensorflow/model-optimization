@@ -20,11 +20,7 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow.python.keras.layers.wrappers import Wrapper
-from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulatable_layer
-from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulate_registry
-
-QuantizeEmulatableLayer = quantize_emulatable_layer.QuantizeEmulatableLayer
-QuantizeEmulateRegistry = quantize_emulate_registry.QuantizeEmulateRegistry
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider as quantize_provider_mod
 
 
 class QuantizeAnnotate(Wrapper):
@@ -46,51 +42,51 @@ class QuantizeAnnotate(Wrapper):
 
   def __init__(self,
                layer,
-               num_bits,
-               narrow_range=True,
-               symmetric=True,
+               quantize_provider=None,
                **kwargs):
     """Create a quantize annotate wrapper over a keras layer.
 
     Args:
       layer: The keras layer to be quantized.
-      num_bits: Number of bits for quantization
-      narrow_range: Whether to use the narrow quantization range [1; 2^num_bits
-        - 1] or wide range [0; 2^num_bits - 1].
-      symmetric: If true, use symmetric quantization limits instead of training
-        the minimum and maximum of each quantization range separately.
+      quantize_provider: `QuantizeProvider` to quantize layer.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
-
-    if not isinstance(layer, QuantizeEmulatableLayer) and \
-        not QuantizeEmulateRegistry.supports(layer):
-      raise ValueError(
-          self._UNSUPPORTED_LAYER_ERROR_MSG.format(layer.__class__))
-
     super(QuantizeAnnotate, self).__init__(layer, **kwargs)
 
-    self._num_bits = num_bits
-    self._narrow_range = narrow_range
-    self._symmetric = symmetric
+    self.quantize_provider = quantize_provider
 
   def call(self, inputs, training=None):
     return self.layer.call(inputs)
 
   def get_quantize_params(self):
+    # TODO(pulkitb): Keep around function so rest of code works. Remove later.
     return {
-        'num_bits': self._num_bits,
-        'symmetric': self._symmetric,
-        'narrow_range': self._narrow_range
+        'num_bits': 8,
+        'symmetric': True,
+        'narrow_range': True
     }
 
   def get_config(self):
     base_config = super(QuantizeAnnotate, self).get_config()
-    config = self.get_quantize_params()
+    config = {
+        'quantize_provider': self.quantize_provider
+    }
     return dict(list(base_config.items()) + list(config.items()))
 
   @classmethod
   def from_config(cls, config):
     config = config.copy()
+
+    quantize_provider = config.pop('quantize_provider')
+    from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object  # pylint: disable=g-import-not-at-top
+    # TODO(pulkitb): Add all known `QuantizeProvider`s to custom_objects
+    custom_objects = {
+        'QuantizeProvider': quantize_provider_mod.QuantizeProvider
+    }
+    config['quantize_provider'] = deserialize_keras_object(
+        quantize_provider,
+        module_objects=globals(),
+        custom_objects=custom_objects)
 
     from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
     layer = deserialize_layer(config.pop('layer'))

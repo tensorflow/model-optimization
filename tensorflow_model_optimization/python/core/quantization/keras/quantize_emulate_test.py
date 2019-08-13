@@ -27,6 +27,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulate
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_emulate_wrapper
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider as quantize_provider_mod
 
 quantize_annotate = quantize_emulate.quantize_annotate
 QuantizeEmulate = quantize_emulate.QuantizeEmulate
@@ -67,35 +68,20 @@ class QuantizeEmulateTest(test.TestCase):
 
 class QuantizeAnnotateTest(test.TestCase):
 
-  def setUp(self):
-    self.quant_params = {
-        'num_bits': 8,
-        'narrow_range': True,
-        'symmetric': True
-    }
-
-  def _assertQuantParams(self, layer, quant_params):
-    layer_params = {
-        'num_bits': layer._num_bits,
-        'narrow_range': layer._narrow_range,
-        'symmetric': layer._symmetric
-    }
-    self.assertEqual(quant_params, layer_params)
-
-  def _assertWrappedLayer(self, layer, quant_params):
+  def _assertWrappedLayer(self, layer, quantize_provider=None):
     self.assertIsInstance(layer, quant_annotate.QuantizeAnnotate)
-    self._assertQuantParams(layer, quant_params)
+    self.assertEqual(quantize_provider, layer.quantize_provider)
 
-  def _assertWrappedSequential(self, model, quant_params):
+  def _assertWrappedModel(self, model):
     for layer in model.layers:
-      self._assertWrappedLayer(layer, quant_params)
+      self._assertWrappedLayer(layer)
 
   def testQuantizeAnnotateLayer(self):
     layer = keras.layers.Dense(10, input_shape=(5,))
     wrapped_layer = quantize_annotate(
-        layer, input_shape=(5,), **self.quant_params)
+        layer, input_shape=(5,))
 
-    self._assertWrappedLayer(wrapped_layer, self.quant_params)
+    self._assertWrappedLayer(wrapped_layer)
 
     inputs = np.random.rand(1, 5)
     model = keras.Sequential([layer])
@@ -110,24 +96,33 @@ class QuantizeAnnotateTest(test.TestCase):
         keras.layers.Dense(10, input_shape=(5,)),
         keras.layers.Dropout(0.4)
     ])
-    annotated_model = quantize_annotate(model, **self.quant_params)
+    annotated_model = quantize_annotate(model)
 
-    self._assertWrappedSequential(annotated_model, self.quant_params)
+    self._assertWrappedModel(annotated_model)
 
     inputs = np.random.rand(1, 5)
     self.assertAllEqual(model.predict(inputs), annotated_model.predict(inputs))
 
   def testQuantizeAnnotateModel_HasAnnotatedLayers(self):
-    layer_params = {'num_bits': 4, 'narrow_range': False, 'symmetric': False}
+    class TestQuantizeProvider(quantize_provider_mod.QuantizeProvider):
+
+      def get_weights_and_quantizers(self, layer):
+        pass
+
+      def get_activations_and_quantizers(self, layer):
+        pass
+
+    quantize_provider = TestQuantizeProvider()
+
     model = keras.Sequential([
         keras.layers.Dense(10, input_shape=(5,)),
-        quantize_annotate(keras.layers.Dense(5), **layer_params)
+        quant_annotate.QuantizeAnnotate(
+            keras.layers.Dense(5), quantize_provider=quantize_provider)
     ])
+    annotated_model = quantize_annotate(model)
 
-    annotated_model = quantize_annotate(model, **self.quant_params)
-
-    self._assertWrappedLayer(annotated_model.layers[0], self.quant_params)
-    self._assertWrappedLayer(annotated_model.layers[1], layer_params)
+    self._assertWrappedLayer(annotated_model.layers[0])
+    self._assertWrappedLayer(annotated_model.layers[1], quantize_provider)
     # Ensure an already annotated layer is not wrapped again.
     self.assertIsInstance(annotated_model.layers[1].layer, keras.layers.Dense)
 
@@ -181,7 +176,7 @@ class QuantizeApplyTest(test.TestCase):
 
   def testRaisesErrorModelNotBuilt(self):
     model = keras.Sequential([
-        quantize_annotate(keras.layers.Dense(10), **self.quant_params1)])
+        quantize_annotate(keras.layers.Dense(10))])
 
     self.assertFalse(model.built)
     with self.assertRaises(ValueError):
@@ -191,16 +186,15 @@ class QuantizeApplyTest(test.TestCase):
 
   def _get_annotated_sequential_model(self):
     return keras.Sequential([
-        quantize_annotate(keras.layers.Conv2D(32, 5), input_shape=(28, 28, 1),
-                          **self.quant_params1),
-        quantize_annotate(keras.layers.Dense(10), **self.quant_params2)
+        quantize_annotate(keras.layers.Conv2D(32, 5), input_shape=(28, 28, 1)),
+        quantize_annotate(keras.layers.Dense(10))
     ])
 
   def _get_annotated_functional_model(self):
     inputs = keras.Input(shape=(28, 28, 1))
     x = quantize_annotate(
-        keras.layers.Conv2D(32, 5), **self.quant_params1)(inputs)
-    results = quantize_annotate(keras.layers.Dense(10), **self.quant_params2)(x)
+        keras.layers.Conv2D(32, 5))(inputs)
+    results = quantize_annotate(keras.layers.Dense(10))(x)
 
     return keras.Model(inputs=inputs, outputs=results)
 
@@ -283,8 +277,7 @@ class QuantizeApplyTest(test.TestCase):
     model = keras.Sequential([
         quantize_annotate(
             keras.layers.Conv2D(32, 5, activation='relu'),
-            input_shape=(28, 28, 1),
-            **quant_params)
+            input_shape=(28, 28, 1))
     ])
 
     quantized_model = quantize_emulate.quantize_apply(model)
@@ -304,8 +297,7 @@ class QuantizeApplyTest(test.TestCase):
 
     inputs = keras.Input(shape=(28, 28, 1))
     results = quantize_annotate(
-        keras.layers.Conv2D(32, 5, activation='relu'),
-        **self.quant_params1)(inputs)
+        keras.layers.Conv2D(32, 5, activation='relu'))(inputs)
     model = keras.Model(inputs=inputs, outputs=results)
 
     quantized_model = quantize_emulate.quantize_apply(model)

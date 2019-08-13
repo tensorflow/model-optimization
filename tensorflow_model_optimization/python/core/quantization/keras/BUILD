@@ -183,8 +183,7 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        ":quantize_emulatable_layer",
-        ":quantize_emulate_registry",
+        ":quantize_provider",
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
@@ -200,7 +199,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
-        ":quantize_emulatable_layer",
+        ":quantize_provider",
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
