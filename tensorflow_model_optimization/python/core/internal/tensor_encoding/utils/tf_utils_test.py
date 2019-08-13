@@ -56,12 +56,60 @@ class FastWalshHadamardTransformTests(tf.test.TestCase, parameterized.TestCase):
       tf_utils.fast_walsh_hadamard_transform(x)
 
   @parameterized.parameters([[1, 3], [1, 7], [1, 9], [4, 3]])
-  def test_illegal_inputs_power_of_two(self, *dims):
-    """Tests incorrect shape of the rank 2 input."""
+  def test_illegal_inputs_static_power_of_two(self, *dims):
+    """Tests incorrect static shape of the rank 2 input."""
     x = tf.random.normal(dims)
     with self.assertRaisesRegexp(ValueError,
                                  'The dimension of x must be a power of two.'):
       tf_utils.fast_walsh_hadamard_transform(x)
+
+  def test_illegal_inputs_dynamic_power_of_two(self):
+    """Tests incorrect dynamic shape of the rank 2 input."""
+    rand = tf.random.uniform((), maxval=3, dtype=tf.int32)
+    x = tf.random.normal((3, 3**rand))
+    hx = tf_utils.fast_walsh_hadamard_transform(x)
+    with self.assertRaisesOpError('The dimension of x must be a power of two.'):
+      hx = self.evaluate(hx)
+
+  @parameterized.parameters([[1, 1], [4, 1], [2, 2], [1, 8], [1, 4]])
+  def test_static_input_shape(self, *dims):
+    """Tests static input shape."""
+    x = tf.random.normal(dims)
+    hx_tf = tf_utils.fast_walsh_hadamard_transform(x)
+    hhx_tf = tf_utils.fast_walsh_hadamard_transform(hx_tf)
+
+    x, hx_tf, hhx_tf = self.evaluate([x, hx_tf, hhx_tf])
+    self.assertAllEqual(x.shape, hhx_tf.shape)
+    self.assertAllClose(x, hhx_tf)
+
+  @parameterized.parameters([[1, 1], [4, 1], [2, 2], [1, 8], [1, 4]])
+  def test_static_input_output_shape(self, *dims):
+    """Tests static output shape is identical to static input shape."""
+    x = tf.random.normal(dims)
+    hx_tf = tf_utils.fast_walsh_hadamard_transform(x)
+    hhx_tf = tf_utils.fast_walsh_hadamard_transform(hx_tf)
+    self.assertEqual(list(dims), hx_tf.shape.as_list())
+    self.assertEqual(list(dims), hhx_tf.shape.as_list())
+
+  def test_dynamic_input_shape(self):
+    """Tests dynamic input shape."""
+    rand = tf.random.uniform((), maxval=4, dtype=tf.int32)
+    x = tf.random.normal((3, 2**rand))
+    hx_tf = tf_utils.fast_walsh_hadamard_transform(x)
+    hhx_tf = tf_utils.fast_walsh_hadamard_transform(hx_tf)
+    x, hx_tf, hhx_tf = self.evaluate([x, hx_tf, hhx_tf])
+    self.assertAllEqual(x.shape, hhx_tf.shape)
+    self.assertAllClose(x, hhx_tf)
+
+  def test_dynamic_input_shape_dim_one(self):
+    """Tests input shape where the second dimension is 1, dynamically known."""
+    rand = tf.random.uniform((), maxval=1, dtype=tf.int32)
+    x = tf.random.normal((3, 2**rand))
+    hx_tf = tf_utils.fast_walsh_hadamard_transform(x)
+    hhx_tf = tf_utils.fast_walsh_hadamard_transform(hx_tf)
+    x, hx_tf, hhx_tf = self.evaluate([x, hx_tf, hhx_tf])
+    self.assertAllEqual(x.shape, hhx_tf.shape)
+    self.assertAllClose(x, hhx_tf)
 
   @parameterized.parameters([2, 4, 8, 16])
   def test_output_same_as_simple_python_implementation(self, dim):
