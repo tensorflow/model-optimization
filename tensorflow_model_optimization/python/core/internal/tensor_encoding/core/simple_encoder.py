@@ -11,7 +11,7 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-"""Stateless and stateful Encoder classes for encoding in "one-to-many" case."""
+"""Base Encoder class for encoding in the "one-to-many" case."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -36,15 +36,15 @@ class SimpleEncoder(object):
   potentially many other locations, leaving the communication between encoding
   and decoding up to the user.
 
-  An instance of this class is capable of encoding only values of a shape and
-  dtype, as specified at construction time. For example, an separate instance of
-  this class should be used for encoding every weight of a model, as opposed to
-  a single instance being reused for each weight.
+  An instance of `SimpleEncoder` is capable of encoding only values of a shape
+  and dtype, as specified at construction time. For example, an separate
+  instance of this class should be used for encoding every `Variable` of a
+  model, as opposed to a single instance being reused for each `Variable`.
 
   `SimpleEncoder` exposes the state of the underlying encoder, and the user is
   responsible for keeping track of the state in case the encoding should be
   adaptive as part of an iterative process. If state is not needed, it can be
-  ignored when calling the `encode` method.
+  simply ignored when calling the `encode` method.
   """
 
   def __init__(self, encoder, tensorspec):
@@ -57,7 +57,7 @@ class SimpleEncoder(object):
 
     Args:
       encoder: An `Encoder` object to be used for encoding.
-      tensorspec: A `TensorSpec`. The created `SimpleEncoder` will be
+      tensorspec: A `tf.TensorSpec`. The created `SimpleEncoder` will be
         constrained to only encode input values compatible with `tensorspec`.
 
     Returns:
@@ -65,12 +65,16 @@ class SimpleEncoder(object):
 
     Raises:
       TypeError:
-        If `encoder` is not an `Encoder` or `tensorspec` is not a `TensorSpec`.
+        If `encoder` is not an `Encoder` or `tensorspec` is not a
+        `tf.TensorSpec`.
     """
     if not isinstance(encoder, core_encoder.Encoder):
       raise TypeError('The encoder must be an instance of `Encoder`.')
     if not isinstance(tensorspec, tf.TensorSpec):
       raise TypeError('The tensorspec must be a tf.TensorSpec.')
+    if not tensorspec.shape.is_fully_defined():
+      raise TypeError('The shape of provided tensorspec must be fully defined.')
+    self._tensorspec = tensorspec
 
     # These dictionaries are filled inside of the initial_state_fn and encode_fn
     # methods, to be used in encode_fn and decode_fn methods, respectively.
@@ -142,7 +146,6 @@ class SimpleEncoder(object):
     self._initial_state_fn = initial_state_fn
     self._encode_fn = encode_fn
     self._decode_fn = decode_fn
-    self._tensorspec = tensorspec
 
   @property
   def input_tensorspec(self):
@@ -164,17 +167,17 @@ class SimpleEncoder(object):
   def encode(self, x, state=None, name=None):
     """Encodes the provided input.
 
-    If `state` is not provided, return value of the `initial_state` method will
-    be used.
+    If `state` is not provided, the return value of the `initial_state` method
+    will be used.
 
     Args:
       x: A `Tensor` to be encoded.
-      state: The (optional) current state, matching the tuple returned by the
-        `initial_state` method.
+      state: The (optional) current state. A tuple, matching the structure
+        returned by the `initial_state` method.
       name: `string`, name of the operation.
 
     Returns:
-      A `(encoded_x, update_state)` tuple, where `encoded_x` is a dictionary of
+      A `(encoded_x, updated_state)` tuple, where `encoded_x` is a dictionary of
       `Tensor` values representing the encoded `x`, and `updated_state` is the
       state updated after encoding, of the same structure as `state`.
 

@@ -26,8 +26,6 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing 
 
 # Abbreviated constants used in tests.
 TENSORS = simple_encoder._TENSORS
-PARAMS = simple_encoder._PARAMS
-SHAPES = simple_encoder._SHAPES
 
 P1_VALS = test_utils.PlusOneEncodingStage.ENCODED_VALUES_KEY
 T2_VALS = test_utils.TimesTwoEncodingStage.ENCODED_VALUES_KEY
@@ -156,30 +154,12 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
     _, _, decoded_x, _ = self.evaluate(iteration(x, state))
     self.assertAllEqual([[7.0] * 5] * 3, decoded_x)
 
-  @tf_test_util.run_all_in_graph_and_eager_modes
-  def test_decode_needs_input_shape_dynamic(self):
-    """Tests that mechanism for passing input shape works with dynamic shape."""
-    if tf.executing_eagerly():
-      fn = tf.function(test_utils.get_tensor_with_random_shape)
-      tensorspec = tf.TensorSpec.from_tensor(
-          fn.get_concrete_function().structured_outputs)
-      x = fn()
-    else:
-      x = test_utils.get_tensor_with_random_shape()
-      tensorspec = tf.TensorSpec.from_tensor(x)
-    encoder = simple_encoder.SimpleEncoder(
-        core_encoder.EncoderComposer(
-            test_utils.ReduceMeanEncodingStage()).make(), tensorspec)
-
-    # Validate the premise of the test - that encode mehtod expects an unknown
-    # shape. This should be true both for graph and eager mode.
-    assert (encoder._encode_fn.get_concrete_function().inputs[0].shape.as_list(
-    ) == [None])
-
-    state = encoder.initial_state()
-    iteration = _make_iteration_function(encoder)
-    x, _, decoded_x, _ = self.evaluate(iteration(x, state))
-    self.assertAllEqual(x.shape, decoded_x.shape)
+  def test_not_fully_defined_shape_raises(self):
+    """Tests tensorspec without fully defined shape."""
+    encoder = core_encoder.EncoderComposer(
+        test_utils.PlusOneOverNEncodingStage()).make()
+    with self.assertRaisesRegex(TypeError, 'fully defined'):
+      simple_encoder.SimpleEncoder(encoder, tf.TensorSpec((None,), tf.float32))
 
   @tf_test_util.run_all_in_graph_and_eager_modes
   def test_input_signature_enforced(self):
@@ -204,6 +184,7 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
       encoder.decode(bad_encoded_x)
 
   def test_input_tensorspec(self):
+    """Tests input_tensorspec property."""
     x = tf.constant([[1.0, 2.0], [3.0, 4.0]])
     encoder = simple_encoder.SimpleEncoder(
         core_encoder.EncoderComposer(
@@ -219,12 +200,12 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
       simple_encoder.SimpleEncoder(not_an_encoder, tensorspec)
 
   @parameterized.parameters([1.0, 'str', object])
-  def test_not_a_tensorspec_raises(self, bad_tensorspec):
+  def test_not_a_tensorspec_raises(self, not_a_tensorspec):
     """Tests invalid type of tensorspec argument."""
     encoder = core_encoder.EncoderComposer(
         test_utils.PlusOneOverNEncodingStage()).make()
     with self.assertRaisesRegex(TypeError, 'TensorSpec'):
-      simple_encoder.SimpleEncoder(encoder, bad_tensorspec)
+      simple_encoder.SimpleEncoder(encoder, not_a_tensorspec)
 
 
 def _make_iteration_function(encoder):

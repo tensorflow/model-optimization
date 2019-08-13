@@ -11,6 +11,7 @@ py_library(
     deps = [
         ":core_encoder",
         ":encoding_stage",
+        ":gather_encoder",
         ":simple_encoder",
     ],
 )
@@ -59,6 +60,33 @@ py_test(
         # mock dep1,
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
+    ],
+)
+
+py_library(
+    name = "gather_encoder",
+    srcs = ["gather_encoder.py"],
+    deps = [
+        ":core_encoder",
+        # tensorflow dep1,
+        # python:util tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/internal/tensor_encoding/utils:py_utils",
+    ],
+)
+
+py_test(
+    name = "gather_encoder_test",
+    size = "small",
+    srcs = ["gather_encoder_test.py"],
+    deps = [
+        ":core_encoder",
+        ":encoding_stage",
+        ":gather_encoder",
+        # absl/testing:parameterized dep1,
+        # numpy dep1,
+        # tensorflow dep1,
+        # python:framework_test_lib tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
     ],
 )

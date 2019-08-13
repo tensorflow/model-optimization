@@ -26,4 +26,5 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.enc
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.encoding_stage import tf_style_adaptive_encoding_stage
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.encoding_stage import tf_style_encoding_stage
 
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.gather_encoder import GatherEncoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core.simple_encoder import SimpleEncoder
