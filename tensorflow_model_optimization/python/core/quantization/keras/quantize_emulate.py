@@ -168,24 +168,6 @@ def quantize_apply(model):
 
     return cloned_model
 
-  def _quantize_activation(activation, parent_class, quantize_params):
-    try:
-      return quantize_aware_activation.QuantizeAwareActivation(
-          activation.__name__, parent_class, **quantize_params)
-    except TypeError:
-      # Non-standard activation. Could be a custom callable, or an advanced
-      # activation. Simply return the original activation for now.
-      # TODO(pulkitb): Determine how to handle custom activations and advanced
-      # activations.
-      return activation
-
-  def _get_quantize_activation_params(layer):
-    quant_params = layer.get_quantize_params()
-    # narrow_range is not relevant to quantizing activations.
-    quant_params.pop('narrow_range')
-
-    return quant_params
-
   def _apply_quantization(quant_annotate_layer):
     return QuantizeEmulateWrapper(
         quant_annotate_layer.layer,
@@ -195,32 +177,7 @@ def quantize_apply(model):
   # model without modifying the weights of the original model.
   model_copy = _clone_model_with_weights(model)
 
-  # Apply all graph level transformations.
-  replace_map = {}
-
-  # Replace activations in layers with QuantAwareActivation.
-  # Dense(activation='relu') -> Dense(activation=QuantAwareActivation('relu'))
-  # TODO(pulkitb): Not all layers (LSTMs) have just activation. Add
-  # generic handling for all layers.
-  for layer in model_copy.layers:
-    if isinstance(layer, quant_annotate.QuantizeAnnotate) and \
-        (layer.layer.activation is not None and
-         layer.layer.activation != keras.activations.linear):
-      quantized_layer = _apply_quantization(layer)
-
-      quantized_layer.layer.activation = _quantize_activation(
-          layer.layer.activation, layer.layer.__class__,
-          _get_quantize_activation_params(layer))
-
-      replace_map[layer] = quantized_layer
-
-  # TODO(pulkitb): Transform [Dense(), ReLU()] to be quant aware.
-
   def _add_quant_emulate_wrapper(layer):  # pylint: disable=missing-docstring
-    # Quantized layer has been constructed during graph transformation. Return.
-    if layer in replace_map:
-      return replace_map[layer]
-
     if not isinstance(layer, quant_annotate.QuantizeAnnotate):
       return layer
 

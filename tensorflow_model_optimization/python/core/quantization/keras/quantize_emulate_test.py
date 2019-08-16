@@ -32,7 +32,6 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 quantize_annotate = quantize_emulate.quantize_annotate
 QuantizeEmulate = quantize_emulate.QuantizeEmulate
 QuantizeEmulateWrapper = quantize_emulate_wrapper.QuantizeEmulateWrapper
-QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 
 
 class QuantizeEmulateTest(test.TestCase):
@@ -269,48 +268,6 @@ class QuantizeApplyTest(test.TestCase):
     quantized_model = quantize_emulate.quantize_apply(model)
 
     self._assert_model_emulated(model, quantized_model)
-
-  # Transformation Tests
-
-  def testQuantizesActivationsWithinLayer_Sequential(self):
-    quant_params = {'num_bits': 8, 'symmetric': True}
-    model = keras.Sequential([
-        quantize_annotate(
-            keras.layers.Conv2D(32, 5, activation='relu'),
-            input_shape=(28, 28, 1))
-    ])
-
-    quantized_model = quantize_emulate.quantize_apply(model)
-
-    # We expect activation to be modified.
-    self._assert_model_emulated(model, quantized_model, ['activation'])
-
-    conv_layer = quantized_model.layers[0].layer
-    self.assertIsInstance(conv_layer.activation, QuantizeAwareActivation)
-    self.assertEqual(
-        keras.activations.get('relu'), conv_layer.activation.activation)
-    self.assertEqual(keras.layers.Conv2D, conv_layer.activation.parent_layer)
-    self.assertEqual(quant_params, conv_layer.activation.get_quantize_params())
-
-  def testQuantizesActivationsWithinLayer_Functional(self):
-    quant_params = {'num_bits': 8, 'symmetric': True}
-
-    inputs = keras.Input(shape=(28, 28, 1))
-    results = quantize_annotate(
-        keras.layers.Conv2D(32, 5, activation='relu'))(inputs)
-    model = keras.Model(inputs=inputs, outputs=results)
-
-    quantized_model = quantize_emulate.quantize_apply(model)
-
-    # We expect activation to be modified.
-    self._assert_model_emulated(model, quantized_model, ['activation'])
-
-    conv_layer = quantized_model.layers[1].layer
-    self.assertIsInstance(conv_layer.activation, QuantizeAwareActivation)
-    self.assertEqual(
-        keras.activations.get('relu'), conv_layer.activation.activation)
-    self.assertEqual(keras.layers.Conv2D, conv_layer.activation.parent_layer)
-    self.assertEqual(quant_params, conv_layer.activation.get_quantize_params())
 
 
 if __name__ == '__main__':
