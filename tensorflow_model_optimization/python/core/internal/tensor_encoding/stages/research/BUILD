@@ -11,6 +11,7 @@ py_library(
     deps = [
         ":clipping",
         ":kashin",
+        ":misc",
         ":quantization",
     ],
 )
@@ -77,6 +78,28 @@ py_test(
     srcs = ["quantization_test.py"],
     deps = [
         ":quantization",
+        # absl/testing:parameterized dep1,
+        # numpy dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
+    ],
+)
+
+py_library(
+    name = "misc",
+    srcs = ["misc.py"],
+    deps = [
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:encoding_stage",
+    ],
+)
+
+py_test(
+    name = "misc_test",
+    size = "small",
+    srcs = ["misc_test.py"],
+    deps = [
+        ":misc",
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
