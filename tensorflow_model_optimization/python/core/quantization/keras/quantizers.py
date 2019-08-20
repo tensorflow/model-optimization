@@ -53,6 +53,22 @@ class Quantizer(object):
     Returns: quantized tensor.
     """
 
+  @abc.abstractmethod
+  def get_config(self):
+    raise NotImplementedError('Quantizer should implement get_config().')
+
+  @classmethod
+  def from_config(cls, config):
+    """Instantiates a `Quantizer` from its config.
+
+    Args:
+        config: Output of `get_config()`.
+
+    Returns:
+        A `Quantizer` instance.
+    """
+    return cls(**config)
+
 
 class LastValueQuantizer(Quantizer):
   """Quantize tensor based on range the last batch of values."""
@@ -96,6 +112,24 @@ class LastValueQuantizer(Quantizer):
         # TODO(pulkitb): Figure out a clean way to use name_prefix here.
     )
 
+  def get_config(self):
+    return {
+        'num_bits': self.num_bits,
+        'per_axis': self.per_axis,
+        'symmetric': self.symmetric,
+    }
+
+  def __eq__(self, other):
+    if not isinstance(other, LastValueQuantizer):
+      return False
+
+    return (self.num_bits == other.num_bits and
+            self.per_axis == other.per_axis and
+            self.symmetric == other.symmetric)
+
+  def __ne__(self, other):
+    return not self.__eq__(other)
+
 
 class MovingAverageQuantizer(Quantizer):
   """Quantize tensor based on a moving average of values across batches."""
@@ -137,3 +171,28 @@ class MovingAverageQuantizer(Quantizer):
         narrow_range=False,
         # TODO(pulkitb): Figure out a clean way to use name_prefix here.
     )
+
+  def get_config(self):
+    return {
+        'num_bits': self.num_bits,
+        'per_axis': self.per_axis,
+        'symmetric': self.symmetric,
+    }
+
+  def __eq__(self, other):
+    if not isinstance(other, MovingAverageQuantizer):
+      return False
+
+    return (self.num_bits == other.num_bits and
+            self.per_axis == other.per_axis and
+            self.symmetric == other.symmetric)
+
+  def __ne__(self, other):
+    return not self.__eq__(other)
+
+
+def _types_dict():
+  return {
+      'LastValueQuantizer': LastValueQuantizer,
+      'MovingAverageQuantizer': MovingAverageQuantizer
+  }

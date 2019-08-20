@@ -18,11 +18,15 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl.testing import parameterized
+
 import numpy as np
 
 from tensorflow.python.client import session
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
+from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
+from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
 from tensorflow.python.ops import variable_scope
 from tensorflow.python.ops import variables
 from tensorflow.python.platform import test
@@ -30,7 +34,9 @@ from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
 
-class QuantizersTest(test.TestCase):
+@parameterized.parameters(
+    quantizers.LastValueQuantizer, quantizers.MovingAverageQuantizer)
+class QuantizersTest(test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(QuantizersTest, self).setUp()
@@ -63,15 +69,32 @@ class QuantizersTest(test.TestCase):
       print('min_var: ', min_max_values[0])
       print('max_var: ', min_max_values[1])
 
-  def testLastValueQuantizer(self):
-    quantizer = quantizers.LastValueQuantizer(**self.quant_params)
+  def testQuantizer(self, quantizer_type):
+    quantizer = quantizer_type(**self.quant_params)
 
     self._test_quantizer(quantizer)
 
-  def testMovingAverageQuantizer(self):
-    quantizer = quantizers.MovingAverageQuantizer(**self.quant_params)
+  def testSerialization(self, quantizer_type):
+    quantizer = quantizer_type(**self.quant_params)
 
-    self._test_quantizer(quantizer)
+    expected_config = {
+        'class_name': quantizer_type.__name__,
+        'config': {
+            'num_bits': 8,
+            'per_axis': False,
+            'symmetric': False
+        }
+    }
+    serialized_quantizer = serialize_keras_object(quantizer)
+
+    self.assertEqual(expected_config, serialized_quantizer)
+
+    quantizer_from_config = deserialize_keras_object(
+        serialized_quantizer,
+        module_objects=globals(),
+        custom_objects=quantizers._types_dict())
+
+    self.assertEqual(quantizer, quantizer_from_config)
 
 
 if __name__ == '__main__':
