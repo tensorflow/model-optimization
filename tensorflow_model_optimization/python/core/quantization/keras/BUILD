@@ -99,6 +99,69 @@ py_library(
 )
 
 py_library(
+    name = "quantize_aware_activation",
+    srcs = [
+        "quantize_aware_activation.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quant_ops",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "quantize_aware_activation_test",
+    srcs = [
+        "quantize_aware_activation_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_aware_activation",
+        ":quantizers",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_library(
+    name = "quantize_wrapper",
+    srcs = [
+        "quantize_wrapper.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_aware_activation",
+        ":quantize_provider",
+        ":quantizers",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "quantize_wrapper_test",
+    srcs = [
+        "quantize_wrapper_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_wrapper",
+        # numpy dep1,
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_registry",
+    ],
+)
+
+py_library(
     name = "quantize_emulatable_layer",
     srcs = [
         "quantize_emulatable_layer.py",
@@ -200,36 +263,6 @@ py_test(
     deps = [
         ":quantize_annotate",
         ":quantize_provider",
-        # tensorflow dep1,
-        # python/keras tensorflow dep2,
-    ],
-)
-
-py_library(
-    name = "quantize_aware_activation",
-    srcs = [
-        "quantize_aware_activation.py",
-    ],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":quant_ops",
-        # tensorflow dep1,
-        # python/keras tensorflow dep2,
-    ],
-)
-
-py_test(
-    name = "quantize_aware_activation_test",
-    srcs = [
-        "quantize_aware_activation_test.py",
-    ],
-    python_version = "PY3",
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":quantize_aware_activation",
-        ":quantizers",
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
