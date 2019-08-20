@@ -21,18 +21,37 @@ from __future__ import print_function
 import numpy as np
 
 from tensorflow.python import keras
+from tensorflow.python.keras import activations
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
+from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
 QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
+MovingAverageQuantizer = quantizers.MovingAverageQuantizer
 
 
 class QuantizeAwareQuantizationTest(test.TestCase):
 
+  def setUp(self):
+    super(QuantizeAwareQuantizationTest, self).setUp()
+    self.quantizer = MovingAverageQuantizer(
+        num_bits=8, per_axis=False, symmetric=True)
+
+  class TestLayer(keras.layers.Layer):
+
+    def call(self, inputs):
+      return self.activation(inputs)
+
+    def compute_output_shape(self, input_shape):
+      return input_shape
+
   def testAppliesQuantizationPostActivation(self):
-    model = keras.Sequential([
-        QuantizeAwareActivation('relu', 'dense', num_bits=8)])
+    layer = self.TestLayer()
+    layer.activation = QuantizeAwareActivation(
+        activations.get('relu'), self.quantizer, 0, layer)
+
+    model = keras.Sequential([layer])
 
     x = np.array([-6.0, -3.0, 0.0, 0.05, 0.1, 3.0, 6.0])
     # All negative values are removed due to ReLU. The other expected values
@@ -46,8 +65,11 @@ class QuantizeAwareQuantizationTest(test.TestCase):
     self.assertAllClose(expected_activation, model.predict(x))
 
   def testAppliesQuantizationPreAndPostActivation(self):
-    model = keras.Sequential([
-        QuantizeAwareActivation('softmax', 'dense', num_bits=8)])
+    layer = self.TestLayer()
+    layer.activation = QuantizeAwareActivation(
+        activations.get('softmax'), self.quantizer, 0, layer)
+
+    model = keras.Sequential([layer])
 
     x = np.array([[1.0, 2.0]])
     # expected_activation is determined using the float buckets when [-6, 6] is
@@ -60,6 +82,7 @@ class QuantizeAwareQuantizationTest(test.TestCase):
     expected_activation = np.array([[0.28235292, 0.70588255]])
 
     self.assertAllClose(expected_activation, model.predict(x))
+
 
 if __name__ == '__main__':
   test.main()

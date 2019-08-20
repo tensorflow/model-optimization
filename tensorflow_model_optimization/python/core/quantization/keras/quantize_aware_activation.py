@@ -19,14 +19,10 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow.python.keras import activations
-from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers
-from tensorflow.python.keras.layers import Layer
-
-from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 
 
-class QuantizeAwareActivation(Layer):
+class QuantizeAwareActivation(object):
   """Activation layer for quantization aware training.
 
   The goal of this layer is to apply quantize operations during training such
@@ -51,107 +47,70 @@ class QuantizeAwareActivation(Layer):
 
   _PRE_ACTIVATION_TYPES = {'softmax'}
 
-  def __init__(
-      self,
-      activation,
-      parent_layer,
-      num_bits,
-      symmetric=True,
-      **kwargs):
+  def __init__(self, activation, quantizer, step, quantize_wrapper):
     """Construct a QuantizeAwareActivation layer.
 
     Args:
-      activation: Activation function to use.
-        If you don't specify anything, no activation is applied
+      activation: Activation function to use. If you don't specify anything, no
+        activation is applied
         (ie. "linear" activation: `a(x) = x`).
-      parent_layer: The layer this activation is being applied to. Such
-        as Conv2D, Dense etc.
-      num_bits: Number of bits for quantization
-      symmetric: If true, use symmetric quantization limits instead of training
-        the minimum and maximum of each quantization range separately.
-      **kwargs: Additional keyword arguments to be passed to the keras layer.
+      quantizer: `Quantizer` to be used to quantize the activation.
+      step: Variable which tracks optimizer step.
+      quantize_wrapper: `QuantizeWrapper` which owns this activation.
     """
-    super(QuantizeAwareActivation, self).__init__(**kwargs)
-
     self.activation = activations.get(activation)
-    self.parent_layer = parent_layer
+    self.quantizer = quantizer
+    self.step = step
+    self.quantize_wrapper = quantize_wrapper
 
-    self.num_bits = num_bits
-    self.symmetric = symmetric
+    self._training = False
 
-    # TODO(pulkitb): Generate a meaningful name for this layer, which
-    # ideally also includes the parent layer.
+    if self._should_pre_quantize():
+      self._min_pre_activation, self._max_pre_activation = \
+        self._add_range_weights('pre_activation')
 
-  def _requires_pre_quant(self):
-    # TODO(pulkitb): Make this more sophisticated. This should match the
-    # implementation of kernels on-device.
+    self._min_post_activation, self._max_post_activation = \
+      self._add_range_weights('post_activation')
+
+  def _should_pre_quantize(self):
+    # TODO(pulkitb): Add logic to deduce whether we should pre-quantize.
+    # Whether we apply quantize operations around activations depends on the
+    # implementation of the specific kernel. For example, ReLUs are fused in
+    # whereas Softmax ops are not. Should linear have post-quantize?
     return self.activation.__name__ in self._PRE_ACTIVATION_TYPES
 
-  def build(self, input_shape):
-    if self._requires_pre_quant():
-      self._min_pre_activation = self.add_variable(
-          'min_pre_activation',
-          initializer=initializers.Constant(-6.0),
-          trainable=False)
-      self._max_pre_activation = self.add_variable(
-          'max_pre_activation',
-          initializer=initializers.Constant(6.0),
-          trainable=False)
+  def _add_range_weights(self, name):
+    min_var = self.quantize_wrapper.add_weight(
+        name + '_min', initializer=initializers.Constant(-6.0), trainable=False)
+    max_var = self.quantize_wrapper.add_weight(
+        name + '_max', initializer=initializers.Constant(6.0), trainable=False)
 
-    self._min_post_activation = self.add_variable(
-        'min_post_activation',
-        initializer=initializers.Constant(-6.0),
-        trainable=False)
-    self._max_post_activation = self.add_variable(
-        'max_post_activation',
-        initializer=initializers.Constant(6.0),
-        trainable=False)
+    return min_var, max_var
 
-  def call(self, inputs, training=None):
-    # TODO(pulkitb): Construct graph for both training/eval modes.
-    if training is None:
-      training = K.learning_phase()
+  @property
+  def training(self):
+    return self._training
 
+  @training.setter
+  def training(self, value):
+    self._training = value
+
+  def __call__(self, inputs, *args, **kwargs):
+    # TODO(pulkitb): Add cond here to handle training properly.
     x = inputs
-    if self._requires_pre_quant():
-      x = quant_ops.MovingAvgQuantize(
-          inputs,
-          self._min_pre_activation,
-          self._max_pre_activation,
-          ema_decay=0.999,
-          is_training=training,
-          num_bits=self.num_bits,
-          symmetric=self.symmetric,
-          name_prefix=self.name)
+    if self._should_pre_quantize():
+      x = self.quantizer(
+          x, self.step, self._training, **{
+              'min_var': self._min_pre_activation,
+              'max_var': self._max_pre_activation
+          })
 
-    x = self.activation(x)
-    x = quant_ops.MovingAvgQuantize(
-        x,
-        self._min_post_activation,
-        self._max_post_activation,
-        ema_decay=0.999,
-        is_training=training,
-        num_bits=self.num_bits,
-        symmetric=self.symmetric,
-        name_prefix=self.name)
+    x = self.activation(x, *args, **kwargs)
+
+    x = self.quantizer(
+        x, self.step, self._training, **{
+            'min_var': self._min_post_activation,
+            'max_var': self._max_post_activation
+        })
 
     return x
-
-  def get_quantize_params(self):
-    return {
-        'num_bits': self.num_bits,
-        'symmetric': self.symmetric,
-    }
-
-  def compute_output_shape(self, input_shape):
-    return input_shape
-
-  def get_config(self):
-    base_config = super(QuantizeAwareActivation, self).get_config()
-    config = {
-        'activation': activations.serialize(self.activation),
-        'parent_layer': self.parent_layer,
-        'num_bits': self.num_bits,
-        'symmetric': self.symmetric,
-    }
-    return dict(list(base_config.items()) + list(config.items()))

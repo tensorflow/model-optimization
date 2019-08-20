@@ -229,6 +229,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
+        ":quantizers",
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
