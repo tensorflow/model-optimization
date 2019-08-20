@@ -18,7 +18,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import numpy as np
+
 from tensorflow.python import keras
+from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import layers as l
 from tensorflow.python.platform import test
 
@@ -26,7 +29,41 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
 
 
-class TFLiteQuantizeRegistryTest(test.TestCase):
+class _TestHelper(object):
+
+  def _convert_list(self, list_of_tuples):
+    """Transforms a list of 2-tuples to a tuple of 2 lists.
+
+    `QuantizeProvider` methods return a list of 2-tuples in the form
+    [(weight1, quantizer1), (weight2, quantizer2)]. This function converts
+    it into a 2-tuple of lists. ([weight1, weight2]), (quantizer1, quantizer2).
+
+    Args:
+      list_of_tuples: List of 2-tuples.
+
+    Returns:
+      2-tuple of lists.
+    """
+    list1 = []
+    list2 = []
+    for a, b in list_of_tuples:
+      list1.append(a)
+      list2.append(b)
+
+    return list1, list2
+
+  # TODO(pulkitb): Consider asserting on full equality for quantizers.
+
+  def _assert_weight_quantizers(self, quantizer_list):
+    for quantizer in quantizer_list:
+      self.assertIsInstance(quantizer, quantizers.LastValueQuantizer)
+
+  def _assert_activation_quantizers(self, quantizer_list):
+    for quantizer in quantizer_list:
+      self.assertIsInstance(quantizer, quantizers.MovingAverageQuantizer)
+
+
+class TFLiteQuantizeRegistryTest(test.TestCase, _TestHelper):
 
   def setUp(self):
     super(TFLiteQuantizeRegistryTest, self).setUp()
@@ -75,37 +112,6 @@ class TFLiteQuantizeRegistryTest(test.TestCase):
     with self.assertRaises(ValueError):
       self.quantize_registry.get_quantize_provider(self.CustomLayer())
 
-  # TODO(pulkitb): Consider asserting on full equality for quantizers.
-
-  def _assert_weight_quantizers(self, quantizer_list):
-    for quantizer in quantizer_list:
-      self.assertIsInstance(quantizer, quantizers.LastValueQuantizer)
-
-  def _assert_activation_quantizers(self, quantizer_list):
-    for quantizer in quantizer_list:
-      self.assertIsInstance(quantizer, quantizers.MovingAverageQuantizer)
-
-  def _convert_list(self, list_of_tuples):
-    """Transforms a list of 2-tuples to a tuple of 2 lists.
-
-    `QuantizeProvider` methods return a list of 2-tuples in the form
-    [(weight1, quantizer1), (weight2, quantizer2)]. This function converts
-    it into a 2-tuple of lists. ([weight1, weight2]), (quantizer1, quantizer2).
-
-    Args:
-      list_of_tuples: List of 2-tuples.
-
-    Returns:
-      2-tuple of lists.
-    """
-    list1 = []
-    list2 = []
-    for a, b in list_of_tuples:
-      list1.append(a)
-      list2.append(b)
-
-    return list1, list2
-
   def testReturnsProvider_KerasLayer(self):
     model = keras.Sequential([(
         l.Dense(2, input_shape=(3,)))])
@@ -123,6 +129,15 @@ class TFLiteQuantizeRegistryTest(test.TestCase):
 
     self._assert_activation_quantizers(activation_quantizers)
     self.assertEqual([layer.activation], activations)
+
+    quantize_kernel = keras.backend.variable(
+        np.ones(layer.kernel.shape.as_list()))
+    quantize_activation = keras.activations.relu
+    quantize_provider.set_quantize_weights(layer, [quantize_kernel])
+    quantize_provider.set_quantize_activations(layer, [quantize_activation])
+
+    self.assertEqual(layer.kernel, quantize_kernel)
+    self.assertEqual(layer.activation, quantize_activation)
 
   def testReturnsProvider_KerasRNNLayer(self):
     model = keras.Sequential([(
@@ -167,6 +182,190 @@ class TFLiteQuantizeRegistryTest(test.TestCase):
         [lstm_cell.activation, lstm_cell.recurrent_activation,
          gru_cell.activation, gru_cell.recurrent_activation],
         activations)
+
+
+class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
+
+  def _simple_dense_layer(self):
+    layer = l.Dense(2)
+    layer.build(input_shape=(3,))
+    return layer
+
+  def testGetsQuantizeWeightsAndQuantizers(self):
+    layer = self._simple_dense_layer()
+
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        ['kernel'], ['activation'])
+    (weights, weight_quantizers) = self._convert_list(
+        quantize_provider.get_weights_and_quantizers(layer))
+
+    self._assert_weight_quantizers(weight_quantizers)
+    self.assertEqual([layer.kernel], weights)
+
+  def testGetsQuantizeActivationsAndQuantizers(self):
+    layer = self._simple_dense_layer()
+
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        ['kernel'], ['activation'])
+    (activations, activation_quantizers) = self._convert_list(
+        quantize_provider.get_activations_and_quantizers(layer))
+
+    self._assert_activation_quantizers(activation_quantizers)
+    self.assertEqual([layer.activation], activations)
+
+  def testSetsQuantizeWeights(self):
+    layer = self._simple_dense_layer()
+    quantize_kernel = K.variable(np.ones(layer.kernel.shape.as_list()))
+
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        ['kernel'], ['activation'])
+    quantize_provider.set_quantize_weights(layer, [quantize_kernel])
+
+    self.assertEqual(layer.kernel, quantize_kernel)
+
+  def testSetsQuantizeActivations(self):
+    layer = self._simple_dense_layer()
+    quantize_activation = keras.activations.relu
+
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        ['kernel'], ['activation'])
+    quantize_provider.set_quantize_activations(layer, [quantize_activation])
+
+    self.assertEqual(layer.activation, quantize_activation)
+
+  def testSetsQuantizeWeights_ErrorOnWrongNumberOfWeights(self):
+    layer = self._simple_dense_layer()
+    quantize_kernel = K.variable(np.ones(layer.kernel.shape.as_list()))
+
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        ['kernel'], ['activation'])
+
+    with self.assertRaises(ValueError):
+      quantize_provider.set_quantize_weights(layer, [])
+
+    with self.assertRaises(ValueError):
+      quantize_provider.set_quantize_weights(
+          layer, [quantize_kernel, quantize_kernel])
+
+  def testSetsQuantizeWeights_ErrorOnWrongShapeOfWeight(self):
+    layer = self._simple_dense_layer()
+    quantize_kernel = K.variable(np.ones([1, 2]))
+
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        ['kernel'], ['activation'])
+
+    with self.assertRaises(ValueError):
+      quantize_provider.set_quantize_weights(layer, [quantize_kernel])
+
+  def testSetsQuantizeActivations_ErrorOnWrongNumberOfActivations(self):
+    layer = self._simple_dense_layer()
+    quantize_activation = keras.activations.relu
+
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        ['kernel'], ['activation'])
+
+    with self.assertRaises(ValueError):
+      quantize_provider.set_quantize_activations(layer, [])
+
+    with self.assertRaises(ValueError):
+      quantize_provider.set_quantize_activations(
+          layer, [quantize_activation, quantize_activation])
+
+
+class TFLiteQuantizeProviderRNNTest(test.TestCase, _TestHelper):
+
+  def setUp(self):
+    super(TFLiteQuantizeProviderRNNTest, self).setUp()
+
+    self.cell1 = l.LSTMCell(3)
+    self.cell2 = l.GRUCell(2)
+    self.layer = l.RNN([self.cell1, self.cell2])
+    self.layer.build(input_shape=(3, 2))
+
+    self.quantize_provider = tflite_quantize_registry.TFLiteQuantizeProviderRNN(
+        [['kernel', 'recurrent_kernel'], ['kernel', 'recurrent_kernel']],
+        [['activation', 'recurrent_activation'],
+         ['activation', 'recurrent_activation']]
+    )
+
+  def _expected_weights(self):
+    return [self.cell1.kernel, self.cell1.recurrent_kernel,
+            self.cell2.kernel, self.cell2.recurrent_kernel]
+
+  def _expected_activations(self):
+    return [self.cell1.activation, self.cell1.recurrent_activation,
+            self.cell2.activation, self.cell2.recurrent_activation]
+
+  def _dummy_weights(self, weight):
+    return K.variable(np.ones(weight.shape.as_list()))
+
+  def testGetsQuantizeWeightsAndQuantizers(self):
+    (weights, weight_quantizers) = self._convert_list(
+        self.quantize_provider.get_weights_and_quantizers(self.layer))
+
+    self._assert_weight_quantizers(weight_quantizers)
+    self.assertEqual(self._expected_weights(), weights)
+
+  def testGetsQuantizeActivationsAndQuantizers(self):
+    (activations, activation_quantizers) = self._convert_list(
+        self.quantize_provider.get_activations_and_quantizers(self.layer))
+
+    self._assert_activation_quantizers(activation_quantizers)
+    self.assertEqual(self._expected_activations(), activations)
+
+  def testSetsQuantizeWeights(self):
+    quantize_weights = [
+        self._dummy_weights(self.cell1.kernel),
+        self._dummy_weights(self.cell1.recurrent_kernel),
+        self._dummy_weights(self.cell2.kernel),
+        self._dummy_weights(self.cell2.recurrent_kernel)
+    ]
+
+    self.quantize_provider.set_quantize_weights(self.layer, quantize_weights)
+
+    self.assertEqual(self._expected_weights(), quantize_weights)
+
+  def testSetsQuantizeActivations(self):
+    quantize_activations = [keras.activations.relu, keras.activations.softmax,
+                            keras.activations.relu, keras.activations.softmax]
+
+    self.quantize_provider.set_quantize_activations(
+        self.layer, quantize_activations)
+
+    self.assertEqual(self._expected_activations(), quantize_activations)
+
+  def testSetsQuantizeWeights_ErrorOnWrongNumberOfWeights(self):
+    with self.assertRaises(ValueError):
+      self.quantize_provider.set_quantize_weights(self.layer, [])
+
+    quantize_weights = [
+        self._dummy_weights(self.cell1.kernel),
+        self._dummy_weights(self.cell1.recurrent_kernel),
+    ]
+    with self.assertRaises(ValueError):
+      self.quantize_provider.set_quantize_weights(
+          self.layer, quantize_weights)
+
+  def testSetsQuantizeWeights_ErrorOnWrongShapeOfWeight(self):
+    quantize_weights = [
+        self._dummy_weights(self.cell1.kernel),
+        self._dummy_weights(self.cell1.recurrent_kernel),
+        K.variable(np.ones([1, 2])),  # Incorrect shape.
+        self._dummy_weights(self.cell2.recurrent_kernel)
+    ]
+
+    with self.assertRaises(ValueError):
+      self.quantize_provider.set_quantize_weights(self.layer, quantize_weights)
+
+  def testSetsQuantizeActivations_ErrorOnWrongNumberOfActivations(self):
+    quantize_activation = keras.activations.relu
+
+    with self.assertRaises(ValueError):
+      self.quantize_provider.set_quantize_activations(self.layer, [])
+
+    with self.assertRaises(ValueError):
+      self.quantize_provider.set_quantize_activations(
+          self.layer, [quantize_activation, quantize_activation])
 
 
 if __name__ == '__main__':

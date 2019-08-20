@@ -305,6 +305,34 @@ class TFLiteQuantizeProvider(QuantizeProvider):
     return [(getattr(layer, activation_attr), self.activation_quantizer)
             for activation_attr in self.activation_attrs]
 
+  def set_quantize_weights(self, layer, quantize_weights):
+    if len(self.weight_attrs) != len(quantize_weights):
+      raise ValueError(
+          '`set_quantize_weights` called on layer {} with {} '
+          'weight parameters, but layer expects {} values.'.format(
+              layer.name, len(quantize_weights), len(self.weight_attrs)))
+
+    for weight_attr, weight in zip(self.weight_attrs, quantize_weights):
+      current_weight = getattr(layer, weight_attr)
+      if current_weight.shape != weight.shape:
+        raise ValueError('Existing layer weight shape {} is incompatible with'
+                         'provided weight shape {}'.format(
+                             current_weight.shape, weight.shape))
+
+      setattr(layer, weight_attr, weight)
+
+  def set_quantize_activations(self, layer, quantize_activations):
+    if len(self.activation_attrs) != len(quantize_activations):
+      raise ValueError(
+          '`set_quantize_activations` called on layer {} with {} '
+          'activation parameters, but layer expects {} values.'.format(
+              layer.name, len(quantize_activations),
+              len(self.activation_attrs)))
+
+    for activation_attr, activation in \
+        zip(self.activation_attrs, quantize_activations):
+      setattr(layer, activation_attr, activation)
+
 
 class TFLiteQuantizeProviderRNN(TFLiteQuantizeProvider, _RNNHelper):
   """QuantizeProvider for RNN layers."""
@@ -328,3 +356,49 @@ class TFLiteQuantizeProviderRNN(TFLiteQuantizeProvider, _RNNHelper):
             (getattr(rnn_cell, activation_attr), self.activation_quantizer))
 
     return activations_quantizers
+
+  def _flatten(self, list_of_lists):
+    flat_list = []
+    for sublist in list_of_lists:
+      for item in sublist:
+        flat_list.append(item)
+    return flat_list
+
+  def set_quantize_weights(self, layer, quantize_weights):
+    flattened_weight_attrs = self._flatten(self.weight_attrs)
+    if len(flattened_weight_attrs) != len(quantize_weights):
+      raise ValueError(
+          '`set_quantize_weights` called on layer {} with {} '
+          'weight parameters, but layer expects {} values.'.format(
+              layer.name, len(quantize_weights), len(flattened_weight_attrs)))
+
+    i = 0
+    for weight_attrs_cell, rnn_cell in \
+        zip(self.weight_attrs, self._get_rnn_cells(layer)):
+      for weight_attr in weight_attrs_cell:
+        current_weight = getattr(rnn_cell, weight_attr)
+        quantize_weight = quantize_weights[i]
+
+        if current_weight.shape != quantize_weight.shape:
+          raise ValueError('Existing layer weight shape {} is incompatible with'
+                           'provided weight shape {}'.format(
+                               current_weight.shape, quantize_weight.shape))
+
+        setattr(rnn_cell, weight_attr, quantize_weight)
+        i += 1
+
+  def set_quantize_activations(self, layer, quantize_activations):
+    flattened_activation_attrs = self._flatten(self.activation_attrs)
+    if len(flattened_activation_attrs) != len(quantize_activations):
+      raise ValueError(
+          '`set_quantize_activations` called on layer {} with {} '
+          'activation parameters, but layer expects {} values.'.format(
+              layer.name, len(quantize_activations),
+              len(flattened_activation_attrs)))
+
+    i = 0
+    for activation_attrs_cell, rnn_cell in \
+        zip(self.activation_attrs, self._get_rnn_cells(layer)):
+      for activation_attr in activation_attrs_cell:
+        setattr(rnn_cell, activation_attr, quantize_activations[i])
+        i += 1

@@ -37,6 +37,12 @@ class QuantizeAnnotateTest(test.TestCase):
     def get_activations_and_quantizers(self, layer):
       pass
 
+    def set_quantize_weights(self, layer, quantize_weights):
+      pass
+
+    def set_quantize_activations(self, layer, quantize_activations):
+      pass
+
   def testAnnotatesKerasLayer(self):
     layer = keras.layers.Dense(5, activation='relu', input_shape=(10,))
     model = keras.Sequential([layer])

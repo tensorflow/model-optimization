@@ -47,3 +47,32 @@ class QuantizeProvider(object):
       quantizer.
     """
     raise NotImplementedError('Must be implemented in subclasses.')
+
+  @abc.abstractmethod
+  def set_quantize_weights(self, layer, quantize_weights):
+    """Replace the weights in the layer with quantized weights.
+
+    Args:
+      layer: layer being quantized.
+      quantize_weights: List of quantized weight tensors.
+
+    Returns:
+      List of 2-tuples. Each tuple is a weight tensor and an associated
+      quantizer.
+    """
+    raise NotImplementedError('Must be implemented in subclasses.')
+
+  @abc.abstractmethod
+  def set_quantize_activations(self, layer, quantize_activations):
+    """Replace the activations in the layer with quantized activations.
+
+    Args:
+      layer: layer being quantized.
+      quantize_activations: List of `QuantizeAwareActivation`s to replace
+        layer activations.
+
+    Returns:
+      List of 2-tuples. Each tuple is a keras activation and an associated
+      quantizer.
+    """
+    raise NotImplementedError('Must be implemented in subclasses.')

@@ -111,6 +111,12 @@ class QuantizeAnnotateTest(test.TestCase):
       def get_activations_and_quantizers(self, layer):
         pass
 
+      def set_quantize_weights(self, layer, quantize_weights):
+        pass
+
+      def set_quantize_activations(self, layer, quantize_activations):
+        pass
+
     quantize_provider = TestQuantizeProvider()
 
     model = keras.Sequential([
