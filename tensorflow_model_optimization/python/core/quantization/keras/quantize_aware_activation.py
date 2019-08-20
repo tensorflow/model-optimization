@@ -20,6 +20,7 @@ from __future__ import print_function
 
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import initializers
+from tensorflow.python.keras.utils import tf_utils
 
 
 class QuantizeAwareActivation(object):
@@ -63,8 +64,6 @@ class QuantizeAwareActivation(object):
     self.step = step
     self.quantize_wrapper = quantize_wrapper
 
-    self._training = False
-
     if self._should_pre_quantize():
       self._min_pre_activation, self._max_pre_activation = \
         self._add_range_weights('pre_activation')
@@ -95,22 +94,39 @@ class QuantizeAwareActivation(object):
   def training(self, value):
     self._training = value
 
+  def _dict_vars(self, min_var, max_var):
+    return {'min_var': min_var, 'max_var': max_var}
+
   def __call__(self, inputs, *args, **kwargs):
-    # TODO(pulkitb): Add cond here to handle training properly.
+
+    def make_quantizer_fn(training, x, min_var, max_var):
+      """Use currying to return True/False specialized fns to the cond."""
+
+      def quantizer_fn(x=x,
+                       quantizer=self.quantizer,
+                       min_var=min_var,
+                       max_var=max_var):
+        return quantizer(x, self.step, training,
+                         **self._dict_vars(min_var, max_var))
+
+      return quantizer_fn
+
     x = inputs
     if self._should_pre_quantize():
-      x = self.quantizer(
-          x, self.step, self._training, **{
-              'min_var': self._min_pre_activation,
-              'max_var': self._max_pre_activation
-          })
+      x = tf_utils.smart_cond(
+          self._training,
+          make_quantizer_fn(True, x, self._min_pre_activation,
+                            self._max_pre_activation),
+          make_quantizer_fn(False, x, self._min_pre_activation,
+                            self._max_pre_activation))
 
     x = self.activation(x, *args, **kwargs)
 
-    x = self.quantizer(
-        x, self.step, self._training, **{
-            'min_var': self._min_post_activation,
-            'max_var': self._max_post_activation
-        })
+    x = tf_utils.smart_cond(
+        self._training,
+        make_quantizer_fn(True, x, self._min_post_activation,
+                          self._max_post_activation),
+        make_quantizer_fn(False, x, self._min_post_activation,
+                          self._max_post_activation))
 
     return x

@@ -22,6 +22,7 @@ import numpy as np
 
 from tensorflow.python import keras
 from tensorflow.python.keras import activations
+from tensorflow.python.keras import backend as K
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
@@ -40,7 +41,11 @@ class QuantizeAwareQuantizationTest(test.TestCase):
 
   class TestLayer(keras.layers.Layer):
 
-    def call(self, inputs):
+    def call(self, inputs, training=None):
+      if training is None:
+        training = K.learning_phase()
+
+      self.activation.training = training
       return self.activation(inputs)
 
     def compute_output_shape(self, input_shape):
