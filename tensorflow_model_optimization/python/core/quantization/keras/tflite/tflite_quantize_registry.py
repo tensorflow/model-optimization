@@ -333,6 +333,39 @@ class TFLiteQuantizeProvider(QuantizeProvider):
         zip(self.activation_attrs, quantize_activations):
       setattr(layer, activation_attr, activation)
 
+  @classmethod
+  def from_config(cls, config):
+    """Instantiates a `TFLiteQuantizeProvider` from its config.
+
+    Args:
+        config: Output of `get_config()`.
+
+    Returns:
+        A `TFLiteQuantizeProvider` instance.
+    """
+    return cls(**config)
+
+  def get_config(self):
+    # TODO(pulkitb): Add weight and activation quantizer to config.
+    # Currently it's created internally, but ideally the quantizers should be
+    # part of the constructor and passed in from the registry.
+    return {
+        'weight_attrs': self.weight_attrs,
+        'activation_attrs': self.activation_attrs,
+    }
+
+  def __eq__(self, other):
+    if not isinstance(other, TFLiteQuantizeProvider):
+      return False
+
+    return (self.weight_attrs == other.weight_attrs and
+            self.activation_attrs == self.activation_attrs and
+            self.weight_quantizer == other.weight_quantizer and
+            self.activation_quantizer == other.activation_quantizer)
+
+  def __ne__(self, other):
+    return not self.__eq__(other)
+
 
 class TFLiteQuantizeProviderRNN(TFLiteQuantizeProvider, _RNNHelper):
   """QuantizeProvider for RNN layers."""
@@ -402,3 +435,10 @@ class TFLiteQuantizeProviderRNN(TFLiteQuantizeProvider, _RNNHelper):
       for activation_attr in activation_attrs_cell:
         setattr(rnn_cell, activation_attr, quantize_activations[i])
         i += 1
+
+
+def _types_dict():
+  return {
+      'TFLiteQuantizeProvider': TFLiteQuantizeProvider,
+      'TFLiteQuantizeProviderRNN': TFLiteQuantizeProviderRNN
+  }

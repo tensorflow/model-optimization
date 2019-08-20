@@ -23,6 +23,8 @@ import numpy as np
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import layers as l
+from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
+from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
@@ -271,6 +273,28 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
       quantize_provider.set_quantize_activations(
           layer, [quantize_activation, quantize_activation])
 
+  def testSerialization(self):
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        ['kernel'], ['activation'])
+
+    expected_config = {
+        'class_name': 'TFLiteQuantizeProvider',
+        'config': {
+            'weight_attrs': ['kernel'],
+            'activation_attrs': ['activation'],
+        }
+    }
+    serialized_quantize_provider = serialize_keras_object(quantize_provider)
+
+    self.assertEqual(expected_config, serialized_quantize_provider)
+
+    quantize_provider_from_config = deserialize_keras_object(
+        serialized_quantize_provider,
+        module_objects=globals(),
+        custom_objects=tflite_quantize_registry._types_dict())
+
+    self.assertEqual(quantize_provider, quantize_provider_from_config)
+
 
 class TFLiteQuantizeProviderRNNTest(test.TestCase, _TestHelper):
 
@@ -366,6 +390,28 @@ class TFLiteQuantizeProviderRNNTest(test.TestCase, _TestHelper):
     with self.assertRaises(ValueError):
       self.quantize_provider.set_quantize_activations(
           self.layer, [quantize_activation, quantize_activation])
+
+  def testSerialization(self):
+    expected_config = {
+        'class_name': 'TFLiteQuantizeProviderRNN',
+        'config': {
+            'weight_attrs': [['kernel', 'recurrent_kernel'],
+                             ['kernel', 'recurrent_kernel']],
+            'activation_attrs': [['activation', 'recurrent_activation'],
+                                 ['activation', 'recurrent_activation']],
+        }
+    }
+    serialized_quantize_provider = serialize_keras_object(
+        self.quantize_provider)
+
+    self.assertEqual(expected_config, serialized_quantize_provider)
+
+    quantize_provider_from_config = deserialize_keras_object(
+        serialized_quantize_provider,
+        module_objects=globals(),
+        custom_objects=tflite_quantize_registry._types_dict())
+
+    self.assertEqual(self.quantize_provider, quantize_provider_from_config)
 
 
 if __name__ == '__main__':

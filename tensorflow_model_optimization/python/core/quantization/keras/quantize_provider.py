@@ -76,3 +76,7 @@ class QuantizeProvider(object):
       quantizer.
     """
     raise NotImplementedError('Must be implemented in subclasses.')
+
+  @abc.abstractmethod
+  def get_config(self):
+    raise NotImplementedError('QuantizeProvider should implement get_config().')
