@@ -76,7 +76,12 @@ class QuantizeAwareActivation(object):
     # Whether we apply quantize operations around activations depends on the
     # implementation of the specific kernel. For example, ReLUs are fused in
     # whereas Softmax ops are not. Should linear have post-quantize?
-    return self.activation.__name__ in self._PRE_ACTIVATION_TYPES
+
+    # For custom quantizations unknown in keras, we default to post
+    # quantization.
+
+    return (hasattr(self.activation, '__name__') and
+            self.activation.__name__ in self._PRE_ACTIVATION_TYPES)
 
   def _add_range_weights(self, name):
     min_var = self.quantize_wrapper.add_weight(
@@ -130,3 +135,19 @@ class QuantizeAwareActivation(object):
                           self._max_post_activation))
 
     return x
+
+  # `QuantizeAwareActivation` wraps the activation within a layer to perform
+  # quantization. In the process, the layer's activation is replaced with
+  # `QuantizeAwareActivation`.
+  # However, when the layer is serialized and deserialized, we want the original
+  # activation to be reconstructed. This ensures that when `QuantizeWrapper`
+  # wraps the layer, it can again replace the original activation.
+
+  @classmethod
+  def from_config(cls, config):
+    return activations.deserialize(config['activation'])
+
+  def get_config(self):
+    return {
+        'activation': activations.serialize(self.activation)
+    }

@@ -153,6 +153,7 @@ py_test(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        ":quantize_aware_activation",
         ":quantize_wrapper",
         # numpy dep1,
         # tensorflow dep1,

@@ -25,11 +25,15 @@ import tensorflow as tf
 
 from tensorflow.python import keras
 from tensorflow.python.keras import layers
+from tensorflow.python.keras.layers import deserialize as deserialize_layer
+from tensorflow.python.keras.layers import serialize as serialize_layer
 from tensorflow.python.platform import test
 
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
 
+QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 QuantizeWrapper = quantize_wrapper.QuantizeWrapper
 TFLiteQuantizeRegistry = tflite_quantize_registry.TFLiteQuantizeRegistry
 
@@ -139,6 +143,28 @@ class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
     expected_output = tf.fake_quant_with_min_max_vars(
         model.predict(inputs), -6.0, 6.0, num_bits=8, narrow_range=False)
     self.assertAllClose(expected_output, quantized_model.predict(inputs))
+
+  def testSerializationQuantizeWrapper(self):
+    input_shape = (2,)
+    layer = keras.layers.Dense(3)
+    wrapper = QuantizeWrapper(
+        layer=layer,
+        quantize_provider=self.quantize_registry.get_quantize_provider(layer),
+        input_shape=input_shape)
+
+    custom_objects = {
+        'QuantizeAwareActivation': QuantizeAwareActivation,
+        'QuantizeWrapper': QuantizeWrapper
+    }
+    custom_objects.update(tflite_quantize_registry._types_dict())
+
+    serialized_wrapper = serialize_layer(wrapper)
+    with keras.utils.custom_object_scope(custom_objects):
+      wrapper_from_config = deserialize_layer(serialized_wrapper)
+
+    self.assertEqual(wrapper_from_config.get_config(), wrapper.get_config())
+
+  # TODO(pulkitb): Add test to ensure weights are also preserved.
 
 
 if __name__ == '__main__':
