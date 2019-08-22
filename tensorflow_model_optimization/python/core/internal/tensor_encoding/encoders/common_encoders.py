@@ -24,6 +24,7 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import gather_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import simple_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages import stages_impl
 
@@ -33,8 +34,8 @@ def as_simple_encoder(encoder, tensorspec):
 
   Args:
     encoder: An `Encoder` object to be used to encoding.
-    tensorspec: A `TensorSpec`. The created `SimpleEncoderV2` will be
-      constrained to only encode input values compatible with `tensorspec`.
+    tensorspec: A `TensorSpec`. The created `SimpleEncoder` will be constrained
+      to only encode input values compatible with `tensorspec`.
 
   Returns:
     A `SimpleEncoder`.
@@ -48,6 +49,28 @@ def as_simple_encoder(encoder, tensorspec):
   if not isinstance(tensorspec, tf.TensorSpec):
     raise TypeError('The tensorspec must be a tf.TensorSpec.')
   return simple_encoder.SimpleEncoder(encoder, tensorspec)
+
+
+def as_gather_encoder(encoder, tensorspec):
+  """Wraps an `Encoder` object as a `GahterEncoder`.
+
+  Args:
+    encoder: An `Encoder` object to be used to encoding.
+    tensorspec: A `TensorSpec`. The created `GahterEncoder` will be constrained
+      to only encode input values compatible with `tensorspec`.
+
+  Returns:
+    A `GahterEncoder`.
+
+  Raises:
+    TypeError:
+      If `encoder` is not an `Encoder` or `tensorspec` is not a `TensorSpec`.
+  """
+  if not isinstance(encoder, core_encoder.Encoder):
+    raise TypeError('The encoder must be an instance of `Encoder`.')
+  if not isinstance(tensorspec, tf.TensorSpec):
+    raise TypeError('The tensorspec must be a tf.TensorSpec.')
+  return gather_encoder.GatherEncoder.from_encoder(encoder, tensorspec)
 
 
 def identity():

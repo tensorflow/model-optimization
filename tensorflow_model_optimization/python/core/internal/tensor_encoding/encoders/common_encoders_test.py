@@ -21,6 +21,7 @@ import tensorflow as tf
 
 from tensorflow.python.util import nest as core_nest
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import gather_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import simple_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders import common_encoders
 
@@ -50,6 +51,24 @@ class EncoderLibraryTest(parameterized.TestCase):
   def test_as_simple_encoder_raises_tensorspec(self, not_a_tensorspec):
     with self.assertRaises(TypeError):
       common_encoders.as_simple_encoder(common_encoders.identity(),
+                                        not_a_tensorspec)
+
+  @parameterized.parameters(_ENCODER_FNS)
+  def test_as_gather_encoder(self, encoder_fn):
+    encoder = common_encoders.as_gather_encoder(encoder_fn(),
+                                                tf.TensorSpec((2,), tf.float32))
+    self.assertIsInstance(encoder, gather_encoder.GatherEncoder)
+
+  @parameterized.parameters(None, [[]], 2.0, 'string')
+  def test_as_gather_encoder_raises_encoder(self, not_an_encoder):
+    with self.assertRaises(TypeError):
+      common_encoders.as_gather_encoder(not_an_encoder,
+                                        tf.TensorSpec((2,), tf.float32))
+
+  @parameterized.parameters(None, [[]], 2.0, 'string')
+  def test_as_gather_encoder_raises_tensorspec(self, not_a_tensorspec):
+    with self.assertRaises(TypeError):
+      common_encoders.as_gather_encoder(common_encoders.identity(),
                                         not_a_tensorspec)
 
   def test_identity(self):
