@@ -161,7 +161,7 @@ class SimpleEncoder(object):
     Returns:
       A tuple of `Tensor` values, representing the initial state.
     """
-    with tf.name_scope(name, 'simple_encoder_initial_state'):
+    with tf.compat.v1.name_scope(name, 'simple_encoder_initial_state'):
       return self._initial_state_fn()
 
   def encode(self, x, state=None, name=None):
@@ -188,7 +188,8 @@ class SimpleEncoder(object):
     """
     if state is None:
       state = self.initial_state()
-    with tf.name_scope(name, 'simple_encoder_encode', [x] + list(state)):
+    with tf.compat.v1.name_scope(name, 'simple_encoder_encode',
+                                 [x] + list(state)):
       return self._encode_fn(x, state)
 
   def decode(self, encoded_x, name=None):
@@ -208,5 +209,6 @@ class SimpleEncoder(object):
         If `encoded_x` is not of the same structure as returned by the `encode`
         method.
     """
-    with tf.name_scope(name, 'simple_encoder_decode', encoded_x.values()):
+    with tf.compat.v1.name_scope(name, 'simple_encoder_decode',
+                                 encoded_x.values()):
       return self._decode_fn(encoded_x)

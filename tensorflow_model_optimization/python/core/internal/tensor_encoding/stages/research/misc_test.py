@@ -26,6 +26,10 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.r
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing import test_utils
 
 
+if tf.executing_eagerly():
+  tf.compat.v1.disable_eager_execution()
+
+
 class SplitBySmallValueEncodingStageTest(test_utils.BaseEncodingStageTest):
 
   def default_encoding_stage(self):
@@ -154,7 +158,7 @@ class DifferenceBetweenIntegersEncodingStageTest(
     # Tests that the encoding works when the input shape is [0], but not
     # statically known.
     y = tf.zeros((10,))
-    indices = tf.where_v2(tf.abs(y) > 1e-8)
+    indices = tf.compat.v2.where(tf.abs(y) > 1e-8)
     x = tf.gather_nd(y, indices)
     x = tf.cast(x, tf.int32)  # Empty tensor.
     assert x.shape.as_list() == [None]

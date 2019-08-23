@@ -390,7 +390,7 @@ class GatherEncoder(object):
     Returns:
       A tuple of `Tensor` values, representing the initial state.
     """
-    with tf.name_scope(name, 'gather_encoder_initial_state'):
+    with tf.compat.v1.name_scope(name, 'gather_encoder_initial_state'):
       return self._initial_state_fn()
 
   def get_params(self, state=None, name=None):
@@ -417,7 +417,8 @@ class GatherEncoder(object):
     """
     if state is None:
       state = self.initial_state()
-    with tf.name_scope(name, 'gather_encoder_get_params', list(state)):
+    with tf.compat.v1.name_scope(name, 'gather_encoder_get_params',
+                                 list(state)):
       state = tf.nest.map_structure(tf.convert_to_tensor, state)
       return self._get_params_fn(state)
 
@@ -445,7 +446,7 @@ class GatherEncoder(object):
         `get_params` method.
     """
     values = [x] + list(encode_params)
-    with tf.name_scope(name, 'gather_encoder_encode', values):
+    with tf.compat.v1.name_scope(name, 'gather_encoder_encode', values):
       x = tf.convert_to_tensor(x)
       encode_params = tf.nest.map_structure(tf.convert_to_tensor, encode_params)
       return self._encode_fn(x, encode_params)
@@ -476,7 +477,8 @@ class GatherEncoder(object):
         `get_params` method.
     """
     values = list(encoded_x.values()) + list(decode_before_sum_params)
-    with tf.name_scope(name, 'gather_encoder_decode_before_sum', values):
+    with tf.compat.v1.name_scope(name, 'gather_encoder_decode_before_sum',
+                                 values):
       encoded_x = tf.nest.map_structure(tf.convert_to_tensor, encoded_x)
       decode_before_sum_params = tf.nest.map_structure(
           tf.convert_to_tensor, decode_before_sum_params)
@@ -513,7 +515,8 @@ class GatherEncoder(object):
     values = list(part_decoded_x.values()) if isinstance(
         part_decoded_x, dict) else [part_decoded_x]
     values = (values + list(decode_after_sum_params) + [num_summands])
-    with tf.name_scope(name, 'gather_encoder_decode_after_sum', values):
+    with tf.compat.v1.name_scope(name, 'gather_encoder_decode_after_sum',
+                                 values):
       part_decoded_x = tf.nest.map_structure(tf.convert_to_tensor,
                                              part_decoded_x)
       decode_after_sum_params = tf.nest.map_structure(tf.convert_to_tensor,
@@ -545,7 +548,7 @@ class GatherEncoder(object):
         return value of the `initial_state` method.
     """
     values = list(state) + list(state_update_tensors)
-    with tf.name_scope(name, 'gather_encoder_update_state', values):
+    with tf.compat.v1.name_scope(name, 'gather_encoder_update_state', values):
       state = tf.nest.map_structure(tf.convert_to_tensor, state)
       state_update_tensors = tf.nest.map_structure(tf.convert_to_tensor,
                                                    state_update_tensors)

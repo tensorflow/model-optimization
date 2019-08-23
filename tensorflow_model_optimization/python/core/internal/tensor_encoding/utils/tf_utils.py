@@ -46,7 +46,7 @@ def fast_walsh_hadamard_transform(x):
       execution of the Python function, but during execution of the resulting
       computation.
   """
-  with tf.name_scope(None, 'fast_walsh_hadamard_transform'):
+  with tf.compat.v1.name_scope(None, 'fast_walsh_hadamard_transform'):
     # Validate input.
     x = tf.convert_to_tensor(x)
     if x.shape.ndims != 2:

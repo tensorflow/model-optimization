@@ -24,6 +24,10 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import tf_utils
 
 
+if tf.executing_eagerly():
+  tf.compat.v1.disable_eager_execution()
+
+
 class FastWalshHadamardTransformTests(tf.test.TestCase, parameterized.TestCase):
   """Tests for `fast_walsh_hadamard_transform` method."""
 

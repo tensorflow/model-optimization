@@ -26,6 +26,10 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.r
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing import test_utils
 
 
+if tf.executing_eagerly():
+  tf.compat.v1.disable_eager_execution()
+
+
 class PRNGUniformQuantizationEncodingStageTest(test_utils.BaseEncodingStageTest
                                               ):
 
@@ -235,7 +239,7 @@ class PerChannelUniformQuantizationEncodingStageTest(
     stage = quantization.PerChannelUniformQuantizationEncodingStage(bits=8)
     shape = [10, 5, 7]
     prob = [0.5, 0.8, 0.6]
-    original_x = tf.random.poisson(1.5, shape, dtype=tf.float32)
+    original_x = tf.compat.v1.random.poisson(1.5, shape, dtype=tf.float32)
     rand = [tf.random.uniform([
         shape[i],
     ], dtype=tf.float32) for i in range(3)]
@@ -347,7 +351,7 @@ class PerChannelPRNGUniformQuantizationEncodingStageTest(
     stage = quantization.PerChannelPRNGUniformQuantizationEncodingStage(bits=8)
     shape = [10, 5, 7]
     prob = [0.5, 0.8, 0.6]
-    original_x = tf.random.poisson(1.5, shape, dtype=tf.float32)
+    original_x = tf.compat.v1.random.poisson(1.5, shape, dtype=tf.float32)
     rand = [tf.random.uniform([
         shape[i],
     ], dtype=tf.float32) for i in range(3)]

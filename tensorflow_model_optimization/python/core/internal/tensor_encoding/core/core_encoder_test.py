@@ -51,6 +51,10 @@ AN_FACTOR_STATE = test_utils.AdaptiveNormalizeEncodingStage.FACTOR_STATE_KEY
 AN_NORM_UPDATE = test_utils.AdaptiveNormalizeEncodingStage.NORM_STATE_UPDATE_KEY
 
 
+if tf.executing_eagerly():
+  tf.compat.v1.disable_eager_execution()
+
+
 class EncoderTest(tf.test.TestCase):
 
   def test_correct_structure(self):

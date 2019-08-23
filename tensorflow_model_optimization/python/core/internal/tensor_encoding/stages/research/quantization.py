@@ -103,7 +103,7 @@ class PRNGUniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface
     max_value = tf.cast(encode_params[self.MAX_INT_VALUE_PARAMS_KEY], x.dtype)
     # Shift the values to range [0, max_value].
     # In the case of min_x == max_x, this will return all zeros.
-    x = tf.div_no_nan(x - min_x, max_x - min_x) * max_value
+    x = tf.compat.v1.div_no_nan(x - min_x, max_x - min_x) * max_value
 
     # Randomized rounding.
     floored_x = tf.floor(x)
@@ -250,10 +250,10 @@ class PerChannelUniformQuantizationEncodingStage(
     max_value = tf.cast(encode_params[self.MAX_INT_VALUE_PARAMS_KEY], x.dtype)
     # Shift the values to range [0, max_value].
     # In the case of min_x == max_x, this will return all zeros.
-    x = tf.div_no_nan(x - min_x, max_x - min_x) * max_value
+    x = tf.compat.v1.div_no_nan(x - min_x, max_x - min_x) * max_value
     if self._stochastic:  # Randomized rounding.
       floored_x = tf.floor(x)
-      bernoulli = tf.random_uniform(tf.shape(x), dtype=x.dtype)
+      bernoulli = tf.random.uniform(tf.shape(x), dtype=x.dtype)
       bernoulli = bernoulli < (x - floored_x)
       quantized_x = floored_x + tf.cast(bernoulli, x.dtype)
     else:  # Deterministic rounding.
@@ -374,7 +374,7 @@ class PerChannelPRNGUniformQuantizationEncodingStage(
     max_value = tf.cast(encode_params[self.MAX_INT_VALUE_PARAMS_KEY], x.dtype)
     # Shift the values to range [0, max_value].
     # In the case of min_x == max_x, this will return all zeros.
-    x = tf.div_no_nan(x - min_x, max_x - min_x) * max_value
+    x = tf.compat.v1.div_no_nan(x - min_x, max_x - min_x) * max_value
 
     # Randomized rounding.
     floored_x = tf.floor(x)

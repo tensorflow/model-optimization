@@ -344,10 +344,10 @@ class UniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface):
     max_value = tf.cast(encode_params[self.MAX_INT_VALUE_PARAMS_KEY], x.dtype)
     # Shift the values to range [0, max_value].
     # In the case of min_x == max_x, this will return all zeros.
-    x = tf.div_no_nan(x - min_x, max_x - min_x) * max_value
+    x = tf.compat.v1.div_no_nan(x - min_x, max_x - min_x) * max_value
     if self._stochastic:  # Randomized rounding.
       floored_x = tf.floor(x)
-      bernoulli = tf.random_uniform(tf.shape(x), dtype=x.dtype)
+      bernoulli = tf.random.uniform(tf.shape(x), dtype=x.dtype)
       bernoulli = bernoulli < (x - floored_x)
       quantized_x = floored_x + tf.cast(bernoulli, x.dtype)
     else:  # Deterministic rounding.
@@ -494,7 +494,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
     # necessary to fit the dimension. The bitpacked representation is computed
     # as product with vector [1, 2, 4, ..., 2**target_bits].
     packing_vector = tf.constant([[2**i] for i in range(target_bits)], tf.int32)
-    extra_zeros = tf.zeros(tf.mod(-tf.shape(x), target_bits), tf.int32)
+    extra_zeros = tf.zeros(tf.math.mod(-tf.shape(x), target_bits), tf.int32)
     reshaped_x = tf.reshape(tf.concat([x, extra_zeros], 0), [-1, target_bits])
     packed_x = tf.matmul(reshaped_x, packing_vector)
     return packed_x
@@ -504,7 +504,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
     # This operation is inverse of self._pack_binary_form, except padded zeros
     # are not removed.
     expand_vector = tf.constant([2**i for i in range(input_bits)], tf.int32)
-    return tf.reshape(tf.mod(tf.floordiv(x, expand_vector), 2), [-1])
+    return tf.reshape(tf.math.mod(tf.math.floordiv(x, expand_vector), 2), [-1])
 
   def _pack_into_int32(self, x, bits):
     """Pack input represented by `bits` bits into int32 values."""

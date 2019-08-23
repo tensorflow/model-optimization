@@ -149,9 +149,9 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
 
   def test_encoding_stage_constructor_does_not_modify_graph(self):
     """Tests that the constructor of encoding stage does not modify graph."""
-    graph_def = tf.get_default_graph().as_graph_def()
+    graph_def = tf.compat.v1.get_default_graph().as_graph_def()
     self.default_encoding_stage()
-    new_graph_def = tf.get_default_graph().as_graph_def()
+    new_graph_def = tf.compat.v1.get_default_graph().as_graph_def()
     tf.test.assert_equal_graph_def(graph_def, new_graph_def)
 
   def test_encoding_stage_name(self):
@@ -1034,14 +1034,14 @@ def dummy_rng_source(seed, num_elements):
 
   def next_num(num):
     # This creates a cycle of length 136.
-    return tf.mod((num * 13), 137)
+    return tf.math.mod((num * 13), 137)
 
-  num = tf.reshape(tf.mod(seed, 136) + 1, (1,))
+  num = tf.reshape(tf.math.mod(seed, 136) + 1, (1,))
   result = num
   for _ in range(num_elements - 1):
     num = next_num(num)
     result = tf.concat([result, num], 0)
-  return tf.to_float(result)
+  return tf.cast(result, tf.float32)
 
 
 @encoding_stage.tf_style_encoding_stage
@@ -1165,7 +1165,8 @@ class PlusOneOverNEncodingStage(encoding_stage.AdaptiveEncodingStageInterface):
   def get_params(self, state):
     """See base class."""
     params = {
-        self.ADD_PARAM_KEY: 1 / tf.to_float(state[self.ITERATION_STATE_KEY])
+        self.ADD_PARAM_KEY:
+            1 / tf.cast(state[self.ITERATION_STATE_KEY], tf.float32)
     }
     return params, params
 
@@ -1407,7 +1408,7 @@ def get_tensor_with_random_shape(expected_num_elements=10,
       tf.gather(
           source_fn([2 * expected_num_elements]),
           tf.where(
-              tf.less(tf.random_uniform([2 * expected_num_elements]), 0.5))), 1)
+              tf.less(tf.random.uniform([2 * expected_num_elements]), 0.5))), 1)
 
 
 def is_adaptive_stage(stage):

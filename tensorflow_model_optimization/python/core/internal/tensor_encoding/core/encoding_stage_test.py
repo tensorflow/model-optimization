@@ -25,6 +25,10 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.core imp
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing import test_utils
 
 
+if tf.executing_eagerly():
+  tf.compat.v1.disable_eager_execution()
+
+
 class TFStyleEncodeDecodeTest(tf.test.TestCase, parameterized.TestCase):
   """Tests for `_tf_style_*` decorators.
 
@@ -95,7 +99,7 @@ class TFStyleEncodeDecodeTest(tf.test.TestCase, parameterized.TestCase):
     initial_state = self.evaluate(test_initial_state_fn(stage, name))
 
     # The graph should contain a single node.
-    graph = tf.get_default_graph()
+    graph = tf.compat.v1.get_default_graph()
     self.assertLen(graph.as_graph_def().node, 1)
     if name is not None:
       self._assert_all_graph_nodes_in_name_scope(graph, name)
@@ -117,7 +121,7 @@ class TFStyleEncodeDecodeTest(tf.test.TestCase, parameterized.TestCase):
 
     # The graph should contain three nodes. Two for the constants created, and
     # one for their addition.
-    graph = tf.get_default_graph()
+    graph = tf.compat.v1.get_default_graph()
     self.assertLen(graph.as_graph_def().node, 3)
     if name is not None:
       self._assert_all_graph_nodes_in_name_scope(graph, name)
@@ -136,7 +140,7 @@ class TFStyleEncodeDecodeTest(tf.test.TestCase, parameterized.TestCase):
         test_get_params_fn(stage, name))
 
     # The graph should contain a single node.
-    graph = tf.get_default_graph()
+    graph = tf.compat.v1.get_default_graph()
     self.assertLen(graph.as_graph_def().node, 1)
     if name is not None:
       self._assert_all_graph_nodes_in_name_scope(graph, name)
@@ -158,7 +162,7 @@ class TFStyleEncodeDecodeTest(tf.test.TestCase, parameterized.TestCase):
 
     # The graph should contain three nodes. Two for the constants created, and
     # one for the multiplication to create the params.
-    graph = tf.get_default_graph()
+    graph = tf.compat.v1.get_default_graph()
     self.assertLen(graph.as_graph_def().node, 3)
     if name is not None:
       self._assert_all_graph_nodes_in_name_scope(graph, name)
@@ -178,7 +182,7 @@ class TFStyleEncodeDecodeTest(tf.test.TestCase, parameterized.TestCase):
 
     # The graph should contain three nodes. The two above Python constants
     # converted to a Tensor object, and the resulting sum.
-    graph = tf.get_default_graph()
+    graph = tf.compat.v1.get_default_graph()
     self.assertLen(graph.as_graph_def().node, 3)
     if name is not None:
       self._assert_all_graph_nodes_in_name_scope(graph, name)
@@ -215,7 +219,7 @@ class TFStyleEncodeDecodeTest(tf.test.TestCase, parameterized.TestCase):
 
     # The graph should contain six nodes. The four above Python constants
     # converted to a Tensor object, the subtraction, and the final reshape.
-    graph = tf.get_default_graph()
+    graph = tf.compat.v1.get_default_graph()
     self.assertLen(graph.as_graph_def().node, 6)
     if name is not None:
       self._assert_all_graph_nodes_in_name_scope(graph, name)
@@ -246,8 +250,8 @@ class NoneStateAdaptiveEncodingStageTest(tf.test.TestCase,
 
   def test_as_adaptive_encoding_stage(self):
     """Tests correctness of the wrapped encoding stage."""
-    a_var = tf.get_variable('a', initializer=2.0)
-    b_var = tf.get_variable('b', initializer=3.0)
+    a_var = tf.compat.v1.get_variable('a', initializer=2.0)
+    b_var = tf.compat.v1.get_variable('b', initializer=3.0)
     stage = test_utils.SimpleLinearEncodingStage(a_var, b_var)
     wrapped_stage = encoding_stage.as_adaptive_encoding_stage(stage)
     self.assertIsInstance(wrapped_stage,
@@ -279,7 +283,7 @@ class NoneStateAdaptiveEncodingStageTest(tf.test.TestCase,
     self.assertEqual(stage.decode_needs_input_shape,
                      wrapped_stage.decode_needs_input_shape)
 
-    self.evaluate(tf.global_variables_initializer())
+    self.evaluate(tf.compat.v1.global_variables_initializer())
     test_data = test_utils.TestData(*self.evaluate([x, encoded_x, decoded_x]))
     self.assertEqual(2.0, test_data.x)
     self.assertEqual(

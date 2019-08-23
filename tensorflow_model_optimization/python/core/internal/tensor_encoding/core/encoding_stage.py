@@ -631,7 +631,7 @@ def _tf_style_initial_state(initial_state_fn):
 
   def actual_initial_state_fn(self, name=None):
     """Modified `initial_state` method."""
-    with tf.name_scope(name, self.name + INITIAL_STATE_SCOPE_SUFFIX):
+    with tf.compat.v1.name_scope(name, self.name + INITIAL_STATE_SCOPE_SUFFIX):
       return initial_state_fn(self, name=name)
 
   return actual_initial_state_fn
@@ -643,7 +643,8 @@ def _tf_style_update_state(update_state_fn):
   def actual_initial_state_fn(self, state, state_update_tensors, name=None):
     """Modified `update_state` method."""
     values = list(state.values()) + list(state_update_tensors.values())
-    with tf.name_scope(name, self.name + UPDATE_STATE_SCOPE_SUFFIX, values):
+    with tf.compat.v1.name_scope(name, self.name + UPDATE_STATE_SCOPE_SUFFIX,
+                                 values):
       state = tf.nest.map_structure(tf.convert_to_tensor, state)
       state_update_tensors = tf.nest.map_structure(tf.convert_to_tensor,
                                                    state_update_tensors)
@@ -657,7 +658,7 @@ def _tf_style_get_params(get_params_fn):
 
   def actual_get_params_fn(self, name=None):
     """Modified `get_params` method."""
-    with tf.name_scope(name, self.name + GET_PARAMS_SCOPE_SUFFIX):
+    with tf.compat.v1.name_scope(name, self.name + GET_PARAMS_SCOPE_SUFFIX):
       return get_params_fn(self, name=name)
 
   return actual_get_params_fn
@@ -668,8 +669,8 @@ def _tf_style_adaptive_get_params(get_params_fn):
 
   def actual_get_params_fn(self, state, name=None):
     """Modified `get_params` method."""
-    with tf.name_scope(name, self.name + GET_PARAMS_SCOPE_SUFFIX,
-                       state.values()):
+    with tf.compat.v1.name_scope(name, self.name + GET_PARAMS_SCOPE_SUFFIX,
+                                 state.values()):
       state = tf.nest.map_structure(tf.convert_to_tensor, state)
       return get_params_fn(self, state, name=name)
 
@@ -682,7 +683,8 @@ def _tf_style_encode(encode_fn):
   def actual_encode_fn(self, x, encode_params, name=None):
     """Modified `encode` method."""
     values = list(encode_params.values()) + [x]
-    with tf.variable_scope(name, self.name + ENCODE_SCOPE_SUFFIX, values):
+    with tf.compat.v1.variable_scope(name, self.name + ENCODE_SCOPE_SUFFIX,
+                                     values):
       x = tf.convert_to_tensor(x)
       encode_params = tf.nest.map_structure(tf.convert_to_tensor, encode_params)
       return encode_fn(self, x, encode_params, name=name)
@@ -701,9 +703,10 @@ def _tf_style_decode(decode_fn):
                        name=None):
     """Modified `decode` method."""
     values = list(encoded_tensors.values()) + list(decode_params.values())
-    with tf.variable_scope(name, self.name + DECODE_SCOPE_SUFFIX, values):
+    with tf.compat.v1.variable_scope(name, self.name + DECODE_SCOPE_SUFFIX,
+                                     values):
       encoded_tensors = tf.nest.map_structure(tf.convert_to_tensor,
-                                           encoded_tensors)
+                                              encoded_tensors)
       decode_params = tf.nest.map_structure(tf.convert_to_tensor, decode_params)
       if shape is not None:
         shape = tf.convert_to_tensor(shape)

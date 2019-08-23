@@ -206,7 +206,7 @@ class KashinHadamardEncodingStage(encoding_stage.EncodingStageInterface):
       # If there is clipping in the last iteration, this can result in
       # biased representation of smaller magnitude. We compensate for this
       # by scaling such that the norm is preserved.
-      kashin_coefficients *= tf.div_no_nan(
+      kashin_coefficients *= tf.compat.v1.div_no_nan(
           tf.norm(x, axis=1, keepdims=True),
           tf.norm(kashin_coefficients, axis=1, keepdims=True))
 

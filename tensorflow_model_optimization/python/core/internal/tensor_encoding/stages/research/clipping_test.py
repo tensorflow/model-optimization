@@ -26,6 +26,10 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.r
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing import test_utils
 
 
+if tf.executing_eagerly():
+  tf.compat.v1.disable_eager_execution()
+
+
 class ClipByNormEncodingStageTest(test_utils.BaseEncodingStageTest):
 
   def default_encoding_stage(self):

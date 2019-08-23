@@ -23,6 +23,10 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import py_utils
 
 
+if tf.executing_eagerly():
+  tf.compat.v1.disable_eager_execution()
+
+
 class OrderedEnumTest(parameterized.TestCase):
 
   def test_ordered_enum(self):
@@ -50,7 +54,7 @@ class StaticOrDynamicShapeTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllEqual((3,), py_utils.static_or_dynamic_shape(x))
 
     # Tensor without statically known shape.
-    x = tf.squeeze(tf.where(tf.less(tf.random_uniform([10]), 0.5)))
+    x = tf.squeeze(tf.where(tf.less(tf.random.uniform([10]), 0.5)))
     shape = py_utils.static_or_dynamic_shape(x)
     self.assertIsInstance(shape, tf.Tensor)
     x, shape = self.evaluate([x, shape])

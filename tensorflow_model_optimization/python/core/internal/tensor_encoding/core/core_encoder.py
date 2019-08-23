@@ -150,14 +150,14 @@ class Encoder(object):
       keys as `self.children`, each of which maps to an object like this one,
       recursively.
     """
-    with tf.name_scope(name, 'encoder_initial_state'):
+    with tf.compat.v1.name_scope(name, 'encoder_initial_state'):
       return self._initial_state_impl()
 
   def _initial_state_impl(self):
     """Implementation for the `initial_state` method."""
     children_state = {}
     for key, encoder in six.iteritems(self.children):
-      with tf.name_scope(None, '/'.join([self.stage.name, key])):
+      with tf.compat.v1.name_scope(None, '/'.join([self.stage.name, key])):
         children_state[key] = encoder._initial_state_impl()  # pylint: disable=protected-access
     return {
         EncoderKeys.STATE: self.stage.initial_state(),
@@ -185,14 +185,14 @@ class Encoder(object):
       recursively.
     """
     values = tf.nest.flatten(state) + tf.nest.flatten(state_update_tensors)
-    with tf.name_scope(name, 'encoder_update_state', values):
+    with tf.compat.v1.name_scope(name, 'encoder_update_state', values):
       return self._update_state_impl(state, state_update_tensors)
 
   def _update_state_impl(self, state, state_update_tensors):
     """Implementation for the `update_state` method."""
     children_states = {}
     for key, encoder in six.iteritems(self.children):
-      with tf.name_scope(None, '/'.join([self.stage.name, key])):
+      with tf.compat.v1.name_scope(None, '/'.join([self.stage.name, key])):
         children_states[key] = encoder._update_state_impl(  # pylint: disable=protected-access
             state[EncoderKeys.CHILDREN][key],
             state_update_tensors[EncoderKeys.CHILDREN][key])
@@ -222,7 +222,8 @@ class Encoder(object):
       `self.children`, each of which maps to an object like this one,
       recursively.
     """
-    with tf.name_scope(name, 'encoder_get_params', tf.nest.flatten(state)):
+    with tf.compat.v1.name_scope(name, 'encoder_get_params',
+                                 tf.nest.flatten(state)):
       return self._get_params_impl(state)
 
   def _get_params_impl(self, state):
@@ -234,7 +235,7 @@ class Encoder(object):
     children_encode_params = {}
     children_decode_params = {}
     for key, encoder in six.iteritems(self.children):
-      with tf.name_scope(None, '/'.join([self.stage.name, key])):
+      with tf.compat.v1.name_scope(None, '/'.join([self.stage.name, key])):
         children_encode_params[key], children_decode_params[key] = (
             encoder._get_params_impl(state[EncoderKeys.CHILDREN][key]))  # pylint: disable=protected-access
     encode_params[EncoderKeys.CHILDREN] = children_encode_params
@@ -272,8 +273,8 @@ class Encoder(object):
         dictionary can be either `Tensor` objects, non-TensorFlow constants such
         as a `list` or numpy value, or `None`, if the shape is not needed.
     """
-    with tf.name_scope(name, 'encoder_encode',
-                       [x] + tf.nest.flatten(encode_params)):
+    with tf.compat.v1.name_scope(name, 'encoder_encode',
+                                 [x] + tf.nest.flatten(encode_params)):
       return self._encode_impl(x, encode_params)
 
   def _encode_impl(self, x, encode_params):
@@ -290,7 +291,7 @@ class Encoder(object):
     children_state_update_tensors = {}
     children_shapes = {}
     for key, encoder in six.iteritems(self.children):
-      with tf.name_scope(None, '/'.join([self.stage.name, key])):
+      with tf.compat.v1.name_scope(None, '/'.join([self.stage.name, key])):
         (encoded_tensors[key], children_state_update_tensors[key],
          children_shapes[key]) = encoder._encode_impl(  # pylint: disable=protected-access
              encoded_tensors[key], encode_params[EncoderKeys.CHILDREN][key])
@@ -319,7 +320,7 @@ class Encoder(object):
     values = (
         tf.nest.flatten(shape) + tf.nest.flatten(decode_params) +
         tf.nest.flatten(encoded_tensors))
-    with tf.name_scope(name, 'encoder_decode', values):
+    with tf.compat.v1.name_scope(name, 'encoder_decode', values):
       # Calling _decode_before_sum_impl with force_decode=True will decode the
       # entire tree, regardless of potential commutativity with sum.
       return self._decode_before_sum_impl(
@@ -354,7 +355,7 @@ class Encoder(object):
     values = (
         tf.nest.flatten(shape) + tf.nest.flatten(decode_params) +
         tf.nest.flatten(encoded_tensors))
-    with tf.name_scope(name, 'encoder_decode_before_sum', values):
+    with tf.compat.v1.name_scope(name, 'encoder_decode_before_sum', values):
       return self._decode_before_sum_impl(
           encoded_tensors, decode_params, shape, force_decode=False)
 
@@ -383,7 +384,7 @@ class Encoder(object):
     force_decode |= not self.stage.commutes_with_sum
     for key, value in six.iteritems(encoded_tensors):
       if key in self.children:
-        with tf.name_scope(None, '/'.join([self.stage.name, key])):
+        with tf.compat.v1.name_scope(None, '/'.join([self.stage.name, key])):
           temp_encoded_tensors[key] = (
               self.children[key]._decode_before_sum_impl(  # pylint: disable=protected-access
                   value,
@@ -435,7 +436,7 @@ class Encoder(object):
         tf.nest.flatten(shape) + tf.nest.flatten(decode_params) +
         tf.nest.flatten(encoded_tensors) + [num_summands])
     num_summands = tf.convert_to_tensor(num_summands)
-    with tf.name_scope(name, 'encoder_decode_after_sum', values):
+    with tf.compat.v1.name_scope(name, 'encoder_decode_after_sum', values):
       return self._decode_after_sum_impl(encoded_tensors, decode_params,
                                          num_summands, shape)
 
@@ -450,7 +451,7 @@ class Encoder(object):
     temp_encoded_tensors = {}
     for key, value in six.iteritems(encoded_tensors):
       if key in self.children:
-        with tf.name_scope(None, '/'.join([self.stage.name, key])):
+        with tf.compat.v1.name_scope(None, '/'.join([self.stage.name, key])):
           temp_encoded_tensors[key] = self.children[key]._decode_after_sum_impl(  # pylint: disable=protected-access
               value, decode_params[EncoderKeys.CHILDREN][key], num_summands,
               shape[EncoderKeys.CHILDREN][key])

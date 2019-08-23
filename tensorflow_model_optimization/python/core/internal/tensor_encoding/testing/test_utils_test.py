@@ -27,6 +27,10 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.core imp
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing import test_utils
 
 
+if tf.executing_eagerly():
+  tf.compat.v1.disable_eager_execution()
+
+
 class PlusOneEncodingStageTest(test_utils.BaseEncodingStageTest):
 
   def default_encoding_stage(self):
@@ -101,12 +105,12 @@ class SimpleLinearEncodingStageTest(test_utils.BaseEncodingStageTest):
 
   def test_basic_encode_decode_tf_constructor_parameters(self):
     """Tests the core funcionality with `tf.Variable` constructor parameters."""
-    a_var = tf.get_variable('a_var', initializer=self._DEFAULT_A)
-    b_var = tf.get_variable('b_var', initializer=self._DEFAULT_B)
+    a_var = tf.compat.v1.get_variable('a_var', initializer=self._DEFAULT_A)
+    b_var = tf.compat.v1.get_variable('b_var', initializer=self._DEFAULT_B)
     stage = test_utils.SimpleLinearEncodingStage(a_var, b_var)
 
     with self.cached_session() as sess:
-      sess.run(tf.global_variables_initializer())
+      sess.run(tf.compat.v1.global_variables_initializer())
     x = self.default_input()
     encode_params, decode_params = stage.get_params()
     encoded_x, decoded_x = self.encode_decode_x(stage, x, encode_params,
@@ -116,7 +120,9 @@ class SimpleLinearEncodingStageTest(test_utils.BaseEncodingStageTest):
     self.common_asserts_for_test_data(test_data)
 
     # Change the variables and verify the behavior of stage changes.
-    self.evaluate([tf.assign(a_var, 5.0), tf.assign(b_var, 6.0)])
+    self.evaluate(
+        [tf.compat.v1.assign(a_var, 5.0),
+         tf.compat.v1.assign(b_var, 6.0)])
     test_data = self.evaluate_test_data(
         test_utils.TestData(x, encoded_x, decoded_x))
     self.assertAllClose(test_data.x * 5.0 + 6.0,
@@ -154,7 +160,7 @@ class ReduceMeanEncodingStageTest(test_utils.BaseEncodingStageTest):
   @parameterized.parameters([2], [2, 3], [2, 3, 4], [2, 3, 4, 5])
   def test_one_to_many_with_multiple_input_shapes(self, *shape):
     test_data = self.run_one_to_many_encode_decode(
-        self.default_encoding_stage(), lambda: tf.random_uniform(shape))
+        self.default_encoding_stage(), lambda: tf.random.uniform(shape))
     self.common_asserts_for_test_data(test_data)
 
 
