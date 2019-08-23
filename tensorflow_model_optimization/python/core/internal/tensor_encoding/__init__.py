@@ -20,4 +20,5 @@ from __future__ import print_function
 from tensorflow_model_optimization.python.core.internal.tensor_encoding import core
 from tensorflow_model_optimization.python.core.internal.tensor_encoding import encoders
 from tensorflow_model_optimization.python.core.internal.tensor_encoding import stages
+from tensorflow_model_optimization.python.core.internal.tensor_encoding import testing
 from tensorflow_model_optimization.python.core.internal.tensor_encoding import utils

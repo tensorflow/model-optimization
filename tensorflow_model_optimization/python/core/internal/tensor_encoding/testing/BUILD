@@ -6,7 +6,6 @@ licenses(["notice"])  # Apache 2.0
 
 py_library(
     name = "testing",
-    testonly = True,
     srcs = ["__init__.py"],
     visibility = ["//visibility:public"],
     deps = [
@@ -16,7 +15,6 @@ py_library(
 
 py_library(
     name = "test_utils",
-    testonly = True,
     srcs = ["test_utils.py"],
     deps = [
         # absl/testing:parameterized dep1,
