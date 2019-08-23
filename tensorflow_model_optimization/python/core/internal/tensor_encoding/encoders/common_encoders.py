@@ -52,15 +52,15 @@ def as_simple_encoder(encoder, tensorspec):
 
 
 def as_gather_encoder(encoder, tensorspec):
-  """Wraps an `Encoder` object as a `GahterEncoder`.
+  """Wraps an `Encoder` object as a `GatherEncoder`.
 
   Args:
     encoder: An `Encoder` object to be used to encoding.
-    tensorspec: A `TensorSpec`. The created `GahterEncoder` will be constrained
+    tensorspec: A `TensorSpec`. The created `GatherEncoder` will be constrained
       to only encode input values compatible with `tensorspec`.
 
   Returns:
-    A `GahterEncoder`.
+    A `GatherEncoder`.
 
   Raises:
     TypeError:
