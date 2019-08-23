@@ -19,18 +19,14 @@ from __future__ import division
 from __future__ import print_function
 # import g3
 import numpy as np
-from tensorflow.python.eager import context
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
+
+import tensorflow.compat.v1 as tf
+# TODO(tf-mot): when migrating to 2.0, K.get_session() no longer exists.
+K = tf.keras.backend
+dtypes = tf.dtypes
+test = tf.test
+
 from tensorflow.python.framework import test_util as tf_test_util
-from tensorflow.python.keras import backend as K
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import partitioned_variables
-from tensorflow.python.ops import state_ops
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops import variables
-from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
@@ -66,7 +62,7 @@ class PruningTest(test.TestCase):
     mask_before_pruning = K.get_value(mask)
     self.assertAllEqual(np.count_nonzero(mask_before_pruning), 100)
 
-    if context.executing_eagerly():
+    if tf.executing_eagerly():
       p.conditional_mask_update()
     else:
       K.get_session().run(p.conditional_mask_update())
@@ -121,7 +117,7 @@ class PruningTest(test.TestCase):
   def testBlockMaskingMax(self):
     block_size = (2, 2)
     block_pooling_type = "MAX"
-    weight = constant_op.constant([[0.1, 0.0, 0.2, 0.0], [0.0, -0.1, 0.0, -0.2],
+    weight = tf.constant([[0.1, 0.0, 0.2, 0.0], [0.0, -0.1, 0.0, -0.2],
                                    [0.3, 0.0, 0.4, 0.0], [0.0, -0.3, 0.0,
                                                           -0.4]])
     expected_mask = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0],
@@ -133,7 +129,7 @@ class PruningTest(test.TestCase):
     block_size = (2, 2)
     block_pooling_type = "AVG"
     # Weights as in testBlockMasking, but with one extra dimension.
-    weight = constant_op.constant([[[0.1, 0.1, 0.2, 0.2], [0.1, 0.1, 0.2, 0.2],
+    weight = tf.constant([[[0.1, 0.1, 0.2, 0.2], [0.1, 0.1, 0.2, 0.2],
                                     [0.3, 0.3, 0.4, 0.4], [0.3, 0.3, 0.4,
                                                            0.4]]])
     expected_mask = [[[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0],
@@ -149,9 +145,9 @@ class PruningTest(test.TestCase):
     threshold = K.zeros([])
 
     def linear_sparsity(step):
-      sparsity_val = ops.convert_to_tensor(
+      sparsity_val = tf.convert_to_tensor(
           [0.0, 0.1, 0.1, 0.3, 0.3, 0.5, 0.5, 0.5, 0.5, 0.5])
-      return ops.convert_to_tensor(True), sparsity_val[step]
+      return tf.convert_to_tensor(True), sparsity_val[step]
 
     # Set up pruning
     p = pruning_impl.Pruning(
@@ -163,14 +159,14 @@ class PruningTest(test.TestCase):
 
     non_zero_count = []
     for _ in range(10):
-      if context.executing_eagerly():
+      if tf.executing_eagerly():
         p.conditional_mask_update()
         p.weight_mask_op()
-        state_ops.assign_add(self.global_step, 1)
+        tf.assign_add(self.global_step, 1)
       else:
         K.get_session().run(p.conditional_mask_update())
         K.get_session().run(p.weight_mask_op())
-        K.get_session().run(state_ops.assign_add(self.global_step, 1))
+        K.get_session().run(tf.assign_add(self.global_step, 1))
 
       non_zero_count.append(np.count_nonzero(K.get_value(weight)))
 
@@ -180,4 +176,5 @@ class PruningTest(test.TestCase):
 
 
 if __name__ == "__main__":
+  tf.disable_v2_behavior()
   test.main()
