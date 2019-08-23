@@ -25,9 +25,10 @@ pip install --user --upgrade tensorflow-model-optimization
 For release details, see our
 [release notes](https://github.com/tensorflow/model-optimization/releases).
 
-TensorFlow Model Optimization currently depends on the nightly build of
-[TensorFlow](https://www.tensorflow.org/install) (pip package `tf-nightly`) and
-only supports Tensorflow 1.XX.
+TensorFlow Model Optimization requires either Tensorflow 1.x for versions 1.14+
+or the nightly build of [TensorFlow](https://www.tensorflow.org/install) (pip
+package `tf-nightly`). Note that for the nightly build, you need to use
+tf.compat.v1 since 2.x is the default now.
 
 Since TensorFlow is *not* included as a dependency of the TensorFlow Model
 Optimization package (in `setup.py`), you must explicitly install the TensorFlow
