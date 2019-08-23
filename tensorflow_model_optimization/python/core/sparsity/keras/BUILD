@@ -199,6 +199,7 @@ py_library(
         ":prune",
         ":pruning_wrapper",
         # numpy dep1,
+        # tensorflow dep1,
         # python/keras tensorflow dep2,
         # python/keras:backend tensorflow dep2,
         # python/keras:saving tensorflow dep2,

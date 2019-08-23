@@ -17,9 +17,10 @@
 import tempfile
 import numpy as np
 
+import tensorflow as tf
+
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.saving import saved_model_experimental
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
@@ -109,10 +110,10 @@ def _save_restore_keras_model(model):
 
 def _save_restore_saved_model(model):
   tmpdir = tempfile.mkdtemp()
-  saved_model_experimental.export_saved_model(model, tmpdir)
+  tf.keras.experimental.export_saved_model(model, tmpdir)
 
   with prune.prune_scope():
-    loaded_model = saved_model_experimental.load_from_saved_model(tmpdir)
+    loaded_model = tf.keras.experimental.load_from_saved_model(tmpdir)
 
   loaded_model.compile(
       loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
