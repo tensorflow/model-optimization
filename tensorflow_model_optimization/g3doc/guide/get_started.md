@@ -22,7 +22,7 @@ during [TensorFlow Lite conversion](https://www.tensorflow.org/lite/convert),
 which can optimize your already-trained TensorFlow model.
 
 See the
-[post-training quantization tutorial](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/tutorials/post_training_quant.ipynb)
+[post-training quantization tutorial](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_quant.ipynb)
 to learn more.
 
 ## Next steps: Training-time tooling
