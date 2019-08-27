@@ -60,14 +60,6 @@ class QuantizeAnnotate(Wrapper):
   def call(self, inputs, training=None):
     return self.layer.call(inputs)
 
-  def get_quantize_params(self):
-    # TODO(pulkitb): Keep around function so rest of code works. Remove later.
-    return {
-        'num_bits': 8,
-        'symmetric': True,
-        'narrow_range': True
-    }
-
   def get_config(self):
     base_config = super(QuantizeAnnotate, self).get_config()
     config = {
