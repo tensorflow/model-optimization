@@ -19,8 +19,10 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from tensorflow.python.keras.layers import deserialize as deserialize_layer
 from tensorflow.python.keras.layers.wrappers import Wrapper
-from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider as quantize_provider_mod
+from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
+from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
 
 
 class QuantizeAnnotate(Wrapper):
@@ -69,7 +71,7 @@ class QuantizeAnnotate(Wrapper):
   def get_config(self):
     base_config = super(QuantizeAnnotate, self).get_config()
     config = {
-        'quantize_provider': self.quantize_provider
+        'quantize_provider': serialize_keras_object(self.quantize_provider)
     }
     return dict(list(base_config.items()) + list(config.items()))
 
@@ -77,22 +79,19 @@ class QuantizeAnnotate(Wrapper):
   def from_config(cls, config):
     config = config.copy()
 
-    quantize_provider = config.pop('quantize_provider')
-    from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object  # pylint: disable=g-import-not-at-top
-    # TODO(pulkitb): Add all known `QuantizeProvider`s to custom_objects
-    custom_objects = {
-        'QuantizeProvider': quantize_provider_mod.QuantizeProvider
-    }
-    config['quantize_provider'] = deserialize_keras_object(
-        quantize_provider,
+    # QuantizeAnnotate may be constructed with any QuantizeProvider and the
+    # wrapper itself cannot know all the possible provider classes.
+    # The deserialization code should ensure the QuantizeProvider is in keras
+    # serialization scope.
+    # TODO(pulkitb): Decide if built-in QuantizeProviders should be in scope.
+    quantize_provider = deserialize_keras_object(
+        config.pop('quantize_provider'),
         module_objects=globals(),
-        custom_objects=custom_objects)
+        custom_objects=None)
 
-    from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
     layer = deserialize_layer(config.pop('layer'))
-    config['layer'] = layer
 
-    return cls(**config)
+    return cls(layer=layer, quantize_provider=quantize_provider, **config)
 
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(input_shape)

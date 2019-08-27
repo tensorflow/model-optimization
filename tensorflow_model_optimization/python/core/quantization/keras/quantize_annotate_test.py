@@ -21,6 +21,8 @@ from __future__ import print_function
 import numpy as np
 
 from tensorflow.python import keras
+from tensorflow.python.keras.layers import deserialize as deserialize_layer
+from tensorflow.python.keras.layers import serialize as serialize_layer
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate
@@ -44,7 +46,7 @@ class QuantizeAnnotateTest(test.TestCase):
       pass
 
     def get_config(self):
-      pass
+      return {}
 
   def testAnnotatesKerasLayer(self):
     layer = keras.layers.Dense(5, activation='relu', input_shape=(10,))
@@ -62,6 +64,25 @@ class QuantizeAnnotateTest(test.TestCase):
     # Annotated model should not affect computation. Returns same results.
     x_test = np.random.rand(10, 10)
     self.assertAllEqual(model.predict(x_test), annotated_model.predict(x_test))
+
+  def testSerializationQuantizeAnnotate(self):
+    input_shape = (2,)
+    layer = keras.layers.Dense(3)
+    wrapper = quantize_annotate.QuantizeAnnotate(
+        layer=layer,
+        quantize_provider=self.TestQuantizeProvider(),
+        input_shape=input_shape)
+
+    custom_objects = {
+        'QuantizeAnnotate': quantize_annotate.QuantizeAnnotate,
+        'TestQuantizeProvider': self.TestQuantizeProvider
+    }
+
+    serialized_wrapper = serialize_layer(wrapper)
+    with keras.utils.custom_object_scope(custom_objects):
+      wrapper_from_config = deserialize_layer(serialized_wrapper)
+
+    self.assertEqual(wrapper_from_config.get_config(), wrapper.get_config())
 
 
 if __name__ == '__main__':
