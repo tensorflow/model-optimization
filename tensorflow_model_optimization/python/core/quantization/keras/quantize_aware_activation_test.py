@@ -53,6 +53,17 @@ class QuantizeAwareQuantizationTest(test.TestCase):
     def compute_output_shape(self, input_shape):
       return input_shape
 
+  def testRaisesError_NotKerasBuiltinActivation(self):
+    layer = self.TestLayer()
+
+    def custom_quantize(x):
+      return x
+
+    with self.assertRaises(ValueError) as cm:
+      QuantizeAwareActivation(custom_quantize, self.quantizer, 0, layer)
+    self.assertEqual(
+        str(cm.exception), QuantizeAwareActivation._CUSTOM_ACTIVATION_ERR_MSG)
+
   def testAppliesQuantizationPostActivation(self):
     layer = self.TestLayer()
     layer.activation = QuantizeAwareActivation(
@@ -106,47 +117,6 @@ class QuantizeAwareQuantizationTest(test.TestCase):
     deserialized_activation = deserialize_keras_object(
         serialized_quantize_activation,
         custom_objects={'QuantizeAwareActivation': QuantizeAwareActivation})
-
-    self.assertEqual(activation, deserialized_activation)
-
-  def testSerializationReturnsWrappedActivation_CustomActivation(self):
-    class CustomActivation(object):
-
-      def __init__(self, key):
-        self.key = key
-
-      def get_config(self):
-        return {'key': self.key}
-
-      def __call__(self, *args, **kwargs):
-        return None
-
-      def __eq__(self, other):
-        return self.key == other.key
-
-    activation = CustomActivation('value')
-    quantize_activation = QuantizeAwareActivation(
-        activation, self.quantizer, 0, self.TestLayer())
-
-    expected_config = {
-        'class_name': 'QuantizeAwareActivation',
-        'config': {
-            'activation': {
-                'class_name': 'CustomActivation',
-                'config': {'key': 'value'}
-            }
-        }
-    }
-    serialized_quantize_activation = serialize_keras_object(quantize_activation)
-
-    self.assertEqual(expected_config, serialized_quantize_activation)
-
-    deserialized_activation = deserialize_keras_object(
-        serialized_quantize_activation,
-        custom_objects={
-            'QuantizeAwareActivation': QuantizeAwareActivation,
-            'CustomActivation': CustomActivation
-        })
 
     self.assertEqual(activation, deserialized_activation)
 

@@ -48,21 +48,28 @@ class QuantizeAwareActivation(object):
 
   _PRE_ACTIVATION_TYPES = {'softmax'}
 
+  _CUSTOM_ACTIVATION_ERR_MSG = (
+      'Only Keras activations under `tf.keras.activations` are supported. For '
+      'custom activations, use `Quantizer` directly, and update layer config '
+      'using `QuantizeProvider`.'
+  )
+
   def __init__(self, activation, quantizer, step, quantize_wrapper):
     """Construct a QuantizeAwareActivation layer.
 
     Args:
-      activation: Activation function to use. If you don't specify anything, no
-        activation is applied
-        (ie. "linear" activation: `a(x) = x`).
+      activation: Activation function to use.
       quantizer: `Quantizer` to be used to quantize the activation.
       step: Variable which tracks optimizer step.
       quantize_wrapper: `QuantizeWrapper` which owns this activation.
     """
-    self.activation = activations.get(activation)
+    self.activation = activation
     self.quantizer = quantizer
     self.step = step
     self.quantize_wrapper = quantize_wrapper
+
+    if not self._is_keras_builtin_activation(self.activation):
+      raise ValueError(self._CUSTOM_ACTIVATION_ERR_MSG)
 
     if self._should_pre_quantize():
       self._min_pre_activation, self._max_pre_activation = \
@@ -71,17 +78,24 @@ class QuantizeAwareActivation(object):
     self._min_post_activation, self._max_post_activation = \
       self._add_range_weights('post_activation')
 
+  def _is_keras_builtin_activation(self, activation):
+    if not hasattr(activation, '__name__'):
+      return False
+
+    try:
+      # Keras built-in activations can be fetched using keras.activations.
+      activations.get(activation.__name__)
+      return True
+    except (ValueError, TypeError):
+      return False
+
   def _should_pre_quantize(self):
     # TODO(pulkitb): Add logic to deduce whether we should pre-quantize.
     # Whether we apply quantize operations around activations depends on the
     # implementation of the specific kernel. For example, ReLUs are fused in
-    # whereas Softmax ops are not. Should linear have post-quantize?
+    # whereas Softmax ops are not.
 
-    # For custom quantizations unknown in keras, we default to post
-    # quantization.
-
-    return (hasattr(self.activation, '__name__') and
-            self.activation.__name__ in self._PRE_ACTIVATION_TYPES)
+    return self.activation.__name__ in self._PRE_ACTIVATION_TYPES
 
   def _add_range_weights(self, name):
     min_var = self.quantize_wrapper.add_weight(
