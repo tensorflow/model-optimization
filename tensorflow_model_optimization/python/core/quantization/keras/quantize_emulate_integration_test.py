@@ -24,10 +24,9 @@ import numpy as np
 from tensorflow.python import keras
 from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.keras import test_utils
+from tensorflow_model_optimization.python.core.quantization.keras import utils
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizeEmulate
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
-from tensorflow_model_optimization.python.core.quantization.keras.utils import assert_fake_quant_equivalence
-from tensorflow_model_optimization.python.core.quantization.keras.utils import convert_mnist_to_tflite
 
 
 class QuantizeEmulateIntegrationTest(test.TestCase):
@@ -58,7 +57,7 @@ class QuantizeEmulateIntegrationTest(test.TestCase):
                      model2.input.get_shape().as_list())
     self.assertEqual(model1.get_config(), model2.get_config())
 
-    assert_fake_quant_equivalence(self, model1, model2)
+    utils.assert_fake_quant_equivalence(self, model1, model2)
 
     # Check predictions match.
     input_data = np.random.randn(
@@ -140,7 +139,7 @@ class QuantizeEmulateIntegrationTest(test.TestCase):
     _, tflite_file = tempfile.mkstemp('.h5')
 
     keras.models.save_model(model, keras_file)
-    convert_mnist_to_tflite(keras_file, tflite_file, {'linear': linear})
+    utils.convert_keras_to_tflite(keras_file, tflite_file, {'linear': linear})
     tflite_accuracy = test_utils.eval_mnist_tflite(
         tflite_file, is_quantized=True)
 

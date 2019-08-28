@@ -21,8 +21,11 @@ from tensorflow.python.keras import backend as K
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
 
 
-def convert_mnist_to_tflite(model_path, output_path, custom_objects=None):
-  """Convert Keras mnist model to TFLite."""
+def convert_keras_to_tflite(model_path,
+                            output_path,
+                            custom_objects=None,
+                            is_quantized=True):
+  """Convert Keras model to TFLite."""
   if custom_objects is None:
     custom_objects = {}
   custom_objects.update({'QuantizeEmulateWrapper': QuantizeEmulateWrapper})
@@ -31,11 +34,12 @@ def convert_mnist_to_tflite(model_path, output_path, custom_objects=None):
       model_path,
       custom_objects=custom_objects)
 
-  converter.inference_type = tf.lite.constants.QUANTIZED_UINT8
-  input_arrays = converter.get_input_arrays()
-  converter.quantized_input_stats = {
-      input_arrays[0]: (0., 255.)
-  }  # mean, std_dev
+  if is_quantized:
+    converter.inference_type = tf.lite.constants.QUANTIZED_UINT8
+    input_arrays = converter.get_input_arrays()
+    converter.quantized_input_stats = {
+        input_arrays[0]: (0., 255.)
+    }  # mean, std_dev
 
   tflite_model = converter.convert()
   open(output_path, 'wb').write(tflite_model)
