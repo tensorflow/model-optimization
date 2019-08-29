@@ -76,6 +76,12 @@ class SplitBySmallValueEncodingStage(encoding_stage.EncodingStageInterface):
     threshold = tf.cast(encode_params[self.THRESHOLD_PARAMS_KEY], x.dtype)
     indices = tf.cast(tf.compat.v2.where(tf.abs(x) > threshold), tf.int32)
     non_zero_x = tf.gather_nd(x, indices)
+    # print(indices)
+    # print(indices.shape)
+    indices = tf.squeeze(indices, axis=1)
+    # print(indices)
+    # print(indices.shape)
+
 
     return {
         self.ENCODED_INDICES_KEY: indices,
@@ -93,6 +99,7 @@ class SplitBySmallValueEncodingStage(encoding_stage.EncodingStageInterface):
     indices = encoded_tensors[self.ENCODED_INDICES_KEY]
     non_zero_x = encoded_tensors[self.ENCODED_VALUES_KEY]
 
+    indices = tf.expand_dims(indices, 1)
     shape = tf.cast(shape, indices.dtype)
     decoded_x = tf.scatter_nd(indices=indices, updates=non_zero_x, shape=shape)
 
