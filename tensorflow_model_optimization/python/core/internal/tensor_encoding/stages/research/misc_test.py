@@ -71,7 +71,7 @@ class SplitBySmallValueEncodingStageTest(test_utils.BaseEncodingStageTest):
 
     # The numpy arrays must have the same dtype as the arrays from test_data.
     expected_encoded_values = np.array([1.0, 0.1], dtype=x.dtype.as_numpy_dtype)
-    expected_encoded_indices = np.array([[0], [1]], dtype=np.int32)
+    expected_encoded_indices = np.array([0, 1], dtype=np.int32)
     expected_decoded_x = np.array([1.0, 0.1, 0., 0., 0.],
                                   dtype=x_dtype.as_numpy_dtype)
     self.assertAllEqual(test_data.encoded_x[stage.ENCODED_VALUES_KEY],
@@ -100,7 +100,7 @@ class SplitBySmallValueEncodingStageTest(test_utils.BaseEncodingStageTest):
     test_data = test_utils.TestData(x, encoded_x, decoded_x)
     test_data = self.evaluate_test_data(test_data)
 
-    expected_encoded_indices = np.array([], dtype=np.int32).reshape([0, 1])
+    expected_encoded_indices = np.array([], dtype=np.int32).reshape([0])
     self.assertAllEqual(test_data.encoded_x[stage.ENCODED_VALUES_KEY], [])
     self.assertAllEqual(test_data.encoded_x[stage.ENCODED_INDICES_KEY],
                         expected_encoded_indices)
