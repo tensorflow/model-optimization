@@ -69,7 +69,7 @@ def assert_fake_quant_equivalence(test_case, model1, model2):
   # This ensures that the number of layers and QuantizeEmulateWrapped layers
   # is equal.
   test_case.assertEqual(model1.get_config(), model2.get_config())
-  for l in xrange(len(model1.layers)):
+  for l in range(len(model1.layers)):
     l1 = model1.layers[l]
     l2 = model2.layers[l]
     if isinstance(l1, QuantizeEmulateWrapper):
