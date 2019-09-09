@@ -42,7 +42,8 @@ def convert_keras_to_tflite(model_path,
     }  # mean, std_dev
 
   tflite_model = converter.convert()
-  open(output_path, 'wb').write(tflite_model)
+  with open(output_path, 'wb') as f:
+    f.write(tflite_model)
 
 
 def _get_fake_quant_values(layer):
