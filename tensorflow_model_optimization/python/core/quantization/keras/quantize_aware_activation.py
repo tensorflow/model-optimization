@@ -78,6 +78,10 @@ class QuantizeAwareActivation(object):
     self._min_post_activation, self._max_post_activation = \
       self._add_range_weights('post_activation')
 
+  @property
+  def __name__(self):
+      return self.activation.__name__
+
   def _is_keras_builtin_activation(self, activation):
     if not hasattr(activation, '__name__'):
       return False
