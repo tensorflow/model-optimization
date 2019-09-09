@@ -6,6 +6,17 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
+    name = "keras",
+    srcs = [
+        "__init__.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":quantize",
+    ],
+)
+
+py_library(
     name = "quant_ops",
     srcs = ["quant_ops.py"],
     srcs_version = "PY2AND3",
@@ -95,6 +106,36 @@ py_library(
     deps = [
         # six dep1,
         # tensorflow dep1,
+    ],
+)
+
+py_library(
+    name = "quantize_annotate",
+    srcs = [
+        "quantize_annotate.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_provider",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "quantize_annotate_test",
+    srcs = [
+        "quantize_annotate_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_annotate",
+        ":quantize_provider",
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
     ],
 )
 
@@ -194,6 +235,19 @@ py_test(
 )
 
 py_library(
+    name = "utils",
+    srcs = [
+        "utils.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_emulate_wrapper",
+        # tensorflow dep1,
+    ],
+)
+
+py_library(
     name = "quantize_emulatable_layer",
     srcs = [
         "quantize_emulatable_layer.py",
@@ -267,49 +321,6 @@ py_library(
         ":quantize_emulate_wrapper",
         # tensorflow dep1,
         # python/keras tensorflow dep2,
-    ],
-)
-
-py_library(
-    name = "quantize_annotate",
-    srcs = [
-        "quantize_annotate.py",
-    ],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":quantize_provider",
-        # tensorflow dep1,
-        # python/keras tensorflow dep2,
-    ],
-)
-
-py_test(
-    name = "quantize_annotate_test",
-    srcs = [
-        "quantize_annotate_test.py",
-    ],
-    python_version = "PY3",
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":quantize_annotate",
-        ":quantize_provider",
-        # tensorflow dep1,
-        # python/keras tensorflow dep2,
-    ],
-)
-
-py_library(
-    name = "utils",
-    srcs = [
-        "utils.py",
-    ],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":quantize_emulate_wrapper",
-        # tensorflow dep1,
     ],
 )
 
