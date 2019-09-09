@@ -234,6 +234,18 @@ py_test(
     ],
 )
 
+py_test(
+    name = "quantize_integration_test",
+    srcs = ["quantize_integration_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":quantize",
+        # numpy dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
+    ],
+)
+
 # TODO(pulkitb): Using PY2 since MNIST data downloading code throws an SSL error on Sponge.
 py_test(
     name = "quantize_functional_test",
