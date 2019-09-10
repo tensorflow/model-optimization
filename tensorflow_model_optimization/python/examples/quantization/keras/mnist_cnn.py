@@ -106,5 +106,6 @@ converter = tf.lite.TFLiteConverter.from_keras_model_file(
 converter.inference_type = tf.lite.constants.QUANTIZED_UINT8
 input_arrays = converter.get_input_arrays()
 converter.quantized_input_stats = {input_arrays[0]: (0., 255.)}  # mean, std_dev
+converter.default_ranges_stats = (0, 255)
 tflite_model = converter.convert()
 open('/tmp/quantized_mnist.tflite', 'wb').write(tflite_model)
