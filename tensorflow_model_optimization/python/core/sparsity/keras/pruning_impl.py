@@ -182,8 +182,9 @@ class Pruning(object):
       for weight, mask, _ in self._pruning_vars:
         masked_weight = math_ops.multiply(weight, mask)
         values_and_vars.append((masked_weight, weight))
-      assign_ops.append(tf.distribute.get_replica_context().merge_call(
-          update_fn, args=(values_and_vars,)))
+      if values_and_vars:
+        assign_ops.append(tf.distribute.get_replica_context().merge_call(
+            update_fn, args=(values_and_vars,)))
     else:
       for weight, mask, _ in self._pruning_vars:
         masked_weight = math_ops.multiply(weight, mask)
