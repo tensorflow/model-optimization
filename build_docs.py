@@ -26,12 +26,11 @@ from __future__ import print_function
 
 import os
 
-# import g3
 from absl import app
 from absl import flags
 from tensorflow_docs.api_generator import generate_lib
 
-# import g3.third_party.tensorflow_model_optimization as tfmot
+import tensorflow_model_optimization as tfmot
 
 
 flags.DEFINE_string("output_dir", "/tmp/model_optimization_api",
