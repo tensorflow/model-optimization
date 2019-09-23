@@ -56,7 +56,7 @@ It is on our roadmap to bring full support to TF 2.x and eager execution.
       <td>74.6%</td><td>87.5%</td>
     </tr>
     <tr>
-      <td>MobilenetV1 224</td><td>70.9%</td><td>69.5%</td><td>50%</td>
+      <td>MobilenetV1 224</td><td>71.04%</td><td>70.84%</td><td>50%</td>
     </tr>
  </table>
 </figure>
