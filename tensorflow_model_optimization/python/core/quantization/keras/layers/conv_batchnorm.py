@@ -61,6 +61,7 @@ class _ConvBatchNorm2D(Conv2D):
       activity_regularizer=None,
       kernel_constraint=None,
       bias_constraint=None,
+      name=None,
       # BatchNormalization params
       axis=-1,
       momentum=0.99,
@@ -82,7 +83,6 @@ class _ConvBatchNorm2D(Conv2D):
       trainable=True,
       virtual_batch_size=None,
       adjustment=None,
-      name=None,
       **kwargs):
     super(_ConvBatchNorm2D, self).__init__(
         filters,
@@ -99,6 +99,7 @@ class _ConvBatchNorm2D(Conv2D):
         activity_regularizer=activity_regularizer,
         kernel_constraint=kernel_constraint,
         bias_constraint=bias_constraint,
+        name=name,
         **kwargs)
 
     self.batchnorm = BatchNormalization(
@@ -122,7 +123,6 @@ class _ConvBatchNorm2D(Conv2D):
         trainable=trainable,
         virtual_batch_size=virtual_batch_size,
         adjustment=adjustment,
-        name=name,
     )
 
   def build(self, input_shape):
@@ -196,6 +196,15 @@ class _ConvBatchNorm2D(Conv2D):
   def get_config(self):
     conv_config = super(_ConvBatchNorm2D, self).get_config()
     batchnorm_config = self.batchnorm.get_config()
+
+    # Both BatchNorm and Conv2D have config items from base layer. Since
+    # _ConvBatchNorm2D inherits from Conv2D, we should use base layer config
+    # items from self, rather than self.batchnorm.
+    # For now, deleting 'name', but ideally all base_config items should be
+    # removed.
+    # TODO(pulkitb): Raise error if base_configs in both layers incompatible.
+    batchnorm_config.pop('name')
+
     return dict(list(conv_config.items()) + list(batchnorm_config.items()))
 
   @classmethod
