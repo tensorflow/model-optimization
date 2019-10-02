@@ -110,6 +110,19 @@ py_library(
 )
 
 py_library(
+    name = "quantize_layout_transform",
+    srcs = [
+        "quantize_layout_transform.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_library(
     name = "quantize_annotate",
     srcs = [
         "quantize_annotate.py",
