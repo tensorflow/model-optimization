@@ -99,7 +99,6 @@ if not hasattr(_current_module, '__path__'):
 elif _os.path.dirname(_inspect.getfile(_API_MODULE)) not in __path__:
   __path__.append(_sparsity_api_dir)
 
-
 # Delete python module so that users only access the code using the API path
 # rather than using the code directory structure.
 # This will disallow usage such as `tfmot.python.core.sparsity.keras`.

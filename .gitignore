@@ -1,0 +1,4 @@
+*.h5
+bazel-*
+__pycache__
+

@@ -12,6 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Import API modules for Tensorflow Model Optimization."""
-from tensorflow_model_optimization.python.core.api import sparsity
-from tensorflow_model_optimization.python.core.api import clustering
