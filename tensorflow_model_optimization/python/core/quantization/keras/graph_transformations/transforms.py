@@ -72,14 +72,16 @@ class LayerNode(object):
   been found in a model, and layers which should be replaced inside the model.
   """
 
-  def __init__(self, layer, input_layers):
+  def __init__(self, layer, weights, input_layers):
     """Construct a LayerNode representing a tree of layers.
 
     Args:
       layer: layer config of this node.
+      weights: An OrderedDict of weight name => value for the layer.
       input_layers: List of `LayerNode`s that feed into this layer.
     """
     self.layer = layer
+    self.weights = weights
     self.input_layers = input_layers
 
   def __str__(self):

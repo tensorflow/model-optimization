@@ -15,6 +15,8 @@
 # pylint: disable=g-explicit-length-test
 """Apply graph transformations to a Keras model."""
 
+import collections
+
 from tensorflow.python import keras
 
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms as transforms_mod
@@ -55,6 +57,9 @@ class ModelTransformer(object):
         layer for layer in self._config['layers']
         if layer['name'] in layer_names
     ]
+
+  def _get_layer_weights(self, layer_name):
+    return self._layer_weights_map.get(layer_name, {})
 
   def _match_layer(self, layer, pattern):
     """Check if specific layer matches the pattern."""
@@ -110,7 +115,7 @@ class ModelTransformer(object):
 
     if len(pattern.inputs) == 0:
       # Leaf layer in pattern.
-      return LayerNode(layer, [])
+      return LayerNode(layer, self._get_layer_weights(layer['name']), [])
 
     # There is a possible edge case where a single layer may output multiple
     # tensors and multiple tensors from that layer may be used by the
@@ -138,7 +143,8 @@ class ModelTransformer(object):
         return None
       input_match_layer_nodes.append(match_layer_node)
 
-    return LayerNode(layer, input_match_layer_nodes)
+    return LayerNode(
+        layer, self._get_layer_weights(layer['name']), input_match_layer_nodes)
 
   def _find_pattern(self, pattern):
     for layer in self._config['layers']:
@@ -243,18 +249,33 @@ class ModelTransformer(object):
 
     layers_to_remove_names = _get_layer_names(match_layer_node)
     layers_to_remove = self._get_layers(layers_to_remove_names)
+
     for layer_to_remove in layers_to_remove:
       self._config['layers'].remove(layer_to_remove)
+    # Remove entry from weight map, now that layer has been removed.
+    for layer_name in layers_to_remove_names:
+      self._layer_weights_map.pop(layer_name, None)
 
     # 5. Add in the new layers.
 
     def _add_replacement_layer(layer_node):
       self._config['layers'].append(layer_node.layer)
+      if layer_node.weights:
+        self._layer_weights_map[layer_node.layer['name']] = layer_node.weights
 
       for input_layer in layer_node.input_layers:
         _add_replacement_layer(input_layer)
 
     _add_replacement_layer(replacement_layer_node)
+
+  def _get_keras_layer_weights(self, keras_layer):
+    """Returns a map of weight name, weight matrix. Keeps keras ordering."""
+    weights_map = collections.OrderedDict()
+    for weight_tensor, weight_numpy in \
+        zip(keras_layer.weights, keras_layer.get_weights()):
+      weights_map[weight_tensor.name] = weight_numpy
+
+    return weights_map
 
   def transform(self):
     """Transforms the Keras model by applying all the specified transforms.
@@ -286,6 +307,10 @@ class ModelTransformer(object):
     #
     self._config = self.model.get_config()
 
+    self._layer_weights_map = {}
+    for layer in self.model.layers:
+      self._layer_weights_map[layer.name] = self._get_keras_layer_weights(layer)
+
     # We run an infinite loop and keep applying transformations as long as
     # patterns are found. This allows recursive pattern matching where a
     # modification by one transform may lead to another match.
@@ -316,5 +341,10 @@ class ModelTransformer(object):
 
     # Reconstruct model from the config, using the cloned layers.
     transformed_model = keras.Model.from_config(self._config, custom_objects)
+
+    for layer in transformed_model.layers:
+      weights = self._layer_weights_map.get(layer.name)
+      if weights:
+        layer.set_weights(list(weights.values()))
 
     return transformed_model
