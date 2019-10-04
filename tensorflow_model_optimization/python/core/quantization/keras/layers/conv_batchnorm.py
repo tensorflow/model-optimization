@@ -19,14 +19,21 @@ from __future__ import division
 from __future__ import google_type_annotations
 from __future__ import print_function
 
+from tensorflow.python.framework import dtypes
+from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers.convolutional import Conv2D
 from tensorflow.python.keras.layers.normalization import BatchNormalization
 from tensorflow.python.keras.utils import conv_utils
+from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn
 from tensorflow.python.ops import nn_ops
+
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
+from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
 
 class _ConvBatchNorm2D(Conv2D):
@@ -36,15 +43,21 @@ class _ConvBatchNorm2D(Conv2D):
   Note that in the
   emulated form, there are two convolutions for each convolution in the original
   model.
+
+  Notably, this layer adds the quantization ops  itself, instead of relying on
+  the wrapper. The reason is that the weight (folded_conv_kernel) is an
+  intermediate tensor instead of a variable tensor, and therefore not accessible
+  to the wrapper at build() time.
   """
 
   # TODO(alanchiao): remove these defaults since in practice,
-  # they will be provided by the unfolded layers. Removing the defaults
-  # makes the "use_bias=False" stand out more.
+  # they will be provided by the unfolded layers.
   #
-  # Note: use_bias is not a parameter even though it is a parameter for Conv2D.
-  # This is because a Conv2D bias would be redundant with
+  # Note: the following are not parameters even though they are for Conv2D.
+  # 1. use_bias. This is because a Conv2D bias would be redundant with
   # BatchNormalization's bias.
+  # 2. activation. We can only mathematically fold through linear operations,
+  # so an activation in the Conv2D prevents batchnorm folding.
   def __init__(
       self,
       # Conv2D params
@@ -83,6 +96,10 @@ class _ConvBatchNorm2D(Conv2D):
       trainable=True,
       virtual_batch_size=None,
       adjustment=None,
+      # Post-batchnorm activation.
+      post_activation=None,
+      # quantization params
+      is_quantized=True,
       **kwargs):
     super(_ConvBatchNorm2D, self).__init__(
         filters,
@@ -125,12 +142,42 @@ class _ConvBatchNorm2D(Conv2D):
         adjustment=adjustment,
     )
 
+    # Named as post_activation to not conflict with Layer self.activation.
+    self.post_activation = activations.get(post_activation)
+
+    self.is_quantized = is_quantized
+    if self.is_quantized:
+      # TODO(b/142132535): update when we move to new quantization scheme.
+      self.weight_quantizer = quantizers.LastValueQuantizer(
+          num_bits=8, per_axis=False, symmetric=False)
+
+      self.activation_quantizer = quantizers.MovingAverageQuantizer(
+          num_bits=8, per_axis=False, symmetric=False)
+
   def build(self, input_shape):
     # responsible for trainable self.kernel weights
     super(_ConvBatchNorm2D, self).build(input_shape)
 
     # resposible for trainable gamma and beta weights
     self.batchnorm.build(self.compute_output_shape(input_shape))
+
+    if self.is_quantized:
+      self._weight_min_var = self.add_variable(
+          'weight_min',
+          initializer=initializers.Constant(-6.0),
+          trainable=False)
+      self._weight_max_var = self.add_variable(
+          'weight_max', initializer=initializers.Constant(6.0), trainable=False)
+
+      self.optimizer_step = self.add_weight(
+          'optimizer_step',
+          initializer=initializers.Constant(-1),
+          dtype=dtypes.int32,
+          trainable=False)
+
+      self.post_activation = quantize_aware_activation.QuantizeAwareActivation(
+          self.post_activation, self.activation_quantizer, self.optimizer_step,
+          self)
 
   def call(self, inputs, training=None):
     if training is None:
@@ -151,6 +198,25 @@ class _ConvBatchNorm2D(Conv2D):
         self.batchnorm.beta,
         self.batchnorm.moving_mean * folded_conv_kernel_multiplier,
         name='folded_conv_bias')
+
+    if self.is_quantized:
+
+      def make_quantizer_fn(training):
+        """Return quantizer conditioned on whether training or not."""
+
+        def quantizer_fn():
+          return self.weight_quantizer(
+              folded_conv_kernel,
+              self.optimizer_step,
+              training,
+              min_var=self._weight_min_var,
+              max_var=self._weight_max_var)
+
+        return quantizer_fn
+
+      folded_conv_kernel = tf_utils.smart_cond(training,
+                                               make_quantizer_fn(True),
+                                               make_quantizer_fn(False))
 
     # Second convolution doesn't need new trainable weights, so we
     # cannot reuse Conv2D layer.
@@ -191,6 +257,11 @@ class _ConvBatchNorm2D(Conv2D):
       outputs = nn.bias_add(
           folded_conv_out, folded_conv_bias, data_format='NHWC')
 
+    if self.is_quantized:
+      self.post_activation.training = training
+
+    if self.post_activation is not None:
+      return self.post_activation(outputs)
     return outputs
 
   def get_config(self):
@@ -205,7 +276,14 @@ class _ConvBatchNorm2D(Conv2D):
     # TODO(pulkitb): Raise error if base_configs in both layers incompatible.
     batchnorm_config.pop('name')
 
-    return dict(list(conv_config.items()) + list(batchnorm_config.items()))
+    config = {
+        'is_quantized': self.is_quantized,
+        'post_activation': activations.serialize(self.post_activation),
+    }
+
+    return dict(
+        list(conv_config.items()) + list(batchnorm_config.items()) +
+        list(config.items()))
 
   @classmethod
   def from_config(cls, config):
@@ -213,5 +291,7 @@ class _ConvBatchNorm2D(Conv2D):
     # use_bias is not an argument of this class, as explained by
     # comment in __init__.
     config.pop('use_bias')
+    config['post_activation'] = activations.deserialize(
+        config['post_activation'])
 
     return cls(**config)
