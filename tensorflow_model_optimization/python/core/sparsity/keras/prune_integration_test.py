@@ -20,6 +20,7 @@ import numpy as np
 from tensorflow.python import keras
 from tensorflow.python.framework import test_util as tf_test_util
 from tensorflow.python.keras import layers
+from tensorflow.python.keras.utils import np_utils
 from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
@@ -221,7 +222,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     test_utils.assert_model_sparsity(self, 0.0, model)
     model.fit(
         np.random.rand(32, 28, 28, 1),
-        keras.utils.to_categorical(np.random.randint(10, size=(32, 1)), 10),
+        np_utils.to_categorical(np.random.randint(10, size=(32, 1)), 10),
         callbacks=[pruning_callbacks.UpdatePruningStep()])
 
     test_utils.assert_model_sparsity(self, 0.5, model)
@@ -245,7 +246,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
     # Training has run only 1 step. Sparsity 0.2 (initial_sparsity)
@@ -254,7 +255,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     model = save_restore_fn(model)
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         epochs=3,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
@@ -280,7 +281,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
     # Training has run only 1 step. Sparsity 0.2 (initial_sparsity)
@@ -288,7 +289,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
     # Training has run 2 steps. Sparsity 0.6 (final_sparsity)
@@ -297,7 +298,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     model = save_restore_fn(model)
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         epochs=2,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
@@ -313,7 +314,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     # Simple unpruned model. No sparsity.
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         epochs=2,
         batch_size=20)
     test_utils.assert_model_sparsity(self, 0.0, model)
@@ -325,7 +326,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     # Since newly compiled, iterations starts from 0.
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
     test_utils.assert_model_sparsity(self, 0.5, model)

@@ -23,6 +23,7 @@ import numpy as np
 from tensorflow.python import keras
 from tensorflow.python.keras.layers import deserialize as deserialize_layer
 from tensorflow.python.keras.layers import serialize as serialize_layer
+from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate
@@ -79,7 +80,7 @@ class QuantizeAnnotateTest(test.TestCase):
     }
 
     serialized_wrapper = serialize_layer(wrapper)
-    with keras.utils.custom_object_scope(custom_objects):
+    with generic_utils.custom_object_scope(custom_objects):
       wrapper_from_config = deserialize_layer(serialized_wrapper)
 
     self.assertEqual(wrapper_from_config.get_config(), wrapper.get_config())

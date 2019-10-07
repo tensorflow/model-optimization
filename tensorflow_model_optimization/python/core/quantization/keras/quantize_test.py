@@ -22,6 +22,7 @@ import numpy as np
 
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
@@ -218,7 +219,7 @@ class QuantizeApplyTest(test.TestCase):
     annotated_model = keras.Sequential([
         QuantizeAnnotate(self.CustomLayer(3), input_shape=(2,))])
 
-    with keras.utils.custom_object_scope({'CustomLayer': self.CustomLayer}):
+    with generic_utils.custom_object_scope({'CustomLayer': self.CustomLayer}):
       with self.assertRaises(RuntimeError):
         quantize_apply(annotated_model)
 
@@ -241,7 +242,7 @@ class QuantizeApplyTest(test.TestCase):
         QuantizeAnnotate(self.CustomLayer(3), input_shape=(2,),
                          quantize_provider=_TestQuantizeProvider())])
 
-    with keras.utils.custom_object_scope(
+    with generic_utils.custom_object_scope(
         {'CustomLayer': self.CustomLayer,
          '_TestQuantizeProvider': _TestQuantizeProvider}):
       quantized_model = quantize_apply(annotated_model)
@@ -256,7 +257,7 @@ class QuantizeApplyTest(test.TestCase):
         QuantizeAnnotate(keras.layers.Dense(3), input_shape=(2,),
                          quantize_provider=_TestQuantizeProvider())])
 
-    with keras.utils.custom_object_scope(
+    with generic_utils.custom_object_scope(
         {'_TestQuantizeProvider': _TestQuantizeProvider}):
       quantized_model = quantize_apply(annotated_model)
     quantized_layer = quantized_model.layers[0]

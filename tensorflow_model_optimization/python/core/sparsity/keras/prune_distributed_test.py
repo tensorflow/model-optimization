@@ -66,7 +66,8 @@ class PruneDistributedTest(test.TestCase, parameterized.TestCase):
     # Simple unpruned model. No sparsity.
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.np_utils.to_categorical(
+            np.random.randint(5, size=(20, 1)), 5),
         epochs=2,
         callbacks=[pruning_callbacks.UpdatePruningStep()],
         batch_size=20)

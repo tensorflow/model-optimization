@@ -76,7 +76,8 @@ class QuantizeEmulateIntegrationTest(test.TestCase):
     # Verify serialization correctness persists after training.
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.np_utils.to_categorical(
+            np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
     )
 

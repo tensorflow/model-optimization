@@ -70,7 +70,8 @@ class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     quantized_model.fit(
         np.random.rand(20, 10),
-        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.np_utils.to_categorical(
+            np.random.randint(5, size=(20, 1)), 5),
         batch_size=20)
 
     _, model_file = tempfile.mkstemp('.h5')
