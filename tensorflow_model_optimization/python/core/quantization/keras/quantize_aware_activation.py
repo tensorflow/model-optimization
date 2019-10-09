@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import tensorflow as tf
+keras = tf.keras
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.utils import tf_utils
@@ -47,12 +49,21 @@ class QuantizeAwareActivation(object):
   """
 
   _PRE_ACTIVATION_TYPES = {'softmax'}
+  _PRE_ACTIVATION_ADVANCED_CLASSES = (keras.layers.Softmax,)
+
+  _ADVANCED_ACTIVATION_CLASSES = (
+      keras.layers.LeakyReLU,
+      keras.layers.PReLU,
+      keras.layers.ELU,
+      keras.layers.ThresholdedReLU,
+      keras.layers.Softmax,
+      keras.layers.ReLU,
+  )
 
   _CUSTOM_ACTIVATION_ERR_MSG = (
-      'Only Keras activations under `tf.keras.activations` are supported. For '
-      'custom activations, use `Quantizer` directly, and update layer config '
-      'using `QuantizeProvider`.'
-  )
+      'Only Keras activations under `tf.keras.activations` and '
+      '`tf.keras.layers` are supported. For custom activations, use '
+      '`Quantizer` directly, and update layer config using `QuantizeProvider`.')
 
   def __init__(self, activation, quantizer, step, quantize_wrapper):
     """Construct a QuantizeAwareActivation layer.
@@ -79,11 +90,16 @@ class QuantizeAwareActivation(object):
       self._add_range_weights('post_activation')
 
   def _is_keras_builtin_activation(self, activation):
+    """Determine if is builtin activation."""
+    if isinstance(activation, self._ADVANCED_ACTIVATION_CLASSES):
+      return True
+
     if not hasattr(activation, '__name__'):
       return False
 
     try:
-      # Keras built-in activations can be fetched using keras.activations.
+      # Non-advanced Keras built-in activations can be fetched
+      # using keras.activations.
       activations.get(activation.__name__)
       return True
     except (ValueError, TypeError):
@@ -94,8 +110,11 @@ class QuantizeAwareActivation(object):
     # Whether we apply quantize operations around activations depends on the
     # implementation of the specific kernel. For example, ReLUs are fused in
     # whereas Softmax ops are not.
+    if isinstance(self.activation, self._PRE_ACTIVATION_ADVANCED_CLASSES):
+      return True
 
-    return self.activation.__name__ in self._PRE_ACTIVATION_TYPES
+    if hasattr(self.activation, '__name__'):
+      return self.activation.__name__ in self._PRE_ACTIVATION_TYPES
 
   def _add_range_weights(self, name):
     min_var = self.quantize_wrapper.add_weight(
@@ -159,9 +178,21 @@ class QuantizeAwareActivation(object):
 
   @classmethod
   def from_config(cls, config):
-    return activations.deserialize(config['activation'])
+    is_advanced = config.pop('is_advanced')
+    if is_advanced:
+      return keras.layers.deserialize(config['activation'])
+    else:
+      return activations.deserialize(config['activation'])
 
   def get_config(self):
+    if isinstance(self.activation, self._ADVANCED_ACTIVATION_CLASSES):
+      activation = keras.utils.serialize_keras_object(self.activation)
+      is_advanced = True
+    else:
+      activation = activations.serialize(self.activation)
+      is_advanced = False
+
     return {
-        'activation': activations.serialize(self.activation)
+        'activation': activation,
+        'is_advanced': is_advanced,
     }

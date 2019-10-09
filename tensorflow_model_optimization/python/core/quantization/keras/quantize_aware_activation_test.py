@@ -82,6 +82,24 @@ class QuantizeAwareQuantizationTest(test.TestCase):
 
     self.assertAllClose(expected_activation, model.predict(x))
 
+  def testAppliesQuantizationPostActivationForAdvancedActivation(self):
+    layer = self.TestLayer()
+    layer.activation = QuantizeAwareActivation(
+        keras.layers.ReLU(max_value=6.0), self.quantizer, 0, layer)
+
+    model = keras.Sequential([layer])
+
+    x = np.array([-6.0, -3.0, 0.0, 0.05, 0.1, 3.0, 6.0])
+    # All negative values are removed due to ReLU. The other expected values
+    # are the border values of float buckets when [-6, 6] range is quantized to
+    # 256 buckets.
+    # Derived using `tf.fake_quant_with_min_max_vars`
+    expected_activation = np.array(
+        [0.0, 0.0, 0.0, 0.04705906, 0.09411764, 3.011765,
+         5.9764705]).reshape(7, 1)
+
+    self.assertAllClose(expected_activation, model.predict(x))
+
   def testAppliesQuantizationPreAndPostActivation(self):
     layer = self.TestLayer()
     layer.activation = QuantizeAwareActivation(
@@ -108,7 +126,10 @@ class QuantizeAwareQuantizationTest(test.TestCase):
 
     expected_config = {
         'class_name': 'QuantizeAwareActivation',
-        'config': {'activation': 'tanh'}
+        'config': {
+            'activation': 'tanh',
+            'is_advanced': False
+        }
     }
     serialized_quantize_activation = serialize_keras_object(quantize_activation)
 
@@ -119,6 +140,20 @@ class QuantizeAwareQuantizationTest(test.TestCase):
         custom_objects={'QuantizeAwareActivation': QuantizeAwareActivation})
 
     self.assertEqual(activation, deserialized_activation)
+
+  def testSerializationReturnsWrappedAdvancedActivation_BuiltInActivation(self):
+    activation = keras.layers.ReLU(max_value=6.0)
+    quantize_activation = QuantizeAwareActivation(activation, self.quantizer, 0,
+                                                  self.TestLayer())
+
+    serialized_quantize_activation = serialize_keras_object(quantize_activation)
+
+    deserialized_activation = deserialize_keras_object(
+        serialized_quantize_activation,
+        custom_objects={'QuantizeAwareActivation': QuantizeAwareActivation})
+
+    self.assertEqual(activation.get_config(),
+                     deserialized_activation.get_config())
 
 
 if __name__ == '__main__':
