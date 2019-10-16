@@ -27,12 +27,21 @@ LayerNode = transforms_mod.LayerNode
 class ModelTransformer(object):
   """Matches patterns to apply transforms in a Keras model graph."""
 
-  def __init__(self, model, transforms):
+  def __init__(self, model, transforms, candidate_layers=None):
+    """Construct ModelTransformer.
+
+    Args:
+      model: Keras model to be transformed.
+      transforms: List of transforms to be applied to the model.
+      candidate_layers: Names of layers which may be transformed. Only layers
+        whose names are in candidate_layers are matched against patterns.
+    """
     if not (isinstance(model, keras.Model) and model._is_graph_network):  # pylint: disable=protected-access
       raise ValueError('Only Keras functional models can be transformed.')
 
     self.model = model
     self.transforms = transforms
+    self.candidate_layers = candidate_layers
 
   def _get_consuming_layers(self, check_layer):
     """Returns all the layers which are out nodes from the layer."""
@@ -63,6 +72,9 @@ class ModelTransformer(object):
 
   def _match_layer(self, layer, pattern):
     """Check if specific layer matches the pattern."""
+
+    if self.candidate_layers and layer['name'] not in self.candidate_layers:
+      return False
 
     # TODO(pulkitb): Possible changes and extensions to this method.
     # Consider making this case insensitive

@@ -270,6 +270,51 @@ class ModelTransformerTest(test.TestCase):
   # 2. Adding a single layer clone will lead to infinite loop. Fix and test.
   # 3. Handles layer being part of multiple models.
 
+  class VerifyMatch(Transform):
+
+    def __init__(self, pattern):
+      self._pattern = pattern
+      self._matched = False
+
+    def pattern(self):
+      return self._pattern
+
+    def replacement(self, match_layer):
+      self._matched = True
+      return match_layer
+
+    def matched(self):
+      return self._matched
+
+    def reset(self):
+      self._matched = False
+
+  def testPatternShouldOnlyMatchCandidateLayers(self):
+    pattern = LayerPattern('ReLU', inputs=[LayerPattern('Dense')])
+    transform = self.VerifyMatch(pattern)
+
+    model = self._simple_dense_model()
+    layer_names = [layer.name for layer in model.layers]
+
+    # By default matches everything.
+    ModelTransformer(model, [transform]).transform()
+    self.assertTrue(transform.matched())
+
+    # Matches when all layers passed in.
+    transform.reset()
+    ModelTransformer(model, [transform], layer_names).transform()
+    self.assertTrue(transform.matched())
+
+    # Fails. Dense missing.
+    transform.reset()
+    ModelTransformer(model, [transform], [model.layers[-2].name]).transform()
+    self.assertFalse(transform.matched())
+
+    # Fails. ReLU missing.
+    transform.reset()
+    ModelTransformer(model, [transform], [model.layers[-1].name]).transform()
+    self.assertFalse(transform.matched())
+
 
 if __name__ == '__main__':
   test.main()
