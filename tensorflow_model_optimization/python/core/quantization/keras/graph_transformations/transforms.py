@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import abc
+import collections
 import six
 
 
@@ -72,7 +73,7 @@ class LayerNode(object):
   been found in a model, and layers which should be replaced inside the model.
   """
 
-  def __init__(self, layer, weights, input_layers):
+  def __init__(self, layer, weights=None, input_layers=None):
     """Construct a LayerNode representing a tree of layers.
 
     Args:
@@ -80,6 +81,11 @@ class LayerNode(object):
       weights: An OrderedDict of weight name => value for the layer.
       input_layers: List of `LayerNode`s that feed into this layer.
     """
+    if weights is None:
+      weights = collections.OrderedDict()
+    if input_layers is None:
+      input_layers = []
+
     self.layer = layer
     self.weights = weights
     self.input_layers = input_layers
@@ -88,6 +94,29 @@ class LayerNode(object):
     return '{} <- [{}]'.format(
         self.layer,
         ', '.join([str(input_layer) for input_layer in self.input_layers]))
+
+  def __eq__(self, other):
+    if not other or not isinstance(other, LayerNode):
+      return False
+
+    if self.layer != other.layer:
+      return False
+
+    # TODO(pulkitb): Consider if we should include weights in equality check.
+
+    if len(self.input_layers) != len(other.input_layers):
+      return False
+
+    for first_input_layer, second_input_layer in zip(
+        self.input_layers, other.input_layers):
+      if first_input_layer != second_input_layer:
+        return False
+
+    return True
+
+  def __ne__(self, other):
+    """Ensure this works on Python2."""
+    return not self.__eq__(other)
 
 
 @six.add_metaclass(abc.ABCMeta)

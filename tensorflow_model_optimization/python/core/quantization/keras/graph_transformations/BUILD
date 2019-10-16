@@ -5,14 +5,40 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
-    name = "model_transformer",
+    name = "transforms",
     srcs = [
-        "model_transformer.py",
         "transforms.py",
     ],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        # six dep1,
+    ],
+)
+
+py_test(
+    name = "transforms_test",
+    srcs = [
+        "transforms_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":transforms",
+        # tensorflow dep1,
+    ],
+)
+
+py_library(
+    name = "model_transformer",
+    srcs = [
+        "model_transformer.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":transforms",
         # six dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,

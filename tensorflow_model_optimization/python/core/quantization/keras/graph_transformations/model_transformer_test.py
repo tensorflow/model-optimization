@@ -248,6 +248,22 @@ class ModelTransformerTest(test.TestCase):
     # TODO(pulkitb): Implement
     pass
 
+  def testDoesNotMatchForever_IfReplacementEqualsMatch(self):
+    class ReplaceWithSelf(Transform):
+
+      def pattern(self):
+        return LayerPattern('ReLU', inputs=[LayerPattern('Dense')])
+
+      def replacement(self, match_layer):
+        return match_layer
+
+    model = self._simple_dense_model()
+
+    transformed_model = ModelTransformer(
+        model, [ReplaceWithSelf()]).transform()
+
+    self._assert_config(model.get_config(), transformed_model.get_config())
+
   # Negative Tests
   # TODO(pulkitb): Add negative tests
   # 1. Does not replace if any layer in the pattern has multiple nodes/consumers

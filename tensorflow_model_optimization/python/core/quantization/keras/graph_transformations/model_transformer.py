@@ -327,8 +327,16 @@ class ModelTransformer(object):
           if not match_layer_node:
             break
 
-          match_found = True
           replacement_layer_node = transform.replacement(match_layer_node)
+
+          # If equal, the matched layers are being replaced with exactly the
+          # same set of layers that were matched with the same config.
+          # For Transforms, that may inadvertently do this we can end up in
+          # an infinite loop. Break if no meaningful change has been made.
+          if match_layer_node == replacement_layer_node:
+            break
+
+          match_found = True
           self._replace(match_layer_node, replacement_layer_node)
 
       # None of the transforms found a pattern. We can stop now.
