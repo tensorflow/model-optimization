@@ -22,8 +22,7 @@ from __future__ import print_function
 
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
-from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate import QuantizeEmulate
-from tensorflow_model_optimization.python.core.quantization.keras.quantize_emulate_wrapper import QuantizeEmulateWrapper
+from tensorflow_model_optimization.python.core.quantization.keras import quantize
 
 batch_size = 128
 num_classes = 10
@@ -57,24 +56,24 @@ y_train = tf.keras.utils.to_categorical(y_train, num_classes)
 y_test = tf.keras.utils.to_categorical(y_test, num_classes)
 
 l = tf.keras.layers
-quant_params = {'num_bits': 8}
 
 model = tf.keras.Sequential([
-    QuantizeEmulate(
+    quantize.quantize_annotate(
         l.Conv2D(32, 5, padding='same', activation='relu'),
-        input_shape=input_shape,
-        **quant_params),
+        input_shape=input_shape),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
-    QuantizeEmulate(
-        l.Conv2D(64, 5, padding='same', activation='relu'), **quant_params),
+    quantize.quantize_annotate(
+        l.Conv2D(64, 5, padding='same', activation='relu')),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
     l.Flatten(),
-    QuantizeEmulate(l.Dense(1024, activation='relu'), **quant_params),
+    quantize.quantize_annotate(l.Dense(1024, activation='relu')),
     l.Dropout(0.4),
-    QuantizeEmulate(l.Dense(num_classes), **quant_params),
+    quantize.quantize_annotate(l.Dense(num_classes)),
     # TODO(alanchiao): fuse softmax once we've handled it.
     l.Softmax(),
 ])
+
+model = quantize.quantize_apply(model)
 
 # Dump graph to /tmp for verification on tensorboard.
 graph_def = tf.get_default_graph().as_graph_def()
@@ -100,9 +99,9 @@ keras_file = '/tmp/quantized_mnist.h5'
 tf.keras.models.save_model(model, keras_file)
 
 # Convert to TFLite model.
-converter = tf.lite.TFLiteConverter.from_keras_model_file(
-    keras_file,
-    custom_objects={'QuantizeEmulateWrapper': QuantizeEmulateWrapper})
+with quantize.quantize_scope():
+  converter = tf.lite.TFLiteConverter.from_keras_model_file(
+      keras_file)
 converter.inference_type = tf.lite.constants.QUANTIZED_UINT8
 input_arrays = converter.get_input_arrays()
 converter.quantized_input_stats = {input_arrays[0]: (0., 255.)}  # mean, std_dev

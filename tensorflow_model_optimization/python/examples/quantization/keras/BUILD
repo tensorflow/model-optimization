@@ -10,7 +10,6 @@ py_binary(
         # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
-        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_emulate",
-        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_emulate_wrapper",
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
     ],
 )
