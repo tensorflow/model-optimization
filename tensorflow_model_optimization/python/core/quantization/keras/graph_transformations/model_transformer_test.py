@@ -315,6 +315,38 @@ class ModelTransformerTest(test.TestCase):
     ModelTransformer(model, [transform], [model.layers[-1].name]).transform()
     self.assertFalse(transform.matched())
 
+  def testLayerMetadataPassedAndReplacedInTransforms(self):
+    class ReplaceLayerMetadata(Transform):
+
+      def pattern(self):
+        return LayerPattern('Dense')
+
+      def replacement(self, match_layer):
+        if match_layer.metadata['key'] == 'Hello':
+          match_layer.metadata['key'] = 'World'
+        return match_layer
+
+    model = self._simple_dense_model()
+    layer_metadata = {
+        model.layers[1].name: {'key': 'Hello'},
+        model.layers[2].name: {'key': 'Hello'},
+    }
+
+    expected_metadata = {
+        model.layers[1].name: {'key': 'World'},
+        model.layers[2].name: {'key': 'Hello'}
+    }
+
+    transformer = ModelTransformer(
+        model, [ReplaceLayerMetadata()], None, layer_metadata)
+    transformed_model = transformer.transform()
+    # Once the updated metadata is returned along with the model, this won't
+    # be necessary.
+    updated_metadata = transformer._layer_metadata_map    # pylint: disable=protected-access
+
+    self.assertEqual(expected_metadata, updated_metadata)
+    self._assert_config(model.get_config(), transformed_model.get_config())
+
 
 if __name__ == '__main__':
   test.main()

@@ -16,6 +16,7 @@
 """Apply graph transformations to a Keras model."""
 
 import collections
+import copy
 
 from tensorflow.python import keras
 
@@ -27,7 +28,8 @@ LayerNode = transforms_mod.LayerNode
 class ModelTransformer(object):
   """Matches patterns to apply transforms in a Keras model graph."""
 
-  def __init__(self, model, transforms, candidate_layers=None):
+  def __init__(
+      self, model, transforms, candidate_layers=None, layer_metadata=None):
     """Construct ModelTransformer.
 
     Args:
@@ -35,13 +37,19 @@ class ModelTransformer(object):
       transforms: List of transforms to be applied to the model.
       candidate_layers: Names of layers which may be transformed. Only layers
         whose names are in candidate_layers are matched against patterns.
+      layer_metadata: Dictionary of metadata associated with each layer in the
+        model. The keys are layer names.
     """
     if not (isinstance(model, keras.Model) and model._is_graph_network):  # pylint: disable=protected-access
       raise ValueError('Only Keras functional models can be transformed.')
 
+    if layer_metadata is None:
+      layer_metadata = {}
+
     self.model = model
     self.transforms = transforms
     self.candidate_layers = candidate_layers
+    self.layer_metadata = layer_metadata
 
   def _get_consuming_layers(self, check_layer):
     """Returns all the layers which are out nodes from the layer."""
@@ -69,6 +77,9 @@ class ModelTransformer(object):
 
   def _get_layer_weights(self, layer_name):
     return self._layer_weights_map.get(layer_name, {})
+
+  def _get_layer_metadata(self, layer_name):
+    return self._layer_metadata_map.get(layer_name, {})
 
   def _match_layer(self, layer, pattern):
     """Check if specific layer matches the pattern."""
@@ -127,7 +138,8 @@ class ModelTransformer(object):
 
     if len(pattern.inputs) == 0:
       # Leaf layer in pattern.
-      return LayerNode(layer, self._get_layer_weights(layer['name']), [])
+      return LayerNode(layer, self._get_layer_weights(layer['name']), [],
+                       self._get_layer_metadata(layer['name']))
 
     # There is a possible edge case where a single layer may output multiple
     # tensors and multiple tensors from that layer may be used by the
@@ -156,7 +168,8 @@ class ModelTransformer(object):
       input_match_layer_nodes.append(match_layer_node)
 
     return LayerNode(
-        layer, self._get_layer_weights(layer['name']), input_match_layer_nodes)
+        layer, self._get_layer_weights(layer['name']), input_match_layer_nodes,
+        self._get_layer_metadata(layer['name']))
 
   def _find_pattern(self, pattern):
     for layer in self._config['layers']:
@@ -267,6 +280,7 @@ class ModelTransformer(object):
     # Remove entry from weight map, now that layer has been removed.
     for layer_name in layers_to_remove_names:
       self._layer_weights_map.pop(layer_name, None)
+      self._layer_metadata_map.pop(layer_name, None)
 
     # 5. Add in the new layers.
 
@@ -274,6 +288,8 @@ class ModelTransformer(object):
       self._config['layers'].append(layer_node.layer)
       if layer_node.weights:
         self._layer_weights_map[layer_node.layer['name']] = layer_node.weights
+      if layer_node.metadata:
+        self._layer_metadata_map[layer_node.layer['name']] = layer_node.metadata
 
       for input_layer in layer_node.input_layers:
         _add_replacement_layer(input_layer)
@@ -323,6 +339,9 @@ class ModelTransformer(object):
     for layer in self.model.layers:
       self._layer_weights_map[layer.name] = self._get_keras_layer_weights(layer)
 
+    # Maintains a current mutable copy of the metadata through transformation.
+    self._layer_metadata_map = copy.deepcopy(self.layer_metadata)
+
     # We run an infinite loop and keep applying transformations as long as
     # patterns are found. This allows recursive pattern matching where a
     # modification by one transform may lead to another match.
@@ -366,5 +385,9 @@ class ModelTransformer(object):
       weights = self._layer_weights_map.get(layer.name)
       if weights:
         layer.set_weights(list(weights.values()))
+
+    # TODO(pulkitb): Consider returning the updated metadata for the
+    # transformed model along with the model. This allows the opportunity for
+    # transforms to encode updated metadata for layers.
 
     return transformed_model
