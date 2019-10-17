@@ -41,11 +41,15 @@ class QuantizeLayoutTransform(object):
   """
 
   @abc.abstractmethod
-  def apply(self, model):
+  def apply(self, model, layer_quantize_map):
     """Transform model to a quantization friendly model.
 
     Args:
       model: Keras model to be quantized.
+      layer_quantize_map: Map containing list of layers to be quantized and
+        associated metadata. Keys are layer names which need to be quantized,
+        and values are dicts containing relevant metadata. For example,
+        any custom `QuantizeProvider` passed with a layer is present.
 
     Returns:
       New keras model based on `model` which has been
