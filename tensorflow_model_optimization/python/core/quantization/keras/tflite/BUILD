@@ -35,3 +35,34 @@ py_test(
         # python/keras tensorflow dep2,
     ],
 )
+
+py_library(
+    name = "tflite_transforms",
+    srcs = [
+        "tflite_transforms.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:transforms",
+        "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
+    ],
+)
+
+py_test(
+    name = "tflite_transforms_test",
+    srcs = [
+        "tflite_transforms_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tflite_transforms",
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
+        "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:model_transformer",
+        "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm_test_utils",
+    ],
+)

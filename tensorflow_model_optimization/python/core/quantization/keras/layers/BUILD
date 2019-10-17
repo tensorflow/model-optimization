@@ -27,8 +27,19 @@ py_test(
     srcs = ["conv_batchnorm_test.py"],
     deps = [
         ":conv_batchnorm",
+        ":conv_batchnorm_test_utils",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
         "//tensorflow_model_optimization/python/core/quantization/keras:utils",
+    ],
+)
+
+py_library(
+    name = "conv_batchnorm_test_utils",
+    srcs = ["conv_batchnorm_test_utils.py"],
+    srcs_version = "PY2AND3",
+    deps = [
+        ":conv_batchnorm",
+        # tensorflow dep1,
     ],
 )

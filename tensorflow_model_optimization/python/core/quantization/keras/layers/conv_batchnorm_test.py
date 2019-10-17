@@ -34,33 +34,15 @@ from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
+from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
 
 _ConvBatchNorm2D = conv_batchnorm._ConvBatchNorm2D
 _DepthwiseConvBatchNorm2D = conv_batchnorm._DepthwiseConvBatchNorm2D
+Conv2DModel = conv_batchnorm_test_utils.Conv2DModel
+DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 
 
 class FoldedBatchNormTestBase(test.TestCase):
-
-  def setUp(self):
-    super(FoldedBatchNormTestBase, self).setUp()
-    self.batch_size = 8
-    self.model_params = {
-        'kernel_size': (3, 3),
-        'input_shape': (10, 10, 3),
-        'batch_size': self.batch_size,
-    }
-
-  def _get_folded_batchnorm_model(self,
-                                  is_quantized=False,
-                                  post_bn_activation=None):
-    raise NotImplementedError('_get_folded_batchnorm_model() not implemented')
-
-  def _get_nonfolded_batchnorm_model(self):
-    raise NotImplementedError(
-        '_get_nonfolded_batchnorm_model() not implemented')
-
-  def _get_output_shape(self):
-    raise NotImplementedError('_get_output_shape() not implemented')
 
   @staticmethod
   def _compute_quantization_params(model):
@@ -81,34 +63,39 @@ class FoldedBatchNormTestBase(test.TestCase):
 
   # This does a basic serialize/deserialize test since deserialization
   # occurs during conversion to TFLite.
-  def _test_equivalent_to_tflite(self, model, is_tflite_quantized=False):
+  def _test_equal_tf_and_tflite_outputs(self,
+                                        tf_model,
+                                        is_tflite_quantized=False):
     _, keras_file = tempfile.mkstemp('.h5')
     _, tflite_file = tempfile.mkstemp('.tflite')
 
-    model.compile(
+    batched_input_shape = self._get_batched_input_shape()
+    output_shape = self._get_output_shape()
+
+    tf_model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
-    model.fit(
-        np.random.uniform(0, 1, size=[self.batch_size, 10, 10, 3]),
-        np.random.uniform(0, 10, size=self._get_output_shape()),
+    tf_model.fit(
+        np.random.uniform(0, 1, size=batched_input_shape),
+        np.random.uniform(0, 10, size=output_shape),
         epochs=1,
         callbacks=[])
     # Prepare for inference.
-    inp = np.random.uniform(0, 1, size=[self.batch_size, 10, 10, 3])
+    inp = np.random.uniform(0, 1, size=batched_input_shape)
     inp = inp.astype(np.float32)
 
     # TensorFlow inference.
-    tf_out = model.predict(inp)
+    tf_out = tf_model.predict(inp)
 
     if is_tflite_quantized:
-      scale, zero_point = self._compute_quantization_params(model)
+      scale, zero_point = self._compute_quantization_params(tf_model)
 
       # TFLite input needs to be quantized.
       inp = inp * 255
       inp = inp.astype(np.uint8)
 
     # TensorFlow Lite inference.
-    tf.keras.models.save_model(model, keras_file)
+    tf.keras.models.save_model(tf_model, keras_file)
     with quantize.quantize_scope():
       utils.convert_keras_to_tflite(
           keras_file,
@@ -140,78 +127,65 @@ class FoldedBatchNormTestBase(test.TestCase):
       # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/optimize_for_inference_test.py#L230
       self.assertAllClose(tf_out, tflite_out, rtol=1e-04, atol=1e-06)
 
-  def _test_equivalent_to_nonfolded_batchnorm(self):
-    folded_model = self._get_folded_batchnorm_model(is_quantized=False)
-    non_folded_model = self._get_nonfolded_batchnorm_model()
-
+  def _test_equal_outputs(self, model, model2):
     for _ in range(2):
-      inp = np.random.uniform(0, 10, size=[1, 10, 10, 3])
-      folded_out = folded_model.predict(inp)
-      non_folded_out = non_folded_model.predict(inp)
+      inp = np.random.uniform(0, 10, size=self._get_batched_input_shape())
+      model_out = model.predict(inp)
+      model2_out = model2.predict(inp)
 
       # Taken from testFoldFusedBatchNorms from
       # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/optimize_for_inference_test.py#L230
-      self.assertAllClose(folded_out, non_folded_out, rtol=1e-04, atol=1e-06)
+      self.assertAllClose(model_out, model2_out, rtol=1e-04, atol=1e-06)
 
 
 class ConvBatchNorm2DTest(FoldedBatchNormTestBase):
 
-  def setUp(self):
-    super(ConvBatchNorm2DTest, self).setUp()
-    self.model_params['filters'] = 2
-
   def _get_folded_batchnorm_model(self,
                                   is_quantized=False,
                                   post_bn_activation=None):
-    return tf.keras.Sequential([
-        _ConvBatchNorm2D(
-            kernel_initializer=keras.initializers.glorot_uniform(seed=0),
-            is_quantized=is_quantized,
-            post_activation=post_bn_activation,
-            **self.model_params)
-    ])
+    return Conv2DModel.get_folded_batchnorm_model(
+        is_quantized=is_quantized, post_bn_activation=post_bn_activation)
 
   def _get_nonfolded_batchnorm_model(self):
-    return tf.keras.Sequential([
-        keras.layers.Conv2D(
-            kernel_initializer=keras.initializers.glorot_uniform(seed=0),
-            use_bias=False,
-            **self.model_params),
-        keras.layers.BatchNormalization(axis=-1),
-    ])
+    return Conv2DModel.get_nonfolded_batchnorm_model()
+
+  def _get_batched_input_shape(self):
+    return Conv2DModel.get_batched_input_shape()
 
   def _get_output_shape(self):
-    return [self.batch_size, 8, 8, 2]
+    return Conv2DModel.get_output_shape()
 
   def testEquivalentToNonFoldedBatchNorm(self):
-    self._test_equivalent_to_nonfolded_batchnorm()
+    self._test_equal_outputs(
+        self._get_folded_batchnorm_model(is_quantized=False),
+        self._get_nonfolded_batchnorm_model())
 
   def testEquivalentToFloatTFLite(self):
-    model = self._get_folded_batchnorm_model(is_quantized=False)
-    self._test_equivalent_to_tflite(model)
+    tf_model = self._get_folded_batchnorm_model(is_quantized=False)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedEquivalentToFloatTFLite(self):
-    model = self._get_folded_batchnorm_model(is_quantized=True)
-    self._test_equivalent_to_tflite(model)
+    tf_model = self._get_folded_batchnorm_model(is_quantized=True)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedWithReLUEquivalentToFloatTFLite(self):
-    model = self._get_folded_batchnorm_model(
+    tf_model = self._get_folded_batchnorm_model(
         is_quantized=True, post_bn_activation=activations.get('relu'))
-    self._test_equivalent_to_tflite(model)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedWithAdvancedReLUEquivalentToFloatTFLite(self):
-    model = self._get_folded_batchnorm_model(
+    tf_model = self._get_folded_batchnorm_model(
         is_quantized=True, post_bn_activation=keras.layers.ReLU(max_value=6.0))
-    self._test_equivalent_to_tflite(model)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedWithSoftmaxEquivalentToFloatTfLite(self):
-    model = self._get_folded_batchnorm_model(
+    tf_model = self._get_folded_batchnorm_model(
         is_quantized=True, post_bn_activation=activations.get('softmax'))
-    self._test_equivalent_to_tflite(model)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedEquivalentToQuantizedTFLite(self):
-    model = self._get_folded_batchnorm_model(is_quantized=True)
-    self._test_equivalent_to_tflite(model, is_tflite_quantized=True)
+    tf_model = self._get_folded_batchnorm_model(is_quantized=True)
+    self._test_equal_tf_and_tflite_outputs(tf_model, is_tflite_quantized=True)
 
 
 class DepthwiseConvBatchNorm2DTest(FoldedBatchNormTestBase):
@@ -219,55 +193,49 @@ class DepthwiseConvBatchNorm2DTest(FoldedBatchNormTestBase):
   def _get_folded_batchnorm_model(self,
                                   is_quantized=False,
                                   post_bn_activation=None):
-    return tf.keras.Sequential([
-        _DepthwiseConvBatchNorm2D(
-            depthwise_initializer=keras.initializers.glorot_uniform(seed=0),
-            is_quantized=is_quantized,
-            post_activation=post_bn_activation,
-            **self.model_params)
-    ])
+    return DepthwiseConv2DModel.get_folded_batchnorm_model(
+        is_quantized=is_quantized, post_bn_activation=post_bn_activation)
 
   def _get_nonfolded_batchnorm_model(self):
-    return tf.keras.Sequential([
-        keras.layers.DepthwiseConv2D(
-            depthwise_initializer=keras.initializers.glorot_uniform(seed=0),
-            use_bias=False,
-            **self.model_params),
-        keras.layers.BatchNormalization(axis=-1),
-    ])
+    return DepthwiseConv2DModel.get_nonfolded_batchnorm_model()
+
+  def _get_batched_input_shape(self):
+    return DepthwiseConv2DModel.get_batched_input_shape()
 
   def _get_output_shape(self):
-    return [self.batch_size, 8, 8, 3]
+    return DepthwiseConv2DModel.get_output_shape()
 
   def testEquivalentToNonFoldedBatchNorm(self):
-    self._test_equivalent_to_nonfolded_batchnorm()
+    self._test_equal_outputs(
+        self._get_folded_batchnorm_model(is_quantized=False),
+        self._get_nonfolded_batchnorm_model())
 
   def testEquivalentToFloatTFLite(self):
-    model = self._get_folded_batchnorm_model(is_quantized=False)
-    self._test_equivalent_to_tflite(model)
+    tf_model = self._get_folded_batchnorm_model(is_quantized=False)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedEquivalentToFloatTFLite(self):
-    model = self._get_folded_batchnorm_model(is_quantized=True)
-    self._test_equivalent_to_tflite(model)
+    tf_model = self._get_folded_batchnorm_model(is_quantized=True)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedWithSoftmaxEquivalentToFloatTfLite(self):
-    model = self._get_folded_batchnorm_model(
+    tf_model = self._get_folded_batchnorm_model(
         is_quantized=True, post_bn_activation=activations.get('softmax'))
-    self._test_equivalent_to_tflite(model)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedWithReLUEquivalentToFloatTFLite(self):
-    model = self._get_folded_batchnorm_model(
+    tf_model = self._get_folded_batchnorm_model(
         is_quantized=True, post_bn_activation=activations.get('relu'))
-    self._test_equivalent_to_tflite(model)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedWithAdvancedReLUEquivalentToFloatTFLite(self):
-    model = self._get_folded_batchnorm_model(
+    tf_model = self._get_folded_batchnorm_model(
         is_quantized=True, post_bn_activation=keras.layers.ReLU(max_value=6.0))
-    self._test_equivalent_to_tflite(model)
+    self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedEquivalentToQuantizedTFLite(self):
-    model = self._get_folded_batchnorm_model(is_quantized=True)
-    self._test_equivalent_to_tflite(model, is_tflite_quantized=True)
+    tf_model = self._get_folded_batchnorm_model(is_quantized=True)
+    self._test_equal_tf_and_tflite_outputs(tf_model, is_tflite_quantized=True)
 
 
 if __name__ == '__main__':
