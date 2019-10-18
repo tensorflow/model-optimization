@@ -228,6 +228,7 @@ py_library(
         ":quantize_wrapper",
         # tensorflow dep1,
         # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_layout_transform",
         "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_registry",
     ],
 )

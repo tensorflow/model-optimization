@@ -21,6 +21,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_layout_transform
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
 
 
@@ -142,20 +143,32 @@ def quantize_apply(model):
 
     return cloned_model
 
+  def _extract_original_model(model_to_unwrap):
+    """Extracts original model by removing wrappers."""
+    layer_quantize_map = {}
+
+    def _unwrap(layer):
+      if not isinstance(layer, quantize_annotate_mod.QuantizeAnnotate):
+        return layer
+
+      annotate_wrapper = layer
+      layer_quantize_map[annotate_wrapper.layer.name] = {
+          'quantize_provider': annotate_wrapper.quantize_provider
+      }
+      return annotate_wrapper.layer
+
+    unwrapped_model = keras.models.clone_model(
+        model_to_unwrap, input_tensors=None, clone_function=_unwrap)
+
+    return unwrapped_model, layer_quantize_map
+
   def _quantize(layer):  # pylint: disable=missing-docstring
-    if not isinstance(layer, quantize_annotate_mod.QuantizeAnnotate):
+    if layer.name not in layer_quantize_map:
       return layer
 
-    annotate_wrapper = layer
-    layer_to_quantize = annotate_wrapper.layer
-
-    quantize_provider = None
-    if annotate_wrapper.quantize_provider:
-      quantize_provider = annotate_wrapper.quantize_provider
-    else:
-      if quantize_registry.supports(layer_to_quantize):
-        quantize_provider = quantize_registry.get_quantize_provider(
-            layer_to_quantize)
+    quantize_provider = layer_quantize_map[layer.name].get('quantize_provider')
+    if not quantize_provider and quantize_registry.supports(layer):
+      quantize_provider = quantize_registry.get_quantize_provider(layer)
 
     if not quantize_provider:
       error_msg = ('Could not find a suitable QuantizeProvider for layer {}. '
@@ -163,23 +176,36 @@ def quantize_apply(model):
                    'should provide one while annotating the layer using '
                    'QuantizeAnnotate.')
       raise RuntimeError(error_msg.format(
-          layer_to_quantize.__class__, quantize_registry.__class__))
+          layer.__class__, quantize_registry.__class__))
 
     # `QuantizeWrapper` does not copy any additional layer params from
     # `QuantizeAnnotate`. This should generally be fine, but occasionally
     # `QuantizeAnnotate` wrapper may contain `batch_input_shape` like params.
     # TODO(pulkitb): Ensure this does not affect model cloning.
-    return quantize_wrapper.QuantizeWrapper(
-        layer_to_quantize, quantize_provider)
+    return quantize_wrapper.QuantizeWrapper(layer, quantize_provider)
 
-  # Create a copy of the model with the same weights. We can then quantize this
-  # model without modifying the weights of the original model.
+  # 1. Create a copy of the model with the same weights. This ensures
+  # modifications don't affect the original model, or its weights.
   model_copy = _clone_model_with_weights(model)
+
+  # 2. Remove QuantizeAnnotate wrappers from the layers in the model. This
+  # extracts the original model structure (easier to transform), and
+  # stores relevant quantization information in a map.
+  unwrapped_model, layer_quantize_map = _extract_original_model(model_copy)
+
+  # 3. Apply the graph transformations required to match model passes on
+  # target device/dialect.
+  quantize_transform = \
+    tflite_quantize_layout_transform.TFLiteQuantizeLayoutTransform()
+  transformed_model = quantize_transform.apply(
+      unwrapped_model, layer_quantize_map)
 
   # TODO(pulkitb): Think more about how to introduce TFLite specific code.
   quantize_registry = tflite_quantize_registry.TFLiteQuantizeRegistry()
 
-  # TODO(pulkitb): Implement model transformation code here.
+  # 4. Actually quantize all the relevant layers in the model. This is done by
+  # wrapping the layers with QuantizeWrapper, and passing the associated
+  # `QuantizeProvider`.
 
   return keras.models.clone_model(
-      model_copy, input_tensors=None, clone_function=_quantize)
+      transformed_model, input_tensors=None, clone_function=_quantize)
