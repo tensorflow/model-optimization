@@ -66,3 +66,20 @@ py_test(
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm_test_utils",
     ],
 )
+
+py_library(
+    name = "tflite_quantize_layout_transform",
+    srcs = [
+        "tflite_quantize_layout_transform.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tflite_transforms",
+        # six dep1,
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_layout_transform",
+        "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:model_transformer",
+    ],
+)
