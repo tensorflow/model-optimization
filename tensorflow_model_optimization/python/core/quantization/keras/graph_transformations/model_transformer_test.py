@@ -347,6 +347,21 @@ class ModelTransformerTest(test.TestCase):
     self.assertEqual(expected_metadata, updated_metadata)
     self._assert_config(model.get_config(), transformed_model.get_config())
 
+  # Validation Tests
+
+  def testRaisesErrorForSubclassModels(self):
+    class MyModel(keras.Model):
+      pass
+
+    with self.assertRaises(ValueError):
+      ModelTransformer(MyModel(), [self.ReplaceDenseLayer()]).transform()
+
+  def testRaisesErrorForSequentialModels(self):
+    sequential_model = keras.Sequential([keras.layers.Dense(2)])
+
+    with self.assertRaises(ValueError):
+      ModelTransformer(sequential_model, [self.ReplaceDenseLayer()]).transform()
+
 
 if __name__ == '__main__':
   test.main()

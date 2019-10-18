@@ -40,7 +40,7 @@ class ModelTransformer(object):
       layer_metadata: Dictionary of metadata associated with each layer in the
         model. The keys are layer names.
     """
-    if not (isinstance(model, keras.Model) and model._is_graph_network):  # pylint: disable=protected-access
+    if not self._is_functional_model(model):
       raise ValueError('Only Keras functional models can be transformed.')
 
     if layer_metadata is None:
@@ -50,6 +50,12 @@ class ModelTransformer(object):
     self.transforms = transforms
     self.candidate_layers = candidate_layers
     self.layer_metadata = layer_metadata
+
+  @staticmethod
+  def _is_functional_model(model):
+    return isinstance(model, keras.Model) \
+           and not isinstance(model, keras.Sequential) \
+           and model._is_graph_network    # pylint: disable=protected-access
 
   def _get_consuming_layers(self, check_layer):
     """Returns all the layers which are out nodes from the layer."""
