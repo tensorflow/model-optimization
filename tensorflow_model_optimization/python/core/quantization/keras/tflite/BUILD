@@ -18,6 +18,7 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_provider",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
     ],
 )
 

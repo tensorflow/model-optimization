@@ -23,12 +23,14 @@ import tempfile
 from absl.testing import parameterized
 
 import numpy as np
+import tensorflow as tf
 
 from tensorflow.python import keras
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.keras import test_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
+from tensorflow_model_optimization.python.core.quantization.keras import utils
 
 quantize_annotate = quantize.quantize_annotate
 quantize_apply = quantize.quantize_apply
@@ -80,6 +82,22 @@ class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
       loaded_model = keras.models.load_model(model_file)
 
     self._assert_models_equal(quantized_model, loaded_model)
+
+  def testProductionModelConversionToTFLite(self):
+    # small input shape to keep test running quickly.
+    model = tf.keras.applications.mobilenet.MobileNet(
+        weights=None, input_shape=(32, 32, 3))
+
+    annotated = quantize_annotate(model)
+    quantized_model = quantize_apply(annotated)
+
+    _, keras_file = tempfile.mkstemp('.h5')
+    _, tflite_file = tempfile.mkstemp('.h5')
+
+    keras.models.save_model(quantized_model, keras_file)
+
+    with quantize.quantize_scope():
+      utils.convert_keras_to_tflite(keras_file, tflite_file)
 
 
 if __name__ == '__main__':

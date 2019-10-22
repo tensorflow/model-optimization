@@ -26,6 +26,7 @@ from tensorflow.python.keras import layers
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 
 QuantizeProvider = quantize_provider.QuantizeProvider
 
@@ -111,6 +112,11 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       layers.pooling.MaxPooling1D: [],
       layers.pooling.MaxPooling2D: [],
       layers.pooling.MaxPooling3D: [],
+      # TODO(tf-mot): if more transforms handle quantization instead of using
+      # wrapper, add way for transforms to indicate that without modifying
+      # registry.
+      conv_batchnorm._ConvBatchNorm2D: [],  # pylint: disable=protected-access
+      conv_batchnorm._DepthwiseConvBatchNorm2D: [],  # pylint: disable=protected-access
   }
 
   _LAYERS_ACTIVATIONS_MAP = {
@@ -177,6 +183,8 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       layers.pooling.MaxPooling1D: [],
       layers.pooling.MaxPooling2D: [],
       layers.pooling.MaxPooling3D: [],
+      conv_batchnorm._ConvBatchNorm2D: [],  # pylint: disable=protected-access
+      conv_batchnorm._DepthwiseConvBatchNorm2D: [],  # pylint: disable=protected-access
   }
 
   _RNN_CELLS_WEIGHTS_MAP = {
