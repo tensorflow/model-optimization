@@ -145,6 +145,22 @@ class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
         model.predict(inputs), -6.0, 6.0, num_bits=8, narrow_range=False)
     self.assertAllClose(expected_output, quantized_model.predict(inputs))
 
+  def testQuantizesOutputsFromLayer(self):
+    # TODO(pulkitb): Increase coverage by adding other output quantize layers
+    # such as AveragePooling etc.
+
+    layer = layers.ReLU()
+    quantized_model = keras.Sequential([QuantizeWrapper(
+        layers.ReLU(),
+        quantize_provider=self.quantize_registry.get_quantize_provider(layer))])
+
+    model = keras.Sequential([layers.ReLU()])
+
+    inputs = np.random.rand(1, 2, 1)
+    expected_output = tf.fake_quant_with_min_max_vars(
+        model.predict(inputs), -6.0, 6.0, num_bits=8, narrow_range=False)
+    self.assertAllClose(expected_output, quantized_model.predict(inputs))
+
   def testSerializationQuantizeWrapper(self):
     input_shape = (2,)
     layer = keras.layers.Dense(3)
