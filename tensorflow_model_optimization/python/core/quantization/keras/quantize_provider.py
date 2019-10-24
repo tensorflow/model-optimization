@@ -78,5 +78,27 @@ class QuantizeProvider(object):
     raise NotImplementedError('Must be implemented in subclasses.')
 
   @abc.abstractmethod
+  def get_output_quantizers(self, layer):
+    """Returns the quantizer used to quantize the outputs from a layer.
+
+    For certain layers, we may want to quantize the outputs tensors returned
+    by the layer's `call` function. This allows us to quantize those output
+    tensors.
+
+    This function should return a list of quantizers. In most cases, a layer
+    outputs only a single tensor so it should only have one quantizer. Return
+    an empty list for if no quantization operation is desired on the results
+    of the layer.
+
+    Args:
+      layer: layer being quantized.
+
+    Returns:
+      List of `Quantizer`s to be used to quantize the resulting tensors from
+      a layer.
+    """
+    raise NotImplementedError('Must be implemented in subclasses.')
+
+  @abc.abstractmethod
   def get_config(self):
     raise NotImplementedError('QuantizeProvider should implement get_config().')

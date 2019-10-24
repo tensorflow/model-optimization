@@ -46,6 +46,9 @@ class QuantizeAnnotateTest(test.TestCase):
     def set_quantize_activations(self, layer, quantize_activations):
       pass
 
+    def get_output_quantizers(self, layer):
+      pass
+
     def get_config(self):
       return {}
 

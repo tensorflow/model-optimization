@@ -197,7 +197,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     layer = self._simple_dense_layer()
 
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
-        ['kernel'], ['activation'])
+        ['kernel'], ['activation'], False)
     (weights, weight_quantizers) = self._convert_list(
         quantize_provider.get_weights_and_quantizers(layer))
 
@@ -208,7 +208,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     layer = self._simple_dense_layer()
 
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
-        ['kernel'], ['activation'])
+        ['kernel'], ['activation'], False)
     (activations, activation_quantizers) = self._convert_list(
         quantize_provider.get_activations_and_quantizers(layer))
 
@@ -220,7 +220,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     quantize_kernel = K.variable(np.ones(layer.kernel.shape.as_list()))
 
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
-        ['kernel'], ['activation'])
+        ['kernel'], ['activation'], False)
     quantize_provider.set_quantize_weights(layer, [quantize_kernel])
 
     self.assertEqual(layer.kernel, quantize_kernel)
@@ -230,7 +230,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     quantize_activation = keras.activations.relu
 
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
-        ['kernel'], ['activation'])
+        ['kernel'], ['activation'], False)
     quantize_provider.set_quantize_activations(layer, [quantize_activation])
 
     self.assertEqual(layer.activation, quantize_activation)
@@ -240,7 +240,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     quantize_kernel = K.variable(np.ones(layer.kernel.shape.as_list()))
 
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
-        ['kernel'], ['activation'])
+        ['kernel'], ['activation'], False)
 
     with self.assertRaises(ValueError):
       quantize_provider.set_quantize_weights(layer, [])
@@ -254,7 +254,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     quantize_kernel = K.variable(np.ones([1, 2]))
 
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
-        ['kernel'], ['activation'])
+        ['kernel'], ['activation'], False)
 
     with self.assertRaises(ValueError):
       quantize_provider.set_quantize_weights(layer, [quantize_kernel])
@@ -264,7 +264,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     quantize_activation = keras.activations.relu
 
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
-        ['kernel'], ['activation'])
+        ['kernel'], ['activation'], False)
 
     with self.assertRaises(ValueError):
       quantize_provider.set_quantize_activations(layer, [])
@@ -275,13 +275,14 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
 
   def testSerialization(self):
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
-        ['kernel'], ['activation'])
+        ['kernel'], ['activation'], False)
 
     expected_config = {
         'class_name': 'TFLiteQuantizeProvider',
         'config': {
             'weight_attrs': ['kernel'],
             'activation_attrs': ['activation'],
+            'quantize_output': False
         }
     }
     serialized_quantize_provider = serialize_keras_object(quantize_provider)
@@ -309,7 +310,8 @@ class TFLiteQuantizeProviderRNNTest(test.TestCase, _TestHelper):
     self.quantize_provider = tflite_quantize_registry.TFLiteQuantizeProviderRNN(
         [['kernel', 'recurrent_kernel'], ['kernel', 'recurrent_kernel']],
         [['activation', 'recurrent_activation'],
-         ['activation', 'recurrent_activation']]
+         ['activation', 'recurrent_activation']],
+        False
     )
 
   def _expected_weights(self):
@@ -399,6 +401,7 @@ class TFLiteQuantizeProviderRNNTest(test.TestCase, _TestHelper):
                              ['kernel', 'recurrent_kernel']],
             'activation_attrs': [['activation', 'recurrent_activation'],
                                  ['activation', 'recurrent_activation']],
+            'quantize_output': False
         }
     }
     serialized_quantize_provider = serialize_keras_object(

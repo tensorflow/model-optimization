@@ -294,9 +294,10 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 class TFLiteQuantizeProvider(QuantizeProvider):
   """QuantizeProvider for non recurrent Keras layers."""
 
-  def __init__(self, weight_attrs, activation_attrs):
+  def __init__(self, weight_attrs, activation_attrs, quantize_output=False):
     self.weight_attrs = weight_attrs
     self.activation_attrs = activation_attrs
+    self.quantize_output = quantize_output
 
     # TODO(pulkitb): For some layers such as Conv2D, per_axis should be True.
     # Add mapping for which layers support per_axis.
@@ -341,6 +342,11 @@ class TFLiteQuantizeProvider(QuantizeProvider):
         zip(self.activation_attrs, quantize_activations):
       setattr(layer, activation_attr, activation)
 
+  def get_output_quantizers(self, layer):
+    if self.quantize_output:
+      return [self.activation_quantizer]
+    return []
+
   @classmethod
   def from_config(cls, config):
     """Instantiates a `TFLiteQuantizeProvider` from its config.
@@ -360,6 +366,7 @@ class TFLiteQuantizeProvider(QuantizeProvider):
     return {
         'weight_attrs': self.weight_attrs,
         'activation_attrs': self.activation_attrs,
+        'quantize_output': self.quantize_output
     }
 
   def __eq__(self, other):
@@ -369,7 +376,8 @@ class TFLiteQuantizeProvider(QuantizeProvider):
     return (self.weight_attrs == other.weight_attrs and
             self.activation_attrs == self.activation_attrs and
             self.weight_quantizer == other.weight_quantizer and
-            self.activation_quantizer == other.activation_quantizer)
+            self.activation_quantizer == other.activation_quantizer and
+            self.quantize_output == other.quantize_output)
 
   def __ne__(self, other):
     return not self.__eq__(other)
