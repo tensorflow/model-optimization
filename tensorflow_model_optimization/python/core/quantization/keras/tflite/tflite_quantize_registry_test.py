@@ -141,6 +141,15 @@ class TFLiteQuantizeRegistryTest(test.TestCase, _TestHelper):
     self.assertEqual(layer.kernel, quantize_kernel)
     self.assertEqual(layer.activation, quantize_activation)
 
+  def testReturnsProvider_LayerWithResultQuantizer(self):
+    layer = l.ReLU()
+    quantize_provider = self.quantize_registry.get_quantize_provider(layer)
+
+    output_quantizers = quantize_provider.get_output_quantizers(layer)
+
+    self.assertLen(output_quantizers, 1)
+    self._assert_activation_quantizers(output_quantizers)
+
   def testReturnsProvider_KerasRNNLayer(self):
     model = keras.Sequential([(
         l.LSTM(2, input_shape=(3, 2)))])
@@ -272,6 +281,25 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     with self.assertRaises(ValueError):
       quantize_provider.set_quantize_activations(
           layer, [quantize_activation, quantize_activation])
+
+  def testGetsResultQuantizers_ReturnsQuantizer(self):
+    layer = self._simple_dense_layer()
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        [], [], True)
+
+    output_quantizers = quantize_provider.get_output_quantizers(layer)
+
+    self.assertLen(output_quantizers, 1)
+    self._assert_activation_quantizers(output_quantizers)
+
+  def testGetsResultQuantizers_EmptyWhenFalse(self):
+    layer = self._simple_dense_layer()
+    quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
+        [], [], False)
+
+    output_quantizers = quantize_provider.get_output_quantizers(layer)
+
+    self.assertEqual([], output_quantizers)
 
   def testSerialization(self):
     quantize_provider = tflite_quantize_registry.TFLiteQuantizeProvider(
