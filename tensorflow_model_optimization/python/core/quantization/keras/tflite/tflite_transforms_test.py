@@ -34,6 +34,7 @@ Conv2DModel = conv_batchnorm_test_utils.Conv2DModel
 DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 
 
+# TODO(alanchiao): reduce redundancy by parameterizing on Depthwise vs Conv.
 class TFLiteTransformsTest(test.TestCase):
 
   def testTransformsConvBNReLUPattern(self):
@@ -50,6 +51,60 @@ class TFLiteTransformsTest(test.TestCase):
     self.assertAllClose(
         transformed_model.predict(inputs), folded_model.predict(inputs))
 
+  def testTransformsConvBNReLUPatternPreservesWeights(self):
+    # random_init to prevent non-random initialization in resulting
+    # in same weights between transformed and non-transformed models.
+    model = Conv2DModel.get_nonfolded_batchnorm_model(
+        post_bn_activation=keras.layers.ReLU(6.0),
+        model_type='functional',
+        random_init=True)
+
+    with quantize.quantize_scope():
+      transformed_model = ModelTransformer(
+          model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
+
+    transformed_weights = transformed_model.get_weights()
+    # Remove quantization related weights.
+    del transformed_weights[3:8]
+
+    self.assertEqual(len(transformed_weights), len(model.get_weights()))
+    for i in range(len(transformed_weights)):
+      self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
+
+  def testTransformsConvBNPattern(self):
+    model = Conv2DModel.get_nonfolded_batchnorm_model(
+        model_type='functional')
+    folded_model = Conv2DModel.get_folded_batchnorm_model(
+        is_quantized=True)
+
+    with quantize.quantize_scope():
+      transformed_model = ModelTransformer(
+          model, [tflite_transforms.Conv2DBatchNormFold()]).transform()
+
+    inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
+    self.assertAllClose(
+        transformed_model.predict(inputs), folded_model.predict(inputs))
+
+  def testTransformsConvBNPatternPreservesWeights(self):
+    # random_init to prevent non-random initialization in resulting
+    # in same weights between transformed and non-transformed models.
+    model = Conv2DModel.get_nonfolded_batchnorm_model(
+        model_type='functional',
+        random_init=True)
+
+    with quantize.quantize_scope():
+      transformed_model = ModelTransformer(
+          model,
+          [tflite_transforms.Conv2DBatchNormFold()]).transform()
+
+    transformed_weights = transformed_model.get_weights()
+    # Remove quantization related weights.
+    del transformed_weights[3:8]
+
+    self.assertEqual(len(transformed_weights), len(model.get_weights()))
+    for i in range(len(transformed_weights)):
+      self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
+
   def testTransformsDepthwiseConvBNReLUPattern(self):
     model = DepthwiseConv2DModel.get_nonfolded_batchnorm_model(
         post_bn_activation=keras.layers.ReLU(6.0), model_type='functional')
@@ -65,6 +120,27 @@ class TFLiteTransformsTest(test.TestCase):
         DepthwiseConv2DModel.get_batched_input_shape())
     self.assertAllClose(
         transformed_model.predict(inputs), folded_model.predict(inputs))
+
+  def testTransformsDepthwiseConvBNReLUPatternPreservesWeights(self):
+    # random_init to prevent non-random initialization in resulting
+    # in same weights between transformed and non-transformed models.
+    model = DepthwiseConv2DModel.get_nonfolded_batchnorm_model(
+        post_bn_activation=keras.layers.ReLU(6.0),
+        model_type='functional',
+        random_init=True)
+
+    with quantize.quantize_scope():
+      transformed_model = ModelTransformer(
+          model,
+          [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
+
+    transformed_weights = transformed_model.get_weights()
+    # Remove quantization related weights.
+    del transformed_weights[3:8]
+
+    self.assertEqual(len(transformed_weights), len(model.get_weights()))
+    for i in range(len(transformed_weights)):
+      self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
 
 
 if __name__ == '__main__':

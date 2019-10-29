@@ -45,6 +45,7 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        # numpy dep1,
         # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:transforms",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",

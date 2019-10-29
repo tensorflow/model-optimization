@@ -36,6 +36,14 @@ def _get_conv2d_params():
   }
 
 
+def _get_initializer(random_init):
+  if random_init:
+    kernel_initializer = keras.initializers.glorot_uniform()
+  else:
+    kernel_initializer = keras.initializers.glorot_uniform(seed=0)
+  return kernel_initializer
+
+
 class Conv2DModel(object):
   """Construct and access Conv + BatchNorm + activation models."""
 
@@ -64,7 +72,7 @@ class Conv2DModel(object):
     """Return folded Conv2D + BN + optional activation model."""
     return tf.keras.Sequential([
         _ConvBatchNorm2D(
-            kernel_initializer=keras.initializers.glorot_uniform(seed=0),
+            kernel_initializer=_get_initializer(random_init=False),
             is_quantized=is_quantized,
             post_activation=post_bn_activation,
             **cls.params)
@@ -73,12 +81,13 @@ class Conv2DModel(object):
   @classmethod
   def get_nonfolded_batchnorm_model(cls,
                                     post_bn_activation=None,
-                                    model_type='sequential'):
+                                    model_type='sequential',
+                                    random_init=False):
     """Return nonfolded Conv2D + BN + optional activation model."""
     if model_type == 'sequential':
       layers = [
           keras.layers.Conv2D(
-              kernel_initializer=keras.initializers.glorot_uniform(seed=0),
+              kernel_initializer=_get_initializer(random_init),
               use_bias=False,
               **cls.params),
           keras.layers.BatchNormalization(axis=-1),
@@ -92,7 +101,8 @@ class Conv2DModel(object):
       x = keras.layers.Conv2D(
           cls.params['filters'],
           cls.params['kernel_size'],
-          kernel_initializer=keras.initializers.glorot_uniform(seed=0))(
+          kernel_initializer=_get_initializer(random_init),
+          use_bias=False)(
               inp)
       out = keras.layers.BatchNormalization(axis=-1)(x)
       if post_bn_activation is not None:
@@ -119,7 +129,7 @@ class DepthwiseConv2DModel(Conv2DModel):
                                  post_bn_activation=None):
     return tf.keras.Sequential([
         _DepthwiseConvBatchNorm2D(
-            depthwise_initializer=keras.initializers.glorot_uniform(seed=0),
+            depthwise_initializer=_get_initializer(random_init=False),
             is_quantized=is_quantized,
             post_activation=post_bn_activation,
             **cls.params)
@@ -128,11 +138,12 @@ class DepthwiseConv2DModel(Conv2DModel):
   @classmethod
   def get_nonfolded_batchnorm_model(cls,
                                     post_bn_activation=None,
-                                    model_type='sequential'):
+                                    model_type='sequential',
+                                    random_init=False):
     if model_type == 'sequential':
       layers = [
           keras.layers.DepthwiseConv2D(
-              depthwise_initializer=keras.initializers.glorot_uniform(seed=0),
+              depthwise_initializer=_get_initializer(random_init),
               use_bias=False,
               **cls.params),
           keras.layers.BatchNormalization(axis=-1),
@@ -145,7 +156,8 @@ class DepthwiseConv2DModel(Conv2DModel):
                                cls.params['batch_size'])
       x = keras.layers.DepthwiseConv2D(
           cls.params['kernel_size'],
-          depthwise_initializer=keras.initializers.glorot_uniform(seed=0))(
+          depthwise_initializer=_get_initializer(random_init),
+          use_bias=False)(
               inp)
       out = keras.layers.BatchNormalization(axis=-1)(x)
       if post_bn_activation is not None:

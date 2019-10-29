@@ -14,6 +14,9 @@
 # ==============================================================================
 """TFLite transforms."""
 
+import collections
+import numpy as np
+
 from tensorflow.python import keras
 
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
@@ -21,7 +24,6 @@ from tensorflow_model_optimization.python.core.quantization.keras.layers import 
 
 LayerNode = transforms.LayerNode
 LayerPattern = transforms.LayerPattern
-Transform = transforms.Transform
 
 _ConvBatchNorm2D = conv_batchnorm._ConvBatchNorm2D  # pylint: disable=protected-access
 _DepthwiseConvBatchNorm2D = conv_batchnorm._DepthwiseConvBatchNorm2D  # pylint: disable=protected-access
@@ -33,9 +35,39 @@ def _get_conv_bn_layers(bn_layer_node):
   return conv_layer, bn_layer
 
 
+def _get_weights(bn_layer_node):
+  """Returns weight values for fused layer, including copying original values in unfused version."""
+  weights = collections.OrderedDict()
+
+  bn_layer_weights = list(bn_layer_node.weights.items())
+  conv_layer_weights = list(bn_layer_node.input_layers[0].weights.items())
+
+  weights['conv/kernel'] = conv_layer_weights[0][1]
+  weights['batch_normalization/gamma:0'] = bn_layer_weights[0][1]
+  weights['batch_normalization/beta:0'] = bn_layer_weights[1][1]
+
+  # TODO(tfmot): remove hardcoded initialization values.
+  weights['weight_min'] = np.array(-6.0)
+  weights['weight_max'] = np.array(6.0)
+  weights['optimizer_step'] = np.array(-1)
+  weights['activation_min'] = np.array(-6.0)
+  weights['activation_max'] = np.array(6.0)
+
+  weights['batch_normalization/moving_mean:0'] = bn_layer_weights[2][1]
+  weights['batch_normalization/moving_variance:0'] = bn_layer_weights[3][1]
+
+  return weights
+
+
 def _get_params(conv_layer, bn_layer, relu_layer=None):
   """Retrieve conv_bn params within wrapped layers."""
   if 'use_bias' in conv_layer['config']:
+    if conv_layer['config']['use_bias']:
+      raise ValueError(
+          'use_bias should not be set to True in a Conv layer when followed '
+          'by BatchNormalization. The bias in the Conv would be redundant '
+          'with the one in the BatchNormalization.')
+
     del conv_layer['config']['use_bias']
 
   if 'name' in bn_layer['config']:
@@ -51,11 +83,11 @@ def _get_params(conv_layer, bn_layer, relu_layer=None):
   return params
 
 
-def _get_layer_node(fused_layer):
+def _get_layer_node(fused_layer, weights):
   layer_config = keras.layers.serialize(fused_layer)
   layer_config['name'] = layer_config['config']['name']
 
-  return LayerNode(layer_config, [])
+  return LayerNode(layer_config, weights)
 
 
 class Conv2DBatchNormFold(transforms.Transform):
@@ -71,7 +103,8 @@ class Conv2DBatchNormFold(transforms.Transform):
     fused_params = _get_params(conv_layer, bn_layer)
     fused_layer = _ConvBatchNorm2D(**fused_params)
 
-    return _get_layer_node(fused_layer)
+    weights = _get_weights(match_layer)
+    return _get_layer_node(fused_layer, weights)
 
   def custom_objects(self):
     return {'_ConvBatchNorm2D': _ConvBatchNorm2D}
@@ -93,7 +126,8 @@ class Conv2DBatchNormReLU6Fold(Conv2DBatchNormFold):
     fused_params = _get_params(conv_layer, bn_layer, relu_layer)
     fused_layer = _ConvBatchNorm2D(**fused_params)
 
-    return _get_layer_node(fused_layer)
+    weights = _get_weights(match_layer.input_layers[0])
+    return _get_layer_node(fused_layer, weights)
 
 
 class DepthwiseConv2DBatchNormReLU6Fold(transforms.Transform):
@@ -112,7 +146,8 @@ class DepthwiseConv2DBatchNormReLU6Fold(transforms.Transform):
     fused_params = _get_params(conv_layer, bn_layer, relu_layer)
     fused_layer = _DepthwiseConvBatchNorm2D(**fused_params)
 
-    return _get_layer_node(fused_layer)
+    weights = _get_weights(match_layer.input_layers[0])
+    return _get_layer_node(fused_layer, weights)
 
   def custom_objects(self):
     return {'_DepthwiseConvBatchNorm2D': _DepthwiseConvBatchNorm2D}
