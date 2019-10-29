@@ -1,9 +1,13 @@
 # How to Contribute
 
-We'd love to accept your patches and contributions to this project. There are
-just a few small guidelines you need to follow.
+We'd love to accept your patches and contributions to this project.
 
-## Contributor License Agreement
+Notably, we're working to make this project contributor-friendly. Please follow the
+progress and comment [here](https://github.com/tensorflow/model-optimization/issues/131).
+
+## One-time Setup
+
+### Contributor License Agreement
 
 Contributions to this project must be accompanied by a Contributor License
 Agreement. You (or your employer) retain the copyright to your contribution;
@@ -15,6 +19,16 @@ You generally only need to submit a CLA once, so if you've already submitted one
 (even if it was for a different project), you probably don't need to do it
 again.
 
+## TensorFlow Model Optimization Specific
+
+### Contributing Whole Techniques
+
+See these [guidelines](CONTRIBUTING_TECHNIQUE.md).
+
+### Other Contributions
+
+Please wait until we finish this section.
+
 ## Code reviews
 
 All submissions, including submissions by project members, require review. We
@@ -25,4 +39,7 @@ information on using pull requests.
 ## Community Guidelines
 
 This project follows [Google's Open Source Community
-Guidelines](https://opensource.google.com/conduct/).
+Guidelines](https://opensource.google.com/conduct/). Please also
+look at the [TensorFlow contributor
+guide](https://www.tensorflow.org/community/contribute), in particular for the
+community values and style guides.
