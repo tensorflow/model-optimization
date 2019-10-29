@@ -22,6 +22,7 @@ from tensorflow.python import keras
 from tensorflow.python.distribute import collective_all_reduce_strategy
 from tensorflow.python.distribute import mirrored_strategy
 from tensorflow.python.distribute import one_device_strategy
+from tensorflow.python.keras.utils import np_utils
 from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
@@ -66,7 +67,7 @@ class PruneDistributedTest(test.TestCase, parameterized.TestCase):
     # Simple unpruned model. No sparsity.
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.np_utils.to_categorical(
+        np_utils.to_categorical(
             np.random.randint(5, size=(20, 1)), 5),
         epochs=2,
         callbacks=[pruning_callbacks.UpdatePruningStep()],

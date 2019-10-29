@@ -16,9 +16,9 @@
 
 import numpy as np
 
-from tensorflow.python import keras
 from tensorflow.python.framework import test_util as tf_test_util
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras.utils import np_utils
 from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
@@ -35,7 +35,7 @@ class PruneTest(test.TestCase):
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     model.fit(
         np.random.rand(20, 10),
-        keras.utils.np_utils.to_categorical(
+        np_utils.to_categorical(
             np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         epochs=3,
