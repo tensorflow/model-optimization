@@ -51,13 +51,22 @@ PKGDIR=$(mktemp -d)
 ./bazel-bin/pip_pkg $PKGDIR
 pip install --user --upgrade $PKGDIR/*.whl
 ```
+## Contribution guidelines
+
+**If you want to contribute to TensorFlow Model Optimization, be sure to review
+the [contribution guidelines](CONTRIBUTING.md). This project adheres to
+TensorFlow's
+[code of conduct](https://github.com/tensorflow/tensorflow/blob/master/CODE_OF_CONDUCT.md).
+By participating, you are expected to uphold this code.**
+
+**We use
+[GitHub issues](https://github.com/tensorflow/model-optimization/issues) for
+tracking requests and bugs.**
 
 ## Community
 
 As part of TensorFlow, we're committed to fostering an open and welcoming
 environment.
 
-*   [GitHub](https://github.com/tensorflow/model-optimization/issues): Report
-    bugs or make feature requests.
 *   [TensorFlow Blog](https://medium.com/tensorflow): Stay up to date on content
     from the TensorFlow team and best articles from the community.
