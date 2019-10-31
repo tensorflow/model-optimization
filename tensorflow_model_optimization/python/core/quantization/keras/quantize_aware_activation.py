@@ -46,12 +46,18 @@ class QuantizeAwareActivation(object):
     Same shape as input.
   """
 
-  _PRE_ACTIVATION_TYPES = {'softmax'}
+  # These activations don't need to be quantized prior to being used.
+  # `relu` gets fused into the preceding operation, and `linear` is a no-op.
+  _ACTIVATIONS_NO_PRE_QUANT = {'relu', 'linear'}
+
+  # TODO(pulkitb): Other activations such as elu, tanh etc., should just work
+  # on inclusion. Verify in TFLite before enabling.
+  _SUPPORTED_ACTIVATIONS = {'relu', 'softmax', 'linear'}
 
   _CUSTOM_ACTIVATION_ERR_MSG = (
-      'Only Keras activations under `tf.keras.activations` are supported. For '
-      'custom activations, use `Quantizer` directly, and update layer config '
-      'using `QuantizeProvider`.'
+      'Only some Keras activations under `tf.keras.activations` are supported. '
+      'For other activations, use `Quantizer` directly, and update layer '
+      'config using `QuantizeProvider`.'
   )
 
   def __init__(self, activation, quantizer, step, quantize_wrapper):
@@ -68,7 +74,7 @@ class QuantizeAwareActivation(object):
     self.step = step
     self.quantize_wrapper = quantize_wrapper
 
-    if not self._is_keras_builtin_activation(self.activation):
+    if not self._is_supported_activation(self.activation):
       raise ValueError(self._CUSTOM_ACTIVATION_ERR_MSG)
 
     if self._should_pre_quantize():
@@ -78,24 +84,14 @@ class QuantizeAwareActivation(object):
     self._min_post_activation, self._max_post_activation = \
       self._add_range_weights('post_activation')
 
-  def _is_keras_builtin_activation(self, activation):
+  def _is_supported_activation(self, activation):
     if not hasattr(activation, '__name__'):
       return False
 
-    try:
-      # Keras built-in activations can be fetched using keras.activations.
-      activations.get(activation.__name__)
-      return True
-    except (ValueError, TypeError):
-      return False
+    return activation.__name__ in self._SUPPORTED_ACTIVATIONS
 
   def _should_pre_quantize(self):
-    # TODO(pulkitb): Add logic to deduce whether we should pre-quantize.
-    # Whether we apply quantize operations around activations depends on the
-    # implementation of the specific kernel. For example, ReLUs are fused in
-    # whereas Softmax ops are not.
-
-    return self.activation.__name__ in self._PRE_ACTIVATION_TYPES
+    return self.activation.__name__ not in self._ACTIVATIONS_NO_PRE_QUANT
 
   def _add_range_weights(self, name):
     min_var = self.quantize_wrapper.add_weight(

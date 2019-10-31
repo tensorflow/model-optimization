@@ -102,13 +102,13 @@ class QuantizeAwareQuantizationTest(test.TestCase):
     self.assertAllClose(expected_activation, model.predict(x))
 
   def testSerializationReturnsWrappedActivation_BuiltInActivation(self):
-    activation = activations.get('tanh')
+    activation = activations.get('softmax')
     quantize_activation = QuantizeAwareActivation(
         activation, self.quantizer, 0, self.TestLayer())
 
     expected_config = {
         'class_name': 'QuantizeAwareActivation',
-        'config': {'activation': 'tanh'}
+        'config': {'activation': 'softmax'}
     }
     serialized_quantize_activation = serialize_keras_object(quantize_activation)
 

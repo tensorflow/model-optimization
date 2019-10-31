@@ -20,10 +20,11 @@ import tensorflow as tf
 from tensorflow.python import keras
 l = keras.layers
 
+
 def build_simple_dense_model():
   return keras.Sequential([
       l.Dense(8, activation='relu', input_shape=(10,)),
-      l.Dense(5, activation='sigmoid')
+      l.Dense(5, activation='softmax')
   ])
 
 
