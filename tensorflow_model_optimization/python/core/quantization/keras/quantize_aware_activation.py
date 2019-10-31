@@ -24,9 +24,9 @@ from tensorflow.python.keras.utils import tf_utils
 
 
 class QuantizeAwareActivation(object):
-  """Activation layer for quantization aware training.
+  """Activation wrapper for quantization aware training.
 
-  The goal of this layer is to apply quantize operations during training such
+  The goal of this class is to apply quantize operations during training such
   that the training network mimics quantization loss experienced in activations
   during inference.
 

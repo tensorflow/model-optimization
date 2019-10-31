@@ -31,12 +31,6 @@ from tensorflow_model_optimization.python.core.quantization.keras import quant_o
 class Quantizer(object):
   """ABC interface which contains logic to quantize a tensor."""
 
-  # TODO(pulkitb): Figure out a clean way to handle TF variables in Quantizer.
-  # Currently, Quantizers need to create variables for tracking min/max values.
-  # However, variables in Keras are a property of the layer and need to be
-  # serialized/deserialized along with the layer.
-  # For now, passing in variables as additional **kwargs in `__call__`.
-
   @abc.abstractmethod
   def __call__(self, inputs, step, training, **kwargs):
     """Apply quantization to the input tensor.
@@ -109,7 +103,6 @@ class LastValueQuantizer(Quantizer):
         per_channel=self.per_axis,
         symmetric=self.symmetric,
         narrow_range=True
-        # TODO(pulkitb): Figure out a clean way to use name_prefix here.
     )
 
   def get_config(self):
@@ -169,7 +162,6 @@ class MovingAverageQuantizer(Quantizer):
         per_channel=self.per_axis,
         symmetric=self.symmetric,
         narrow_range=False,
-        # TODO(pulkitb): Figure out a clean way to use name_prefix here.
     )
 
   def get_config(self):

@@ -71,11 +71,6 @@ class QuantizeAnnotate(Wrapper):
   def from_config(cls, config):
     config = config.copy()
 
-    # QuantizeAnnotate may be constructed with any QuantizeProvider and the
-    # wrapper itself cannot know all the possible provider classes.
-    # The deserialization code should ensure the QuantizeProvider is in keras
-    # serialization scope.
-    # TODO(pulkitb): Decide if built-in QuantizeProviders should be in scope.
     quantize_provider = deserialize_keras_object(
         config.pop('quantize_provider'),
         module_objects=globals(),
