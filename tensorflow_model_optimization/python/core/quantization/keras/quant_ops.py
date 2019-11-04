@@ -99,21 +99,21 @@ def LastValueQuantize(inputs,
 
     if per_channel:
       if input_dim >= 2:
-        batch_min = math_ops.reduce_min(
+        batch_min = math_ops.reduce_min_v1(
             inputs, reduction_indices=reduce_dims, name='BatchMin')
       else:
         batch_min = inputs
     else:
-      batch_min = math_ops.reduce_min(inputs, name='BatchMin')
+      batch_min = math_ops.reduce_min_v1(inputs, name='BatchMin')
 
     if per_channel:
       if input_dim >= 2:
-        batch_max = math_ops.reduce_max(
+        batch_max = math_ops.reduce_max_v1(
             inputs, reduction_indices=reduce_dims, name='BatchMax')
       else:
         batch_max = inputs
     else:
-      batch_max = math_ops.reduce_max(inputs, name='BatchMax')
+      batch_max = math_ops.reduce_max_v1(inputs, name='BatchMax')
 
     if symmetric:
       if narrow_range:

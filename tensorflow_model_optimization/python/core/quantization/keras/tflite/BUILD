@@ -5,6 +5,36 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
+    name = "tflite_quantizers",
+    srcs = [
+        "tflite_quantizers.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
+    ],
+)
+
+py_test(
+    name = "tflite_quantizers_test",
+    srcs = [
+        "tflite_quantizers_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":tflite_quantizers",
+        # absl/testing:parameterized dep1,
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_library(
     name = "tflite_quantize_registry",
     srcs = [
         "tflite_quantize_registry.py",

@@ -261,7 +261,7 @@ class TFLiteQuantizeProvider(QuantizeProvider):
     self.weight_quantizer = quantizers.LastValueQuantizer(
         num_bits=8, per_axis=False, symmetric=True, narrow_range=True)
     self.activation_quantizer = quantizers.MovingAverageQuantizer(
-        num_bits=8, per_axis=False, symmetric=True, narrow_range=False)
+        num_bits=8, per_axis=False, symmetric=False, narrow_range=False)
 
   def get_weights_and_quantizers(self, layer):
     return [(getattr(layer, weight_attr), self.weight_quantizer)
