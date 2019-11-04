@@ -24,12 +24,27 @@ from __future__ import print_function
 import abc
 import six
 
+from tensorflow.python.keras import initializers
+
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 
 
 @six.add_metaclass(abc.ABCMeta)
 class Quantizer(object):
   """ABC interface which contains logic to quantize a tensor."""
+
+  @abc.abstractmethod
+  def build(self, tensor_shape, name, layer):
+    """Constructs the weights required by the quantizer.
+
+    Args:
+      tensor_shape: Shape of tensor which needs to be quantized.
+      name: Name of tensor.
+      layer: Keras layer which is quantizing the tensors. The layer is needed
+        to construct the weights, and is also the owner of the weights.
+
+    Returns: List of constructed weights
+    """
 
   @abc.abstractmethod
   def __call__(self, inputs, step, training, **kwargs):
@@ -64,7 +79,18 @@ class Quantizer(object):
     return cls(**config)
 
 
-class LastValueQuantizer(Quantizer):
+class _QuantizeHelper(object):
+
+  def _add_range_weights(self, layer, name):
+    min_weight = layer.add_weight(
+        name + '_min', initializer=initializers.Constant(-6.0), trainable=False)
+    max_weight = layer.add_weight(
+        name + '_max', initializer=initializers.Constant(6.0), trainable=False)
+
+    return [min_weight, max_weight]
+
+
+class LastValueQuantizer(_QuantizeHelper, Quantizer):
   """Quantize tensor based on range the last batch of values."""
 
   # TODO(pulkitb): Decide and change num_bits to num_fixedpoint_values.
@@ -85,6 +111,9 @@ class LastValueQuantizer(Quantizer):
     self.per_axis = per_axis
     self.symmetric = symmetric
     self.narrow_range = narrow_range
+
+  def build(self, tensor_shape, name, layer):
+    return self._add_range_weights(layer, name)
 
   def __call__(self, inputs, step, training, **kwargs):
     """Quantize tensor.
@@ -130,7 +159,7 @@ class LastValueQuantizer(Quantizer):
     return not self.__eq__(other)
 
 
-class MovingAverageQuantizer(Quantizer):
+class MovingAverageQuantizer(_QuantizeHelper, Quantizer):
   """Quantize tensor based on a moving average of values across batches."""
 
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
@@ -149,6 +178,9 @@ class MovingAverageQuantizer(Quantizer):
     self.per_axis = per_axis
     self.symmetric = symmetric
     self.narrow_range = narrow_range
+
+  def build(self, tensor_shape, name, layer):
+    return self._add_range_weights(layer, name)
 
   def __call__(self, inputs, step, training, **kwargs):
     """Quantize tensor.

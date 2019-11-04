@@ -77,14 +77,6 @@ class QuantizeWrapper(Wrapper):
     """
     return name.split(':')[0].split('/')[-1]
 
-  def _add_range_weights(self, name):
-    min_weight = self.add_weight(
-        name + '_min', initializer=initializers.Constant(-6.0), trainable=False)
-    max_weight = self.add_weight(
-        name + '_max', initializer=initializers.Constant(6.0), trainable=False)
-
-    return min_weight, max_weight
-
   def build(self, input_shape):
     super(QuantizeWrapper, self).build(input_shape)
 
@@ -97,7 +89,8 @@ class QuantizeWrapper(Wrapper):
     self._weight_vars = []
     for weight, quantizer in \
         self.quantize_provider.get_weights_and_quantizers(self.layer):
-      min_var, max_var = self._add_range_weights(self._weight_name(weight.name))
+      min_var, max_var = quantizer.build(
+          input_shape, self._weight_name(weight.name), self)
 
       self._weight_vars.append((weight, quantizer, min_var, max_var))
       # Needed to ensure unquantized weights get trained as part of the wrapper.
@@ -114,7 +107,8 @@ class QuantizeWrapper(Wrapper):
     self._output_quantizers = self.quantize_provider.get_output_quantizers(
         self.layer)
     if self._output_quantizers:
-      self._output_min_max = self._add_range_weights('output')
+      self._output_min_max = self._output_quantizers[0].build(
+          self.layer.compute_output_shape(input_shape), 'output', self)
 
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(self.layer.input_shape)

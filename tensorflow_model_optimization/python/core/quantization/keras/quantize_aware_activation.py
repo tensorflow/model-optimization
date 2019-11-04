@@ -61,7 +61,7 @@ class QuantizeAwareActivation(object):
   )
 
   def __init__(self, activation, quantizer, step, quantize_wrapper):
-    """Construct a QuantizeAwareActivation layer.
+    """Constructs object, and initializes weights for quantization.
 
     Args:
       activation: Activation function to use.
@@ -79,10 +79,10 @@ class QuantizeAwareActivation(object):
 
     if self._should_pre_quantize():
       self._min_pre_activation, self._max_pre_activation = \
-        self._add_range_weights('pre_activation')
+        quantizer.build(None, 'pre_activation', quantize_wrapper)
 
     self._min_post_activation, self._max_post_activation = \
-      self._add_range_weights('post_activation')
+        quantizer.build(None, 'post_activation', quantize_wrapper)
 
   def _is_supported_activation(self, activation):
     if not hasattr(activation, '__name__'):
@@ -92,14 +92,6 @@ class QuantizeAwareActivation(object):
 
   def _should_pre_quantize(self):
     return self.activation.__name__ not in self._ACTIVATIONS_NO_PRE_QUANT
-
-  def _add_range_weights(self, name):
-    min_var = self.quantize_wrapper.add_weight(
-        name + '_min', initializer=initializers.Constant(-6.0), trainable=False)
-    max_var = self.quantize_wrapper.add_weight(
-        name + '_max', initializer=initializers.Constant(6.0), trainable=False)
-
-    return min_var, max_var
 
   @property
   def training(self):
