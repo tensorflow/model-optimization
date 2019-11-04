@@ -43,7 +43,8 @@ class QuantizersTest(test.TestCase, parameterized.TestCase):
     self.quant_params = {
         'num_bits': 8,
         'per_axis': False,
-        'symmetric': False
+        'symmetric': False,
+        'narrow_range': False
     }
 
   @staticmethod
@@ -82,7 +83,8 @@ class QuantizersTest(test.TestCase, parameterized.TestCase):
         'config': {
             'num_bits': 8,
             'per_axis': False,
-            'symmetric': False
+            'symmetric': False,
+            'narrow_range': False
         }
     }
     serialized_quantizer = serialize_keras_object(quantizer)

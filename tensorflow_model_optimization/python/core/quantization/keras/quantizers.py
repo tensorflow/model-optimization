@@ -69,7 +69,7 @@ class LastValueQuantizer(Quantizer):
 
   # TODO(pulkitb): Decide and change num_bits to num_fixedpoint_values.
 
-  def __init__(self, num_bits, per_axis, symmetric):
+  def __init__(self, num_bits, per_axis, symmetric, narrow_range):
     """Construct a LastValueQuantizer.
 
     Args:
@@ -77,10 +77,14 @@ class LastValueQuantizer(Quantizer):
       per_axis: Whether to apply per_axis quantization.
       symmetric: If true, use symmetric quantization limits instead of training
         the minimum and maximum of each quantization range separately.
+      narrow_range: In case of 8 bits, narrow_range nudges the quantized range
+        to be [-127, 127] instead of [-128, 127]. This ensures symmetric
+        range has 0 as the centre.
     """
     self.num_bits = num_bits
     self.per_axis = per_axis
     self.symmetric = symmetric
+    self.narrow_range = narrow_range
 
   def __call__(self, inputs, step, training, **kwargs):
     """Quantize tensor.
@@ -102,7 +106,7 @@ class LastValueQuantizer(Quantizer):
         num_bits=self.num_bits,
         per_channel=self.per_axis,
         symmetric=self.symmetric,
-        narrow_range=True
+        narrow_range=self.narrow_range
     )
 
   def get_config(self):
@@ -110,6 +114,7 @@ class LastValueQuantizer(Quantizer):
         'num_bits': self.num_bits,
         'per_axis': self.per_axis,
         'symmetric': self.symmetric,
+        'narrow_range': self.narrow_range
     }
 
   def __eq__(self, other):
@@ -118,7 +123,8 @@ class LastValueQuantizer(Quantizer):
 
     return (self.num_bits == other.num_bits and
             self.per_axis == other.per_axis and
-            self.symmetric == other.symmetric)
+            self.symmetric == other.symmetric and
+            self.narrow_range == other.narrow_range)
 
   def __ne__(self, other):
     return not self.__eq__(other)
@@ -127,7 +133,7 @@ class LastValueQuantizer(Quantizer):
 class MovingAverageQuantizer(Quantizer):
   """Quantize tensor based on a moving average of values across batches."""
 
-  def __init__(self, num_bits, per_axis, symmetric):
+  def __init__(self, num_bits, per_axis, symmetric, narrow_range):
     """Construct a LastValueQuantizer.
 
     Args:
@@ -135,10 +141,14 @@ class MovingAverageQuantizer(Quantizer):
       per_axis: Whether to apply per_axis quantization.
       symmetric: If true, use symmetric quantization limits instead of training
         the minimum and maximum of each quantization range separately.
+      narrow_range: In case of 8 bits, narrow_range nudges the quantized range
+        to be [-127, 127] instead of [-128, 127]. This ensures symmetric
+        range has 0 as the centre.
     """
     self.num_bits = num_bits
     self.per_axis = per_axis
     self.symmetric = symmetric
+    self.narrow_range = narrow_range
 
   def __call__(self, inputs, step, training, **kwargs):
     """Quantize tensor.
@@ -161,7 +171,7 @@ class MovingAverageQuantizer(Quantizer):
         num_bits=self.num_bits,
         per_channel=self.per_axis,
         symmetric=self.symmetric,
-        narrow_range=False,
+        narrow_range=self.narrow_range,
     )
 
   def get_config(self):
@@ -169,6 +179,7 @@ class MovingAverageQuantizer(Quantizer):
         'num_bits': self.num_bits,
         'per_axis': self.per_axis,
         'symmetric': self.symmetric,
+        'narrow_range': self.narrow_range
     }
 
   def __eq__(self, other):
@@ -177,7 +188,8 @@ class MovingAverageQuantizer(Quantizer):
 
     return (self.num_bits == other.num_bits and
             self.per_axis == other.per_axis and
-            self.symmetric == other.symmetric)
+            self.symmetric == other.symmetric and
+            self.narrow_range == other.narrow_range)
 
   def __ne__(self, other):
     return not self.__eq__(other)

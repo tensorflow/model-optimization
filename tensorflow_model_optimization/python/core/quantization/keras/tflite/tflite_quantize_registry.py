@@ -259,9 +259,9 @@ class TFLiteQuantizeProvider(QuantizeProvider):
     # TODO(pulkitb): For some layers such as Conv2D, per_axis should be True.
     # Add mapping for which layers support per_axis.
     self.weight_quantizer = quantizers.LastValueQuantizer(
-        num_bits=8, per_axis=False, symmetric=True)
+        num_bits=8, per_axis=False, symmetric=True, narrow_range=True)
     self.activation_quantizer = quantizers.MovingAverageQuantizer(
-        num_bits=8, per_axis=False, symmetric=True)
+        num_bits=8, per_axis=False, symmetric=True, narrow_range=False)
 
   def get_weights_and_quantizers(self, layer):
     return [(getattr(layer, weight_attr), self.weight_quantizer)

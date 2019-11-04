@@ -39,7 +39,7 @@ class QuantizeAwareQuantizationTest(test.TestCase):
   def setUp(self):
     super(QuantizeAwareQuantizationTest, self).setUp()
     self.quantizer = MovingAverageQuantizer(
-        num_bits=8, per_axis=False, symmetric=True)
+        num_bits=8, per_axis=False, symmetric=True, narrow_range=False)
 
   class TestLayer(keras.layers.Layer):
 
