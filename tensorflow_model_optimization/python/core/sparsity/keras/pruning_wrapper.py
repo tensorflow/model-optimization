@@ -201,7 +201,7 @@ class PruneLowMagnitude(Wrapper):
         'pruning_step',
         shape=[],
         initializer=initializers.Constant(-1),
-        dtype=dtypes.int32,
+        dtype=dtypes.int64,
         trainable=False)
 
     def training_step_fn():
@@ -222,7 +222,9 @@ class PruneLowMagnitude(Wrapper):
     def add_update():
       with ops.control_dependencies([
           check_ops.assert_greater_equal(
-              self.pruning_step, 0, message=self._PRUNE_CALLBACK_ERROR_MSG)]):
+              self.pruning_step,
+              np.int64(0),
+              message=self._PRUNE_CALLBACK_ERROR_MSG)]):
         with ops.control_dependencies(
             [self.pruning_obj.conditional_mask_update()]):
           return control_flow_ops.no_op('update')
