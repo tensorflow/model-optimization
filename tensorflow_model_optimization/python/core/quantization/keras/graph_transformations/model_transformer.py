@@ -19,6 +19,7 @@ import collections
 import copy
 
 from tensorflow.python import keras
+from tensorflow.python.keras import backend as K
 
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms as transforms_mod
 
@@ -302,14 +303,40 @@ class ModelTransformer(object):
 
     _add_replacement_layer(replacement_layer_node)
 
+  @staticmethod
+  def _weight_name(name):
+    """Extracts the weight name by removing layer from TF variable name.
+
+    For example, returns 'kernel:0' for 'dense_2/kernel:0'.
+
+    Args:
+      name: TensorFlow variable name.
+
+    Returns:
+      Extracted weight name.
+    """
+    return name.split('/')[-1]
+
   def _get_keras_layer_weights(self, keras_layer):
     """Returns a map of weight name, weight matrix. Keeps keras ordering."""
     weights_map = collections.OrderedDict()
     for weight_tensor, weight_numpy in \
         zip(keras_layer.weights, keras_layer.get_weights()):
-      weights_map[weight_tensor.name] = weight_numpy
+      weights_map[self._weight_name(weight_tensor.name)] = weight_numpy
 
     return weights_map
+
+  def _set_layer_weights(self, layer, weights_map):
+    """Sets the values of weights in a Keras layer."""
+
+    weight_value_tuples = []
+    for weight_tensor in layer.weights:
+      weight_name = self._weight_name(weight_tensor.name)
+      if weight_name in weights_map:
+        weight_value_tuples.append(
+            (weight_tensor, weights_map[weight_name]))
+
+    K.batch_set_value(weight_value_tuples)
 
   def transform(self):
     """Transforms the Keras model by applying all the specified transforms.
@@ -390,7 +417,7 @@ class ModelTransformer(object):
     for layer in transformed_model.layers:
       weights = self._layer_weights_map.get(layer.name)
       if weights:
-        layer.set_weights(list(weights.values()))
+        self._set_layer_weights(layer, weights)
 
     # TODO(pulkitb): Consider returning the updated metadata for the
     # transformed model along with the model. This allows the opportunity for

@@ -37,27 +37,10 @@ def _get_conv_bn_layers(bn_layer_node):
 
 def _get_weights(bn_layer_node):
   """Returns weight values for fused layer, including copying original values in unfused version."""
-  weights = collections.OrderedDict()
 
-  bn_layer_weights = list(bn_layer_node.weights.items())
-  conv_layer_weights = list(bn_layer_node.input_layers[0].weights.items())
-
-  weights['conv/kernel'] = conv_layer_weights[0][1]
-  weights['batch_normalization/gamma:0'] = bn_layer_weights[0][1]
-  weights['batch_normalization/beta:0'] = bn_layer_weights[1][1]
-
-  # TODO(tfmot): remove hardcoded initialization values.
-  weights['weight_min'] = np.array(-6.0)
-  weights['weight_max'] = np.array(6.0)
-  weights['optimizer_step'] = np.array(-1)
-  weights['activation_min'] = np.array(-6.0)
-  weights['activation_max'] = np.array(6.0)
-
-  weights['batch_normalization/moving_mean:0'] = bn_layer_weights[2][1]
-  weights['batch_normalization/moving_variance:0'] = bn_layer_weights[3][1]
-
-  return weights
-
+  return collections.OrderedDict(
+      list(bn_layer_node.input_layers[0].weights.items())
+      + list(bn_layer_node.weights.items()))
 
 def _get_params(conv_layer, bn_layer, relu_layer=None):
   """Retrieve conv_bn params within wrapped layers."""
