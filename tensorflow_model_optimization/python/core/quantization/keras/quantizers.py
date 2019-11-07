@@ -100,7 +100,8 @@ class LastValueQuantizer(_QuantizeHelper, Quantizer):
 
     Args:
       num_bits: Number of bits for quantization
-      per_axis: Whether to apply per_axis quantization.
+      per_axis: Whether to apply per_axis quantization. The last dimension is
+        used as the axis.
       symmetric: If true, use symmetric quantization limits instead of training
         the minimum and maximum of each quantization range separately.
       narrow_range: In case of 8 bits, narrow_range nudges the quantized range
@@ -167,7 +168,8 @@ class MovingAverageQuantizer(_QuantizeHelper, Quantizer):
 
     Args:
       num_bits: Number of bits for quantization
-      per_axis: Whether to apply per_axis quantization.
+      per_axis: Whether to apply per_axis quantization. The last dimension is
+        used as the axis.
       symmetric: If true, use symmetric quantization limits instead of training
         the minimum and maximum of each quantization range separately.
       narrow_range: In case of 8 bits, narrow_range nudges the quantized range
