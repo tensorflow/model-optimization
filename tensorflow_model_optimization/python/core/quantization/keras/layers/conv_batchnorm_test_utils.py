@@ -49,9 +49,9 @@ class Conv2DModel(object):
 
   params = {
       'filters': 2,
-      'kernel_size': (3, 3),
-      'input_shape': (10, 10, 3),
-      'batch_size': 8,
+      'kernel_size': (2, 2),
+      'input_shape': (3, 3, 3),
+      'batch_size': 1,
   }
 
   @classmethod
@@ -63,7 +63,7 @@ class Conv2DModel(object):
 
   @classmethod
   def get_output_shape(cls):
-    return [cls.params['batch_size'], 8, 8, 2]
+    return [cls.params['batch_size'], 2, 2, 2]
 
   @classmethod
   def get_folded_batchnorm_model(cls,

@@ -17,8 +17,6 @@
 
 import tensorflow as tf
 
-from tensorflow.python.keras import backend as K
-
 
 def convert_keras_to_tflite(model_path,
                             output_path,
@@ -30,13 +28,16 @@ def convert_keras_to_tflite(model_path,
 
   converter = tf.lite.TFLiteConverter.from_keras_model_file(
       model_path, custom_objects=custom_objects)
+  converter.experimental_new_converter = True
 
   if is_quantized:
-    converter.inference_type = tf.lite.constants.QUANTIZED_UINT8
+    converter.inference_type = tf.lite.constants.INT8
+    converter.inference_input_type = tf.lite.constants.INT8
+
     input_arrays = converter.get_input_arrays()
     converter.quantized_input_stats = {
-        input_arrays[0]: (0., 255.)
-    }  # mean, std_dev
+        input_arrays[0]: (-128., 255.)
+    }  # mean, std_dev values for float [0, 1] quantized to [-128, 127]
 
   tflite_model = converter.convert()
   with open(output_path, 'wb') as f:

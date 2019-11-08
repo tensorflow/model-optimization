@@ -90,7 +90,7 @@ class QuantizeWrapper(Wrapper):
     for weight, quantizer in \
         self.quantize_provider.get_weights_and_quantizers(self.layer):
       min_var, max_var = quantizer.build(
-          input_shape, self._weight_name(weight.name), self)
+          weight.shape, self._weight_name(weight.name), self)
 
       self._weight_vars.append((weight, quantizer, min_var, max_var))
       # Needed to ensure unquantized weights get trained as part of the wrapper.
