@@ -148,12 +148,12 @@ tf.keras.model.save_model(final_model, file, include_optimizer=False)
 The pruning wrapper can also be applied to a user-defined keras layer. Custom
 layers can inherit from the PrunableLayer interface and implement the
 get_prunable_weights() method to be pruned. Please refer to
-[PrunableLayer](../api_docs/python/tfmot/sparsity/keras/PrunableLayer).
+[PrunableLayer](../../api_docs/python/tfmot/sparsity/keras/PrunableLayer).
 
 ### Block sparsity
 
 Configure this via
-[prune_low_magnitude](../api_docs/python/tfmot/sparsity/keras/prune_low_magnitude).
+[prune_low_magnitude](../../api_docs/python/tfmot/sparsity/keras/prune_low_magnitude).
 
 For some hardware architectures, it may be beneficial to induce spatially
 correlated sparsity. To train models in which the weight tensors have block
