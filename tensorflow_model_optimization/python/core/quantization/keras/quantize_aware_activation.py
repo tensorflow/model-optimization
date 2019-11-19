@@ -19,7 +19,6 @@ from __future__ import division
 from __future__ import print_function
 
 from tensorflow.python.keras import activations
-from tensorflow.python.keras import initializers
 from tensorflow.python.keras.utils import tf_utils
 
 
@@ -46,13 +45,14 @@ class QuantizeAwareActivation(object):
     Same shape as input.
   """
 
-  # These activations don't need to be quantized prior to being used.
-  # `relu` gets fused into the preceding operation, and `linear` is a no-op.
-  _ACTIVATIONS_NO_PRE_QUANT = {'relu', 'linear'}
-
   # TODO(pulkitb): Other activations such as elu, tanh etc., should just work
   # on inclusion. Verify in TFLite before enabling.
-  _SUPPORTED_ACTIVATIONS = {'relu', 'softmax', 'linear'}
+
+  # These activations should be quantized prior to the activation being applied.
+  _PRE_QUANT_ACTIVATIONS = {'softmax'}
+
+  # These activations should be quantized after the activation has been applied.
+  _POST_QUANT_ACTIVATIONS = {'linear', 'relu'}
 
   _CUSTOM_ACTIVATION_ERR_MSG = (
       'Only some Keras activations under `tf.keras.activations` are supported. '
@@ -88,10 +88,14 @@ class QuantizeAwareActivation(object):
     if not hasattr(activation, '__name__'):
       return False
 
-    return activation.__name__ in self._SUPPORTED_ACTIVATIONS
+    return activation.__name__ in self._PRE_QUANT_ACTIVATIONS \
+           or activation.__name__ in self._POST_QUANT_ACTIVATIONS
 
   def _should_pre_quantize(self):
-    return self.activation.__name__ not in self._ACTIVATIONS_NO_PRE_QUANT
+    return self.activation.__name__ in self._PRE_QUANT_ACTIVATIONS
+
+  def _should_post_quantize(self):
+    return self.activation.__name__ in self._POST_QUANT_ACTIVATIONS
 
   @property
   def training(self):
@@ -129,12 +133,13 @@ class QuantizeAwareActivation(object):
 
     x = self.activation(x, *args, **kwargs)
 
-    x = tf_utils.smart_cond(
-        self._training,
-        make_quantizer_fn(True, x, self._min_post_activation,
-                          self._max_post_activation),
-        make_quantizer_fn(False, x, self._min_post_activation,
-                          self._max_post_activation))
+    if self._should_post_quantize():
+      x = tf_utils.smart_cond(
+          self._training,
+          make_quantizer_fn(True, x, self._min_post_activation,
+                            self._max_post_activation),
+          make_quantizer_fn(False, x, self._min_post_activation,
+                            self._max_post_activation))
 
     return x
 

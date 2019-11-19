@@ -82,7 +82,7 @@ class QuantizeAwareQuantizationTest(test.TestCase):
 
     self.assertAllClose(expected_activation, model.predict(x))
 
-  def testAppliesQuantizationPreAndPostActivation(self):
+  def testAppliesQuantizationPreActivation(self):
     layer = self.TestLayer()
     layer.activation = QuantizeAwareActivation(
         activations.get('softmax'), self.quantizer, 0, layer)
@@ -96,8 +96,7 @@ class QuantizeAwareQuantizationTest(test.TestCase):
     #
     # FakeQuant([1.0, 2.0]) = [0.9882355, 1.9764705]
     # Softmax([0.9882355, 1.9764705]) = [0.27126083, 0.72873914]
-    # FakeQuant[0.27126083, 0.72873914]) = [0.28235292, 0.70588255]
-    expected_activation = np.array([[0.28235292, 0.70588255]])
+    expected_activation = np.array([[0.27126083, 0.72873914]])
 
     self.assertAllClose(expected_activation, model.predict(x))
 

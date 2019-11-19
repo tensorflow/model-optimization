@@ -194,6 +194,17 @@ class TFLiteQuantizeRegistryTest(test.TestCase, _TestHelper):
          gru_cell.activation, gru_cell.recurrent_activation],
         activations)
 
+  def testReturnsActivationProvider_Activation(self):
+    activation_layer = keras.layers.Activation('relu')
+
+    quantize_provider = self.quantize_registry.get_quantize_provider(
+        activation_layer)
+
+    self.assertIsInstance(
+        quantize_provider, tflite_quantize_registry.ActivationQuantizeProvider)
+    self._assert_activation_quantizers(
+        quantize_provider.get_output_quantizers(activation_layer))
+
 
 class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
 
@@ -443,6 +454,19 @@ class TFLiteQuantizeProviderRNNTest(test.TestCase, _TestHelper):
         custom_objects=tflite_quantize_registry._types_dict())
 
     self.assertEqual(self.quantize_provider, quantize_provider_from_config)
+
+
+class ActivationQuantizeProviderTest(test.TestCase):
+
+  def testRaisesErrorUnsupportedActivation(self):
+    quantize_provider = tflite_quantize_registry.ActivationQuantizeProvider()
+
+    with self.assertRaises(ValueError):
+      quantize_provider.get_output_quantizers(keras.layers.Activation('tanh'))
+
+    with self.assertRaises(ValueError):
+      quantize_provider.get_output_quantizers(
+          keras.layers.Activation(lambda x: x))
 
 
 if __name__ == '__main__':

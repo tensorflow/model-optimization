@@ -75,7 +75,7 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
       # Activation Layers
       _QuantizeInfo(layers.advanced_activations.ReLU, [], [], True),
-      _QuantizeInfo(layers.advanced_activations.Softmax, [], [], True),
+      _QuantizeInfo(layers.advanced_activations.Softmax, [], []),
       # Enable once verified.
       # layers.advanced_activations.ELU,
       # layers.advanced_activations.LeakyReLU,
@@ -107,7 +107,6 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       # layers.convolutional.SeparableConv2D,
 
       # Core Layers
-      _QuantizeInfo(layers.core.Activation, [], ['activation']),
       _no_quantize(layers.core.ActivityRegularization),
       _QuantizeInfo(layers.core.Dense, ['kernel'], ['activation']),
       _no_quantize(layers.core.Dropout),
@@ -170,6 +169,10 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
     for quantize_info in self._LAYER_QUANTIZE_INFO:
       self._layer_quantize_map[quantize_info.layer_type] = quantize_info
 
+    # Hack for `Activation` layer. That is the only layer with a separate
+    # QuantizeProvider.
+    self._layer_quantize_map[layers.Activation] = ActivationQuantizeProvider()
+
   def _is_supported_layer(self, layer):
     return layer.__class__ in self._layer_quantize_map
 
@@ -228,6 +231,12 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
     if self._is_supported_layer(layer):
       quantize_info = self._get_quantize_info(layer)
+
+      # In case of `Activation`, there is no `_QuantizeInfo` object. It
+      # directly stores a `QuantizeProvider`.
+      if isinstance(quantize_info, QuantizeProvider):
+        return quantize_info
+
       return TFLiteQuantizeProvider(
           quantize_info.weight_attrs, quantize_info.activation_attrs,
           quantize_info.quantize_output)
@@ -410,8 +419,56 @@ class TFLiteQuantizeProviderRNN(TFLiteQuantizeProvider, _RNNHelper):
         i += 1
 
 
+class ActivationQuantizeProvider(QuantizeProvider):
+  """QuantizeProvider for keras.layers.Activation.
+
+  `keras.layers.Activation` needs a separate `QuantizeProvider` since the
+  decision to quantize depends on the specific activation type.
+  """
+
+  def _assert_activation_layer(self, layer):
+    if not isinstance(layer, layers.Activation):
+      raise RuntimeError('ActivationQuantizeProvider can only be used with '
+                         '`keras.layers.Activation`.')
+
+  def get_weights_and_quantizers(self, layer):
+    self._assert_activation_layer(layer)
+    return []
+
+  def get_activations_and_quantizers(self, layer):
+    self._assert_activation_layer(layer)
+    return []
+
+  def set_quantize_weights(self, layer, quantize_weights):
+    self._assert_activation_layer(layer)
+
+  def set_quantize_activations(self, layer, quantize_activations):
+    self._assert_activation_layer(layer)
+
+  def get_output_quantizers(self, layer):
+    self._assert_activation_layer(layer)
+
+    if not hasattr(layer.activation, '__name__'):
+      raise ValueError('Activation {} not supported by '
+                       'ActivationQuantizeProvider.'.format(layer.activation))
+
+    if layer.activation.__name__ in ['relu']:
+      # 'relu' should generally get fused into the previous layer.
+      return [quantizers.MovingAverageQuantizer(
+          num_bits=8, per_axis=False, symmetric=False, narrow_range=False)]
+    elif layer.activation.__name__ in ['linear', 'softmax']:
+      return []
+
+    raise ValueError('Activation {} not supported by '
+                     'ActivationQuantizeProvider.'.format(layer.activation))
+
+  def get_config(self):
+    return {}
+
+
 def _types_dict():
   return {
       'TFLiteQuantizeProvider': TFLiteQuantizeProvider,
-      'TFLiteQuantizeProviderRNN': TFLiteQuantizeProviderRNN
+      'TFLiteQuantizeProviderRNN': TFLiteQuantizeProviderRNN,
+      'ActivationQuantizeProvider': ActivationQuantizeProvider
   }
