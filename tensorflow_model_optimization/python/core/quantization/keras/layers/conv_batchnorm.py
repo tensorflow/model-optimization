@@ -26,7 +26,7 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers import convolutional
 from tensorflow.python.keras.layers import deserialize as deserialize_layer
-from tensorflow.python.keras.layers import normalization
+from tensorflow.python.keras.layers import normalization_v1 as normalization
 from tensorflow.python.keras.utils import conv_utils
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import array_ops
