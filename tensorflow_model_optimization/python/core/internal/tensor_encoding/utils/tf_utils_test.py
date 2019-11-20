@@ -18,7 +18,7 @@ from __future__ import print_function
 
 from absl.testing import parameterized
 import numpy as np
-import scipy
+import scipy.linalg
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import tf_utils
