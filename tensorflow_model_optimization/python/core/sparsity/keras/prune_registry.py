@@ -14,8 +14,9 @@
 # ==============================================================================
 """Registry responsible for built-in keras classes."""
 
-from tensorflow.python.keras import layers
+import tensorflow as tf
 
+from tensorflow.python.keras import layers
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 
 
@@ -75,7 +76,7 @@ class PruneRegistry(object):
       layers.noise.AlphaDropout: [],
       layers.noise.GaussianDropout: [],
       layers.noise.GaussianNoise: [],
-      layers.normalization.BatchNormalization: [],
+      tf.keras.layers.BatchNormalization: [],
       layers.normalization.LayerNormalization: [],
       layers.pooling.AveragePooling1D: [],
       layers.pooling.AveragePooling2D: [],
