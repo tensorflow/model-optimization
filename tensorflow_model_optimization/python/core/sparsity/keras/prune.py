@@ -52,13 +52,13 @@ def prune_low_magnitude(to_prune,
                         **kwargs):
   """Modify a keras layer or model to be pruned during training.
 
-  This function wraps a keras model or layer with pruning functionality which
+  This function wraps a tf.keras model or layer with pruning functionality which
   sparsifies the layer's weights during training. For example, using this with
   50% sparsity will ensure that 50% of the layer's weights are zero.
 
   The function accepts either a single keras layer
-  (subclass of `keras.layers.Layer`), list of keras layers or a keras model
-  (instance of `keras.models.Model`) and handles them appropriately.
+  (subclass of `tf.keras.layers.Layer`), list of keras layers or a Sequential
+  or Functional keras model and handles them appropriately.
 
   If it encounters a layer it does not know how to handle, it will throw an
   error. While pruning an entire model, even a single unknown layer would lead
@@ -144,15 +144,28 @@ def prune_low_magnitude(to_prune,
       'block_size': block_size,
       'block_pooling_type': block_pooling_type
   }
+  is_sequential_or_functional = isinstance(
+      to_prune, keras.Model) and (isinstance(to_prune, keras.Sequential) or
+                                  to_prune._is_graph_network)
+
+  # A subclassed model is also a subclass of keras.layers.Layer.
+  is_keras_layer = isinstance(
+      to_prune, keras.layers.Layer) and not isinstance(to_prune, keras.Model)
 
   if isinstance(to_prune, list):
     return _prune_list(to_prune, **params)
-  elif isinstance(to_prune, keras.Model):
+  elif is_sequential_or_functional:
     return keras.models.clone_model(
         to_prune, input_tensors=None, clone_function=_add_pruning_wrapper)
-  elif isinstance(to_prune, keras.layers.Layer):
+  elif is_keras_layer:
     params.update(kwargs)
     return pruning_wrapper.PruneLowMagnitude(to_prune, **params)
+  else:
+    raise ValueError(
+        '`prune_low_magnitude` can only prune an object of the following '
+        'types: tf.keras.models.Sequential, tf.keras functional model, '
+        'tf.keras.layers.Layer, list of tf.keras.layers.Layer. You passed '
+        'an object of type: {input}.'.format(input=to_prune.__class__.__name__))
 
 
 def strip_pruning(model):

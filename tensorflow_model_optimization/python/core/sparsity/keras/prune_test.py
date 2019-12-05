@@ -31,12 +31,12 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_sch
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
 
-class TestModel(keras.Model):
+class TestSubclassedModel(keras.Model):
   """A model subclass."""
 
   def __init__(self):
     """A test subclass model with one dense layer."""
-    super(TestModel, self).__init__(name='test_model')
+    super(TestSubclassedModel, self).__init__(name='test_model')
     self.layer1 = keras.layers.Dense(10, activation='relu')
 
   def call(self, inputs):
@@ -54,6 +54,13 @@ class CustomNonPrunableLayer(layers.Dense):
 
 
 class PruneTest(test.TestCase, parameterized.TestCase):
+
+  INVALID_TO_PRUNE_PARAM_ERROR = ('`prune_low_magnitude` can only prune an '
+                                  'object of the following types: '
+                                  'tf.keras.models.Sequential, tf.keras '
+                                  'functional model, tf.keras.layers.Layer, '
+                                  'list of tf.keras.layers.Layer. You passed an'
+                                  ' object of type: {input}.')
 
   def setUp(self):
     super(PruneTest, self).setUp()
@@ -319,9 +326,21 @@ class PruneTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(loaded_model.built, True)
 
   def testPruneSubclassModel(self):
-    model = TestModel()
-    with self.assertRaises(ValueError):
+    model = TestSubclassedModel()
+    with self.assertRaises(ValueError) as e:
       _ = prune.prune_low_magnitude(model, **self.params)
+    self.assertEqual(
+        str(e.exception),
+        self.INVALID_TO_PRUNE_PARAM_ERROR.format(input='TestSubclassedModel'))
+
+  def testPruneMiscObject(self):
+
+    model = object()
+    with self.assertRaises(ValueError) as e:
+      _ = prune.prune_low_magnitude(model, **self.params)
+    self.assertEqual(
+        str(e.exception),
+        self.INVALID_TO_PRUNE_PARAM_ERROR.format(input='object'))
 
   def testStripPruningSequentialModel(self):
     model = keras.Sequential([
