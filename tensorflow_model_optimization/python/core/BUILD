@@ -12,6 +12,7 @@ py_library(
         ":version",
         "//tensorflow_model_optimization/python/core/internal",
         "//tensorflow_model_optimization/python/core/sparsity",
+        "//tensorflow_model_optimization/python/core/clustering",
     ],
 )
 
