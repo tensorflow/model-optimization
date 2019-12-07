@@ -89,7 +89,8 @@ class EncoderLibraryTest(parameterized.TestCase):
     keys = [k for k, _ in py_utils.flatten_with_joined_string_paths(encoded_x)]
     self.assertSameElements([
         'flattened_values/min_max',
-        'flattened_values/quantized_values/bitpacked_values'
+        'flattened_values/quantized_values/bitpacked_values',
+        'flattened_values/quantized_values/dummy_type_value'
     ], keys)
 
   def test_hadamard_quantization(self):
@@ -101,7 +102,8 @@ class EncoderLibraryTest(parameterized.TestCase):
     keys = [k for k, _ in py_utils.flatten_with_joined_string_paths(encoded_x)]
     self.assertSameElements([
         'flattened_values/hadamard_values/min_max',
-        'flattened_values/hadamard_values/quantized_values/bitpacked_values'
+        'flattened_values/hadamard_values/quantized_values/bitpacked_values',
+        'flattened_values/hadamard_values/quantized_values/dummy_type_value',
     ], keys)
 
 

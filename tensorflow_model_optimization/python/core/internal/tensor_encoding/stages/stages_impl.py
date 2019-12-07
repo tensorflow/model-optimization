@@ -392,17 +392,16 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
   This class performs a lossless transformation, and realizes representation
   savings.
 
-  The encode method expects integer values in range `[0, 2**input_bits-1]` in a
-  floating point type (`tf.float32` or `tf.float64`). It packs the values to
-  `tf.int32` type, and returns a rank 1 `Tensor` of packed values. The packed
-  values are in the range `[0, 2**28-1]`, as the serialization in protocol
-  buffer for this type is varint, and this thus ensures every element fits into
-  4 bytes.
+  The encode method expects integer values in range `[0, 2**input_bits-1]`.
+  It packs the values to `tf.int32` type, and returns a rank 1 `Tensor` of
+  packed values. The packed values are in the range `[0, 2**28-1]`, as the
+  serialization in protocol buffer for this type is varint, and this thus
+  ensures every element fits into 4 bytes.
   """
 
   ENCODED_VALUES_KEY = 'bitpacked_values'
   DUMMY_TYPE_VALUES_KEY = 'dummy_type_value'
-  _ALLOWED_INPUT_BITS_ARG = list(range(1, 17))
+  _ALLOWED_INPUT_BITS_ARG = list(range(1, 63))
 
   def __init__(self, input_bits):
     """Initializer for the UniformQuantizationEncodingStage.
@@ -419,7 +418,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
       raise TypeError('The input_bits argument cannot be a TensorFlow value.')
     if input_bits not in self._ALLOWED_INPUT_BITS_ARG:
       raise ValueError(
-          'The input_bits argument must be an integer between 1 and 16.')
+          'The input_bits argument must be an integer between 1 and 63.')
     self._input_bits = input_bits
 
     # Because the proto serialization format for integers is varint, we pack to
@@ -434,7 +433,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
   @property
   def compressible_tensors_keys(self):
     """See base class."""
-    return []  # Bitpacked values should not be further modified.
+    return [self.ENCODED_VALUES_KEY]
 
   @property
   def commutes_with_sum(self):
@@ -456,19 +455,14 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
     flat_x = tf.reshape(x, [-1])
     packed_x = self._pack_into_int32(tf.cast(flat_x, tf.int32),
                                      self._input_bits)
-
-    # The most common type will be tf.float32, which we keep as default.
-    # If another type is provided, return a Tensor with a single value of that
-    # type to be able to recover the type from encoded_tensors in decode method.
-    if x.dtype == tf.float32:
-      return {self.ENCODED_VALUES_KEY: packed_x}
-    elif x.dtype == tf.float64:
-      return {self.ENCODED_VALUES_KEY: packed_x,
-              self.DUMMY_TYPE_VALUES_KEY: tf.constant(0.0, dtype=tf.float64)}
-    else:
+    if x.dtype in [tf.bool, tf.string]:
       raise TypeError(
-          'Unsupported packing type: %s. Supported types are tf.float32 and '
-          'tf.float64 values' % x.dtype)
+          'Unsupported packing type: %s. Input dtype must be numerical'%
+          x.dtype)
+    return {
+        self.ENCODED_VALUES_KEY: packed_x,
+        self.DUMMY_TYPE_VALUES_KEY: tf.constant(0, dtype=x.dtype)
+    }
 
   def decode(self,
              encoded_tensors,
@@ -482,11 +476,8 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
         self._input_bits,
         shape)
 
-    dummy_type_value = encoded_tensors.get(self.DUMMY_TYPE_VALUES_KEY)
-    if dummy_type_value is not None:
-      return tf.cast(unpacked_x, dummy_type_value.dtype)
-    else:
-      return tf.cast(unpacked_x, tf.float32)
+    original_type = encoded_tensors[self.DUMMY_TYPE_VALUES_KEY].dtype
+    return tf.cast(unpacked_x, original_type)
 
   def _pack_binary_form(self, x, target_bits):
     """Packs input of 0/1 values into target_bits-valued values."""

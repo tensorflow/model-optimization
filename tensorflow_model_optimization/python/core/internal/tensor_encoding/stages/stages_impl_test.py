@@ -425,6 +425,19 @@ class BitpackingEncodingStageTest(test_utils.BaseEncodingStageTest):
     self.assertAllClose(test_data.x, test_data.decoded_x)
     self.assertEqual(np.float64, test_data.decoded_x.dtype)
 
+  def test_int_types(self):
+    # Tests that both int32 and int64 type work correctly.
+    stage = self.default_encoding_stage()
+    test_data = self.run_one_to_many_encode_decode(
+        stage, lambda: tf.cast(self.default_input(), tf.int32))
+    self.assertAllClose(test_data.x, test_data.decoded_x)
+    self.assertEqual(np.int32, test_data.decoded_x.dtype)
+
+    test_data = self.run_one_to_many_encode_decode(
+        stage, lambda: tf.cast(self.default_input(), tf.int64))
+    self.assertAllClose(test_data.x, test_data.decoded_x)
+    self.assertEqual(np.int64, test_data.decoded_x.dtype)
+
   def test_bad_input_executes(self):
     # Test that if input to encode is outside of the expected range, everything
     # still executes, but the result is not correct.
@@ -434,7 +447,7 @@ class BitpackingEncodingStageTest(test_utils.BaseEncodingStageTest):
         stage, lambda: tf.constant(x, tf.float32))
     self.assertNotAllClose(x, test_data.decoded_x.astype(np.int32))
 
-  @parameterized.parameters([tf.bool, tf.int32])
+  @parameterized.parameters([tf.bool])
   def test_encode_unsupported_type_raises(self, dtype):
     stage = self.default_encoding_stage()
     with self.assertRaisesRegexp(TypeError, 'Unsupported packing type'):
@@ -444,10 +457,10 @@ class BitpackingEncodingStageTest(test_utils.BaseEncodingStageTest):
   def test_bad_input_bits_raises(self):
     with self.assertRaisesRegexp(TypeError, 'cannot be a TensorFlow value'):
       stages_impl.BitpackingEncodingStage(tf.constant(1, dtype=tf.int32))
-    with self.assertRaisesRegexp(ValueError, 'between 1 and 16'):
+    with self.assertRaisesRegexp(ValueError, 'between 1 and 63'):
       stages_impl.BitpackingEncodingStage(0)
-    with self.assertRaisesRegexp(ValueError, 'between 1 and 16'):
-      stages_impl.BitpackingEncodingStage(17)
+    with self.assertRaisesRegexp(ValueError, 'between 1 and 63'):
+      stages_impl.BitpackingEncodingStage(64)
 
 
 if __name__ == '__main__':
