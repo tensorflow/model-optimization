@@ -22,14 +22,17 @@ The technique is being evaluated in various speech applications, such as
 speech recognition and text-to-speech, and has been experimented on across
 various vision and translation models.
 
-Users can apply this technique using APIs for Keras on Tensorflow 1.x for
-versions 1.14+ and tf-nightly in both graph and eager execution. Note that in
-tf-nightly, you must use tf.compat.v1 since 2.x is the default now.
+### API Compatibility Matrix
+Users can apply pruning with the following APIs:
 
-Note: The pruning API is only compatible with `tf.distribute` when using graph
-execution.
+* Model building: `tf.keras` with only Sequential and Functional models
+* TensorFlow versions: TF 1.x for versions 1.14+
+* TensorFlow execution mode: both graph and eager
+* Distributed training: `tf.distribute` with only graph execution
 
-It is on our roadmap to bring full support to TF 2.x and eager execution.
+It is on our roadmap to add support in the following areas:
+* TF 2.x (moderate testing has been done)
+* [Minimal Subclassed model support](https://github.com/tensorflow/model-optimization/issues/155)
 
 ## Results
 
