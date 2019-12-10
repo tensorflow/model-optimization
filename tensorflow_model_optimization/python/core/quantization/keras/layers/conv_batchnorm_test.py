@@ -160,6 +160,21 @@ class FoldedBatchNormTestBase(test.TestCase):
       # https://github.com/tensorflow/tensorflow/blob/master/tensorflow/python/tools/optimize_for_inference_test.py#L230
       self.assertAllClose(model_out, model2_out, rtol=1e-04, atol=1e-06)
 
+  def _assert_batchnorm_weights_equal(self, non_folded_model, folded_model):
+    self.assertAllClose(
+        keras.backend.get_value(non_folded_model.layers[-1].gamma),
+        keras.backend.get_value(folded_model.layers[-1].batchnorm.gamma))
+    self.assertAllClose(
+        keras.backend.get_value(non_folded_model.layers[-1].beta),
+        keras.backend.get_value(folded_model.layers[-1].batchnorm.beta))
+    self.assertAllClose(
+        keras.backend.get_value(non_folded_model.layers[-1].moving_mean),
+        keras.backend.get_value(folded_model.layers[-1].batchnorm.moving_mean))
+    self.assertAllClose(
+        keras.backend.get_value(non_folded_model.layers[-1].moving_variance),
+        keras.backend.get_value(
+            folded_model.layers[-1].batchnorm.moving_variance))
+
 
 class ConvBatchNorm2DTest(FoldedBatchNormTestBase):
 
@@ -179,9 +194,27 @@ class ConvBatchNorm2DTest(FoldedBatchNormTestBase):
     return Conv2DModel.get_output_shape()
 
   def testEquivalentToNonFoldedBatchNorm(self):
-    self._test_equal_outputs(
-        self._get_folded_batchnorm_model(is_quantized=False),
-        self._get_nonfolded_batchnorm_model())
+    folded_model = self._get_folded_batchnorm_model(is_quantized=False)
+    non_folded_model = self._get_nonfolded_batchnorm_model()
+
+    self._test_equal_outputs(folded_model, non_folded_model)
+
+    folded_model.compile(
+        loss='mean_squared_error', optimizer='sgd', metrics=['accuracy'])
+    non_folded_model.compile(
+        loss='mean_squared_error', optimizer='sgd', metrics=['accuracy'])
+
+    x_ = np.random.uniform(0, 1, size=self._get_batched_input_shape())
+    y_ = np.random.uniform(0, 10, size=folded_model.output_shape)
+    folded_model.fit(x_, y_, epochs=5)
+    non_folded_model.fit(x_, y_, epochs=5)
+
+    self._assert_batchnorm_weights_equal(non_folded_model, folded_model)
+    self.assertAllClose(
+        keras.backend.get_value(non_folded_model.layers[-2].kernel),
+        keras.backend.get_value(folded_model.layers[-1].kernel))
+
+    self._test_equal_outputs(folded_model, non_folded_model)
 
   def testEquivalentToFloatTFLite(self):
     tf_model = self._get_folded_batchnorm_model(is_quantized=False)
@@ -238,9 +271,27 @@ class DepthwiseConvBatchNorm2DTest(FoldedBatchNormTestBase):
     return DepthwiseConv2DModel.get_output_shape()
 
   def testEquivalentToNonFoldedBatchNorm(self):
-    self._test_equal_outputs(
-        self._get_folded_batchnorm_model(is_quantized=False),
-        self._get_nonfolded_batchnorm_model())
+    folded_model = self._get_folded_batchnorm_model(is_quantized=False)
+    non_folded_model = self._get_nonfolded_batchnorm_model()
+
+    self._test_equal_outputs(folded_model, non_folded_model)
+
+    folded_model.compile(
+        loss='mean_squared_error', optimizer='sgd', metrics=['accuracy'])
+    non_folded_model.compile(
+        loss='mean_squared_error', optimizer='sgd', metrics=['accuracy'])
+
+    x_ = np.random.uniform(0, 1, size=self._get_batched_input_shape())
+    y_ = np.random.uniform(0, 10, size=folded_model.output_shape)
+    folded_model.fit(x_, y_, epochs=5)
+    non_folded_model.fit(x_, y_, epochs=5)
+
+    self._assert_batchnorm_weights_equal(non_folded_model, folded_model)
+    self.assertAllClose(
+        keras.backend.get_value(non_folded_model.layers[-2].depthwise_kernel),
+        keras.backend.get_value(folded_model.layers[-1].depthwise_kernel))
+
+    self._test_equal_outputs(folded_model, non_folded_model)
 
   def testEquivalentToFloatTFLite(self):
     tf_model = self._get_folded_batchnorm_model(is_quantized=False)

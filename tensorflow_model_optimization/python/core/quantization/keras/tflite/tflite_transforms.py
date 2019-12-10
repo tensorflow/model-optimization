@@ -147,7 +147,8 @@ class Conv2DBatchNormQuantize(transforms.Transform):
   def pattern(self):
     return LayerPattern(
         'BatchNormalization',
-        inputs=[LayerPattern('Conv2D', config={'activation': 'linear'})])
+        inputs=[LayerPattern(
+            'Conv2D|DepthwiseConv2D', config={'activation': 'linear'})])
 
   @staticmethod
   def _get_quantize_provider(layer_node):
