@@ -20,12 +20,12 @@ from __future__ import print_function
 
 import tensorflow as tf
 from tensorflow.python.framework import dtypes
+from tensorflow.python.framework import ops
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers import convolutional
 from tensorflow.python.keras.layers import deserialize as deserialize_layer
-from tensorflow.python.keras.layers import normalization
 from tensorflow.python.keras.utils import conv_utils
 from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import array_ops
@@ -150,6 +150,28 @@ class _ConvBatchNormMixin(object):
         list(config.items()))
 
 
+@ops.RegisterGradient('FoldFusedBatchNormGrad')
+def _fold_fused_batch_norm_grad(op,
+                                unused_grad_y,
+                                grad_mean,
+                                grad_var,
+                                unused_1,
+                                unused_2,
+                                unused_3=None):
+  """Gradient function for the FusedBatchNorm ops."""
+
+  # FusedBatchNormGrad doesn't compute gradients of the batch_mean and
+  # batch_variance outputs, so we need to substitute our own custom
+  # gradient.
+
+  x = op.inputs[0]
+  n = math_ops.cast(
+      array_ops.size(x) / array_ops.size(grad_mean), dtypes.float32)
+  dmean_dx = grad_mean / n
+  dvar_dx = 2 * grad_var * (x - op.outputs[1]) / (n - 1)
+  return (dmean_dx + dvar_dx), None, None, None, None
+
+
 class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
   """Layer for emulating the folding of batch normalization into Conv during serving.
 
@@ -231,7 +253,7 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
         name=name,
         **kwargs)
 
-    self.batchnorm = normalization.BatchNormalization(
+    self.batchnorm = keras.layers.BatchNormalization(
         axis=axis,
         momentum=momentum,
         epsilon=epsilon,
@@ -281,17 +303,32 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
 
     # Not all the computations in the batchnorm need to happen,
     # but this avoids duplicating code (e.g. moving_average).
-    self.batchnorm.call(conv_out)
+    with ops.get_default_graph().gradient_override_map(
+        {'FusedBatchNormV3': 'FoldFusedBatchNormGrad'}):
+      self.batchnorm.call(conv_out, training)
 
-    folded_conv_kernel_multiplier = self.batchnorm.gamma * math_ops.rsqrt(
-        self.batchnorm.moving_variance + self.batchnorm.epsilon)
+    # pylint: disable=g-long-lambda
+    folded_conv_kernel_multiplier = tf_utils.smart_cond(
+        training,
+        lambda: self.batchnorm.gamma * math_ops.rsqrt(
+            self.batchnorm._batch_variance + self.batchnorm.epsilon),  #  pylint:disable=protected-access
+        lambda: self.batchnorm.gamma * math_ops.rsqrt(
+            self.batchnorm.moving_variance + self.batchnorm.epsilon))
+
+    folded_conv_bias = tf_utils.smart_cond(
+        training,
+        lambda: math_ops.subtract(
+            self.batchnorm.beta,
+            self.batchnorm._batch_mean * folded_conv_kernel_multiplier,  #  pylint:disable=protected-access
+            name='folded_conv_bias_train'),
+        lambda: math_ops.subtract(
+            self.batchnorm.beta,
+            self.batchnorm.moving_mean * folded_conv_kernel_multiplier,
+            name='folded_conv_bias_inf'))
+    # pylint: enable=g-long-lambda
+
     folded_conv_kernel = math_ops.mul(
         folded_conv_kernel_multiplier, self.kernel, name='folded_conv_kernel')
-
-    folded_conv_bias = math_ops.subtract(
-        self.batchnorm.beta,
-        self.batchnorm.moving_mean * folded_conv_kernel_multiplier,
-        name='folded_conv_bias')
 
     if self.is_quantized:
       folded_conv_kernel = self._apply_weight_quantizer(training,
@@ -415,7 +452,7 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
         name=name,
         **kwargs)
 
-    self.batchnorm = normalization.BatchNormalization(
+    self.batchnorm = keras.layers.BatchNormalization(
         axis=axis,
         momentum=momentum,
         epsilon=epsilon,
@@ -461,15 +498,29 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
 
     conv_out = super(_DepthwiseConvBatchNorm2D, self).call(inputs)
 
-    self.batchnorm.call(conv_out)
+    with ops.get_default_graph().gradient_override_map(
+        {'FusedBatchNormV3': 'FoldFusedBatchNormGrad'}):
+      self.batchnorm.call(conv_out, training)
 
-    folded_conv_kernel_multiplier = self.batchnorm.gamma * math_ops.rsqrt(
-        self.batchnorm.moving_variance + self.batchnorm.epsilon)
+    # pylint: disable=g-long-lambda
+    folded_conv_kernel_multiplier = tf_utils.smart_cond(
+        training,
+        lambda: self.batchnorm.gamma * math_ops.rsqrt(
+            self.batchnorm._batch_variance + self.batchnorm.epsilon),  #  pylint:disable=protected-access
+        lambda: self.batchnorm.gamma * math_ops.rsqrt(
+            self.batchnorm.moving_variance + self.batchnorm.epsilon))
 
-    folded_conv_bias = math_ops.subtract(
-        self.batchnorm.beta,
-        self.batchnorm.moving_mean * folded_conv_kernel_multiplier,
-        name='folded_conv_bias')
+    folded_conv_bias = tf_utils.smart_cond(
+        training,
+        lambda: math_ops.subtract(
+            self.batchnorm.beta,
+            self.batchnorm._batch_mean * folded_conv_kernel_multiplier,  #  pylint:disable=protected-access
+            name='folded_conv_bias_train'),
+        lambda: math_ops.subtract(
+            self.batchnorm.beta,
+            self.batchnorm.moving_mean * folded_conv_kernel_multiplier,
+            name='folded_conv_bias_inf'))
+    # pylint: enable=g-long-lambda
 
     depthwise_weights_shape = [
         self.depthwise_kernel.get_shape().as_list()[2],
