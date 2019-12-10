@@ -27,6 +27,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantizers
 
 QuantizeProvider = quantize_provider.QuantizeProvider
 
@@ -84,7 +85,6 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
       # Convolution Layers
       _QuantizeInfo(layers.convolutional.Conv1D, ['kernel'], ['activation']),
-      _QuantizeInfo(layers.convolutional.Conv2D, ['kernel'], ['activation']),
       _QuantizeInfo(layers.convolutional.Conv3D, ['kernel'], ['activation']),
       # TODO(pulkitb): Verify Transpose layers.
       _QuantizeInfo(layers.convolutional.Conv2DTranspose,
@@ -94,8 +94,6 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       _no_quantize(layers.convolutional.Cropping1D),
       _no_quantize(layers.convolutional.Cropping2D),
       _no_quantize(layers.convolutional.Cropping3D),
-      _QuantizeInfo(layers.convolutional.DepthwiseConv2D,
-                    ['depthwise_kernel'], ['activation']),
       _no_quantize(layers.convolutional.UpSampling1D),
       _no_quantize(layers.convolutional.UpSampling2D),
       _no_quantize(layers.convolutional.UpSampling3D),
@@ -172,6 +170,10 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
     # Hack for `Activation` layer. That is the only layer with a separate
     # QuantizeProvider.
     self._layer_quantize_map[layers.Activation] = ActivationQuantizeProvider()
+    self._layer_quantize_map[layers.Conv2D] = ConvQuantizeProvider(
+        ['kernel'], ['activation'], False)
+    self._layer_quantize_map[layers.DepthwiseConv2D] = ConvQuantizeProvider(
+        ['depthwise_kernel'], ['activation'], False)
 
   def _is_supported_layer(self, layer):
     return layer.__class__ in self._layer_quantize_map
@@ -466,9 +468,20 @@ class ActivationQuantizeProvider(QuantizeProvider):
     return {}
 
 
+class ConvQuantizeProvider(TFLiteQuantizeProvider):
+  """QuantizeProvider for Conv2D/DepthwiseConv2D layers."""
+
+  def __init__(self, weight_attrs, activation_attrs, quantize_output):
+    super(ConvQuantizeProvider, self).__init__(
+        weight_attrs, activation_attrs, quantize_output)
+
+    self.weight_quantizer = tflite_quantizers.ConvWeightsQuantizer()
+
+
 def _types_dict():
   return {
       'TFLiteQuantizeProvider': TFLiteQuantizeProvider,
       'TFLiteQuantizeProviderRNN': TFLiteQuantizeProviderRNN,
-      'ActivationQuantizeProvider': ActivationQuantizeProvider
+      'ActivationQuantizeProvider': ActivationQuantizeProvider,
+      'ConvQuantizeProvider': ConvQuantizeProvider
   }

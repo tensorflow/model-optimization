@@ -54,6 +54,9 @@ class QuantizeWrapper(Wrapper):
       raise ValueError('quantize_provider cannot be None. It is needed to '
                        'quantize a layer.')
 
+    if 'name' not in kwargs:
+      kwargs['name'] = self._make_layer_name(layer)
+
     super(QuantizeWrapper, self).__init__(layer, **kwargs)
     self.quantize_provider = quantize_provider
 
@@ -62,6 +65,10 @@ class QuantizeWrapper(Wrapper):
         hasattr(layer, '_batch_input_shape')):
       self._batch_input_shape = self.layer._batch_input_shape  # pylint: disable=protected-access
     self._track_trackable(layer, name='layer')
+
+  @staticmethod
+  def _make_layer_name(layer):
+    return '{}_{}'.format('quant', layer.name)
 
   @staticmethod
   def _weight_name(name):
