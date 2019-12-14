@@ -102,7 +102,7 @@ class Pruning(object):
       current_threshold = array_ops.gather(values, k - 1)
       new_mask = math_ops.cast(
           math_ops.greater_equal(abs_weights, current_threshold),
-          dtypes.float32)
+          weights.dtype)
     return current_threshold, new_mask
 
   def _maybe_update_block_mask(self, weights):
