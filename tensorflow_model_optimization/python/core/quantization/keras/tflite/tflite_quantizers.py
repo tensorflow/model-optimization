@@ -39,7 +39,7 @@ class ConvWeightsQuantizer(quantizers.LastValueQuantizer):
         name + '_min',
         shape=(tensor_shape[-1],),
         initializer=initializers.Constant(-6.0),
-        trainable=False,)
+        trainable=False)
     max_weight = layer.add_weight(
         name + '_max',
         shape=(tensor_shape[-1],),
