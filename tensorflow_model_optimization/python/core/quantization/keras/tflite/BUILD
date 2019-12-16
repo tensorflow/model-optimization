@@ -62,6 +62,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":tflite_quantize_registry",
+        # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
@@ -92,6 +93,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":tflite_transforms",
+        # numpy dep1,
         # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:model_transformer",

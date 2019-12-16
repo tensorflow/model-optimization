@@ -40,7 +40,7 @@ cd bazel-bin/pip_pkg.runfiles/tensorflow_model_optimization
 # specifies the output dir) to setup.py, e.g.,
 #  ./pip_pkg /tmp/tensorflow_model_optimization_pkg --release
 # passes `--release` to setup.py.
-python setup.py bdist_wheel --universal ${@:2} --dist-dir="$DEST" # >/dev/null
+python3 setup.py bdist_wheel --universal ${@:2} --dist-dir="$DEST" # >/dev/null
 
 set +x
 echo -e "\nBuild complete. Wheel files are in $DEST"

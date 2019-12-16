@@ -22,7 +22,6 @@ import tempfile
 
 from absl.testing import parameterized
 
-from tensorflow.python import keras
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.keras.testing import test_utils_mnist
@@ -54,13 +53,11 @@ class QuantizeFunctionalTest(test.TestCase, parameterized.TestCase):
 
     self.assertGreater(quantized_model_accuracy, 0.6)
 
-    _, quantized_keras_file = tempfile.mkstemp('.h5')
     _, quantized_tflite_file = tempfile.mkstemp('.tflite')
 
-    keras.models.save_model(quantized_model, quantized_keras_file)
     with quantize.quantize_scope():
       test_utils.convert_keras_to_tflite(
-          model_path=quantized_keras_file,
+          model=quantized_model,
           output_path=quantized_tflite_file,
           is_quantized=True)
     quantized_model_tflite_accuracy = test_utils_mnist.eval_tflite(

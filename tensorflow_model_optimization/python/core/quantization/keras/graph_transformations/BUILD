@@ -55,6 +55,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":model_transformer",
+        # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],

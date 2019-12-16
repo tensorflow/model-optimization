@@ -72,7 +72,7 @@ class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     quantized_model.fit(
         np.random.rand(20, 10),
-        keras.utils.np_utils.to_categorical(
+        tf.keras.utils.to_categorical(
             np.random.randint(5, size=(20, 1)), 5),
         batch_size=20)
 
@@ -91,13 +91,10 @@ class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
     annotated = quantize_annotate(model)
     quantized_model = quantize_apply(annotated)
 
-    _, keras_file = tempfile.mkstemp('.h5')
     _, tflite_file = tempfile.mkstemp('.h5')
 
-    keras.models.save_model(quantized_model, keras_file)
-
     with quantize.quantize_scope():
-      utils.convert_keras_to_tflite(keras_file, tflite_file)
+      utils.convert_keras_to_tflite(quantized_model, tflite_file)
 
 
 if __name__ == '__main__':
