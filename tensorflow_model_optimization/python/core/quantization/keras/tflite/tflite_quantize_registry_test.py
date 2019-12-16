@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
+import tensorflow as tf
 
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
@@ -63,6 +64,16 @@ class _TestHelper(object):
   def _assert_activation_quantizers(self, quantizer_list):
     for quantizer in quantizer_list:
       self.assertIsInstance(quantizer, quantizers.MovingAverageQuantizer)
+
+  def _assert_kernel_equality(self, a, b):
+    # TODO(tfmot): branch on eager mode also.
+    if tf.__version__[0] == '1':
+      self.assertEqual(a, b)
+    # TODO(tfmot): find why self.assertAllEqual(a, b) doesn't work as
+    # https://www.tensorflow.org/api_docs/python/tf/test/TestCase#assertAllClose
+    # suggests).
+    else:
+      self.assertAllEqual(a.numpy(), b.numpy())
 
 
 class TFLiteQuantizeRegistryTest(test.TestCase, _TestHelper):
@@ -138,7 +149,7 @@ class TFLiteQuantizeRegistryTest(test.TestCase, _TestHelper):
     quantize_provider.set_quantize_weights(layer, [quantize_kernel])
     quantize_provider.set_quantize_activations(layer, [quantize_activation])
 
-    self.assertEqual(layer.kernel, quantize_kernel)
+    self._assert_kernel_equality(layer.kernel, quantize_kernel)
     self.assertEqual(layer.activation, quantize_activation)
 
   def testReturnsProvider_LayerWithResultQuantizer(self):
@@ -243,7 +254,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
         ['kernel'], ['activation'], False)
     quantize_provider.set_quantize_weights(layer, [quantize_kernel])
 
-    self.assertEqual(layer.kernel, quantize_kernel)
+    self._assert_kernel_equality(layer.kernel, quantize_kernel)
 
   def testSetsQuantizeActivations(self):
     layer = self._simple_dense_layer()

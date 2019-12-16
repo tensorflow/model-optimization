@@ -75,7 +75,6 @@ class FoldedBatchNormTestBase(test.TestCase):
   def _test_equal_tf_and_tflite_outputs(self,
                                         tf_model,
                                         is_tflite_quantized=False):
-    _, keras_file = tempfile.mkstemp('.h5')
     _, tflite_file = tempfile.mkstemp('.tflite')
 
     batched_input_shape = self._get_batched_input_shape()
@@ -115,10 +114,9 @@ class FoldedBatchNormTestBase(test.TestCase):
     tf_out = tf_model.predict(inp)
 
     # TensorFlow Lite inference.
-    tf.keras.models.save_model(tf_model, keras_file)
     with quantize.quantize_scope():
       utils.convert_keras_to_tflite(
-          keras_file,
+          tf_model,
           tflite_file,
           custom_objects={
               '_ConvBatchNorm2D': _ConvBatchNorm2D,

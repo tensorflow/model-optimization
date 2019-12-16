@@ -73,6 +73,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
+        # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
         # python:dtypes tensorflow dep2,
@@ -147,6 +148,7 @@ py_test(
     deps = [
         ":quantize_annotate",
         ":quantize_provider",
+        # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
@@ -177,6 +179,7 @@ py_test(
     deps = [
         ":quantize_aware_activation",
         ":quantizers",
+        # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
     ],
@@ -209,6 +212,7 @@ py_test(
     deps = [
         ":quantize_aware_activation",
         ":quantize_wrapper",
+        # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
@@ -244,6 +248,7 @@ py_test(
         ":quantize",
         ":quantize_wrapper",
         # absl/testing:parameterized dep1,
+        # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_registry",
     ],
@@ -256,6 +261,7 @@ py_test(
     deps = [
         ":quantize",
         ":utils",
+        # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
@@ -271,6 +277,7 @@ py_test(
     deps = [
         ":quantize",
         ":utils",
+        # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",

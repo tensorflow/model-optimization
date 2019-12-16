@@ -116,7 +116,7 @@ class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
       assert tuple(shape) == self.weights.shape
 
       # Default values used in TFLiteRegistry.
-      return tf.fake_quant_with_min_max_vars(
+      return tf.quantization.fake_quant_with_min_max_vars(
           self.weights, -6.0, 6.0, num_bits=8, narrow_range=True)
 
     layer = layer_type(kernel_initializer=_get_random_weights, **kwargs)
@@ -141,7 +141,7 @@ class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
     inputs = np.random.rand(1, *input_shape)
     # `quantized_model` should apply FakeQuant. Explicitly applying to the
     # results of `model` to verify QuantizeWrapper works as expected.
-    expected_output = tf.fake_quant_with_min_max_vars(
+    expected_output = tf.quantization.fake_quant_with_min_max_vars(
         model.predict(inputs), -6.0, 6.0, num_bits=8, narrow_range=False)
     self.assertAllClose(expected_output, quantized_model.predict(inputs))
 
@@ -157,7 +157,7 @@ class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
     model = keras.Sequential([layers.ReLU()])
 
     inputs = np.random.rand(1, 2, 1)
-    expected_output = tf.fake_quant_with_min_max_vars(
+    expected_output = tf.quantization.fake_quant_with_min_max_vars(
         model.predict(inputs), -6.0, 6.0, num_bits=8, narrow_range=False)
     self.assertAllClose(expected_output, quantized_model.predict(inputs))
 
