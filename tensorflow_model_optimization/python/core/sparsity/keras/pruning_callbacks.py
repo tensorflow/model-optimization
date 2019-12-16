@@ -22,10 +22,10 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import callbacks
-from tensorflow.python.ops import math_ops
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
+
+K = tf.keras.backend
+callbacks = tf.keras.callbacks
 
 
 class UpdatePruningStep(callbacks.Callback):

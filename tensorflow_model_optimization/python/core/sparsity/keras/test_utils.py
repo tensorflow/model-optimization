@@ -19,11 +19,10 @@ import numpy as np
 
 import tensorflow as tf
 
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as K
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
+keras = tf.keras
 l = keras.layers
 
 
@@ -98,6 +97,44 @@ def model_type_keys():
   return ['sequential', 'functional', 'layer_list', 'layer_wise']
 
 
+def list_to_named_parameters(param_name, options):
+  """Convert list of options for parameter to input to @parameterized.named_parameters.
+
+  Arguments:
+    param_name: name of parameter
+    options: list of options for parameter
+
+  Returns:
+    named_params: input to @parameterized.named_parameters
+
+  Needed to stack multiple parameters (e.g. with keras run_all_modes).
+  """
+
+  def snakecase_to_camelcase(value):
+    # Non-comprensive check for camelcase already.
+    if value[0].isupper() and '_' not in value:
+      return value
+
+    camelcase = ''
+    for s in value.split('_'):
+      camelcase += s.capitalize()
+    return camelcase
+
+  def name(s):
+    if isinstance(s, str):
+      return s
+
+    return s.__name__
+
+  named_params = []
+  for key in options:
+    named_params.append({
+        'testcase_name': snakecase_to_camelcase(name(key)),
+        param_name: key
+    })
+  return named_params
+
+
 def _save_restore_keras_model(model):
   _, keras_file = tempfile.mkstemp('.h5')
   keras.models.save_model(model, keras_file)
@@ -135,4 +172,5 @@ def assert_model_sparsity(test_case, sparsity, model):
   for layer in model.layers:
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       for weight in layer.layer.get_prunable_weights():
-        test_case.assertAllClose(sparsity, _get_sparsity(K.get_value(weight)))
+        test_case.assertAllClose(
+            sparsity, _get_sparsity(tf.keras.backend.get_value(weight)))

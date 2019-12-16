@@ -22,12 +22,13 @@ from absl import app as absl_app
 from absl import flags
 
 import tensorflow as tf
-from tensorflow.python import keras
+
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
 ConstantSparsity = pruning_schedule.ConstantSparsity
+keras = tf.keras
 l = keras.layers
 
 FLAGS = flags.FLAGS

@@ -15,11 +15,13 @@
 # pylint: disable=protected-access,missing-docstring,unused-argument
 """Entry point for pruning models during training."""
 
-from tensorflow.python import keras
-from tensorflow.python.keras.engine.input_layer import InputLayer
-from tensorflow.python.keras.utils.generic_utils import custom_object_scope
+import tensorflow as tf
+
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
+
+keras = tf.keras
+custom_object_scope = tf.keras.utils.custom_object_scope
 
 
 def prune_scope():
@@ -125,7 +127,7 @@ def prune_low_magnitude(to_prune,
       # No need to wrap the input layer either.
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         wrapped_layers.append(layer)
-      elif isinstance(layer, InputLayer):
+      elif isinstance(layer, keras.layers.InputLayer):
         # TODO(yunluli): Replace with a clone function in keras.
         wrapped_layers.append(layer.__class__.from_config(layer.get_config()))
       else:

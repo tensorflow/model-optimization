@@ -13,16 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 """Test utilities for generating, saving, and evaluating models."""
+# TODO(tf-mot): dedup and migrate to testing/ directory.
 
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python import keras
-l = keras.layers
+l = tf.keras.layers
 
 
 def build_simple_dense_model():
-  return keras.Sequential([
+  return tf.keras.Sequential([
       l.Dense(8, activation='relu', input_shape=(10,)),
       l.Dense(5, activation='softmax')
   ])

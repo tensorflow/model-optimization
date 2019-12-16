@@ -16,12 +16,10 @@
 
 from absl.testing import parameterized
 import numpy as np
+import tensorflow as tf
 
-from tensorflow.python import keras
-from tensorflow.python.framework import test_util as tf_test_util
-from tensorflow.python.keras import layers
-from tensorflow.python.keras.utils import np_utils
-from tensorflow.python.platform import test
+# TODO(b/139939526): move to public API.
+from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
@@ -29,9 +27,13 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_cal
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import test_utils
 
+keras = tf.keras
+layers = keras.layers
+list_to_named_parameters = test_utils.list_to_named_parameters
 
-@tf_test_util.run_all_in_graph_and_eager_modes
-class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
+
+@keras_parameterized.run_all_keras_modes
+class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
   # Fetch all the prunable layers from the registry.
   _PRUNABLE_LAYERS = [
@@ -78,22 +80,20 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
       for the layer.
     """
     return {
-        layers.convolutional.Conv1D: ([4, 2], (3, 6)),
-        layers.convolutional.Conv2D: ([4, (2, 2)], (4, 6, 1)),
-        layers.convolutional.Conv2DTranspose: ([2, (3, 3)], (7, 6, 3)),
-        layers.convolutional.Conv3D: ([2, (3, 3, 3)], (5, 7, 6, 3)),
-        layers.convolutional.Conv3DTranspose: ([2, (3, 3, 3)], (5, 7, 6, 3)),
-        layers.convolutional.SeparableConv1D: ([4, 3], (3, 6)),
-        layers.convolutional.SeparableConv2D: ([4, (2, 2)], (4, 6, 1)),
-
-        layers.core.Dense: ([4], (6,)),
-
-        layers.local.LocallyConnected1D: ([4, 2], (3, 6)),
-        layers.local.LocallyConnected2D: ([4, (2, 2)], (4, 6, 1)),
+        layers.Conv1D: ([4, 2], (3, 6)),
+        layers.Conv2D: ([4, (2, 2)], (4, 6, 1)),
+        layers.Conv2DTranspose: ([2, (3, 3)], (7, 6, 3)),
+        layers.Conv3D: ([2, (3, 3, 3)], (5, 7, 6, 3)),
+        layers.Conv3DTranspose: ([2, (3, 3, 3)], (5, 7, 6, 3)),
+        layers.SeparableConv1D: ([4, 3], (3, 6)),
+        layers.SeparableConv2D: ([4, (2, 2)], (4, 6, 1)),
+        layers.Dense: ([4], (6,)),
+        layers.LocallyConnected1D: ([4, 2], (3, 6)),
+        layers.LocallyConnected2D: ([4, (2, 2)], (4, 6, 1)),
 
         # Embedding has a separate test since training it is not
         # feasible as a single layer.
-        layers.embeddings.Embedding: (None, None),
+        layers.Embedding: (None, None),
     }[layer_type]
 
   def setUp(self):
@@ -120,6 +120,9 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     stripped_model_result = stripped_model.predict(input_data)
     np.testing.assert_almost_equal(model_result, stripped_model_result)
 
+  # TODO(tf-mot): this fails sometimes, observed so far only for Conv3DTranspose
+  # on some form of eager, with or without functions. The weights become
+  # nan (though the mask seems fine still).
   @parameterized.parameters(_PRUNABLE_LAYERS)
   def testPrunesSingleLayer(self, layer_type):
     model = keras.Sequential()
@@ -141,8 +144,8 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self._check_strip_pruning_matches_original(model, 0.5)
 
-  @parameterized.parameters(
-      prune_registry.PruneRegistry._RNN_LAYERS - {keras.layers.RNN})
+  @parameterized.parameters(prune_registry.PruneRegistry._RNN_LAYERS -
+                            {keras.layers.RNN})
   def testRNNLayersSingleCell(self, layer_type):
     model = keras.Sequential()
     model.add(
@@ -168,7 +171,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
             keras.layers.RNN([
                 layers.LSTMCell(10),
                 layers.GRUCell(10),
-                layers.PeepholeLSTMCell(10),
+                tf.keras.experimental.PeepholeLSTMCell(10),
                 layers.SimpleRNNCell(10)
             ]),
             input_shape=(3, 4),
@@ -190,11 +193,11 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     model = keras.Sequential()
     model.add(
         prune.prune_low_magnitude(
-            keras.layers.Embedding(input_dim=10, output_dim=3),
+            layers.Embedding(input_dim=10, output_dim=3),
             input_shape=(5,),
             **self.params))
-    model.add(keras.layers.Flatten())
-    model.add(keras.layers.Dense(1, activation='sigmoid'))
+    model.add(layers.Flatten())
+    model.add(layers.Dense(1, activation='sigmoid'))
 
     model.compile(
         loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
@@ -222,7 +225,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     test_utils.assert_model_sparsity(self, 0.0, model)
     model.fit(
         np.random.rand(32, 28, 28, 1),
-        np_utils.to_categorical(np.random.randint(10, size=(32, 1)), 10),
+        keras.utils.to_categorical(np.random.randint(10, size=(32, 1)), 10),
         callbacks=[pruning_callbacks.UpdatePruningStep()])
 
     test_utils.assert_model_sparsity(self, 0.5, model)
@@ -246,7 +249,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
     # Training has run only 1 step. Sparsity 0.2 (initial_sparsity)
@@ -255,7 +258,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     model = save_restore_fn(model)
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         epochs=3,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
@@ -281,7 +284,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
     # Training has run only 1 step. Sparsity 0.2 (initial_sparsity)
@@ -289,7 +292,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
     # Training has run 2 steps. Sparsity 0.6 (final_sparsity)
@@ -298,7 +301,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     model = save_restore_fn(model)
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         epochs=2,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
@@ -314,7 +317,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     # Simple unpruned model. No sparsity.
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         epochs=2,
         batch_size=20)
     test_utils.assert_model_sparsity(self, 0.0, model)
@@ -326,7 +329,7 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
     # Since newly compiled, iterations starts from 0.
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
     test_utils.assert_model_sparsity(self, 0.5, model)
@@ -335,4 +338,4 @@ class PruneIntegrationTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

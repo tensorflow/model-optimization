@@ -16,11 +16,7 @@
 
 import abc
 import six
-
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.ops import math_ops
+import tensorflow as tf
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -57,18 +53,16 @@ class PruningSchedule(object):
     Returns:
       True/False, if pruning should be applied in current step.
     """
-    is_in_pruning_range = math_ops.logical_and(
-        math_ops.greater_equal(step, begin_step),
+    is_in_pruning_range = tf.math.logical_and(
+        tf.math.greater_equal(step, begin_step),
         # If end_pruning_step is negative, keep pruning forever!
-        math_ops.logical_or(
-            math_ops.less_equal(step, end_step),
-            math_ops.less(end_step, 0)))
+        tf.math.logical_or(
+            tf.math.less_equal(step, end_step), tf.math.less(end_step, 0)))
 
-    is_pruning_turn = math_ops.equal(
-        math_ops.mod(math_ops.subtract(step, begin_step), frequency),
-        0)
+    is_pruning_turn = tf.math.equal(
+        tf.math.floormod(tf.math.subtract(step, begin_step), frequency), 0)
 
-    return math_ops.logical_and(is_in_pruning_range, is_pruning_turn)
+    return tf.math.logical_and(is_in_pruning_range, is_pruning_turn)
 
   @staticmethod
   def _validate_step(begin_step, end_step, frequency, allow_negative_1):
@@ -172,7 +166,7 @@ class ConstantSparsity(PruningSchedule):
   def __call__(self, step):
     return (self._should_prune_in_step(step, self.begin_step, self.end_step,
                                        self.frequency),
-            constant_op.constant(self.target_sparsity, dtype=dtypes.float32))
+            tf.constant(self.target_sparsity, dtype=tf.float32))
 
   def get_config(self):
     return {
@@ -229,18 +223,24 @@ class PolynomialDecay(PruningSchedule):
     self._validate_sparsity(final_sparsity, 'final_sparsity')
 
   def __call__(self, step):
+    # TODO(tf-mot): consider switch to divide for 1.XX also.
+    if tf.__version__[0] == '1':
+      divide = tf.div
+    else:
+      divide = tf.math.divide
+
     # TODO(pulkitb): Replace function with tf.polynomial_decay
-    with ops.name_scope('polynomial_decay_pruning_schedule'):
-      p = math_ops.minimum(
+    with tf.name_scope('polynomial_decay_pruning_schedule'):
+      p = tf.math.minimum(
           1.0,
-          math_ops.maximum(
+          tf.math.maximum(
               0.0,
-              math_ops.div(
-                  math_ops.cast(step - self.begin_step, dtypes.float32),
+              divide(
+                  tf.dtypes.cast(step - self.begin_step, tf.float32),
                   self.end_step - self.begin_step)))
-      sparsity = math_ops.add(
-          math_ops.multiply(self.initial_sparsity - self.final_sparsity,
-                            math_ops.pow(1 - p, self.power)),
+      sparsity = tf.math.add(
+          tf.math.multiply(self.initial_sparsity - self.final_sparsity,
+                           tf.math.pow(1 - p, self.power)),
           self.final_sparsity,
           name='sparsity')
 

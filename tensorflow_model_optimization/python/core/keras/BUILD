@@ -15,6 +15,5 @@ py_library(
     deps = [
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
     ],
 )

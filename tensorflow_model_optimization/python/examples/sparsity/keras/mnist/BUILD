@@ -39,8 +39,6 @@ py_binary(
         # absl:app dep1,
         # absl/flags dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
-        # python/keras/optimizer_v2 tensorflow dep2,
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",

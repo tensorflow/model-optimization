@@ -14,19 +14,19 @@
 # ==============================================================================
 """Tests for Pruning callbacks."""
 
+from absl.testing import parameterized
 import numpy as np
+import tensorflow as tf
 
-from tensorflow.python.framework import test_util as tf_test_util
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.utils import np_utils
-from tensorflow.python.platform import test
+# TODO(b/139939526): move to public API.
+from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 
 
-@tf_test_util.run_all_in_graph_and_eager_modes
-class PruneTest(test.TestCase):
+@keras_parameterized.run_all_keras_modes
+class PruneTest(tf.test.TestCase, parameterized.TestCase):
 
   def testUpdatesPruningStep(self):
     model = prune.prune_low_magnitude(
@@ -35,15 +35,16 @@ class PruneTest(test.TestCase):
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(
-            np.random.randint(5, size=(20, 1)), 5),
+        tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         epochs=3,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
 
-    self.assertEqual(2, K.get_value(model.layers[0].pruning_step))
-    self.assertEqual(2, K.get_value(model.layers[1].pruning_step))
+    self.assertEqual(2,
+                     tf.keras.backend.get_value(model.layers[0].pruning_step))
+    self.assertEqual(2,
+                     tf.keras.backend.get_value(model.layers[1].pruning_step))
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

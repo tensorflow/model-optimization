@@ -18,24 +18,22 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 # import g3
 import numpy as np
+import tensorflow as tf
 
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import initializers
-from tensorflow.python.keras.engine.base_layer import Layer
-from tensorflow.python.keras.layers.wrappers import Wrapper
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.keras.utils import tf_utils
-from tensorflow.python.ops import check_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import variables as tf_variables
+
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
+
+keras = tf.keras
+K = keras.backend
+Wrapper = keras.layers.Wrapper
 
 
 class PruneLowMagnitude(Wrapper):
@@ -130,7 +128,7 @@ class PruneLowMagnitude(Wrapper):
           'Unsupported pooling type \'{}\'. Should be \'AVG\' or \'MAX\'.'
           .format(block_pooling_type))
 
-    if not isinstance(layer, Layer):
+    if not isinstance(layer, tf.keras.layers.Layer):
       raise ValueError(
           'Please initialize `Prune` layer with a '
           '`Layer` instance. You passed: {input}'.format(input=layer))
@@ -179,17 +177,17 @@ class PruneLowMagnitude(Wrapper):
       mask = self.add_variable(
           'mask',
           shape=weight.shape,
-          initializer=initializers.get('ones'),
+          initializer=tf.keras.initializers.get('ones'),
           dtype=weight.dtype,
           trainable=False,
-          aggregation=tf_variables.VariableAggregation.MEAN)
+          aggregation=tf.VariableAggregation.MEAN)
       threshold = self.add_variable(
           'threshold',
           shape=[],
-          initializer=initializers.get('zeros'),
+          initializer=tf.keras.initializers.get('zeros'),
           dtype=weight.dtype,
           trainable=False,
-          aggregation=tf_variables.VariableAggregation.MEAN)
+          aggregation=tf.VariableAggregation.MEAN)
 
       weight_vars.append(weight)
       mask_vars.append(mask)
@@ -200,8 +198,8 @@ class PruneLowMagnitude(Wrapper):
     self.pruning_step = self.add_variable(
         'pruning_step',
         shape=[],
-        initializer=initializers.Constant(-1),
-        dtype=dtypes.int64,
+        initializer=tf.keras.initializers.Constant(-1),
+        dtype=tf.int64,
         trainable=False)
 
     def training_step_fn():
@@ -220,21 +218,24 @@ class PruneLowMagnitude(Wrapper):
       training = K.learning_phase()
 
     def add_update():
-      with ops.control_dependencies([
-          check_ops.assert_greater_equal(
+      with tf.control_dependencies([
+          tf.debugging.assert_greater_equal(
               self.pruning_step,
               np.int64(0),
-              message=self._PRUNE_CALLBACK_ERROR_MSG)]):
-        with ops.control_dependencies(
+              message=self._PRUNE_CALLBACK_ERROR_MSG)
+      ]):
+        with tf.control_dependencies(
             [self.pruning_obj.conditional_mask_update()]):
-          return control_flow_ops.no_op('update')
+          return tf.no_op('update')
 
     def no_op():
-      return control_flow_ops.no_op('no_update')
+      return tf.no_op('no_update')
 
     update_op = tf_utils.smart_cond(training, add_update, no_op)
     self.add_update(update_op)
     # Always execute the op that performs weights = weights * mask
+    # Relies on UpdatePruningStep callback to ensure the weights
+    # are sparse after the final backpropagation.
     self.add_update(self.pruning_obj.weight_mask_op())
 
     return self.layer.call(inputs)
@@ -256,7 +257,7 @@ class PruneLowMagnitude(Wrapper):
     config = config.copy()
 
     pruning_schedule = config.pop('pruning_schedule')
-    from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object  # pylint: disable=g-import-not-at-top
+    deserialize_keras_object = keras.utils.deserialize_keras_object  # pylint: disable=g-import-not-at-top
     # TODO(pulkitb): This should ideally be fetched from pruning_schedule,
     # which should maintain a list of all the pruning_schedules.
     custom_objects = {
