@@ -132,7 +132,6 @@ py_library(
     deps = [
         ":pruning_utils",
         # tensorflow dep1,
-        # python:state_ops tensorflow dep2,
         # python:summary tensorflow dep2,
     ],
 )

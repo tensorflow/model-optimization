@@ -20,11 +20,10 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-# b/(139939526): update assign ops to v2 API.
-from tensorflow.python.ops import state_ops
 from tensorflow.python.ops import summary_ops_v2
 from tensorflow.python.summary import summary as summary_ops_v1
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
+
 
 class Pruning(object):
   """Implementation of magnitude-based weight pruning."""
@@ -53,6 +52,13 @@ class Pruning(object):
     self._step_fn = training_step_fn
 
     self._validate_block()
+
+  @staticmethod
+  def _assign(ref, value):
+    if tf.__version__[0] == '1':
+      return tf.assign(ref, value)
+    else:
+      return ref.assign(value)
 
   def _validate_block(self):
     if self._block_size != [1, 1]:
@@ -144,8 +150,15 @@ class Pruning(object):
          squeezed_weights.get_shape()[1]])
     return new_threshold, tf.reshape(sliced_mask, tf.shape(weights))
 
-  def _get_weight_assign_ops(self):
-    """Gather the assign ops for assigning weights<=weights*mask."""
+  def _weight_assign_objs(self):
+    """Gather the assign objs for assigning weights<=weights*mask.
+
+    The objs are ops for graph execution and tensors for eager
+    execution.
+
+    Returns:
+      group of objs for weight assignment.
+    """
 
     def update_fn(distribution, values_and_vars):
       # TODO(yunluli): Need this ReduceOp because the weight is created by the
@@ -158,16 +171,16 @@ class Pruning(object):
       values_and_vars = zip(reduced_values, var_list)
 
       def update_var(variable, reduced_value):
-        return state_ops.assign(variable, reduced_value)
+        return self._assign(variable, reduced_value)
 
-      update_ops = []
+      update_objs = []
       for value, var in values_and_vars:
-        update_ops.append(
+        update_objs.append(
             distribution.extended.update(var, update_var, args=(value,)))
 
-      return tf.group(update_ops)
+      return tf.group(update_objs)
 
-    assign_ops = []
+    assign_objs = []
 
     if tf.distribute.get_replica_context():
       values_and_vars = []
@@ -175,17 +188,17 @@ class Pruning(object):
         masked_weight = tf.math.multiply(weight, mask)
         values_and_vars.append((masked_weight, weight))
       if values_and_vars:
-        assign_ops.append(tf.distribute.get_replica_context().merge_call(
+        assign_objs.append(tf.distribute.get_replica_context().merge_call(
             update_fn, args=(values_and_vars,)))
     else:
       for weight, mask, _ in self._pruning_vars:
         masked_weight = tf.math.multiply(weight, mask)
-        assign_ops.append(state_ops.assign(weight, masked_weight))
+        assign_objs.append(self._assign(weight, masked_weight))
 
-    return assign_ops
+    return assign_objs
 
   def weight_mask_op(self):
-    return tf.group(self._get_weight_assign_ops())
+    return tf.group(self._weight_assign_objs())
 
   def conditional_mask_update(self):
     """Returns an op to updates masks as per the pruning schedule."""
@@ -200,14 +213,14 @@ class Pruning(object):
       """Updates mask without distribution strategy."""
 
       def update():
-        assign_ops = []
+        assign_objs = []
 
         for weight, mask, threshold in self._pruning_vars:
           new_threshold, new_mask = self._maybe_update_block_mask(weight)
-          assign_ops.append(state_ops.assign(threshold, new_threshold))
-          assign_ops.append(state_ops.assign(mask, new_mask))
+          assign_objs.append(self._assign(threshold, new_threshold))
+          assign_objs.append(self._assign(mask, new_mask))
 
-        return tf.group(assign_ops)
+        return tf.group(assign_objs)
 
       return tf.cond(maybe_update_masks(), update, no_update)
 
@@ -215,20 +228,24 @@ class Pruning(object):
       """Updates mask with distribution strategy."""
 
       def update(var, value):
-        return state_ops.assign(var, value)
+        return self._assign(var, value)
 
       def update_distributed():
-        """Gather distributed update ops."""
-        assign_ops = []
+        """Gather distributed update objs.
+
+        The objs are ops for graph execution and tensors for eager
+        execution.
+        """
+        assign_objs = []
 
         for weight, mask, threshold in self._pruning_vars:
           new_threshold, new_mask = self._maybe_update_block_mask(weight)
-          assign_ops.append(
+          assign_objs.append(
               distribution.extended.update(mask, update, (new_mask,)))
-          assign_ops.append(
+          assign_objs.append(
               distribution.extended.update(threshold, update, (new_threshold,)))
 
-        return tf.group(assign_ops)
+        return tf.group(assign_objs)
 
       return tf.cond(maybe_update_masks(), update_distributed, no_update)
 

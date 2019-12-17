@@ -59,7 +59,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
   # setUp() lies outside of the "eager scope" that wraps the test cases
   # themselves, resulting in initializing graph tensors instead of eager
   # tensors when testing eager execution.
-  def initialize_training_step_fn_and_all_variables(self):
+  def initialize(self):
     self.global_step = tf.Variable(
         tf.zeros([], dtype=dtypes.int32),
         dtype=dtypes.int32,
@@ -81,7 +81,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         dtype=weight_dtype)
     threshold = tf.Variable(
         tf.zeros([], dtype=weight_dtype), name="threshold", dtype=weight_dtype)
-    self.initialize_training_step_fn_and_all_variables()
+    self.initialize()
 
     p = pruning_impl.Pruning(
         pruning_vars=[(weight, mask, threshold)],
@@ -102,7 +102,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     self.assertAllEqual(np.count_nonzero(mask_after_pruning), 50)
 
   def testConstructsMaskAndThresholdCorrectly(self):
-    self.initialize_training_step_fn_and_all_variables()
+    self.initialize()
     p = pruning_impl.Pruning(
         lambda: 0, None,
         # Sparsity math often returns values with small tolerances.
@@ -125,7 +125,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         dtype=weight.dtype)
     threshold = tf.Variable(
         tf.zeros([], dtype=weight.dtype), name="threshold", dtype=weight.dtype)
-    self.initialize_training_step_fn_and_all_variables()
+    self.initialize()
 
     # Set up pruning
     p = pruning_impl.Pruning(
@@ -163,7 +163,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     self._blockMasking(block_size, block_pooling_type, weight, expected_mask)
 
   def testBlockMaskingWithHigherDimensionsRaisesError(self):
-    self.initialize_training_step_fn_and_all_variables()
+    self.initialize()
     block_size = (2, 2)
     block_pooling_type = "AVG"
     # Weights as in testBlockMasking, but with one extra dimension.
@@ -186,7 +186,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         dtype=weight_dtype)
     threshold = tf.Variable(
         tf.zeros([], dtype=weight_dtype), name="threshold", dtype=weight_dtype)
-    self.initialize_training_step_fn_and_all_variables()
+    self.initialize()
 
     def linear_sparsity(step):
       sparsity_val = tf.convert_to_tensor(

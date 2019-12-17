@@ -236,6 +236,8 @@ class PruneLowMagnitude(Wrapper):
     # Always execute the op that performs weights = weights * mask
     # Relies on UpdatePruningStep callback to ensure the weights
     # are sparse after the final backpropagation.
+    #
+    # self.add_update does nothing during eager execution.
     self.add_update(self.pruning_obj.weight_mask_op())
 
     return self.layer.call(inputs)
