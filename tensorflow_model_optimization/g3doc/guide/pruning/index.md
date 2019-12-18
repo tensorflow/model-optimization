@@ -26,12 +26,11 @@ various vision and translation models.
 Users can apply pruning with the following APIs:
 
 * Model building: `tf.keras` with only Sequential and Functional models
-* TensorFlow versions: TF 1.x for versions 1.14+
+* TensorFlow versions: TF 1.x for versions 1.14+ and 2.x.
 * TensorFlow execution mode: both graph and eager
 * Distributed training: `tf.distribute` with only graph execution
 
 It is on our roadmap to add support in the following areas:
-* TF 2.x (moderate testing has been done)
 * [Minimal Subclassed model support](https://github.com/tensorflow/model-optimization/issues/155)
 
 ## Results

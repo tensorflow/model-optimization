@@ -17,31 +17,28 @@
 import tempfile
 from absl.testing import parameterized
 import numpy as np
+import tensorflow as tf
 
-from tensorflow.python import keras
-from tensorflow.python.distribute import collective_all_reduce_strategy
-from tensorflow.python.distribute import mirrored_strategy
-from tensorflow.python.distribute import one_device_strategy
-from tensorflow.python.keras.utils import np_utils
-from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import test_utils
 
+keras = tf.keras
+
 
 def _distribution_strategies():
   return [
-      collective_all_reduce_strategy.CollectiveAllReduceStrategy(),
-      mirrored_strategy.MirroredStrategy(),
+      tf.distribute.experimental.MultiWorkerMirroredStrategy(),
+      tf.distribute.MirroredStrategy(),
       # TODO(pulkitb): Add parameter_server
-      # parameter_server_strategy.ParameterServerStrategy(),
-      one_device_strategy.OneDeviceStrategy('/cpu:0'),
+      # tf.distribute.experimental.ParameterServerStrategy,
+      tf.distribute.OneDeviceStrategy('/cpu:0'),
   ]
 
 
-class PruneDistributedTest(test.TestCase, parameterized.TestCase):
+class PruneDistributedTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(PruneDistributedTest, self).setUp()
@@ -67,8 +64,7 @@ class PruneDistributedTest(test.TestCase, parameterized.TestCase):
     # Simple unpruned model. No sparsity.
     model.fit(
         np.random.rand(20, 10),
-        np_utils.to_categorical(
-            np.random.randint(5, size=(20, 1)), 5),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         epochs=2,
         callbacks=[pruning_callbacks.UpdatePruningStep()],
         batch_size=20)
@@ -85,4 +81,4 @@ class PruneDistributedTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

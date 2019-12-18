@@ -14,17 +14,17 @@
 # ==============================================================================
 """Tests for prune registry."""
 
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as K
-from tensorflow.python.platform import test
+import tensorflow as tf
+
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 
+keras = tf.keras
 layers = keras.layers
 PruneRegistry = prune_registry.PruneRegistry
 
 
-class PruneRegistryTest(test.TestCase):
+class PruneRegistryTest(tf.test.TestCase):
 
   class CustomLayer(layers.Layer):
     pass
@@ -51,8 +51,8 @@ class PruneRegistryTest(test.TestCase):
 
     def call(self, inputs, states):
       prev_output = states[0]
-      h = K.dot(inputs, self.kernel)
-      output = h + K.dot(prev_output, self.recurrent_kernel)
+      h = keras.backend.dot(inputs, self.kernel)
+      output = h + keras.backend.dot(prev_output, self.recurrent_kernel)
       return output, [output]
 
   class MinimalRNNCellPrunable(MinimalRNNCell, prunable_layer.PrunableLayer):
@@ -88,7 +88,7 @@ class PruneRegistryTest(test.TestCase):
             layers.RNN([
                 layers.LSTMCell(10),
                 layers.GRUCell(10),
-                layers.PeepholeLSTMCell(10),
+                keras.experimental.PeepholeLSTMCell(10),
                 layers.SimpleRNNCell(10)
             ])))
 
@@ -192,4 +192,4 @@ class PruneRegistryTest(test.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

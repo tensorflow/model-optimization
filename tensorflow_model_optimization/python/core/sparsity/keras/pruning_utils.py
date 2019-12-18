@@ -22,16 +22,7 @@ from __future__ import print_function
 
 # import g3
 import numpy as np
-
-from tensorflow.python.framework import constant_op
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import init_ops
-from tensorflow.python.ops import nn_ops
-from tensorflow.python.ops import state_ops
-from tensorflow.python.ops import variable_scope
+import tensorflow as tf
 
 
 def kronecker_product(mat1, mat2):
@@ -46,10 +37,11 @@ def kronecker_product(mat1, mat2):
   """
 
   m1, n1 = mat1.get_shape().as_list()
-  mat1_rsh = array_ops.reshape(mat1, [m1, 1, n1, 1])
+  mat1_rsh = tf.reshape(mat1, [m1, 1, n1, 1])
   m2, n2 = mat2.get_shape().as_list()
-  mat2_rsh = array_ops.reshape(mat2, [1, m2, 1, n2])
-  return array_ops.reshape(mat1_rsh * mat2_rsh, [m1 * m2, n1 * n2])
+  mat2_rsh = tf.reshape(mat2, [1, m2, 1, n2])
+  return tf.reshape(mat1_rsh * mat2_rsh, [m1 * m2, n1 * n2])
+
 
 def expand_tensor(tensor, block_size):
   """Expands a 2D tensor by replicating the tensor values.
@@ -89,7 +81,7 @@ def expand_tensor(tensor, block_size):
 
   def _tile_rows(tensor, multiple):
     """Create a new tensor by tiling the tensor along rows."""
-    return array_ops.tile(tensor, [multiple, 1])
+    return tf.tile(tensor, [multiple, 1])
 
   def _generate_indices(num_rows, block_dim):
     indices = np.zeros(shape=[num_rows * block_dim, 1], dtype=np.int32)
@@ -101,9 +93,8 @@ def expand_tensor(tensor, block_size):
   def _replicate_rows(tensor, multiple):
     tensor_shape = tensor.shape.as_list()
     expanded_shape = [tensor_shape[0] * multiple, tensor_shape[1]]
-    indices = constant_op.constant(_generate_indices(tensor_shape[0], multiple))
-    return array_ops.scatter_nd(indices, _tile_rows(tensor, multiple),
-                                expanded_shape)
+    indices = tf.constant(_generate_indices(tensor_shape[0], multiple))
+    return tf.scatter_nd(indices, _tile_rows(tensor, multiple), expanded_shape)
 
   expanded_tensor = tensor
 
@@ -113,8 +104,8 @@ def expand_tensor(tensor, block_size):
 
   # Transpose and expand by factor block_width. Transpose the result.
   if block_width > 1:
-    expanded_tensor = array_ops.transpose(
-        _replicate_rows(array_ops.transpose(expanded_tensor), block_width))
+    expanded_tensor = tf.transpose(
+        _replicate_rows(tf.transpose(expanded_tensor), block_width))
 
   return expanded_tensor
 
@@ -145,24 +136,24 @@ def factorized_pool(input_tensor,
     raise ValueError('factorized_pool() accepts tensors of rank 2 only')
 
   [height, width] = input_tensor.get_shape()
-  with ops.name_scope(name, 'factorized_pool'):
-    input_tensor_aligned = array_ops.reshape(input_tensor,
-                                             [1, 1, height, width])
+  if name is None:
+    name = 'factorized_pool'
+  with tf.name_scope(name):
+    input_tensor_aligned = tf.reshape(input_tensor, [1, 1, height, width])
 
-    height_pooling = nn_ops.pool(
+    height_pooling = tf.nn.pool(
         input_tensor_aligned,
         window_shape=[1, window_shape[0]],
         pooling_type=pooling_type,
         strides=[1, strides[0]],
         padding=padding)
-    swap_height_width = array_ops.transpose(height_pooling, perm=[0, 1, 3, 2])
+    swap_height_width = tf.transpose(height_pooling, perm=[0, 1, 3, 2])
 
-    width_pooling = nn_ops.pool(
+    width_pooling = tf.nn.pool(
         swap_height_width,
         window_shape=[1, window_shape[1]],
         pooling_type=pooling_type,
         strides=[1, strides[1]],
         padding=padding)
 
-  return array_ops.squeeze(
-      array_ops.transpose(width_pooling, perm=[0, 1, 3, 2]))
+  return tf.squeeze(tf.transpose(width_pooling, perm=[0, 1, 3, 2]))

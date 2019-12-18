@@ -28,10 +28,7 @@ py_library(
     deps = [
         ":pruning_schedule",
         ":pruning_wrapper",
-        # python:util tensorflow dep2,
-        # python/keras tensorflow dep2,
-        # python/keras:engine tensorflow dep2,
-        # python/keras:generic_utils tensorflow dep2,
+        # tensorflow dep1,
     ],
 )
 
@@ -53,7 +50,6 @@ py_library(
     deps = [
         ":prunable_layer",
         # tensorflow dep1,
-        # python/keras:layers_base tensorflow dep2,
     ],
 )
 
@@ -64,10 +60,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
-        # python:constant_op tensorflow dep2,
-        # python:dtypes tensorflow dep2,
-        # python:framework_ops tensorflow dep2,
-        # python:math_ops tensorflow dep2,
+        # tensorflow dep1,
     ],
 )
 
@@ -81,6 +74,7 @@ py_test(
         ":pruning_schedule",
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
+        # python/keras tensorflow dep2,
     ],
 )
 
@@ -95,16 +89,8 @@ py_library(
         ":pruning_impl",
         ":pruning_schedule",
         # numpy dep1,
-        # python:check_ops tensorflow dep2,
-        # python:control_flow_ops tensorflow dep2,
-        # python:dtypes tensorflow dep2,
-        # python:framework_ops tensorflow dep2,
-        # python:variables tensorflow dep2,
-        # python/keras:backend tensorflow dep2,
-        # python/keras:base_layer tensorflow dep2,
+        # tensorflow dep1,
         # python/keras:generic_utils tensorflow dep2,
-        # python/keras:initializers tensorflow dep2,
-        # python/keras:layers_base tensorflow dep2,
         # python/keras:tf_utils tensorflow dep2,
     ],
 )
@@ -118,9 +104,6 @@ py_library(
         ":pruning_wrapper",
         # numpy dep1,
         # tensorflow dep1,
-        # python:math_ops tensorflow dep2,
-        # python/keras:backend tensorflow dep2,
-        # python/keras:callbacks tensorflow dep2,
     ],
 )
 
@@ -149,15 +132,7 @@ py_library(
     deps = [
         ":pruning_utils",
         # tensorflow dep1,
-        # python:array_ops tensorflow dep2,
-        # python:control_flow_ops tensorflow dep2,
-        # python:dtypes tensorflow dep2,
-        # python:framework_ops tensorflow dep2,
-        # python:math_ops tensorflow dep2,
-        # python:nn_ops tensorflow dep2,
-        # python:state_ops tensorflow dep2,
         # python:summary tensorflow dep2,
-        # python:variables tensorflow dep2,
     ],
 )
 
@@ -168,15 +143,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
-        # python:array_ops tensorflow dep2,
-        # python:constant_op tensorflow dep2,
-        # python:control_flow_ops tensorflow dep2,
-        # python:dtypes tensorflow dep2,
-        # python:framework_ops tensorflow dep2,
-        # python:init_ops tensorflow dep2,
-        # python:nn_ops tensorflow dep2,
-        # python:state_ops tensorflow dep2,
-        # python:variable_scope tensorflow dep2,
+        # tensorflow dep1,
     ],
 )
 
@@ -259,7 +226,6 @@ py_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
 )
@@ -300,6 +266,8 @@ py_test(
         ":pruning_impl",
         ":pruning_schedule",
         # numpy dep1,
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
 )
 

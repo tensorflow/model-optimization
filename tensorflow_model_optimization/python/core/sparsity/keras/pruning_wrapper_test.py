@@ -18,16 +18,17 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python import keras
-from tensorflow.python.platform import test
+import tensorflow as tf
+
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
+keras = tf.keras
 layers = keras.layers
 Prune = pruning_wrapper.PruneLowMagnitude
 
 
-class PruningWrapperTest(test.TestCase):
+class PruningWrapperTest(tf.test.TestCase):
 
   def setUp(self):
     self.model = keras.Sequential()
@@ -101,4 +102,4 @@ class PruningWrapperTest(test.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

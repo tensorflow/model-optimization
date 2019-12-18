@@ -18,17 +18,20 @@ import json
 from absl.testing import parameterized
 import numpy as np
 
-import tensorflow.compat.v1 as tf
-keras = tf.keras
-errors_impl = tf.errors
-layers = keras.layers
-test = tf.test
+import tensorflow as tf
+
+# TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
+
+keras = tf.keras
+errors_impl = tf.errors
+layers = keras.layers
+test = tf.test
 
 
 class TestSubclassedModel(keras.Model):
@@ -369,5 +372,4 @@ class PruneTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  tf.disable_v2_behavior()
   test.main()

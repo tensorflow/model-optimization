@@ -17,40 +17,71 @@
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
+
 # import g3
+
+from absl.testing import parameterized
 import numpy as np
+import tensorflow as tf
 
-import tensorflow.compat.v1 as tf
-# TODO(tf-mot): when migrating to 2.0, K.get_session() no longer exists.
-K = tf.keras.backend
-dtypes = tf.dtypes
-test = tf.test
-
-from tensorflow.python.framework import test_util as tf_test_util
+from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 
+# TODO(b/139939526): move to public API.
 
-@tf_test_util.run_all_in_graph_and_eager_modes
-class PruningTest(test.TestCase):
+K = tf.keras.backend
+dtypes = tf.dtypes
+test = tf.test
+
+
+def assign_add(ref, value):
+  if tf.__version__[0] == "1":
+    return tf.assign_add(ref, value)
+  else:
+    return ref.assign_add(value)
+
+
+@keras_parameterized.run_all_keras_modes
+class PruningTest(test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(PruningTest, self).setUp()
-    self.global_step = K.zeros([], dtype=dtypes.int32)
     self.block_size = (1, 1)
     self.block_pooling_type = "AVG"
 
+    self.constant_sparsity = pruning_schedule.ConstantSparsity(0.5, 0, 100, 1)
+
+  # Variable initialization outside of setUp() is needed for compatibility with
+  # run_all_keras_modes.
+  #
+  # setUp() lies outside of the "eager scope" that wraps the test cases
+  # themselves, resulting in initializing graph tensors instead of eager
+  # tensors when testing eager execution.
+  def initialize(self):
+    self.global_step = tf.Variable(
+        tf.zeros([], dtype=dtypes.int32),
+        dtype=dtypes.int32,
+        name="global_step")
+
     def training_step_fn():
       return self.global_step
-
-    self.constant_sparsity = pruning_schedule.ConstantSparsity(0.5, 0, 100, 1)
     self.training_step_fn = training_step_fn
 
+    if tf.__version__[0] == "1" and not tf.executing_eagerly():
+      self.evaluate(tf.global_variables_initializer())
+
   def testUpdateSingleMask(self):
-    weight = K.variable(np.linspace(1.0, 100.0, 100), name="weights")
-    mask = K.ones(weight.get_shape())
-    threshold = K.zeros([])
+    weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")
+    weight_dtype = weight.dtype.base_dtype
+    mask = tf.Variable(
+        tf.ones(weight.get_shape(), dtype=weight_dtype),
+        name="mask",
+        dtype=weight_dtype)
+    threshold = tf.Variable(
+        tf.zeros([], dtype=weight_dtype), name="threshold", dtype=weight_dtype)
+    self.initialize()
 
     p = pruning_impl.Pruning(
         pruning_vars=[(weight, mask, threshold)],
@@ -71,6 +102,7 @@ class PruningTest(test.TestCase):
     self.assertAllEqual(np.count_nonzero(mask_after_pruning), 50)
 
   def testConstructsMaskAndThresholdCorrectly(self):
+    self.initialize()
     p = pruning_impl.Pruning(
         lambda: 0, None,
         # Sparsity math often returns values with small tolerances.
@@ -87,8 +119,13 @@ class PruningTest(test.TestCase):
 
   def _blockMasking(self, block_size, block_pooling_type, weight,
                     expected_mask):
-    mask = K.ones(weight.get_shape())
-    threshold = K.zeros([])
+    mask = tf.Variable(
+        tf.ones(weight.get_shape(), dtype=weight.dtype),
+        name="mask",
+        dtype=weight.dtype)
+    threshold = tf.Variable(
+        tf.zeros([], dtype=weight.dtype), name="threshold", dtype=weight.dtype)
+    self.initialize()
 
     # Set up pruning
     p = pruning_impl.Pruning(
@@ -107,8 +144,8 @@ class PruningTest(test.TestCase):
   def testBlockMaskingAvg(self):
     block_size = (2, 2)
     block_pooling_type = "AVG"
-    weight = K.variable([[0.1, 0.1, 0.2, 0.2], [0.1, 0.1, 0.2, 0.2],
-                         [0.3, 0.3, 0.4, 0.4], [0.3, 0.3, 0.4, 0.4]])
+    weight = tf.constant([[0.1, 0.1, 0.2, 0.2], [0.1, 0.1, 0.2, 0.2],
+                          [0.3, 0.3, 0.4, 0.4], [0.3, 0.3, 0.4, 0.4]])
     expected_mask = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0],
                      [1., 1., 1., 1.], [1., 1., 1., 1.]]
 
@@ -126,6 +163,7 @@ class PruningTest(test.TestCase):
     self._blockMasking(block_size, block_pooling_type, weight, expected_mask)
 
   def testBlockMaskingWithHigherDimensionsRaisesError(self):
+    self.initialize()
     block_size = (2, 2)
     block_pooling_type = "AVG"
     # Weights as in testBlockMasking, but with one extra dimension.
@@ -140,9 +178,15 @@ class PruningTest(test.TestCase):
       self._blockMasking(block_size, block_pooling_type, weight, expected_mask)
 
   def testConditionalMaskUpdate(self):
-    weight = K.variable(np.linspace(1.0, 100.0, 100), name="weights")
-    mask = K.ones(weight.get_shape())
-    threshold = K.zeros([])
+    weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")
+    weight_dtype = weight.dtype.base_dtype
+    mask = tf.Variable(
+        tf.ones(weight.get_shape(), dtype=weight_dtype),
+        name="mask",
+        dtype=weight_dtype)
+    threshold = tf.Variable(
+        tf.zeros([], dtype=weight_dtype), name="threshold", dtype=weight_dtype)
+    self.initialize()
 
     def linear_sparsity(step):
       sparsity_val = tf.convert_to_tensor(
@@ -162,11 +206,11 @@ class PruningTest(test.TestCase):
       if tf.executing_eagerly():
         p.conditional_mask_update()
         p.weight_mask_op()
-        tf.assign_add(self.global_step, 1)
+        assign_add(self.global_step, 1)
       else:
         K.get_session().run(p.conditional_mask_update())
         K.get_session().run(p.weight_mask_op())
-        K.get_session().run(tf.assign_add(self.global_step, 1))
+        K.get_session().run(assign_add(self.global_step, 1))
 
       non_zero_count.append(np.count_nonzero(K.get_value(weight)))
 
@@ -176,5 +220,4 @@ class PruningTest(test.TestCase):
 
 
 if __name__ == "__main__":
-  tf.disable_v2_behavior()
   test.main()

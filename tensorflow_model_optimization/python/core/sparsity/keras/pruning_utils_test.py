@@ -21,17 +21,24 @@ from __future__ import print_function
 # import g3
 from absl.testing import parameterized
 
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
+
+glorot_uniform_initializer = tf.keras.initializers.glorot_uniform
+
 
 @parameterized.named_parameters(
     ("1x1", [1, 1]), ("4x4", [4, 4]), ("6x6", [6, 6]), ("1x4", [1, 4]),
     ("4x1", [4, 1]), ("1x8", [1, 8]), ("8x1", [8, 1]))
 class PruningUtilsParameterizedTest(tf.test.TestCase, parameterized.TestCase):
 
+  def _initialize_variables(self):
+    if tf.__version__[0] == "1" and not tf.executing_eagerly():
+      self.evaluate(tf.global_variables_initializer())
+
   def _compare_pooling_methods(self, weights, pooling_kwargs):
     with self.cached_session():
-      tf.global_variables_initializer().run()
+      self._initialize_variables()
       pooled_weights_tf = tf.squeeze(
           tf.nn.pool(
               tf.reshape(
@@ -40,12 +47,12 @@ class PruningUtilsParameterizedTest(tf.test.TestCase, parameterized.TestCase):
                    weights.get_shape()[1], 1]), **pooling_kwargs))
       pooled_weights_factorized_pool = pruning_utils.factorized_pool(
           weights, **pooling_kwargs)
-      self.assertAllClose(pooled_weights_tf.eval(),
-                          pooled_weights_factorized_pool.eval())
+      self.assertAllClose(self.evaluate(pooled_weights_tf),
+                          self.evaluate(pooled_weights_factorized_pool))
 
   def _compare_expand_tensor_with_kronecker_product(self, tensor, block_dim):
     with self.cached_session() as session:
-      tf.global_variables_initializer().run()
+      self._initialize_variables()
       expanded_tensor = pruning_utils.expand_tensor(tensor, block_dim)
       kronecker_product = pruning_utils.kronecker_product(
           tensor, tf.ones(block_dim))
@@ -54,7 +61,9 @@ class PruningUtilsParameterizedTest(tf.test.TestCase, parameterized.TestCase):
       self.assertAllEqual(expanded_tensor_val, kronecker_product_val)
 
   def testFactorizedAvgPool(self, window_shape):
-    weights = tf.get_variable("weights", shape=[1024, 2048])
+    shape = [1024, 2048]
+    weights = tf.Variable(
+        glorot_uniform_initializer()(shape), shape=shape, name="weights")
     pooling_kwargs = {
         "window_shape": window_shape,
         "pooling_type": "AVG",
@@ -64,7 +73,9 @@ class PruningUtilsParameterizedTest(tf.test.TestCase, parameterized.TestCase):
     self._compare_pooling_methods(weights, pooling_kwargs)
 
   def testFactorizedMaxPool(self, window_shape):
-    weights = tf.get_variable("weights", shape=[1024, 2048])
+    shape = [1024, 2048]
+    weights = tf.Variable(
+        glorot_uniform_initializer()(shape), shape=shape, name="weights")
     pooling_kwargs = {
         "window_shape": window_shape,
         "pooling_type": "MAX",
@@ -79,5 +90,4 @@ class PruningUtilsParameterizedTest(tf.test.TestCase, parameterized.TestCase):
 
 
 if __name__ == "__main__":
-  tf.disable_v2_behavior()
   tf.test.main()
