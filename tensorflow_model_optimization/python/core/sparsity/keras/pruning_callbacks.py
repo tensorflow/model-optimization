@@ -84,6 +84,12 @@ class PruningSummaries(callbacks.TensorBoard):
     super(PruningSummaries, self).__init__(
         log_dir=log_dir, update_freq=update_freq, **kwargs)
 
+  def _log_pruning_metrics(self, logs, prefix, step):
+    if tf.__version__[0] == '1':
+      self._write_custom_summaries(step, logs)
+    else:
+      self._log_metrics(logs, prefix, step)
+
   def on_epoch_end(self, batch, logs=None):
     super(PruningSummaries, self).on_epoch_end(batch, logs)
 
@@ -112,4 +118,4 @@ class PruningSummaries(callbacks.TensorBoard):
     for threshold, threshold_value in param_value_pairs[1::2]:
       pruning_logs.update({threshold.name + '/threshold': threshold_value})
 
-    self._log_metrics(pruning_logs, '', iteration)
+    self._log_pruning_metrics(pruning_logs, '', iteration)

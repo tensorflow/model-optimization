@@ -14,21 +14,29 @@
 # ==============================================================================
 """Tests for Pruning callbacks."""
 
+import os
+import tempfile
+
 from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-# TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 
+# TODO(b/139939526): move to public API.
+
 
 @keras_parameterized.run_all_keras_modes
 class PruneTest(tf.test.TestCase, parameterized.TestCase):
 
-  def testUpdatesPruningStep(self):
+  def _assertLogsExist(self, log_dir):
+    self.assertNotEmpty(os.listdir(log_dir))
+
+  def testUpdatePruningStepsAndLogsSummaries(self):
+    log_dir = tempfile.mkdtemp()
     model = prune.prune_low_magnitude(
         keras_test_utils.build_simple_dense_model())
     model.compile(
@@ -38,13 +46,17 @@ class PruneTest(tf.test.TestCase, parameterized.TestCase):
         tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20,
         epochs=3,
-        callbacks=[pruning_callbacks.UpdatePruningStep()])
+        callbacks=[
+            pruning_callbacks.UpdatePruningStep(),
+            pruning_callbacks.PruningSummaries(log_dir=log_dir)
+        ])
 
     self.assertEqual(2,
                      tf.keras.backend.get_value(model.layers[0].pruning_step))
     self.assertEqual(2,
                      tf.keras.backend.get_value(model.layers[1].pruning_step))
 
+    self._assertLogsExist(log_dir)
 
 if __name__ == '__main__':
   tf.test.main()
