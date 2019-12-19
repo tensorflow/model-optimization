@@ -23,7 +23,8 @@ import tensorflow as tf
 def convert_keras_to_tflite(model,
                             output_path,
                             custom_objects=None,
-                            is_quantized=True):
+                            is_quantized=True,
+                            inference_input_type=None):
   """Convert Keras model to TFLite."""
   if custom_objects is None:
     custom_objects = {}
@@ -40,10 +41,16 @@ def convert_keras_to_tflite(model,
   if is_quantized:
     if tf.__version__[0] == '1':
       converter.inference_type = tf.lite.constants.INT8
-      converter.inference_input_type = tf.lite.constants.INT8
+      if inference_input_type:
+        converter.inference_input_type = inference_input_type
+      else:
+        converter.inference_input_type = tf.lite.constants.INT8
     else:
       converter.inference_type = tf.int8
-      converter.inference_input_type = tf.int8
+      if inference_input_type:
+        converter.inference_input_type = inference_input_type
+      else:
+        converter.inference_input_type = tf.int8
 
     # TODO(tfmot): API not supported in TF 2.XX.
     input_arrays = converter.get_input_arrays()

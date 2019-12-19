@@ -67,8 +67,7 @@ def input_shape(img_rows=28, img_cols=28):
 
 def preprocessed_data(img_rows=28,
                       img_cols=28,
-                      num_classes=10,
-                      is_quantized_model=False):
+                      num_classes=10):
   """Get data for mnist training and evaluation."""
   (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
 
@@ -79,11 +78,10 @@ def preprocessed_data(img_rows=28,
     x_train = x_train.reshape(x_train.shape[0], img_rows, img_cols, 1)
     x_test = x_test.reshape(x_test.shape[0], img_rows, img_cols, 1)
 
-  if not is_quantized_model:
-    x_train = x_train.astype('float32')
-    x_test = x_test.astype('float32')
-    x_train /= 255
-    x_test /= 255
+  x_train = x_train.astype('float32')
+  x_test = x_test.astype('float32')
+  x_train /= 255
+  x_test /= 255
 
   # convert class vectors to binary class matrices
   y_train = tf.keras.utils.to_categorical(y_train, num_classes)
@@ -92,14 +90,14 @@ def preprocessed_data(img_rows=28,
   return x_train, y_train, x_test, y_test
 
 
-def eval_tflite(model_path, is_quantized=False):
+def eval_tflite(model_path):
   """Evaluate mnist in TFLite for accuracy."""
   interpreter = tf.lite.Interpreter(model_path=model_path)
   interpreter.allocate_tensors()
   input_index = interpreter.get_input_details()[0]['index']
   output_index = interpreter.get_output_details()[0]['index']
 
-  _, _, x_test, y_test = preprocessed_data(is_quantized_model=is_quantized)
+  _, _, x_test, y_test = preprocessed_data()
 
   total_seen = 0
   num_correct = 0
