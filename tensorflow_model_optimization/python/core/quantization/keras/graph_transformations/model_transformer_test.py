@@ -131,7 +131,7 @@ class ModelTransformerTest(test.TestCase):
   def testReplaceSingleLayerWithSingleLayer_OneOccurrence(self):
     model = self._simple_dense_model()
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [self.ReplaceDenseLayer()]).transform()
 
     self._assert_config(model.get_config(), transformed_model.get_config(),
@@ -148,7 +148,7 @@ class ModelTransformerTest(test.TestCase):
     out2 = keras.layers.ReLU(6.0)(x2)
     model = keras.Model(inp, [out1, out2])
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [self.ReplaceDenseLayer()]).transform()
 
     self._assert_config(model.get_config(), transformed_model.get_config(),
@@ -181,7 +181,7 @@ class ModelTransformerTest(test.TestCase):
 
     model = self._simple_dense_model()
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [RemoveBiasInDense()]).transform()
 
     self._assert_config(model.get_config(), transformed_model.get_config(),
@@ -224,7 +224,7 @@ class ModelTransformerTest(test.TestCase):
     model = keras.Model(inp, out)
     model.set_weights(model_fused.get_weights())
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [FuseReLUIntoDense()]).transform()
 
     self._assert_config(
@@ -259,7 +259,7 @@ class ModelTransformerTest(test.TestCase):
 
     model = self._simple_dense_model()
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [ReplaceWithSelf()]).transform()
 
     self._assert_config(model.get_config(), transformed_model.get_config())
@@ -339,10 +339,7 @@ class ModelTransformerTest(test.TestCase):
 
     transformer = ModelTransformer(
         model, [ReplaceLayerMetadata()], None, layer_metadata)
-    transformed_model = transformer.transform()
-    # Once the updated metadata is returned along with the model, this won't
-    # be necessary.
-    updated_metadata = transformer._layer_metadata_map    # pylint: disable=protected-access
+    transformed_model, updated_metadata = transformer.transform()
 
     self.assertEqual(expected_metadata, updated_metadata)
     self._assert_config(model.get_config(), transformed_model.get_config())

@@ -347,7 +347,7 @@ class ModelTransformer(object):
     Not suitable for multi-threaded use. Creates and manipulates internal state.
 
     Returns:
-      Keras model after transformation.
+      (Keras model after transformation, Updated layer metadata map)
     """
 
     # Gets a serialized dict representation of the model, containing all its
@@ -419,8 +419,4 @@ class ModelTransformer(object):
       if weights:
         self._set_layer_weights(layer, weights)
 
-    # TODO(pulkitb): Consider returning the updated metadata for the
-    # transformed model along with the model. This allows the opportunity for
-    # transforms to encode updated metadata for layers.
-
-    return transformed_model
+    return transformed_model, copy.deepcopy(self._layer_metadata_map)

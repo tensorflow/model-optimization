@@ -44,7 +44,7 @@ class TFLiteTransformsTest(test.TestCase):
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
@@ -60,7 +60,7 @@ class TFLiteTransformsTest(test.TestCase):
         random_init=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
@@ -78,7 +78,7 @@ class TFLiteTransformsTest(test.TestCase):
         is_quantized=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model, [tflite_transforms.Conv2DBatchNormFold()]).transform()
 
     inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
@@ -93,7 +93,7 @@ class TFLiteTransformsTest(test.TestCase):
         random_init=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model,
           [tflite_transforms.Conv2DBatchNormFold()]).transform()
 
@@ -112,7 +112,7 @@ class TFLiteTransformsTest(test.TestCase):
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model,
           [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
 
@@ -130,7 +130,7 @@ class TFLiteTransformsTest(test.TestCase):
         random_init=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model,
           [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
 

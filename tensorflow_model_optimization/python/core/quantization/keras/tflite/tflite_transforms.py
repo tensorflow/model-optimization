@@ -69,8 +69,11 @@ def _get_params(conv_layer, bn_layer, relu_layer=None):
 def _get_layer_node(fused_layer, weights):
   layer_config = keras.layers.serialize(fused_layer)
   layer_config['name'] = layer_config['config']['name']
+  # This config tracks which layers get quantized, and whether they have a
+  # custom QuantizeProvider.
+  layer_metadata = {'quantize_provider': None}
 
-  return LayerNode(layer_config, weights)
+  return LayerNode(layer_config, weights, metadata=layer_metadata)
 
 
 class Conv2DBatchNormFold(transforms.Transform):

@@ -202,7 +202,8 @@ def quantize_apply(model):
   # target device/dialect.
   quantize_transform = \
     tflite_quantize_layout_transform.TFLiteQuantizeLayoutTransform()
-  transformed_model = quantize_transform.apply(
+  # layer_quantize_map gets modified by the transformations.
+  transformed_model, layer_quantize_map = quantize_transform.apply(
       unwrapped_model, layer_quantize_map)
 
   # TODO(pulkitb): Think more about how to introduce TFLite specific code.
