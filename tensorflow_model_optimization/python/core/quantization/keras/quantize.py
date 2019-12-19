@@ -52,6 +52,7 @@ def quantize_scope(*args):
       'QuantizeAnnotate': quantize_annotate_mod.QuantizeAnnotate,
       'QuantizeAwareActivation':
           quantize_aware_activation.QuantizeAwareActivation,
+      'NoOpActivation': quantize_aware_activation.NoOpActivation,
       'QuantizeWrapper': quantize_wrapper.QuantizeWrapper,
       # TODO(tf-mot): add way for different quantization schemes to modify this.
       '_DepthwiseConvBatchNorm2D': conv_batchnorm._DepthwiseConvBatchNorm2D,  # pylint: disable=protected-access

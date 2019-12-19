@@ -18,6 +18,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl.testing import parameterized
+
 import numpy as np
 
 from tensorflow.python import keras
@@ -25,6 +27,7 @@ from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
 from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
+from tensorflow.python.ops import array_ops
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
@@ -34,7 +37,7 @@ QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 MovingAverageQuantizer = quantizers.MovingAverageQuantizer
 
 
-class QuantizeAwareQuantizationTest(test.TestCase):
+class QuantizeAwareQuantizationTest(test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(QuantizeAwareQuantizationTest, self).setUp()
@@ -48,13 +51,21 @@ class QuantizeAwareQuantizationTest(test.TestCase):
         training = K.learning_phase()
 
       self.activation.training = training
-      return self.activation(inputs)
+      # Going through `identity` to create a new tensor. TF throws an error
+      # if input tensor is fetched during a run.
+      return self.activation(array_ops.identity(inputs))
 
     def compute_output_shape(self, input_shape):
       return input_shape
 
-  def testRaisesError_NotKerasBuiltinActivation(self):
+  def testConstruction_SupportedAndUnsupportedActivations(self):
     layer = self.TestLayer()
+
+    # Supported activations. No error thrown.
+    QuantizeAwareActivation(activations.relu, self.quantizer, 0, layer)
+    QuantizeAwareActivation(activations.softmax, self.quantizer, 0, layer)
+    QuantizeAwareActivation(
+        quantize_aware_activation.NoOpActivation(), self.quantizer, 0, layer)
 
     def custom_quantize(x):
       return x
@@ -100,22 +111,39 @@ class QuantizeAwareQuantizationTest(test.TestCase):
 
     self.assertAllClose(expected_activation, model.predict(x))
 
-  def testSerializationReturnsWrappedActivation_BuiltInActivation(self):
-    activation = activations.get('softmax')
+  def testDoesNotQuantizeNoOpActivation(self):
+    layer = self.TestLayer()
+    layer.activation = QuantizeAwareActivation(
+        quantize_aware_activation.NoOpActivation(), self.quantizer, 0, layer)
+
+    model = keras.Sequential([layer])
+
+    x = np.array([[-2.0, -1.0, 1.0, 2.0]])
+    self.assertAllClose(x, model.predict(x))
+
+  @parameterized.parameters(
+      (activations.get('relu'), {'activation': 'relu'}),
+      (quantize_aware_activation.NoOpActivation(),
+       {'activation': {'class_name': 'NoOpActivation', 'config': {}}})
+  )
+  def testSerializationReturnsWrappedActivation(
+      self, activation, activation_config):
     quantize_activation = QuantizeAwareActivation(
         activation, self.quantizer, 0, self.TestLayer())
+    serialized_quantize_activation = serialize_keras_object(quantize_activation)
 
     expected_config = {
         'class_name': 'QuantizeAwareActivation',
-        'config': {'activation': 'softmax'}
+        'config': activation_config
     }
-    serialized_quantize_activation = serialize_keras_object(quantize_activation)
-
     self.assertEqual(expected_config, serialized_quantize_activation)
 
     deserialized_activation = deserialize_keras_object(
         serialized_quantize_activation,
-        custom_objects={'QuantizeAwareActivation': QuantizeAwareActivation})
+        custom_objects={
+            'QuantizeAwareActivation': QuantizeAwareActivation,
+            'NoOpActivation': quantize_aware_activation.NoOpActivation
+        })
 
     self.assertEqual(activation, deserialized_activation)
 

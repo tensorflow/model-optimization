@@ -22,6 +22,31 @@ from tensorflow.python.keras import activations
 from tensorflow.python.keras.utils import tf_utils
 
 
+class NoOpActivation(object):
+  """No-op activation which simply returns the incoming tensor.
+
+  This activation is required to distinguish between `keras.activations.linear`
+  which does the same thing. The main difference is that NoOpActivation should
+  not have any quantize operation applied to it.
+  """
+
+  def __call__(self, x):
+    return x
+
+  def get_config(self):
+    return {}
+
+  def __eq__(self, other):
+    if not other or not isinstance(other, NoOpActivation):
+      return False
+
+    return True
+
+  def __ne__(self, other):
+    """Ensure this works on Python2."""
+    return not self.__eq__(other)
+
+
 class QuantizeAwareActivation(object):
   """Activation wrapper for quantization aware training.
 
@@ -49,10 +74,13 @@ class QuantizeAwareActivation(object):
   # on inclusion. Verify in TFLite before enabling.
 
   # These activations should be quantized prior to the activation being applied.
-  _PRE_QUANT_ACTIVATIONS = {'softmax'}
+  _PRE_QUANT_ACTIVATIONS = frozenset({'softmax'})
 
   # These activations should be quantized after the activation has been applied.
-  _POST_QUANT_ACTIVATIONS = {'linear', 'relu'}
+  _POST_QUANT_ACTIVATIONS = frozenset({'linear', 'relu'})
+
+  # Don't take any quantize operations for these activations.
+  _NO_QUANTIZE_ACTIVATIONS = frozenset({'NoOpActivation'})
 
   _CUSTOM_ACTIVATION_ERR_MSG = (
       'Only some Keras activations under `tf.keras.activations` are supported. '
@@ -84,18 +112,24 @@ class QuantizeAwareActivation(object):
     self._min_post_activation, self._max_post_activation = \
         quantizer.build(None, 'post_activation', quantize_wrapper)
 
-  def _is_supported_activation(self, activation):
-    if not hasattr(activation, '__name__'):
-      return False
+  @staticmethod
+  def _name(activation):
+    if hasattr(activation, '__name__'):
+      return activation.__name__
+    return activation.__class__.__name__
 
-    return activation.__name__ in self._PRE_QUANT_ACTIVATIONS \
-           or activation.__name__ in self._POST_QUANT_ACTIVATIONS
+  def _is_supported_activation(self, activation):
+    activation_name = self._name(activation)
+
+    return activation_name in self._PRE_QUANT_ACTIVATIONS \
+           or activation_name in self._POST_QUANT_ACTIVATIONS \
+           or activation_name in self._NO_QUANTIZE_ACTIVATIONS
 
   def _should_pre_quantize(self):
-    return self.activation.__name__ in self._PRE_QUANT_ACTIVATIONS
+    return self._name(self.activation) in self._PRE_QUANT_ACTIVATIONS
 
   def _should_post_quantize(self):
-    return self.activation.__name__ in self._POST_QUANT_ACTIVATIONS
+    return self._name(self.activation) in self._POST_QUANT_ACTIVATIONS
 
   @property
   def training(self):
