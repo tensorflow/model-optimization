@@ -237,8 +237,32 @@ class ModelTransformerTest(test.TestCase):
     self._assert_model_results_equal(model_fused, transformed_model)
 
   def testReplaceChainOfLayers_WithChainOfLayers(self):
-    # TODO(pulkitb): Implement
-    pass
+    class Replace2DenseLayers(transforms.Transform):
+      """Replaces 2 Dense layers with the same dense layers.
+
+      Doesn't make any meaningful change to the layer. Just verifies that
+      replacing multiple layers works as expected.
+      """
+
+      def pattern(self):
+        return LayerPattern('Dense', inputs=[LayerPattern('Dense')])
+
+      def replacement(self, match_layer):
+        # Adds a modification so the transform happens. If the layers are
+        # exactly the same, they get ignored by transformer.
+        match_layer.metadata['key'] = 'value'
+        return match_layer
+
+    inp = keras.layers.Input((3,))
+    x = keras.layers.Dense(3)(inp)
+    x = keras.layers.Dense(2)(x)
+    model = keras.Model(inp, x)
+
+    transformed_model, _ = ModelTransformer(
+        model, [Replace2DenseLayers()]).transform()
+
+    self._assert_model_results_equal(model, transformed_model)
+    self._assert_config(model.get_config(), transformed_model.get_config())
 
   def testReplaceTreeOfLayers_WithSingleLayer(self):
     # TODO(pulkitb): Implement

@@ -232,7 +232,7 @@ class ModelTransformer(object):
       if not layer_node.input_layers:
         return
 
-      layer_node['inbound_nodes'] = [[]]
+      layer_node.layer['inbound_nodes'] = [[]]
       for input_layer in layer_node.input_layers:
         # inbound_nodes can be specific tensors from multiple inbound
         # connections. We make the following assumptions.
@@ -241,7 +241,7 @@ class ModelTransformer(object):
         # - call() method during construction does not have any args.
         # These are reasonable assumptions for almost all case we are
         # interested in.
-        layer_node['inbound_nodes'][0].append(
+        layer_node.layer['inbound_nodes'][0].append(
             [input_layer.layer['name'], 0, 0, {}])
 
         _assign_inbounds_for_replacement(input_layer)
