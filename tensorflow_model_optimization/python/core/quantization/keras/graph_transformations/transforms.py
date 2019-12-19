@@ -30,10 +30,10 @@ class LayerPattern(object):
   graphs that we need to find.
 
   Examples:
-    Matches a Conv+BN+ReLU6 pattern.
+    Matches a Conv+BN+ReLU6 and DepthwiseConv+BN+ReLU6 pattern.
     pattern = LayerPattern('ReLU', {'max_value': 6.0}, [
         LayerPattern('BatchNormalization', {}, [
-            LayerPattern('Conv2D', {} [])
+            LayerPattern('Conv2D|DepthwiseConv2D', {} [])
         ])
     ])
 

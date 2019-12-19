@@ -17,6 +17,7 @@
 
 import collections
 import copy
+import re
 
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
@@ -88,16 +89,16 @@ class ModelTransformer(object):
   def _get_layer_metadata(self, layer_name):
     return self._layer_metadata_map.get(layer_name, {})
 
+  def _match_pattern(self, target, pattern):
+    return re.match('^' + pattern + '$', target) is not None
+
   def _match_layer(self, layer, pattern):
     """Check if specific layer matches the pattern."""
 
     if self.candidate_layers and layer['name'] not in self.candidate_layers:
       return False
 
-    # TODO(pulkitb): Possible changes and extensions to this method.
-    # Consider making this case insensitive
-    # Add support for multiple types. (Conv2D|DepthwiseConv2d)
-    if layer['class_name'] != pattern.class_name:
+    if not self._match_pattern(layer['class_name'], pattern.class_name):
       return False
 
     layer_config = layer['config']

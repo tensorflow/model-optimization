@@ -339,6 +339,25 @@ class ModelTransformerTest(test.TestCase):
     ModelTransformer(model, [transform], [model.layers[-1].name]).transform()
     self.assertFalse(transform.matched())
 
+  def testPatternCanMatchMultipleLayers(self):
+    pattern = LayerPattern('Conv2D|DepthwiseConv2D')
+    transform = self.VerifyMatch(pattern)
+
+    inp = keras.layers.Input((3, 3, 3))
+    x = keras.layers.Conv2D(3, (2, 2))(inp)
+    conv_model = keras.Model(inp, x)
+
+    ModelTransformer(conv_model, [transform]).transform()
+    self.assertTrue(transform.matched())
+
+    inp = keras.layers.Input((3, 3, 3))
+    x = keras.layers.DepthwiseConv2D((2, 2))(inp)
+    depth_conv_model = keras.Model(inp, x)
+
+    transform.reset()
+    ModelTransformer(depth_conv_model, [transform]).transform()
+    self.assertTrue(transform.matched())
+
   def testLayerMetadataPassedAndReplacedInTransforms(self):
     class ReplaceLayerMetadata(Transform):
 
