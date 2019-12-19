@@ -27,6 +27,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantizers
 
 QuantizeProvider = quantize_provider.QuantizeProvider
@@ -483,5 +484,7 @@ def _types_dict():
       'TFLiteQuantizeProvider': TFLiteQuantizeProvider,
       'TFLiteQuantizeProviderRNN': TFLiteQuantizeProviderRNN,
       'ActivationQuantizeProvider': ActivationQuantizeProvider,
-      'ConvQuantizeProvider': ConvQuantizeProvider
+      'ConvQuantizeProvider': ConvQuantizeProvider,
+      'NoOpQuantizeProvider': tflite_quantize_providers.NoOpQuantizeProvider,
+      'OutputQuantizeProvider': tflite_quantize_providers.OutputQuantizeProvider
   }

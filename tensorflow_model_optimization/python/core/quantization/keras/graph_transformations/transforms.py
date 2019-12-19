@@ -99,15 +99,26 @@ class LayerNode(object):
         self.layer,
         ', '.join([str(input_layer) for input_layer in self.input_layers]))
 
+  def _eq(self, ordered_dict1, ordered_dict2):
+    """Built-in equality test for OrderedDict fails when value is NP array."""
+
+    if len(ordered_dict1) != len(ordered_dict2):
+      return False
+
+    for item1, item2 in zip(ordered_dict1.items(), ordered_dict2.items()):
+      if item1[0] != item2[0] or not (item1[1] == item2[1]).all():
+        return False
+
+    return True
+
   def __eq__(self, other):
     if not other or not isinstance(other, LayerNode):
       return False
 
-    if self.layer != other.layer:
+    if self.layer != other.layer \
+        or not self._eq(self.weights, other.weights) \
+        or self.metadata != other.metadata:
       return False
-
-    # TODO(pulkitb): Consider if we should include weights/metadata in equality
-    # check.
 
     if len(self.input_layers) != len(other.input_layers):
       return False

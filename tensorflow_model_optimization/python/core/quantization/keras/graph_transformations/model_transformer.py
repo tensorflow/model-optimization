@@ -391,7 +391,10 @@ class ModelTransformer(object):
           if not match_layer_node:
             break
 
-          replacement_layer_node = transform.replacement(match_layer_node)
+          # Copying the match_layer_node ensures the replacement code can
+          # freely modify the match.
+          replacement_layer_node = transform.replacement(
+              copy.deepcopy(match_layer_node))
 
           # If equal, the matched layers are being replaced with exactly the
           # same set of layers that were matched with the same config.

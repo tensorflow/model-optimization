@@ -24,8 +24,10 @@ from tensorflow.python import keras
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_transforms
 
 ModelTransformer = model_transformer.ModelTransformer
@@ -141,6 +143,51 @@ class TFLiteTransformsTest(test.TestCase):
     self.assertEqual(len(transformed_weights), len(model.get_weights()))
     for i in range(len(transformed_weights)):
       self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
+
+  def testConv2DBatchNormQuantize(self):
+    model = Conv2DModel.get_nonfolded_batchnorm_model(model_type='functional')
+
+    with quantize.quantize_scope():
+      transformed_model, updated_metadata = ModelTransformer(
+          model,
+          [tflite_transforms.Conv2DBatchNormQuantize()],
+      ).transform()
+
+    conv_layer = transformed_model.layers[1]
+    bn_layer = transformed_model.layers[2]
+
+    self.assertIsInstance(
+        conv_layer.activation, quantize_aware_activation.NoOpActivation)
+    self.assertIsInstance(
+        updated_metadata.get(bn_layer.name).get('quantize_provider'),
+        tflite_quantize_providers.OutputQuantizeProvider)
+
+    inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
+    self.assertAllClose(
+        transformed_model.predict(inputs), model.predict(inputs))
+
+  def testConv2DBatchNormReLUQuantize(self):
+    model = Conv2DModel.get_nonfolded_batchnorm_model(
+        model_type='functional', post_bn_activation=keras.layers.ReLU(6.0))
+
+    with quantize.quantize_scope():
+      transformed_model, updated_metadata = ModelTransformer(
+          model,
+          [tflite_transforms.Conv2DBatchNormReLUQuantize()],
+      ).transform()
+
+    conv_layer = transformed_model.layers[1]
+    bn_layer = transformed_model.layers[2]
+
+    self.assertIsInstance(
+        conv_layer.activation, quantize_aware_activation.NoOpActivation)
+    self.assertIsInstance(
+        updated_metadata.get(bn_layer.name).get('quantize_provider'),
+        tflite_quantize_providers.NoOpQuantizeProvider)
+
+    inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
+    self.assertAllClose(
+        transformed_model.predict(inputs), model.predict(inputs))
 
 
 if __name__ == '__main__':
