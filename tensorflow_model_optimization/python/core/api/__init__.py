@@ -14,4 +14,3 @@
 # ==============================================================================
 """Import API modules for Tensorflow Model Optimization."""
 from tensorflow_model_optimization.python.core.api import sparsity
-from tensorflow_model_optimization.python.core.api import clustering

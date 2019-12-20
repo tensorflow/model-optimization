@@ -135,7 +135,7 @@ def train_and_save(models, x_train, y_train, x_test, y_test):
 
     # To acquire the stripped model,
     # deserialize with clustering scope
-    with cluster.clustering_scope():
+    with cluster.cluster_scope():
       loaded_model = keras.models.load_model('stripped_model.h5')
 
     # Checking that the stripped model's accuracy matches the clustered model

@@ -213,7 +213,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(model.built, False)
 
     # Test built state is preserved across serialization
-    with cluster.clustering_scope():
+    with cluster.cluster_scope():
       loaded_model = keras.models.model_from_config(
         json.loads(clustered_model.to_json()))
       self.assertEqual(loaded_model.built, False)
@@ -230,7 +230,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(model.built, True)
 
     # Test built state is preserved across serialization
-    with cluster.clustering_scope():
+    with cluster.cluster_scope():
       loaded_model = keras.models.model_from_config(
         json.loads(clustered_model.to_json()))
     self.assertEqual(loaded_model.built, True)
@@ -248,7 +248,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(model.built, True)
 
     # Test built state preserves across serialization
-    with cluster.clustering_scope():
+    with cluster.cluster_scope():
       loaded_model = keras.models.model_from_config(
         json.loads(clustered_model.to_json()))
     self.assertEqual(loaded_model.built, True)
