@@ -83,19 +83,6 @@ class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self._assert_models_equal(quantized_model, loaded_model)
 
-  def testProductionModelConversionToTFLite(self):
-    # small input shape to keep test running quickly.
-    model = tf.keras.applications.mobilenet.MobileNet(
-        weights=None, input_shape=(32, 32, 3))
-
-    annotated = quantize_annotate(model)
-    quantized_model = quantize_apply(annotated)
-
-    _, tflite_file = tempfile.mkstemp('.h5')
-
-    with quantize.quantize_scope():
-      utils.convert_keras_to_tflite(quantized_model, tflite_file)
-
 
 if __name__ == '__main__':
   test.main()
