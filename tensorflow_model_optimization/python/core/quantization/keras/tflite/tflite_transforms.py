@@ -15,12 +15,13 @@
 """TFLite transforms."""
 
 import collections
-import numpy as np
 
 from tensorflow.python import keras
 
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
 
 LayerNode = transforms.LayerNode
 LayerPattern = transforms.LayerPattern
@@ -41,6 +42,7 @@ def _get_weights(bn_layer_node):
   return collections.OrderedDict(
       list(bn_layer_node.input_layers[0].weights.items())
       + list(bn_layer_node.weights.items()))
+
 
 def _get_params(conv_layer, bn_layer, relu_layer=None):
   """Retrieve conv_bn params within wrapped layers."""
@@ -69,8 +71,11 @@ def _get_params(conv_layer, bn_layer, relu_layer=None):
 def _get_layer_node(fused_layer, weights):
   layer_config = keras.layers.serialize(fused_layer)
   layer_config['name'] = layer_config['config']['name']
+  # This config tracks which layers get quantized, and whether they have a
+  # custom QuantizeProvider.
+  layer_metadata = {'quantize_provider': None}
 
-  return LayerNode(layer_config, weights)
+  return LayerNode(layer_config, weights, metadata=layer_metadata)
 
 
 class Conv2DBatchNormFold(transforms.Transform):
@@ -134,3 +139,76 @@ class DepthwiseConv2DBatchNormReLU6Fold(transforms.Transform):
 
   def custom_objects(self):
     return {'_DepthwiseConvBatchNorm2D': _DepthwiseConvBatchNorm2D}
+
+
+class Conv2DBatchNormQuantize(transforms.Transform):
+  """Ensure FQ does not get placed between Conv and BatchNorm."""
+
+  def pattern(self):
+    return LayerPattern(
+        'BatchNormalization',
+        inputs=[LayerPattern(
+            'Conv2D|DepthwiseConv2D', config={'activation': 'linear'})])
+
+  @staticmethod
+  def _get_quantize_provider(layer_node):
+    return layer_node.metadata.get('quantize_provider')
+
+  def _has_custom_quantize_provider(self, *layer_nodes):
+    for layer_node in layer_nodes:
+      if self._get_quantize_provider(layer_node) is not None:
+        return True
+    return False
+
+  def replacement(self, match_layer):
+    bn_layer_node, conv_layer_node = match_layer, match_layer.input_layers[0]
+
+    if self._has_custom_quantize_provider(bn_layer_node, conv_layer_node):
+      return match_layer
+
+    conv_layer_node.layer['config']['activation'] = \
+      keras.activations.serialize(quantize_aware_activation.NoOpActivation())
+    bn_layer_node.metadata['quantize_provider'] = \
+      tflite_quantize_providers.OutputQuantizeProvider()
+
+    return match_layer
+
+  def custom_objects(self):
+    return {
+        'tflite_quantize_providers':
+            tflite_quantize_providers.OutputQuantizeProvider,
+        'NoOpActivation': quantize_aware_activation.NoOpActivation
+    }
+
+
+class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
+  """Ensure FQ does not get placed between Conv, BatchNorm and ReLU."""
+
+  def pattern(self):
+    return LayerPattern(
+        # TODO(pulkitb): Enhance match to only occur for relu, relu1 and relu6
+        'ReLU',
+        inputs=[super(Conv2DBatchNormReLUQuantize, self).pattern()])
+
+  def replacement(self, match_layer):
+    relu_layer_node = match_layer
+    bn_layer_node = relu_layer_node.input_layers[0]
+    conv_layer_node = bn_layer_node.input_layers[0]
+
+    if self._has_custom_quantize_provider(
+        relu_layer_node, bn_layer_node, conv_layer_node):
+      return match_layer
+
+    conv_layer_node.layer['config']['activation'] = \
+      keras.activations.serialize(quantize_aware_activation.NoOpActivation())
+    bn_layer_node.metadata['quantize_provider'] = \
+      tflite_quantize_providers.NoOpQuantizeProvider()
+
+    return match_layer
+
+  def custom_objects(self):
+    return {
+        'tflite_quantize_providers':
+            tflite_quantize_providers.NoOpQuantizeProvider,
+        'NoOpActivation': quantize_aware_activation.NoOpActivation
+    }

@@ -35,6 +35,22 @@ py_test(
 )
 
 py_library(
+    name = "tflite_quantize_providers",
+    srcs = [
+        "tflite_quantize_providers.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # six dep1,
+        # tensorflow dep1,
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_provider",
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
+    ],
+)
+
+py_library(
     name = "tflite_quantize_registry",
     srcs = [
         "tflite_quantize_registry.py",
@@ -49,6 +65,8 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_providers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantizers",
     ],
 )
 
@@ -78,8 +96,10 @@ py_library(
     deps = [
         # numpy dep1,
         # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:transforms",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_providers",
     ],
 )
 

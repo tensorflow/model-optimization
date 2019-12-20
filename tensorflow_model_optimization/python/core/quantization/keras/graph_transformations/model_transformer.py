@@ -17,6 +17,7 @@
 
 import collections
 import copy
+import re
 
 from tensorflow.python import keras
 from tensorflow.python.keras import backend as K
@@ -88,16 +89,16 @@ class ModelTransformer(object):
   def _get_layer_metadata(self, layer_name):
     return self._layer_metadata_map.get(layer_name, {})
 
+  def _match_pattern(self, target, pattern):
+    return re.match('^' + pattern + '$', target) is not None
+
   def _match_layer(self, layer, pattern):
     """Check if specific layer matches the pattern."""
 
     if self.candidate_layers and layer['name'] not in self.candidate_layers:
       return False
 
-    # TODO(pulkitb): Possible changes and extensions to this method.
-    # Consider making this case insensitive
-    # Add support for multiple types. (Conv2D|DepthwiseConv2d)
-    if layer['class_name'] != pattern.class_name:
+    if not self._match_pattern(layer['class_name'], pattern.class_name):
       return False
 
     layer_config = layer['config']
@@ -232,7 +233,7 @@ class ModelTransformer(object):
       if not layer_node.input_layers:
         return
 
-      layer_node['inbound_nodes'] = [[]]
+      layer_node.layer['inbound_nodes'] = [[]]
       for input_layer in layer_node.input_layers:
         # inbound_nodes can be specific tensors from multiple inbound
         # connections. We make the following assumptions.
@@ -241,7 +242,7 @@ class ModelTransformer(object):
         # - call() method during construction does not have any args.
         # These are reasonable assumptions for almost all case we are
         # interested in.
-        layer_node['inbound_nodes'][0].append(
+        layer_node.layer['inbound_nodes'][0].append(
             [input_layer.layer['name'], 0, 0, {}])
 
         _assign_inbounds_for_replacement(input_layer)
@@ -347,7 +348,7 @@ class ModelTransformer(object):
     Not suitable for multi-threaded use. Creates and manipulates internal state.
 
     Returns:
-      Keras model after transformation.
+      (Keras model after transformation, Updated layer metadata map)
     """
 
     # Gets a serialized dict representation of the model, containing all its
@@ -391,7 +392,10 @@ class ModelTransformer(object):
           if not match_layer_node:
             break
 
-          replacement_layer_node = transform.replacement(match_layer_node)
+          # Copying the match_layer_node ensures the replacement code can
+          # freely modify the match.
+          replacement_layer_node = transform.replacement(
+              copy.deepcopy(match_layer_node))
 
           # If equal, the matched layers are being replaced with exactly the
           # same set of layers that were matched with the same config.
@@ -419,8 +423,4 @@ class ModelTransformer(object):
       if weights:
         self._set_layer_weights(layer, weights)
 
-    # TODO(pulkitb): Consider returning the updated metadata for the
-    # transformed model along with the model. This allows the opportunity for
-    # transforms to encode updated metadata for layers.
-
-    return transformed_model
+    return transformed_model, copy.deepcopy(self._layer_metadata_map)

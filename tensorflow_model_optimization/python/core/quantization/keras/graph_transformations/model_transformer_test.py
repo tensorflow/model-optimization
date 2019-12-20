@@ -131,7 +131,7 @@ class ModelTransformerTest(test.TestCase):
   def testReplaceSingleLayerWithSingleLayer_OneOccurrence(self):
     model = self._simple_dense_model()
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [self.ReplaceDenseLayer()]).transform()
 
     self._assert_config(model.get_config(), transformed_model.get_config(),
@@ -148,7 +148,7 @@ class ModelTransformerTest(test.TestCase):
     out2 = keras.layers.ReLU(6.0)(x2)
     model = keras.Model(inp, [out1, out2])
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [self.ReplaceDenseLayer()]).transform()
 
     self._assert_config(model.get_config(), transformed_model.get_config(),
@@ -181,7 +181,7 @@ class ModelTransformerTest(test.TestCase):
 
     model = self._simple_dense_model()
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [RemoveBiasInDense()]).transform()
 
     self._assert_config(model.get_config(), transformed_model.get_config(),
@@ -224,7 +224,7 @@ class ModelTransformerTest(test.TestCase):
     model = keras.Model(inp, out)
     model.set_weights(model_fused.get_weights())
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [FuseReLUIntoDense()]).transform()
 
     self._assert_config(
@@ -237,8 +237,32 @@ class ModelTransformerTest(test.TestCase):
     self._assert_model_results_equal(model_fused, transformed_model)
 
   def testReplaceChainOfLayers_WithChainOfLayers(self):
-    # TODO(pulkitb): Implement
-    pass
+    class Replace2DenseLayers(transforms.Transform):
+      """Replaces 2 Dense layers with the same dense layers.
+
+      Doesn't make any meaningful change to the layer. Just verifies that
+      replacing multiple layers works as expected.
+      """
+
+      def pattern(self):
+        return LayerPattern('Dense', inputs=[LayerPattern('Dense')])
+
+      def replacement(self, match_layer):
+        # Adds a modification so the transform happens. If the layers are
+        # exactly the same, they get ignored by transformer.
+        match_layer.metadata['key'] = 'value'
+        return match_layer
+
+    inp = keras.layers.Input((3,))
+    x = keras.layers.Dense(3)(inp)
+    x = keras.layers.Dense(2)(x)
+    model = keras.Model(inp, x)
+
+    transformed_model, _ = ModelTransformer(
+        model, [Replace2DenseLayers()]).transform()
+
+    self._assert_model_results_equal(model, transformed_model)
+    self._assert_config(model.get_config(), transformed_model.get_config())
 
   def testReplaceTreeOfLayers_WithSingleLayer(self):
     # TODO(pulkitb): Implement
@@ -259,7 +283,7 @@ class ModelTransformerTest(test.TestCase):
 
     model = self._simple_dense_model()
 
-    transformed_model = ModelTransformer(
+    transformed_model, _ = ModelTransformer(
         model, [ReplaceWithSelf()]).transform()
 
     self._assert_config(model.get_config(), transformed_model.get_config())
@@ -315,6 +339,25 @@ class ModelTransformerTest(test.TestCase):
     ModelTransformer(model, [transform], [model.layers[-1].name]).transform()
     self.assertFalse(transform.matched())
 
+  def testPatternCanMatchMultipleLayers(self):
+    pattern = LayerPattern('Conv2D|DepthwiseConv2D')
+    transform = self.VerifyMatch(pattern)
+
+    inp = keras.layers.Input((3, 3, 3))
+    x = keras.layers.Conv2D(3, (2, 2))(inp)
+    conv_model = keras.Model(inp, x)
+
+    ModelTransformer(conv_model, [transform]).transform()
+    self.assertTrue(transform.matched())
+
+    inp = keras.layers.Input((3, 3, 3))
+    x = keras.layers.DepthwiseConv2D((2, 2))(inp)
+    depth_conv_model = keras.Model(inp, x)
+
+    transform.reset()
+    ModelTransformer(depth_conv_model, [transform]).transform()
+    self.assertTrue(transform.matched())
+
   def testLayerMetadataPassedAndReplacedInTransforms(self):
     class ReplaceLayerMetadata(Transform):
 
@@ -339,10 +382,7 @@ class ModelTransformerTest(test.TestCase):
 
     transformer = ModelTransformer(
         model, [ReplaceLayerMetadata()], None, layer_metadata)
-    transformed_model = transformer.transform()
-    # Once the updated metadata is returned along with the model, this won't
-    # be necessary.
-    updated_metadata = transformer._layer_metadata_map    # pylint: disable=protected-access
+    transformed_model, updated_metadata = transformer.transform()
 
     self.assertEqual(expected_metadata, updated_metadata)
     self._assert_config(model.get_config(), transformed_model.get_config())

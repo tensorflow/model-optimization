@@ -47,13 +47,14 @@ class TFLiteQuantizeLayoutTransform(
         layers.
 
     Returns:
-      Transformed Keras model to better match TensorFlow Lite backend.
+      (Transformed Keras model to better match TensorFlow Lite backend, updated
+      layer quantize map.)
     """
 
     # TODO(pulkitb): Sequential models not supported yet. Remove once support is
     # added.
     if isinstance(model, keras.Sequential):
-      return model
+      return model, layer_quantize_map
 
     transforms = [
         tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold(),

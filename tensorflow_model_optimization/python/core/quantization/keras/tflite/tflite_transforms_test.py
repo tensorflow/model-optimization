@@ -18,14 +18,18 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl.testing import parameterized
+
 import numpy as np
 
 from tensorflow.python import keras
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_transforms
 
 ModelTransformer = model_transformer.ModelTransformer
@@ -35,7 +39,7 @@ DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 
 
 # TODO(alanchiao): reduce redundancy by parameterizing on Depthwise vs Conv.
-class TFLiteTransformsTest(test.TestCase):
+class TFLiteTransformsTest(test.TestCase, parameterized.TestCase):
 
   def testTransformsConvBNReLUPattern(self):
     model = Conv2DModel.get_nonfolded_batchnorm_model(
@@ -44,7 +48,7 @@ class TFLiteTransformsTest(test.TestCase):
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
@@ -60,7 +64,7 @@ class TFLiteTransformsTest(test.TestCase):
         random_init=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
@@ -78,7 +82,7 @@ class TFLiteTransformsTest(test.TestCase):
         is_quantized=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model, [tflite_transforms.Conv2DBatchNormFold()]).transform()
 
     inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
@@ -93,7 +97,7 @@ class TFLiteTransformsTest(test.TestCase):
         random_init=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model,
           [tflite_transforms.Conv2DBatchNormFold()]).transform()
 
@@ -112,7 +116,7 @@ class TFLiteTransformsTest(test.TestCase):
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model,
           [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
 
@@ -130,7 +134,7 @@ class TFLiteTransformsTest(test.TestCase):
         random_init=True)
 
     with quantize.quantize_scope():
-      transformed_model = ModelTransformer(
+      transformed_model, _ = ModelTransformer(
           model,
           [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
 
@@ -141,6 +145,74 @@ class TFLiteTransformsTest(test.TestCase):
     self.assertEqual(len(transformed_weights), len(model.get_weights()))
     for i in range(len(transformed_weights)):
       self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
+
+  @staticmethod
+  def _get_model(layer_type, include_activation):
+    activation = None
+    if include_activation:
+      activation = keras.layers.ReLU(6.0)
+
+    if layer_type == 'Conv2D':
+      return Conv2DModel.get_nonfolded_batchnorm_model(
+          model_type='functional', post_bn_activation=activation)
+    elif layer_type == 'DepthwiseConv2D':
+      return DepthwiseConv2DModel.get_nonfolded_batchnorm_model(
+          model_type='functional', post_bn_activation=activation)
+
+  @staticmethod
+  def _get_input_shape(layer_type):
+    if layer_type == 'Conv2D':
+      return Conv2DModel.get_batched_input_shape()
+    elif layer_type == 'DepthwiseConv2D':
+      return DepthwiseConv2DModel.get_batched_input_shape()
+
+  @parameterized.parameters('Conv2D', 'DepthwiseConv2D')
+  def testConv2DBatchNormQuantize(self, layer_type):
+    model = self._get_model(layer_type, False)
+    input_shape = self._get_input_shape(layer_type)
+
+    with quantize.quantize_scope():
+      transformed_model, updated_metadata = ModelTransformer(
+          model,
+          [tflite_transforms.Conv2DBatchNormQuantize()],
+      ).transform()
+
+    conv_layer = transformed_model.layers[1]
+    bn_layer = transformed_model.layers[2]
+
+    self.assertIsInstance(
+        conv_layer.activation, quantize_aware_activation.NoOpActivation)
+    self.assertIsInstance(
+        updated_metadata.get(bn_layer.name).get('quantize_provider'),
+        tflite_quantize_providers.OutputQuantizeProvider)
+
+    inputs = np.random.standard_normal(input_shape)
+    self.assertAllClose(
+        transformed_model.predict(inputs), model.predict(inputs))
+
+  @parameterized.parameters('Conv2D', 'DepthwiseConv2D')
+  def testConv2DBatchNormReLUQuantize(self, layer_type):
+    model = self._get_model(layer_type, True)
+    input_shape = self._get_input_shape(layer_type)
+
+    with quantize.quantize_scope():
+      transformed_model, updated_metadata = ModelTransformer(
+          model,
+          [tflite_transforms.Conv2DBatchNormReLUQuantize()],
+      ).transform()
+
+    conv_layer = transformed_model.layers[1]
+    bn_layer = transformed_model.layers[2]
+
+    self.assertIsInstance(
+        conv_layer.activation, quantize_aware_activation.NoOpActivation)
+    self.assertIsInstance(
+        updated_metadata.get(bn_layer.name).get('quantize_provider'),
+        tflite_quantize_providers.NoOpQuantizeProvider)
+
+    inputs = np.random.standard_normal(input_shape)
+    self.assertAllClose(
+        transformed_model.predict(inputs), model.predict(inputs))
 
 
 if __name__ == '__main__':

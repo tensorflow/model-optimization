@@ -52,6 +52,7 @@ def quantize_scope(*args):
       'QuantizeAnnotate': quantize_annotate_mod.QuantizeAnnotate,
       'QuantizeAwareActivation':
           quantize_aware_activation.QuantizeAwareActivation,
+      'NoOpActivation': quantize_aware_activation.NoOpActivation,
       'QuantizeWrapper': quantize_wrapper.QuantizeWrapper,
       # TODO(tf-mot): add way for different quantization schemes to modify this.
       '_DepthwiseConvBatchNorm2D': conv_batchnorm._DepthwiseConvBatchNorm2D,  # pylint: disable=protected-access
@@ -201,7 +202,8 @@ def quantize_apply(model):
   # target device/dialect.
   quantize_transform = \
     tflite_quantize_layout_transform.TFLiteQuantizeLayoutTransform()
-  transformed_model = quantize_transform.apply(
+  # layer_quantize_map gets modified by the transformations.
+  transformed_model, layer_quantize_map = quantize_transform.apply(
       unwrapped_model, layer_quantize_map)
 
   # TODO(pulkitb): Think more about how to introduce TFLite specific code.
