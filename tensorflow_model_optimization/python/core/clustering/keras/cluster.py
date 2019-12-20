@@ -22,10 +22,10 @@ from tensorflow.python.keras.engine.input_layer import InputLayer
 from tensorflow.python.keras.utils.generic_utils import custom_object_scope
 
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
-from tensorflow_model_optimization.python.core.clustering.keras.cluster_wrapper import ClusterWeights
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 
 
-def clustering_scope():
+def cluster_scope():
   """Provides a scope in which Clustered layers and models can be deserialized.
 
   If a keras model or layer has been clustered, it needs to be within this scope
@@ -40,13 +40,13 @@ def clustering_scope():
   clustered_model = cluster_weights(model, **self.params)
   keras.models.save_model(clustered_model, keras_file)
 
-  with clustering_scope():
+  with cluster_scope():
     loaded_model = keras.models.load_model(keras_file)
   ```
   """
   return custom_object_scope(
     {
-      'ClusterWeights': ClusterWeights,
+      'ClusterWeights': cluster_wrapper.ClusterWeights,
     }
   )
 
@@ -56,7 +56,7 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
 
   This function wraps a keras model or layer with clustering functionality
   which clusters the layer's weights during training. For examples, using
-  this with number of clusters equals 8 will ensure that each weight tensor has
+  this with number_of_clusters equals 8 will ensure that each weight tensor has
   no more than 8 unique values.
 
   Before passing to the clustering API, a model should already be trained and show some acceptable performance
@@ -112,7 +112,7 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
         Ignored when to_cluster is not a keras layer.
 
   Returns:
-    Layer or model modified with clustering wrappers.
+    Layer or model modified to include clustering related metadata.
 
   Raises:
     ValueError: if the keras layer is unsupported, or the keras model contains
@@ -122,12 +122,12 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
     raise ValueError("cluster centroids can only be one of three: random, density-based, linear")
 
   def _add_clustering_wrapper(layer):
-    if isinstance(layer, ClusterWeights):
+    if isinstance(layer, cluster_wrapper.ClusterWeights):
       return layer
     elif isinstance(layer, InputLayer):
       return layer.__class__.from_config(layer.get_config())
     else:
-      return ClusterWeights(layer, number_of_clusters, cluster_centroids_init, **kwargs)
+      return cluster_wrapper.ClusterWeights(layer, number_of_clusters, cluster_centroids_init, **kwargs)
 
   def _wrap_list(layers):
     output = []
@@ -177,7 +177,7 @@ def strip_clustering(model):
       'Expected model to be a `tf.keras.Model` instance but got: ', model)
 
   def _strip_clustering_wrapper(layer):
-    if isinstance(layer, ClusterWeights):
+    if isinstance(layer, cluster_wrapper.ClusterWeights):
       if not hasattr(layer.layer, '_batch_input_shape') and hasattr(
               layer, '_batch_input_shape'):
         layer.layer._batch_input_shape = layer._batch_input_shape
