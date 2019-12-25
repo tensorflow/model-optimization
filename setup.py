@@ -37,6 +37,7 @@ REQUIRED_PACKAGES = [
     'numpy~=1.14',
     'six~=1.10',
     'enum34~=1.1',
+    'dm-tree~=0.1.1',
 ]
 
 if '--release' in sys.argv:

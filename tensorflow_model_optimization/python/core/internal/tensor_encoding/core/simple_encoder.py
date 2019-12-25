@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow.python.util import nest as core_nest
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import py_utils
 
@@ -115,8 +114,7 @@ class SimpleEncoder(object):
           _SHAPES: input_shapes
       }
       flat_encoded_structure = dict(
-          core_nest.flatten_with_joined_string_paths(
-              full_encoded_structure, separator='/'))
+          py_utils.flatten_with_joined_string_paths(full_encoded_structure))
       flat_encoded_py_structure, flat_encoded_tf_structure = (
           py_utils.split_dict_py_tf(flat_encoded_structure))
 
