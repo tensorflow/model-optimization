@@ -22,6 +22,7 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
+# TODO(b/139939526): Move to public API.
 from tensorflow.python.framework import test_util as tf_test_util
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import encoding_stage

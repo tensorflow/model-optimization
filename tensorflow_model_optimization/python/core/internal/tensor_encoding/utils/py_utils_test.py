@@ -16,6 +16,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
@@ -166,6 +167,32 @@ class SplitMergeDictTest(parameterized.TestCase):
       py_utils.merge_dicts(bad_dict1, bad_dict2)
     with self.assertRaises(error_type):
       py_utils.merge_dicts(bad_dict2, bad_dict1)
+
+
+Foo = collections.namedtuple('Foo', ['a', 'b'])
+Bar = collections.namedtuple('Bar', ['c', 'd'])
+
+
+class NestReplacementTests(parameterized.TestCase):
+  """Tests for replacements of deprecated tf.nest symbols."""
+
+  @parameterized.parameters([
+      dict(inputs=[], expected=[]),
+      dict(inputs=[23, '42'], expected=[('0', 23), ('1', '42')]),
+      dict(inputs=[[[[108]]]], expected=[('0/0/0/0', 108)]),
+      dict(inputs=Foo(a=3, b=Bar(c=23, d=42)),
+           expected=[('a', 3), ('b/c', 23), ('b/d', 42)]),
+      dict(inputs=Foo(a=Bar(c=23, d=42), b=Bar(c=0, d='thing')),
+           expected=[('a/c', 23), ('a/d', 42), ('b/c', 0), ('b/d', 'thing')]),
+      dict(inputs=Bar(c=42, d=43),
+           expected=[('c', 42), ('d', 43)]),
+      dict(inputs=Bar(c=[42], d=43),
+           expected=[('c/0', 42), ('d', 43)]),
+  ])
+  def test_flatten_with_joined_string_paths(self, inputs, expected):
+    self.assertEqual(
+        py_utils.flatten_with_joined_string_paths(inputs, separator='/'),
+        expected)
 
 
 class AssertionsTest(parameterized.TestCase):

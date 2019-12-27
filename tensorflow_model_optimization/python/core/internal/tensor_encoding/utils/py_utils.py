@@ -24,6 +24,7 @@ import enum
 import numpy as np
 import six
 import tensorflow as tf
+import tree
 
 
 class OrderedEnum(enum.Enum):
@@ -157,6 +158,12 @@ def merge_dicts(dict1, dict2):
       merged_dict[k] = v
 
   return merged_dict
+
+
+def flatten_with_joined_string_paths(structure, separator='/'):
+  """Replacement for deprecated tf.nest.flatten_with_joined_string_paths."""
+  return [(separator.join(map(str, path)), item)
+          for path, item in tree.flatten_with_path(structure)]
 
 
 def assert_compatible(spec, value):

@@ -19,7 +19,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow.python.util import nest as core_nest
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import py_utils
 
@@ -287,9 +286,8 @@ class GatherEncoder(object):
       _add_to_py_values('encoded_structure', encoded_structure_py)
 
       return (dict(
-          core_nest.flatten_with_joined_string_paths(
-              encoded_structure_tf,
-              separator='/')), tuple(tf.nest.flatten(state_update_tensors)))
+          py_utils.flatten_with_joined_string_paths(encoded_structure_tf)),
+              tuple(tf.nest.flatten(state_update_tensors)))
 
     encoded_structure, state_update_tensors = encode_fn(
         tf.zeros(tensorspec.shape, tensorspec.dtype), encode_params)
@@ -319,8 +317,7 @@ class GatherEncoder(object):
       _add_to_structure('part_decoded_structure', part_decoded_structure)
       if isinstance(part_decoded_structure, dict):
         return dict(
-            core_nest.flatten_with_joined_string_paths(
-                part_decoded_structure, separator='/'))
+            py_utils.flatten_with_joined_string_paths(part_decoded_structure))
       else:
         return part_decoded_structure
 

@@ -70,7 +70,6 @@ py_library(
     deps = [
         ":core_encoder",
         # tensorflow dep1,
-        # python:util tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/utils:py_utils",
     ],
 )
@@ -97,7 +96,6 @@ py_library(
     deps = [
         ":core_encoder",
         # tensorflow dep1,
-        # python:util tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/utils:py_utils",
     ],
 )

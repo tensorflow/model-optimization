@@ -13,8 +13,11 @@ A clear and concise description of what the bug is.
 **System information**
 
 TensorFlow installed from (source or binary):
-TensorFlow version (use command below):
+
+TensorFlow version:
+
 TensorFlow Model Optimization version:
+
 Python version:
 
 **Describe the expected behavior**
