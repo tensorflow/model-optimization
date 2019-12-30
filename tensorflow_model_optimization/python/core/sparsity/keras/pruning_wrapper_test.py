@@ -23,6 +23,7 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
+# RANDOM COMMENT 90
 keras = tf.keras
 layers = keras.layers
 Prune = pruning_wrapper.PruneLowMagnitude
