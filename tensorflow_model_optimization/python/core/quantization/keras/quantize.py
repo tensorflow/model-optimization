@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Quantization API functions for Keras models."""
+"""Quantization API functions for tf.keras models."""
 
 from tensorflow.python import keras
 from tensorflow.python.keras.utils.generic_utils import custom_object_scope
@@ -29,8 +29,10 @@ from tensorflow_model_optimization.python.core.quantization.keras.tflite import 
 def quantize_scope(*args):
   """Provides a scope in which Quantized layers and models can be deserialized.
 
-  If a keras model or layer has been quantized, it needs to be within this scope
-  to be successfully deserialized.
+  If a keras h5 model or layer has been quantized, it needs to be within this
+  scope
+  to be successfully deserialized. This is not needed for TF checkpoints or
+  SavedModel, which are the recommended serialization formats in TF 2.X.
 
   Args:
     *args: Variable length list of dictionaries of name, class pairs to add to
@@ -64,20 +66,43 @@ def quantize_scope(*args):
   return custom_object_scope(*(args + (quantization_objects,)))
 
 
+def quantize(to_quantize):
+  """Quantize a whole tf.keras model.
+
+  To be more precise, `quantize` creates a model that emulates
+  quantization during training and stores information that downstream
+  tools will use to produce actually quantized models.
+
+  For quantizing individual tf.keras layers, use the `quantize_annotate`
+  and `quantize_apply` APIs.
+
+  Args:
+    to_quantize: tf.keras model to be quantized.
+
+  Returns:
+    Returns a new tf.keras model prepared for quantization. It has the following
+    properties:
+    - Pre-trained weights are copied over, but the optimizer is removed.
+    - Training this model will not affect the weights of the original model.
+  """
+  annotated_model = quantize_annotate(to_quantize)
+  return quantize_apply(annotated_model)
+
+
 def quantize_annotate(to_quantize, **kwargs):
   """Specify a layer or model to be quantized.
 
-  This function does not actually quantize tensors. It merely wraps the keras
-  layer (or each layer in the model) with `QuantizeAnnotate` to note which
-  layers need to be quantized.
+  This function does not actually quantize anything. It merely wraps the
+  tf.keras layer (or each layer in the model) with `QuantizeAnnotate` to note
+  which layers need to be quantized.
 
   Args:
-    to_quantize: Keras layer or model to be quantized.
+    to_quantize: tf.keras layer or model to be quantized.
     **kwargs: Additional keyword arguments to be passed to the keras layer.
 
   Returns:
-    Keras layer wrapped with `QuantizeAnnotate` if layer is passed. Else,
-    a new keras model with each layer in the model wrapped with
+    tf.keras layer wrapped with `QuantizeAnnotate` if layer is passed. Else,
+    a new tf.keras model with each layer in the model wrapped with
     `QuantizeAnnotate`.
   """
 
@@ -101,34 +126,33 @@ def quantize_annotate(to_quantize, **kwargs):
 
 
 def quantize_apply(model):
-  """Apply quantization operations to a keras model.
+  """Introduce quantization operations to a tf.keras model.
 
-  This function takes a keras model which has been annotated with
-  `quantize_annotate` and constructs a new keras model in which each of the
-  annotated layers have been quantized. The quantization process introduces
-  new quantization ops in the Tensorflow graph to appropriately emulate
-  quantization loss.
-
-  Note that to exactly emulate quantization loss, certain graph/model
-  transformations may be applied. This is required since the actual quantized
-  kernel implementations may apply similar transformations.
+  This function takes a tf.keras model which has been annotated with
+  `quantize_annotate` and constructs a new model in which each of the
+  annotated layers will ultimately be quantized. The new quantization
+  operations enable the model to **emulate* quantization during training
+  and store information that downstream tools will use to produce
+  an actually quantized model.
 
   Args:
-    model: A keras Sequential or Functional model which has been annotated
+    model: A tf.keras Sequential or Functional model which has been annotated
     with `quantize_annotate`.
 
   Returns:
-    Returns a new cloned keras model in which the annotated layers have been
-    quantized. All the existing layers are cloned.
+    Returns a new tf.keras model in which the annotated layers have been
+    prepared for quantization. It has the following properties:
+    - Pre-trained weights are copied over, but the optimizer is removed.
+    - Training this model will not affect the weights of the original model.
   """
 
   if not isinstance(model, keras.Model):
-    raise ValueError('Only a keras `Model` instance can be used.')
+    raise ValueError('Only a tf.keras `Model` instance can be used.')
 
   if not isinstance(model, keras.Sequential) \
       and not model._is_graph_network:  # pylint: disable=protected-access
-    raise ValueError('model should be either a keras.Sequential or a '
-                     'keras functional model.')
+    raise ValueError('model should be either a tf.keras Sequential or '
+                     'Functional model.')
 
   # Have at least 1 layer annotated with QuantizeAnnotate
   if not any(isinstance(layer, quantize_annotate_mod.QuantizeAnnotate)

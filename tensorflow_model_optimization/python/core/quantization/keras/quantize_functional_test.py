@@ -29,9 +29,6 @@ from tensorflow_model_optimization.python.core.keras.testing import test_utils_m
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils as test_utils
 
-quantize_annotate = quantize.quantize_annotate
-quantize_apply = quantize.quantize_apply
-
 
 class QuantizeFunctionalTest(test.TestCase, parameterized.TestCase):
 
@@ -46,7 +43,7 @@ class QuantizeFunctionalTest(test.TestCase, parameterized.TestCase):
     model.fit(x_train, y_train, batch_size=500)
     _, model_accuracy = model.evaluate(x_test, y_test, verbose=0)
 
-    quantized_model = quantize_apply(quantize_annotate(model))
+    quantized_model = quantize.quantize(model)
     quantized_model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     quantized_model.fit(x_train, y_train, batch_size=500)

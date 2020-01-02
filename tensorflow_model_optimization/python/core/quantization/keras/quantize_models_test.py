@@ -104,7 +104,7 @@ class QuantizeModelsTest(test.TestCase, parameterized.TestCase):
   def testModelEndToEnd(self, model_type):
     # 1. Check whether quantized model graph can be constructed.
     model = self._get_model(model_type)
-    model = quantize.quantize_apply(quantize.quantize_annotate(model))
+    model = quantize.quantize(model)
 
     # 2. Sanity check to ensure basic training on random data works.
     x_train, y_train = self._create_test_data(model)

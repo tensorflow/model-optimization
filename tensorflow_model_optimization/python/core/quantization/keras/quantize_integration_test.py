@@ -32,9 +32,6 @@ from tensorflow_model_optimization.python.core.keras import test_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils
 
-quantize_annotate = quantize.quantize_annotate
-quantize_apply = quantize.quantize_apply
-
 
 class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
 
@@ -67,7 +64,7 @@ class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
   def testSerialization(self):
     model = test_utils.build_simple_dense_model()
 
-    quantized_model = quantize_apply(quantize_annotate(model))
+    quantized_model = quantize.quantize(model)
     quantized_model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     quantized_model.fit(
