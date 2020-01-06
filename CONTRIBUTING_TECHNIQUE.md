@@ -1,6 +1,6 @@
 # Guidelines for Contributing a New Technique
 
-The following are guidelines for contributing a complete technique into the
+The following are guidelines for contributing a complete technique to the
 toolkit, for example, connection pruning.
 
 We will be evolving these guidelines to make the process more effective, and

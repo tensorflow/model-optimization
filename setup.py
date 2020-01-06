@@ -36,7 +36,7 @@ from version import __version__  # pylint: disable=g-import-not-at-top
 REQUIRED_PACKAGES = [
     'numpy~=1.14',
     'six~=1.10',
-    'enum34~=1.1',
+    'enum34~=1.1;python_version<"3.4"',
     'dm-tree~=0.1.1',
 ]
 
