@@ -19,6 +19,7 @@ py_library(
     deps = [
         "//tensorflow_model_optimization/python",
         "//tensorflow_model_optimization/python/core/api",
+        "//tensorflow_model_optimization/python/core/clustering",
         "//tensorflow_model_optimization/python/core/sparsity",
     ],
 )
