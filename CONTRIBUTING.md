@@ -21,6 +21,9 @@ again.
 
 ## TensorFlow Model Optimization Specific
 
+### Style
+Please refer to [TensorFlow's style guide](https://www.tensorflow.org/community/contribute/code_style). Don't forget to run pylint.
+
 ### Contributing Whole Techniques
 
 See these [guidelines](CONTRIBUTING_TECHNIQUE.md).
@@ -42,4 +45,4 @@ This project follows [Google's Open Source Community
 Guidelines](https://opensource.google.com/conduct/). Please also
 look at the [TensorFlow contributor
 guide](https://www.tensorflow.org/community/contribute), in particular for the
-community values and style guides.
+community values.
