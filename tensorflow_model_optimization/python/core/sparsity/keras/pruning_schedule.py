@@ -224,7 +224,7 @@ class PolynomialDecay(PruningSchedule):
 
   def __call__(self, step):
     # TODO(tf-mot): consider switch to divide for 1.XX also.
-    if tf.__version__[0] == '1':
+    if hasattr(tf, 'div'):
       divide = tf.div
     else:
       divide = tf.math.divide

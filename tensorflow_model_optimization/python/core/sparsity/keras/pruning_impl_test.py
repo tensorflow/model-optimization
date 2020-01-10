@@ -37,7 +37,7 @@ test = tf.test
 
 
 def assign_add(ref, value):
-  if tf.__version__[0] == "1":
+  if hasattr(tf, "assign_add"):
     return tf.assign_add(ref, value)
   else:
     return ref.assign_add(value)
@@ -69,7 +69,8 @@ class PruningTest(test.TestCase, parameterized.TestCase):
       return self.global_step
     self.training_step_fn = training_step_fn
 
-    if tf.__version__[0] == "1" and not tf.executing_eagerly():
+    if hasattr(tf,
+               "global_variables_initializer") and not tf.executing_eagerly():
       self.evaluate(tf.global_variables_initializer())
 
   def testUpdateSingleMask(self):
