@@ -50,6 +50,7 @@ py_library(
     deps = [
         ":prunable_layer",
         # tensorflow dep1,
+        # python/keras:base_layer tensorflow dep2,
     ],
 )
 
