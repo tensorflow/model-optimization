@@ -23,9 +23,9 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        ":cluster_wrapper",
         ":clustering_centroids",
         ":clustering_registry",
-        ":cluster_wrapper"
     ],
 )
 
@@ -64,10 +64,11 @@ py_test(
     name = "cluster_test",
     size = "medium",
     srcs = ["cluster_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",
+        # tensorflow dep1,
     ],
 )
 
@@ -75,10 +76,11 @@ py_test(
     name = "clustering_centroids_test",
     size = "medium",
     srcs = ["clustering_centroids_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":clustering_centroids",
+        # tensorflow dep1,
     ],
 )
 
@@ -86,14 +88,15 @@ py_test(
     name = "cluster_wrapper_test",
     size = "medium",
     srcs = ["cluster_wrapper_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        ":cluster",
         ":cluster_wrapper",
         ":clusterable_layer",
-        ":clustering_registry",
         ":clustering_centroids",
-        ":cluster",
+        ":clustering_registry",
+        # tensorflow dep1,
     ],
 )
 
@@ -101,11 +104,12 @@ py_test(
     name = "clustering_registry_test",
     size = "medium",
     srcs = ["clustering_registry_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_wrapper",
         ":clusterable_layer",
-        ":clustering_registry"
+        ":clustering_registry",
+        # tensorflow dep1,
     ],
 )

@@ -85,7 +85,7 @@ class PruningSummaries(callbacks.TensorBoard):
         log_dir=log_dir, update_freq=update_freq, **kwargs)
 
   def _log_pruning_metrics(self, logs, prefix, step):
-    if tf.__version__[0] == '1':
+    if hasattr(self, '_write_custom_summaries'):
       self._write_custom_summaries(step, logs)
     else:
       self._log_metrics(logs, prefix, step)

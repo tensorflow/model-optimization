@@ -16,11 +16,12 @@
 
 import tensorflow as tf
 from tensorflow.python.keras import initializers, backend as k
-from tensorflow.python.keras.engine import Layer
 from tensorflow.python.keras.layers import Wrapper
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer, clustering_registry, \
   clustering_centroids
+
+Layer = tf.keras.layers.Layer
 
 
 class ClusterWeights(Wrapper):

@@ -33,7 +33,8 @@ glorot_uniform_initializer = tf.keras.initializers.glorot_uniform
 class PruningUtilsParameterizedTest(tf.test.TestCase, parameterized.TestCase):
 
   def _initialize_variables(self):
-    if tf.__version__[0] == "1" and not tf.executing_eagerly():
+    if hasattr(tf,
+               "global_variables_initializer") and not tf.executing_eagerly():
       self.evaluate(tf.global_variables_initializer())
 
   def _compare_pooling_methods(self, weights, pooling_kwargs):

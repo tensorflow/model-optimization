@@ -50,6 +50,7 @@ py_library(
     deps = [
         ":prunable_layer",
         # tensorflow dep1,
+        # python/keras:base_layer tensorflow dep2,
     ],
 )
 
@@ -90,8 +91,8 @@ py_library(
         ":pruning_schedule",
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras:generic_utils tensorflow dep2,
-        # python/keras:tf_utils tensorflow dep2,
+        # python/keras/utils:generic_utils tensorflow dep2,
+        # python/keras/utils:tf_utils tensorflow dep2,
     ],
 )
 
@@ -171,7 +172,7 @@ py_library(
         # tensorflow dep1,
         # python/keras tensorflow dep2,
         # python/keras:backend tensorflow dep2,
-        # python/keras:saving tensorflow dep2,
+        # python/keras/saving tensorflow dep2,
     ],
 )
 

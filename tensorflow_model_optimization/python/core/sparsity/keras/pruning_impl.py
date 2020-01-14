@@ -55,7 +55,7 @@ class Pruning(object):
 
   @staticmethod
   def _assign(ref, value):
-    if tf.__version__[0] == '1':
+    if hasattr(tf, 'assign'):
       return tf.assign(ref, value)
     else:
       return ref.assign(value)

@@ -10,9 +10,9 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":version",
+        "//tensorflow_model_optimization/python/core/clustering",
         "//tensorflow_model_optimization/python/core/internal",
         "//tensorflow_model_optimization/python/core/sparsity",
-        "//tensorflow_model_optimization/python/core/clustering",
     ],
 )
 
