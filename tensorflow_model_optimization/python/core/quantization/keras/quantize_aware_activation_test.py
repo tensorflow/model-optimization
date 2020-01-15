@@ -25,6 +25,7 @@ import numpy as np
 from tensorflow.python import keras
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
+from tensorflow.python.keras import keras_parameterized
 from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
 from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
 from tensorflow.python.ops import array_ops
@@ -37,6 +38,7 @@ QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 MovingAverageQuantizer = quantizers.MovingAverageQuantizer
 
 
+@keras_parameterized.run_all_keras_modes
 class QuantizeAwareQuantizationTest(test.TestCase, parameterized.TestCase):
 
   def setUp(self):
