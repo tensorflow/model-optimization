@@ -25,6 +25,7 @@ import numpy as np
 from tensorflow.python.client import session
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
+from tensorflow.python.keras import keras_parameterized
 from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
 from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
 from tensorflow.python.ops import variable_scope
@@ -34,6 +35,7 @@ from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
 
+@keras_parameterized.run_all_keras_modes
 @parameterized.parameters(
     quantizers.LastValueQuantizer, quantizers.MovingAverageQuantizer)
 class QuantizersTest(test.TestCase, parameterized.TestCase):

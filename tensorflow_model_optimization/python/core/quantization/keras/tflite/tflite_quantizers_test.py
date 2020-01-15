@@ -21,6 +21,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 
 from tensorflow.python import keras
+from tensorflow.python.keras import keras_parameterized
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantizers
@@ -28,6 +29,7 @@ from tensorflow_model_optimization.python.core.quantization.keras.tflite import 
 ConvWeightsQuantizer = tflite_quantizers.ConvWeightsQuantizer
 
 
+@keras_parameterized.run_all_keras_modes
 class ConvWeightsQuantizerTest(test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters(

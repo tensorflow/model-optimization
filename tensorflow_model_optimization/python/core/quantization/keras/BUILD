@@ -38,6 +38,7 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":quant_ops",
+        # tensorflow dep1,
         # python:array_ops tensorflow dep2,
         # python:dtypes tensorflow dep2,
         # python:framework_ops tensorflow dep2,
@@ -46,6 +47,7 @@ py_test(
         # python:session tensorflow dep2,
         # python:variable_scope tensorflow dep2,
         # python:variables tensorflow dep2,
+        # python/keras tensorflow dep2,
     ],
 )
 
@@ -288,6 +290,8 @@ py_test(
     size = "large",
     srcs = ["quantize_functional_test.py"],
     python_version = "PY2",
+    # To match parallel runs of run_all_keras_modes.
+    shard_count = 4,
     deps = [
         ":quantize",
         ":utils",

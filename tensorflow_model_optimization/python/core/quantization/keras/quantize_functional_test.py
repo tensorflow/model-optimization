@@ -23,13 +23,14 @@ import tempfile
 from absl.testing import parameterized
 
 from tensorflow.lite.python import lite
+from tensorflow.python.keras import keras_parameterized
 from tensorflow.python.platform import test
-
 from tensorflow_model_optimization.python.core.keras.testing import test_utils_mnist
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils as test_utils
 
 
+@keras_parameterized.run_all_keras_modes(always_skip_v1=True)
 class QuantizeFunctionalTest(test.TestCase, parameterized.TestCase):
 
   # TODO(pulkitb): Parameterize test and include functional mnist, and
@@ -46,6 +47,7 @@ class QuantizeFunctionalTest(test.TestCase, parameterized.TestCase):
     quantized_model = quantize.quantize(model)
     quantized_model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
     quantized_model.fit(x_train, y_train, batch_size=500)
     _, quantized_model_accuracy = quantized_model.evaluate(
         x_test, y_test, verbose=0)

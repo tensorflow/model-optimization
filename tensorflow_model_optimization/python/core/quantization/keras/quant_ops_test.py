@@ -18,20 +18,25 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl.testing import parameterized
+
+import tensorflow as tf
+
 from tensorflow.python.client import session
 from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
+from tensorflow.python.keras import keras_parameterized
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import partitioned_variables
 from tensorflow.python.ops import variable_scope
 from tensorflow.python.ops import variables
-from tensorflow.python.platform import googletest
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 
 _SYMMETRIC_RANGE_RATIO = 0.9921875  # 127 / 128
 
 
-class QuantOpsTest(googletest.TestCase):
+@keras_parameterized.run_all_keras_modes
+class QuantOpsTest(tf.test.TestCase, parameterized.TestCase):
 
   def testLastValueQuantizeTrainingAssign(self):
     min_value, max_value = self._GetMinMaxValues(quant_ops.LastValueQuantize,
@@ -122,4 +127,4 @@ class QuantOpsTest(googletest.TestCase):
 
 
 if __name__ == '__main__':
-  googletest.main()
+  tf.test.main()
