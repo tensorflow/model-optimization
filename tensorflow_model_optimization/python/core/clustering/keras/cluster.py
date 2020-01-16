@@ -45,13 +45,16 @@ def cluster_scope():
   ```
   """
   return custom_object_scope(
-    {
-      'ClusterWeights': cluster_wrapper.ClusterWeights,
-    }
+      {
+          'ClusterWeights': cluster_wrapper.ClusterWeights
+      }
   )
 
 
-def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kwargs):
+def cluster_weights(to_cluster,
+                    number_of_clusters,
+                    cluster_centroids_init,
+                    **kwargs):
   """Modify a keras layer or model to be clustered during training.
 
   This function wraps a keras model or layer with clustering functionality
@@ -59,16 +62,16 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
   this with number_of_clusters equals 8 will ensure that each weight tensor has
   no more than 8 unique values.
 
-  Before passing to the clustering API, a model should already be trained and show some acceptable performance
-  on the testing/validation sets.
+  Before passing to the clustering API, a model should already be trained and
+  show some acceptable performance on the testing/validation sets.
 
   The function accepts either a single keras layer
   (subclass of `keras.layers.Layer`), list of keras layers or a keras model
   (instance of `keras.models.Model`) and handles them appropriately.
 
   If it encounters a layer it does not know how to handle, it will throw an
-  error. While clustering an entire model, even a single unknown layer would lead
-  to an error.
+  error. While clustering an entire model, even a single unknown layer would
+  lead to an error.
 
   Cluster a model:
 
@@ -98,16 +101,19 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
   Arguments:
       to_cluster: A single keras layer, list of keras layers, or a
         `tf.keras.Model` instance.
-      number_of_clusters: the number of cluster centroids to form when clustering a layer/model.
-        For example, if number_of_clusters=8 then only 8 unique values will be used in each weight array.
+      number_of_clusters: the number of cluster centroids to form when
+        clustering a layer/model. For example, if number_of_clusters=8 then only
+        8 unique values will be used in each weight array.
       cluster_centroids_init: how to initialize the cluster centroids.
         Can have following values:
-          1. 'random' : centroids are sampled using the uniform distribution between the minimum and maximum weight
-          values in a given layer
-          2. 'density-based' : density-based sampling. First, cumulative distribution function is built for weights,
-          then y-axis is evenly spaced into number_of_clusters regions. After this the corresponding x values are
-          obtained and used to initialize clusters centroids.
-          3. 'linear' : cluster centroids are evenly spaced between the minimum and maximum values of a given weight
+          1. 'random' : centroids are sampled using the uniform distribution
+          between the minimum and maximum weight values in a given layer
+          2. 'density-based' : density-based sampling. First, cumulative
+          distribution function is built for weights, then y-axis is evenly
+          spaced into number_of_clusters regions. After this the corresponding x
+          values are obtained and used to initialize clusters centroids.
+          3. 'linear' : cluster centroids are evenly spaced between the minimum
+          and maximum values of a given weight
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 
@@ -118,16 +124,21 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
     ValueError: if the keras layer is unsupported, or the keras model contains
     an unsupported layer.
   """
-  if not clustering_centroids.CentroidsInitializerFactory.init_is_supported(cluster_centroids_init):
-    raise ValueError("cluster centroids can only be one of three: random, density-based, linear")
+  if not clustering_centroids.CentroidsInitializerFactory.\
+      init_is_supported(cluster_centroids_init):
+    raise ValueError("cluster centroids can only be one of three values: "
+                     "random, density-based, linear")
 
   def _add_clustering_wrapper(layer):
     if isinstance(layer, cluster_wrapper.ClusterWeights):
       return layer
-    elif isinstance(layer, InputLayer):
+    if isinstance(layer, InputLayer):
       return layer.__class__.from_config(layer.get_config())
-    else:
-      return cluster_wrapper.ClusterWeights(layer, number_of_clusters, cluster_centroids_init, **kwargs)
+
+    return cluster_wrapper.ClusterWeights(layer,
+                                          number_of_clusters,
+                                          cluster_centroids_init,
+                                          **kwargs)
 
   def _wrap_list(layers):
     output = []
@@ -137,11 +148,12 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
     return output
 
   if isinstance(to_cluster, keras.Model):
-    return keras.models.clone_model(
-      to_cluster, input_tensors=None, clone_function=_add_clustering_wrapper)
-  elif isinstance(to_cluster, Layer):
+    return keras.models.clone_model(to_cluster,
+                                    input_tensors=None,
+                                    clone_function=_add_clustering_wrapper)
+  if isinstance(to_cluster, Layer):
     return _add_clustering_wrapper(layer=to_cluster)
-  elif isinstance(to_cluster, list):
+  if isinstance(to_cluster, list):
     return _wrap_list(to_cluster)
 
 
@@ -174,40 +186,43 @@ def strip_clustering(model):
   """
   if not isinstance(model, keras.Model):
     raise ValueError(
-      'Expected model to be a `tf.keras.Model` instance but got: ', model)
+        'Expected model to be a `tf.keras.Model` instance but got: ', model)
 
   def _strip_clustering_wrapper(layer):
     if isinstance(layer, cluster_wrapper.ClusterWeights):
-      if not hasattr(layer.layer, '_batch_input_shape') and hasattr(
-              layer, '_batch_input_shape'):
+      if not hasattr(layer.layer, '_batch_input_shape') and\
+          hasattr(layer, '_batch_input_shape'):
         layer.layer._batch_input_shape = layer._batch_input_shape
 
-      # We reset both arrays of weights, so that we can guarantee the correct order of newly created weights
+      # We reset both arrays of weights, so that we can guarantee the correct
+      # order of newly created weights
       layer.layer._trainable_weights = []
       layer.layer._non_trainable_weights = []
       for i in range(layer.weights_num):
         # This is why we used integers as keys
         name, weight = layer.restore[i]
-        # In both cases we use k.batch_get_value since we need physical copies of the arrays to initialize a new tensor
+        # In both cases we use k.batch_get_value since we need physical copies
+        # of the arrays to initialize a new tensor
         if i in layer.gone_variables:
-          # If the variable was removed because it was clustered, we restore it by using updater we created earlier
+          # If the variable was removed because it was clustered, we restore it
+          # by using updater we created earlier
           new_weight_value = k.batch_get_value([weight()])[0]
         else:
-          # If the value was not clustered(e.g. bias), we still store a valid reference to the tensor. We use this
-          # reference to get the value
+          # If the value was not clustered(e.g. bias), we still store a valid
+          # reference to the tensor. We use this reference to get the value
           new_weight_value = k.batch_get_value([weight])[0]
         layer.layer.add_weight(
-          name=name,
-          shape=new_weight_value.shape,
-          initializer=initializers.Constant(new_weight_value),
-          trainable=True
+            name=name,
+            shape=new_weight_value.shape,
+            initializer=initializers.Constant(new_weight_value),
+            trainable=True
         )
-      # When all weights are filled with the values, just return the underlying layer since it is now fully autonomous
-      # from its wrapper
+      # When all weights are filled with the values, just return the underlying
+      # layer since it is now fully autonomous from its wrapper
       return layer.layer
     return layer
 
   # Just copy the model with the right callback
-  return keras.models.clone_model(model, input_tensors=None, clone_function=_strip_clustering_wrapper)
-
-
+  return keras.models.clone_model(model,
+                                  input_tensors=None,
+                                  clone_function=_strip_clustering_wrapper)
