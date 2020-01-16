@@ -119,7 +119,7 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
     an unsupported layer.
   """
   if not clustering_centroids.CentroidsInitializerFactory.init_is_supported(cluster_centroids_init):
-    raise ValueError("cluster centroids can only be one of three: random, density-based, linear")
+    raise ValueError("cluster centroids can only be one of three values: random, density-based, linear")
 
   def _add_clustering_wrapper(layer):
     if isinstance(layer, cluster_wrapper.ClusterWeights):
@@ -209,5 +209,3 @@ def strip_clustering(model):
 
   # Just copy the model with the right callback
   return keras.models.clone_model(model, input_tensors=None, clone_function=_strip_clustering_wrapper)
-
-

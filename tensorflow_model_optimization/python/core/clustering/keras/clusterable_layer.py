@@ -35,6 +35,8 @@ class ClusterableLayer(object):
     training must be returned by this method.
 
     Returns: List of weight tensors/kernels in the keras layer which must be
-        clustered during training.
+        clustered during training. Each element in the list is a (name, kernel)
+        2-tuple that consists of the name of the clusterable kernel and the
+        kernel object itself.
     """
     raise NotImplementedError('Must be implemented in subclasses.')
