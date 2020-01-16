@@ -22,10 +22,11 @@ errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
 
+from tensorflow_model_optimization.python.core.clustering.keras import cluster
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
-from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
-from tensorflow_model_optimization.python.core.clustering.keras import cluster
+
 import tensorflow.keras.backend as K
 import numpy as np
 import itertools
@@ -67,13 +68,13 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
                                        cluster_centroids_init='linear')
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
-  def testCanBeInitializedWithNonIntegerNumberOfClusters(self):
+  def testCannotBeInitializedWithNonIntegerNumberOfClusters(self):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters="13",
                                      cluster_centroids_init='linear')
 
-  def testCanBeInitializedWithNonFloatNumberOfClusters(self):
+  def testCannotBeInitializedWithFloatNumberOfClusters(self):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters=13.4,
@@ -84,7 +85,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     (1),
     (-32)
   )
-  def testCanBeInitializedWithNonFloatNumberOfClusters(self, number_of_clusters):
+  def testCannotBeInitializedWithNumberOfClustersLessThanOne(self, number_of_clusters):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters=number_of_clusters,
