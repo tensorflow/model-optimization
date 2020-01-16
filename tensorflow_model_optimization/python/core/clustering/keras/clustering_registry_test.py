@@ -14,18 +14,20 @@
 # ==============================================================================
 """Tests for keras clustering registry API."""
 
+import numpy as np
+
+from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
+from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+
 import tensorflow.compat.v1 as tf
+import tensorflow.keras.backend as K
+
 from absl.testing import parameterized
 
 keras = tf.keras
 errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
-
-from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
-from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
-import tensorflow.keras.backend as K
-import numpy as np
 
 layers = keras.layers
 ClusterRegistry = clustering_registry.ClusteringRegistry
@@ -44,26 +46,37 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
     self.assertSequenceEqual(res_np_list, expected_output)
 
   @parameterized.parameters(
-    ([-1, 1], [[0, 0, 1], [1, 1, 1]], [[-1, -1, 1], [1, 1, 1]]),
-    ([-1, 0, 1], [[1, 1, 1], [1, 1, 1]], [[0, 0, 0], [0, 0, 0]]),
+      ([-1, 1], [[0, 0, 1], [1, 1, 1]], [[-1, -1, 1], [1, 1, 1]]),
+      ([-1, 0, 1], [[1, 1, 1], [1, 1, 1]], [[0, 0, 0], [0, 0, 0]]),
   )
-  def testDenseWeightsCA(self, clustering_centroids, pulling_indices, expected_output):
+  def testDenseWeightsCA(self,
+                         clustering_centroids,
+                         pulling_indices,
+                         expected_output):
     ca = clustering_registry.DenseWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
 
   @parameterized.parameters(
-    ([-1, 1], [0, 0, 0, 0, 1], [-1, -1, -1, -1, 1]),
-    ([0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3]),
+      ([-1, 1], [0, 0, 0, 0, 1], [-1, -1, -1, -1, 1]),
+      ([0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3]),
   )
-  def testBiasWeightsCA(self, clustering_centroids, pulling_indices, expected_output):
+  def testBiasWeightsCA(self,
+                        clustering_centroids,
+                        pulling_indices,
+                        expected_output):
     ca = clustering_registry.BiasWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
 
   @parameterized.parameters(
-    ([0, 3], [[[[0, 0, 0], [1, 1, 1], [0, 0, 0]]]], [[[[0, 0, 0], [3, 3, 3], [0, 0, 0]]]]),
-    ([0, 3, 5], [[[[0, 1, 2], [1, 1, 1], [2, 1, 0]]]], [[[[0, 3, 5], [3, 3, 3], [5, 3, 0]]]]),
+      ([0, 3], [[[[0, 0, 0], [1, 1, 1], [0, 0, 0]]]],
+       [[[[0, 0, 0], [3, 3, 3], [0, 0, 0]]]]),
+      ([0, 3, 5], [[[[0, 1, 2], [1, 1, 1], [2, 1, 0]]]],
+       [[[[0, 3, 5], [3, 3, 3], [5, 3, 0]]]]),
   )
-  def testConvolutionalWeightsCA(self, clustering_centroids, pulling_indices, expected_output):
+  def testConvolutionalWeightsCA(self,
+                                 clustering_centroids,
+                                 pulling_indices,
+                                 expected_output):
     ca = clustering_registry.ConvolutionalWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
 
@@ -75,8 +88,8 @@ class CustomLayer(layers.Layer):
 class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
 
   def testLookupHasEverythingFromRegistry(self):
-    # So basically we want to make sure that every layer that has non-empty ClusteringRegistry records is also
-    # presented in the ClusteringLookup
+    # So basically we want to make sure that every layer that has non-empty
+    # ClusteringRegistry records is also presented in the ClusteringLookup
     for layer, clustering_record in ClusterRegistry._LAYERS_WEIGHTS_MAP.items():
       if clustering_record == []:
         continue
@@ -88,19 +101,25 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
 
   def testGetClusteringImplFailsWithUnknonwClassUnknownWeight(self):
     with self.assertRaises(ValueError):
-      ClusteringLookupRegistry.get_clustering_impl(CustomLayer(), 'no_such_weight')
+      ClusteringLookupRegistry.get_clustering_impl(CustomLayer(),
+                                                   'no_such_weight')
 
   def testGetClusteringImplFailsWithKnonwClassUnknownWeight(self):
     with self.assertRaises(ValueError):
-      ClusteringLookupRegistry.get_clustering_impl(layers.Dense(10), 'no_such_weight')
+      ClusteringLookupRegistry.get_clustering_impl(layers.Dense(10),
+                                                   'no_such_weight')
 
   @parameterized.parameters(
-    (layers.Conv2D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
-    (layers.Conv1D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
+      (layers.Conv2D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
+      (layers.Conv1D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
   )
-  def testReturnsResultsForKnownTypeKnownWeights(self, layer_type, weight, expected):
+  def testReturnsResultsForKnownTypeKnownWeights(self,
+                                                 layer_type,
+                                                 weight,
+                                                 expected):
     # layer_type is a class, thus constructing an object here
-    self.assertTrue(ClusteringLookupRegistry.get_clustering_impl(layer_type(32, 3), weight) is expected)
+    self.assertTrue(ClusteringLookupRegistry.get_clustering_impl(
+        layer_type(32, 3), weight) is expected)
 
   def testRegisterNewImplWorks(self):
     class NewKernelCA(clustering_registry.AbstractClusteringAlgorithm):
@@ -109,13 +128,14 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
         return 1, 2, 3
 
     new_impl = {
-      CustomLayer: {
-        'new_kernel': NewKernelCA
-      }
+        CustomLayer: {
+            'new_kernel': NewKernelCA
+        }
     }
 
     ClusteringLookupRegistry.register_new_implementation(new_impl)
-    self.assertTrue(ClusteringLookupRegistry.get_clustering_impl(CustomLayer(), 'new_kernel') is NewKernelCA)
+    self.assertTrue(ClusteringLookupRegistry.get_clustering_impl(
+        CustomLayer(), 'new_kernel') is NewKernelCA)
 
   def testFailsIfNotADictIsGivenAsInput(self):
     with self.assertRaises(TypeError):
@@ -124,7 +144,7 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
   def testFailsIfNotADictIsGivenAsConcreteImplementation(self):
     with self.assertRaises(TypeError):
       ClusteringLookupRegistry.register_new_implementation({
-        ClusteringLookupRegistry: [('new_kernel', lambda x: x)]
+          ClusteringLookupRegistry: [('new_kernel', lambda x: x)]
       })
 
 
@@ -144,9 +164,9 @@ class ClusterRegistryTest(test.TestCase):
                                     initializer='uniform',
                                     name='kernel')
       self.recurrent_kernel = self.add_weight(
-        shape=(self.units, self.units),
-        initializer='uniform',
-        name='recurrent_kernel')
+          shape=(self.units, self.units),
+          initializer='uniform',
+          name='recurrent_kernel')
       self.built = True
 
     def call(self, inputs, states):
@@ -155,7 +175,8 @@ class ClusterRegistryTest(test.TestCase):
       output = h + K.dot(prev_output, self.recurrent_kernel)
       return output, [output]
 
-  class MinimalRNNCellClusterable(MinimalRNNCell, clusterable_layer.ClusterableLayer):
+  class MinimalRNNCellClusterable(MinimalRNNCell,
+                                  clusterable_layer.ClusterableLayer):
 
     def get_clusterable_weights(self):
       return [self.kernel, self.recurrent_kernel]
@@ -182,19 +203,19 @@ class ClusterRegistryTest(test.TestCase):
 
   def testDoesNotSupportKerasRNNLayerUnknownCell(self):
     self.assertFalse(ClusterRegistry.supports(
-      keras.layers.RNN(ClusterRegistryTest.MinimalRNNCell(32))))
+        keras.layers.RNN(ClusterRegistryTest.MinimalRNNCell(32))))
 
   def testSupportsKerasRNNLayerClusterableCell(self):
     self.assertTrue(ClusterRegistry.supports(
-      keras.layers.RNN(ClusterRegistryTest.MinimalRNNCellClusterable(32))))
+        keras.layers.RNN(ClusterRegistryTest.MinimalRNNCellClusterable(32))))
 
   def testDoesNotSupportCustomLayer(self):
     self.assertFalse(ClusterRegistry.supports(CustomLayer(10)))
 
   def testDoesNotSupportCustomLayerInheritedFromClusterableLayer(self):
     self.assertFalse(
-      ClusterRegistry.supports(
-        ClusterRegistryTest.CustomLayerFromClusterableLayer(10)))
+        ClusterRegistry.supports(
+            ClusterRegistryTest.CustomLayerFromClusterableLayer(10)))
 
   def testMakeClusterableRaisesErrorForKerasUnsupportedLayer(self):
     with self.assertRaises(ValueError):
@@ -204,10 +225,11 @@ class ClusterRegistryTest(test.TestCase):
     with self.assertRaises(ValueError):
       ClusterRegistry.make_clusterable(CustomLayer(10))
 
-  def testMakeClusterableRaisesErrorForCustomLayerInheritedFromClusterableLayer(self):
+  def testMakeClusterableRaisesErrorForCustomLayerInheritedFromClusterableLayer(
+      self):
     with self.assertRaises(ValueError):
       ClusterRegistry.make_clusterable(
-        ClusterRegistryTest.CustomLayerFromClusterableLayer(10))
+          ClusterRegistryTest.CustomLayerFromClusterableLayer(10))
 
   def testMakeClusterableWorksOnKerasClusterableLayer(self):
     layer = layers.Dense(10)
@@ -218,7 +240,8 @@ class ClusterRegistryTest(test.TestCase):
     # Required since build method sets up the layer weights.
     keras.Sequential([layer]).build(input_shape=(10, 1))
 
-    self.assertEqual([('kernel', layer.kernel)], layer.get_clusterable_weights())
+    self.assertEqual([('kernel', layer.kernel)],
+                     layer.get_clusterable_weights())
 
   def testMakeClusterableWorksOnKerasNonClusterableLayer(self):
     layer = layers.Dropout(0.5)
@@ -238,8 +261,8 @@ class ClusterRegistryTest(test.TestCase):
     keras.Sequential([layer]).build(input_shape=(2, 3, 4))
 
     self.assertEqual(
-      [layer.cell.kernel, layer.cell.recurrent_kernel],
-      layer.get_clusterable_weights())
+        [layer.cell.kernel, layer.cell.recurrent_kernel],
+        layer.get_clusterable_weights())
 
   def testMakeClusterableWorksOnKerasRNNLayerWithRNNCellsParams(self):
     cell1 = layers.LSTMCell(10)
@@ -252,8 +275,8 @@ class ClusterRegistryTest(test.TestCase):
     keras.Sequential([layer]).build(input_shape=(2, 3, 4))
 
     expected_weights = [
-      cell1.kernel, cell1.recurrent_kernel, cell2.kernel,
-      cell2.recurrent_kernel
+        cell1.kernel, cell1.recurrent_kernel, cell2.kernel,
+        cell2.recurrent_kernel
     ]
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
@@ -268,15 +291,15 @@ class ClusterRegistryTest(test.TestCase):
     keras.Sequential([layer]).build(input_shape=(2, 3, 4))
 
     expected_weights = [
-      cell1.kernel, cell1.recurrent_kernel, cell2.kernel,
-      cell2.recurrent_kernel
+        cell1.kernel, cell1.recurrent_kernel, cell2.kernel,
+        cell2.recurrent_kernel
     ]
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
   def testMakeClusterableRaisesErrorOnRNNLayersUnsupportedCell(self):
     with self.assertRaises(ValueError):
       ClusterRegistry.make_clusterable(layers.RNN(
-        [layers.LSTMCell(10), ClusterRegistryTest.MinimalRNNCell(5)]))
+          [layers.LSTMCell(10), ClusterRegistryTest.MinimalRNNCell(5)]))
 
 
 if __name__ == '__main__':
