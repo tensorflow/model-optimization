@@ -24,10 +24,10 @@ errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
 
-from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
+from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
-from tensorflow_model_optimization.python.core.clustering.keras.cluster_wrapper import ClusterWeights
 
 from tensorflow.python.framework import test_util as tf_test_util
 
@@ -86,14 +86,14 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     return wrapped_layer
 
   def _validate_clustered_layer(self, original_layer, wrapped_layer):
-    self.assertIsInstance(wrapped_layer, ClusterWeights)
+    self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
     self.assertEqual(original_layer, wrapped_layer.layer)
 
   @staticmethod
   def _count_clustered_layers(model):
     count = 0
     for layer in model._layers:
-      if isinstance(layer, ClusterWeights):
+      if isinstance(layer, cluster_wrapper.ClusterWeights):
         count += 1
     return count
 
@@ -123,7 +123,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   def testClusterCustomNonClusterableLayer(self):
     with self.assertRaises(ValueError):
-      ClusterWeights(self.custom_non_clusterable_layer, **self.params)
+      cluster_wrapper.ClusterWeights(self.custom_non_clusterable_layer, **self.params)
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterModelValidLayersSuccessful(self):
