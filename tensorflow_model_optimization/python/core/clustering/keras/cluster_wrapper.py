@@ -124,7 +124,7 @@ class ClusterWeights(Wrapper):
 
     clusterable_weights = self.layer.get_clusterable_weights()
 
-    # Map automatically assigned TF variable name (e.g. 'dense/kernel:0') to provided human readable name 
+    # Map automatically assigned TF variable name (e.g. 'dense/kernel:0') to provided human readable name
     # (e.g. as in Dense(10).kernel)
     clusterable_weights_to_variables = {}
 
@@ -196,7 +196,7 @@ class ClusterWeights(Wrapper):
       else:
         self.restore.append((name, weight))
 
-  def call(self, inputs, training=None):
+  def call(self, inputs):
     # Go through all tensors and replace them with their clustered copies.
     for weight_name, _ in self.clustered_vars:
       setattr(self.layer, weight_name,

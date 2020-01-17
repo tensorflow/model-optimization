@@ -124,10 +124,10 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
   def _add_clustering_wrapper(layer):
     if isinstance(layer, cluster_wrapper.ClusterWeights):
       return layer
-    elif isinstance(layer, InputLayer):
+    if isinstance(layer, InputLayer):
       return layer.__class__.from_config(layer.get_config())
-    else:
-      return cluster_wrapper.ClusterWeights(layer, number_of_clusters, cluster_centroids_init, **kwargs)
+
+    return cluster_wrapper.ClusterWeights(layer, number_of_clusters, cluster_centroids_init, **kwargs)
 
   def _wrap_list(layers):
     output = []
@@ -139,9 +139,9 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init, **kw
   if isinstance(to_cluster, keras.Model):
     return keras.models.clone_model(
       to_cluster, input_tensors=None, clone_function=_add_clustering_wrapper)
-  elif isinstance(to_cluster, Layer):
+  if isinstance(to_cluster, Layer):
     return _add_clustering_wrapper(layer=to_cluster)
-  elif isinstance(to_cluster, list):
+  if isinstance(to_cluster, list):
     return _wrap_list(to_cluster)
 
 

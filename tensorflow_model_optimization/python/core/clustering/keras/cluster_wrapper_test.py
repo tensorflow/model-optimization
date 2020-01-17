@@ -27,7 +27,6 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster_w
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 
-import tensorflow.keras.backend as K
 import numpy as np
 import itertools
 

@@ -310,7 +310,6 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterWeightsStrippedWeights(self):
-
     i1 = keras.Input(shape=(10,))
     x1 = layers.BatchNormalization()(i1)
     outputs = x1
