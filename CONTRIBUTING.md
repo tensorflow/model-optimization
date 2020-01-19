@@ -32,12 +32,18 @@ See these [guidelines](CONTRIBUTING_TECHNIQUE.md).
 
 Please wait until we finish this section.
 
-## Code reviews
+## Code reviews and pull request submission process
 
 All submissions, including submissions by project members, require review. We
-use GitHub pull requests for this purpose. Consult
+use GitHub pull requests (PRs) for this purpose. Consult
 [GitHub Help](https://help.github.com/articles/about-pull-requests/) for more
 information on using pull requests.
+
+Once the PR is approved by an appropriate OWNER and presubmit checks
+pass, a reviewer will apply the `ready to pull` label to your change. This means
+TF MOT is working on getting your pull request submitted to an internal
+repository. After the change has been submitted internally, your pull request
+will be merged automatically on GitHub.
 
 ## Community Guidelines
 
