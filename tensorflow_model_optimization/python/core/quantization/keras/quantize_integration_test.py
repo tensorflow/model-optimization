@@ -26,6 +26,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.python import keras
+from tensorflow.python.keras import keras_parameterized
 from tensorflow.python.platform import test
 
 from tensorflow_model_optimization.python.core.keras import test_utils
@@ -33,6 +34,10 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import utils
 
 
+# TODO(tfmot): enable for v1. Currently fails because the decorator
+# on graph mode wraps everything in a graph, which is not compatible
+# with the TFLite converter's call to clear_session().
+@keras_parameterized.run_all_keras_modes(always_skip_v1=True)
 class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
 
   @staticmethod

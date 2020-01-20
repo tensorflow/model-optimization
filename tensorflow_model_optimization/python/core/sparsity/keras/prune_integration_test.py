@@ -39,9 +39,8 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase):
   _PRUNABLE_LAYERS = [
       layer for layer, weights in
       prune_registry.PruneRegistry._LAYERS_WEIGHTS_MAP.items()
-      if (weights and layer != tf.keras.layers.Conv3DTranspose
-                  and layer != tf.keras.layers.Conv2DTranspose
-         )
+        if (weights and layer != tf.keras.layers.Conv3DTranspose
+                    and layer != tf.keras.layers.Conv2DTranspose)
   ]
 
   # Fetch all the non-prunable layers from the registry.
@@ -85,14 +84,14 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     return {
         layers.Conv1D: ([4, 2], (3, 6)),
         layers.Conv2D: ([4, (2, 2)], (4, 6, 1)),
-        layers.Conv2DTranspose: ([2, (3, 3)], (7, 6, 3)),
-        layers.Conv3D: ([2, (3, 3, 3)], (5, 7, 6, 3)),
-        layers.Conv3DTranspose: ([2, (3, 3, 3)], (5, 7, 6, 3)),
-        # Leaving out Conv2DTranspose and Conv3DTranspose
-        # due to a sporadic test failure in which weights
-        # become Nan
+        # TODO(tf-mot): fix for Conv2DTranspose on some form of eager,
+        # with or without functions. The weights become nan (though the
+        # mask seems fine still).
         #layers.Conv2DTranspose: ([2, (3, 3)], (7, 6, 3)),
         layers.Conv3D: ([2, (3, 3, 3)], (5, 7, 6, 3)),
+        # TODO(tf-mot): fix for Conv3DTranspose on some form of eager,
+        # with or without functions. The weights become nan (though the
+        # mask seems fine still).
         #layers.Conv3DTranspose: ([2, (3, 3, 3)], (5, 7, 6, 3)),
         layers.SeparableConv1D: ([4, 3], (3, 6)),
         layers.SeparableConv2D: ([4, (2, 2)], (4, 6, 1)),

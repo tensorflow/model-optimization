@@ -124,7 +124,7 @@ class ClusterWeights(Wrapper):
 
     clusterable_weights = self.layer.get_clusterable_weights()
 
-    # Map automatically assigned TF variable name (e.g. 'dense/kernel:0') to provided human readable name
+    # Map automatically assigned TF variable name (e.g. 'dense/kernel:0') to provided human readable name 
     # (e.g. as in Dense(10).kernel)
     clusterable_weights_to_variables = {}
 

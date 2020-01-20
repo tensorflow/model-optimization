@@ -74,6 +74,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
                                      cluster_centroids_init='linear')
 
   def testCannotBeInitializedWithFloatNumberOfClusters(self):
+
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters=13.4,
@@ -84,6 +85,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     (1),
     (-32)
   )
+
   def testCannotBeInitializedWithNumberOfClustersLessThanOne(self, number_of_clusters):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
