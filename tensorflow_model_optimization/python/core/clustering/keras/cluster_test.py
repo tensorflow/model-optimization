@@ -92,7 +92,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @staticmethod
   def _count_clustered_layers(model):
     count = 0
-    for layer in model._layers:
+    for layer in model.layers:
       if isinstance(layer, ClusterWeights):
         count += 1
     return count
