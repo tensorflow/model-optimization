@@ -454,8 +454,8 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
     """See base class."""
     del encode_params
     flat_x = tf.reshape(x, [-1])
-    packed_x = self._pack_into_int32(tf.cast(flat_x, tf.int32),
-                                     self._input_bits)
+    packed_x = tf_utils.pack_into_int32(
+        tf.cast(flat_x, tf.int32), self._input_bits, self._target_bitrange)
 
     # The most common type will be tf.float32, which we keep as default.
     # If another type is provided, return a Tensor with a single value of that
@@ -477,49 +477,12 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
              shape=None):
     """See base class."""
     del decode_params, num_summands  # Unused.
-    unpacked_x = self._unpack_from_int32(
-        encoded_tensors[self.ENCODED_VALUES_KEY],
-        self._input_bits,
-        shape)
+    unpacked_x = tf_utils.unpack_from_int32(
+        encoded_tensors[self.ENCODED_VALUES_KEY], self._input_bits,
+        self._target_bitrange, shape)
 
     dummy_type_value = encoded_tensors.get(self.DUMMY_TYPE_VALUES_KEY)
     if dummy_type_value is not None:
       return tf.cast(unpacked_x, dummy_type_value.dtype)
     else:
       return tf.cast(unpacked_x, tf.float32)
-
-  def _pack_binary_form(self, x, target_bits):
-    """Packs input of 0/1 values into target_bits-valued values."""
-    # Reshape the input to have target_bits columns, padding with zeros if
-    # necessary to fit the dimension. The bitpacked representation is computed
-    # as product with vector [1, 2, 4, ..., 2**target_bits].
-    packing_vector = tf.constant([[2**i] for i in range(target_bits)], tf.int32)
-    extra_zeros = tf.zeros(tf.math.mod(-tf.shape(x), target_bits), tf.int32)
-    reshaped_x = tf.reshape(tf.concat([x, extra_zeros], 0), [-1, target_bits])
-    packed_x = tf.matmul(reshaped_x, packing_vector)
-    return packed_x
-
-  def _expand_to_binary_form(self, x, input_bits):
-    """Expands input into binary representation."""
-    # This operation is inverse of self._pack_binary_form, except padded zeros
-    # are not removed.
-    expand_vector = tf.constant([2**i for i in range(input_bits)], tf.int32)
-    return tf.reshape(tf.math.mod(tf.math.floordiv(x, expand_vector), 2), [-1])
-
-  def _pack_into_int32(self, x, bits):
-    """Pack input represented by `bits` bits into int32 values."""
-    if bits > 1:
-      x = tf.reshape(x, [-1, 1])
-      x = self._expand_to_binary_form(x, bits)
-    return self._pack_binary_form(x, self._target_bitrange)
-
-  def _unpack_from_int32(self, packed_x, bits, shape):
-    """Unpack int32 input into values represented by `bits` bits."""
-    x = self._expand_to_binary_form(packed_x, self._target_bitrange)
-    # The original unpacked shape is important, because inputs of different
-    # shapes could be bitpacked into the same values.
-    x = tf.slice(x, [0], [tf.reduce_prod(shape) * bits])
-    if bits > 1:
-      return tf.reshape(self._pack_binary_form(x, bits), shape)
-    else:
-      return tf.reshape(x, shape)
