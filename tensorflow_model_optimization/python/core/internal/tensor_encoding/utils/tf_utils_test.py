@@ -299,5 +299,67 @@ class RandomFloatsTests(tf.test.TestCase, parameterized.TestCase):
     self.assertFalse(np.array_equal(floats_1, floats_2))
 
 
+class PackingUtilsTests(tf.test.TestCase, parameterized.TestCase):
+  """Tests for bit-packing utilities."""
+
+  @parameterized.parameters([
+      (1, [[1 + 4 + 8]]),
+      (2, [[1 + 4**2 + 4**3]]),
+      (3, [[1 + 8**2 + 8**3]]),
+      (4, [[1 + 16**2 + 16**3]]),
+      (8, [[16842753], [0]])])
+  def test_pack_into_int32(self, input_bitrange, expected_packed_value):
+    value = tf.constant([1, 0, 1, 1, 0], tf.int32)
+    packed_value = tf_utils.pack_into_int32(
+        value, input_bitrange, target_bitrange=28)
+    self.assertAllEqual(expected_packed_value, self.evaluate(packed_value))
+
+  @parameterized.parameters([
+      (1, [[1 + 4 + 8]]),
+      (2, [[1 + 4**2 + 4**3]]),
+      (3, [[1 + 8**2 + 8**3]]),
+      (4, [[1 + 16**2 + 16**3]]),
+      (8, [[16842753], [0]])])
+  def test_unpack_from_int32(self, original_bitrange, packed_value):
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange, target_bitrange=28, shape=(5,))
+    self.assertAllEqual([1, 0, 1, 1, 0], self.evaluate(unpacked_value))
+
+  def test_unpack_from_int32_different_outputs(self):
+    packed_value = tf.constant([[1 + 2**3]], tf.int32)
+
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange=1, target_bitrange=28, shape=(4,))
+    self.assertAllEqual([1, 0, 0, 1], self.evaluate(unpacked_value))
+
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange=1, target_bitrange=28, shape=(5,))
+    self.assertAllEqual([1, 0, 0, 1, 0], self.evaluate(unpacked_value))
+
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange=2, target_bitrange=28, shape=(2,))
+    self.assertAllEqual([1, 2], self.evaluate(unpacked_value))
+
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange=2, target_bitrange=28, shape=(3,))
+    self.assertAllEqual([1, 2, 0], self.evaluate(unpacked_value))
+
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange=3, target_bitrange=28, shape=(2,))
+    self.assertAllEqual([1, 1], self.evaluate(unpacked_value))
+
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange=3, target_bitrange=28, shape=(3,))
+    self.assertAllEqual([1, 1, 0], self.evaluate(unpacked_value))
+
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange=4, target_bitrange=28, shape=(1,))
+    self.assertAllEqual([9], self.evaluate(unpacked_value))
+
+    unpacked_value = tf_utils.unpack_from_int32(
+        packed_value, original_bitrange=4, target_bitrange=28, shape=(2,))
+    self.assertAllEqual([9, 0], self.evaluate(unpacked_value))
+
+
 if __name__ == '__main__':
   tf.test.main()

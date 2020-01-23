@@ -15,7 +15,7 @@ py_library(
         # python:nn tensorflow dep2,
         # python:nn_ops tensorflow dep2,
         # python/keras:backend tensorflow dep2,
-        # python/keras:layers_base tensorflow dep2,
+        # python/keras/layers:layers_base tensorflow dep2,
         # python/keras/utils:engine_utils tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
