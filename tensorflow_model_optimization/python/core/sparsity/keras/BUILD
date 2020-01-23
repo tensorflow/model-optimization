@@ -190,6 +190,7 @@ py_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
 )
 
@@ -204,6 +205,7 @@ py_test(
         ":prune",
         ":pruning_callbacks",
         ":pruning_schedule",
+        ":pruning_wrapper",
         ":test_utils",
         # absl/testing:parameterized dep1,
         # numpy dep1,

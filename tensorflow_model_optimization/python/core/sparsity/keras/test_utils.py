@@ -174,3 +174,13 @@ def assert_model_sparsity(test_case, sparsity, model, rtol=1e-6, atol=1e-6):
       for weight in layer.layer.get_prunable_weights():
         test_case.assertAllClose(
             sparsity, _get_sparsity(tf.keras.backend.get_value(weight)), rtol=rtol, atol=atol)
+
+
+# Check if model does not have target sparsity.
+def is_model_sparsity_not(sparsity, model):
+  for layer in model.layers:
+    if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+      for weight in layer.layer.get_prunable_weights():
+        if sparsity != _get_sparsity(tf.keras.backend.get_value(weight)):
+          return True
+  return False

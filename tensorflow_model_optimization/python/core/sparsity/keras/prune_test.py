@@ -12,19 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for keras pruning API."""
+"""Tests for tf.keras pruning APIs under prune.py."""
 
 import json
+import tempfile
+
 from absl.testing import parameterized
 import numpy as np
-
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
+from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
-from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
@@ -201,31 +202,6 @@ class PruneTest(test.TestCase, parameterized.TestCase):
       self._validate_pruned_layer(layer, pruned_layer)
 
   @keras_parameterized.run_all_keras_modes
-  def testPruneTrainingRaisesError_PruningStepCallbackMissing(self):
-    model = prune.prune_low_magnitude(
-        keras.Sequential([
-            layers.Dense(10, activation='relu', input_shape=(100,)),
-            layers.Dense(2, activation='sigmoid')
-        ]), **self.params)
-
-    model.compile(
-        loss=keras.losses.categorical_crossentropy,
-        optimizer=keras.optimizers.SGD(),
-        metrics=['accuracy'])
-
-    # Throws an error since UpdatePruningStep is missing.
-    with self.assertRaises(errors_impl.InvalidArgumentError):
-      model.fit(
-          np.random.rand(1000, 100),
-          keras.utils.to_categorical(np.random.randint(2, size=(1000, 1))))
-
-    model.fit(
-        np.random.rand(1000, 100),
-        keras.utils.to_categorical(np.random.randint(2, size=(1000, 1))),
-        # Works when callback is provided.
-        callbacks=[pruning_callbacks.UpdatePruningStep()])
-
-  @keras_parameterized.run_all_keras_modes
   def testPruneInferenceWorks_PruningStepCallbackNotRequired(self):
     model = prune.prune_low_magnitude(
         keras.Sequential([
@@ -369,6 +345,81 @@ class PruneTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_pruned_layers(stripped_model), 0)
     self.assertEqual(model.get_config(), stripped_model.get_config())
+
+  def testPruneScope_NeededForKerasModel(self):
+    model = keras_test_utils.build_simple_dense_model()
+    pruned_model = prune.prune_low_magnitude(model)
+
+    _, keras_model = tempfile.mkstemp('.h5')
+    pruned_model.save(keras_model)
+
+    with self.assertRaises(ValueError):
+      tf.keras.models.load_model(keras_model)
+
+    # works with `prune_scope`
+    with prune.prune_scope():
+      tf.keras.models.load_model(keras_model)
+
+  def testPruneScope_NotNeededForKerasCheckpoint(self):
+    model = keras_test_utils.build_simple_dense_model()
+    pruned_model = prune.prune_low_magnitude(model)
+
+    _, keras_weights = tempfile.mkstemp('.h5')
+    pruned_model.save_weights(keras_weights)
+
+    same_architecture_model = keras_test_utils.build_simple_dense_model()
+    same_architecture_model = prune.prune_low_magnitude(same_architecture_model)
+
+    # would error if `prune_scope` was needed.
+    same_architecture_model.load_weights(keras_weights)
+
+  def testPruneScope_NotNeededForTFCheckpoint(self):
+    model = keras_test_utils.build_simple_dense_model()
+    pruned_model = prune.prune_low_magnitude(model)
+
+    _, tf_weights = tempfile.mkstemp('.tf')
+    pruned_model.save_weights(tf_weights)
+
+    same_architecture_model = keras_test_utils.build_simple_dense_model()
+    same_architecture_model = prune.prune_low_magnitude(same_architecture_model)
+
+    # would error if `prune_scope` was needed.
+    same_architecture_model.load_weights(tf_weights)
+
+  def testPruneScope_NotNeededForTF2SavedModel(self):
+    # TODO(tfmot): replace with shared v1 test_util.
+    is_v1_apis = hasattr(tf, 'assign')
+    if is_v1_apis:
+      return
+
+    model = keras_test_utils.build_simple_dense_model()
+    pruned_model = prune.prune_low_magnitude(model)
+
+    saved_model_dir = tempfile.mkdtemp()
+
+    tf.saved_model.save(pruned_model, saved_model_dir)
+
+    # would error if `prune_scope` was needed.
+    tf.saved_model.load(saved_model_dir)
+
+  def testPruneScope_NeededForTF1SavedModel(self):
+    # TODO(tfmot): replace with shared v1 test_util.
+    is_v1_apis = hasattr(tf, 'assign')
+    if not is_v1_apis:
+      return
+
+    model = keras_test_utils.build_simple_dense_model()
+    pruned_model = prune.prune_low_magnitude(model)
+
+    saved_model_dir = tempfile.mkdtemp()
+
+    tf.keras.experimental.export_saved_model(pruned_model, saved_model_dir)
+    with self.assertRaises(ValueError):
+      tf.keras.experimental.load_from_saved_model(saved_model_dir)
+
+    # works with `prune_scope`
+    with prune.prune_scope():
+      tf.keras.experimental.load_from_saved_model(saved_model_dir)
 
 
 if __name__ == '__main__':
