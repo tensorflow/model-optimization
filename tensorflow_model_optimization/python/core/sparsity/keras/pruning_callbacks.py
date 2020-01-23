@@ -91,7 +91,8 @@ class PruningSummaries(callbacks.TensorBoard):
       self._log_metrics(logs, prefix, step)
 
   def on_epoch_end(self, batch, logs=None):
-    super(PruningSummaries, self).on_epoch_end(batch, logs)
+    if logs is not None:
+      super(PruningSummaries, self).on_epoch_end(batch, logs)
 
     pruning_logs = {}
     params = []

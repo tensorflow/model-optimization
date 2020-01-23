@@ -21,6 +21,45 @@ import tensorflow as tf
 l = tf.keras.layers
 
 
+class ModelCompare(object):
+  """Mixin with helper functions for model comparison.
+
+  Needs to be used with tf.test.TestCase.
+
+  Note the following test only trainable_weights.
+  """
+
+  def _assert_weights_same_objects(self, model1, model2):
+    self.assertEqual(
+        len(model1.trainable_weights), len(model2.trainable_weights))
+    for w1, w2 in zip(model1.trainable_weights, model2.trainable_weights):
+      self.assertEqual(id(w1), id(w2))
+
+  def _assert_weights_different_objects(self, model1, model2):
+    self.assertEqual(
+        len(model1.trainable_weights), len(model2.trainable_weights))
+    for w1, w2 in zip(model1.trainable_weights, model2.trainable_weights):
+      self.assertNotEqual(id(w1), id(w2))
+
+  def _assert_weights_same_values(self, model1, model2):
+    self.assertEqual(
+        len(model1.trainable_weights), len(model2.trainable_weights))
+
+    model1_weights = tf.keras.backend.batch_get_value(model1.trainable_weights)
+    model2_weights = tf.keras.backend.batch_get_value(model2.trainable_weights)
+    for w1, w2 in zip(model1_weights, model2_weights):
+      self.assertAllClose(w1, w2)
+
+  def _assert_weights_different_values(self, model1, model2):
+    self.assertEqual(
+        len(model1.trainable_weights), len(model2.trainable_weights))
+
+    model1_weights = tf.keras.backend.batch_get_value(model1.trainable_weights)
+    model2_weights = tf.keras.backend.batch_get_value(model2.trainable_weights)
+    for w1, w2 in zip(model1_weights, model2_weights):
+      self.assertNotAllClose(w1, w2)
+
+
 def build_simple_dense_model():
   return tf.keras.Sequential([
       l.Dense(8, activation='relu', input_shape=(10,)),
