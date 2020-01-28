@@ -25,10 +25,12 @@ various vision and translation models.
 ### API Compatibility Matrix
 Users can apply pruning with the following APIs:
 
-* Model building: `tf.keras` with only Sequential and Functional models
-* TensorFlow versions: TF 1.x for versions 1.14+ and 2.x.
-* TensorFlow execution mode: both graph and eager
-* Distributed training: `tf.distribute` with only graph execution
+*   Model building: `tf.keras` with only Sequential and Functional models
+*   TensorFlow versions: TF 1.x for versions 1.14+ and 2.x.
+    *   `tf.compat.v1` with a TF 2.X package and `tf.compat.v2` with a TF 1.X
+        package are not supported.
+*   TensorFlow execution mode: both graph and eager
+*   Distributed training: `tf.distribute` with only graph execution
 
 It is on our roadmap to add support in the following areas:
 * [Minimal Subclassed model support](https://github.com/tensorflow/model-optimization/issues/155)

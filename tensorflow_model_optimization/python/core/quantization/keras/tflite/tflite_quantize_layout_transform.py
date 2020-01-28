@@ -57,9 +57,8 @@ class TFLiteQuantizeLayoutTransform(
       return model, layer_quantize_map
 
     transforms = [
-        tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold(),
-        tflite_transforms.Conv2DBatchNormReLU6Fold(),
-        tflite_transforms.Conv2DBatchNormFold(),
+        tflite_transforms.Conv2DBatchNormReLUQuantize(),
+        tflite_transforms.Conv2DBatchNormQuantize(),
     ]
 
     return model_transformer.ModelTransformer(
