@@ -115,9 +115,6 @@ class ClusterWeights(Wrapper):
     # comments in the code for usage explanations
     self.restore = []
 
-    # To restore the weight array after clustering is done
-    self.weights_num = len(self.layer.weights)
-
     # setattr will remove the original weights from layer.weights array. We need
     # to memorise the original state of the array since saving the model relies
     # on the variables order in layer.weights rather than on values stored in
