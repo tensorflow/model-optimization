@@ -124,9 +124,12 @@ class ClusterWeights(Wrapper):
 
     clusterable_weights = self.layer.get_clusterable_weights()
 
-    # Map automatically assigned TF variable name (e.g. 'dense/kernel:0') to provided human readable name 
+    # Map automatically assigned TF variable name (e.g. 'dense/kernel:0') to provided human readable name
     # (e.g. as in Dense(10).kernel)
     clusterable_weights_to_variables = {}
+
+    # To restore the weight array after clustering is done
+    self.weights_num = len(self.layer.weights)
 
     for weight_name, weight in clusterable_weights:
       # If a variable appears in this loop, then it is going to be removed from self._trainable_weights.
