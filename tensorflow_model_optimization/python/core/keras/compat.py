@@ -36,3 +36,7 @@ def initialize_variables(testcase):
   """
   if hasattr(tf, 'global_variables_initializer') and not tf.executing_eagerly():
     testcase.evaluate(tf.global_variables_initializer())
+
+
+def is_v1_apis():
+  return hasattr(tf, 'assign')
