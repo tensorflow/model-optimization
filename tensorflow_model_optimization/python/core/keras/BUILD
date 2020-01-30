@@ -11,9 +11,17 @@ py_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
+        # tensorflow dep1,
+    ],
+)
+
+py_library(
+    name = "compat",
+    srcs = ["compat.py"],
+    srcs_version = "PY2AND3",
+    deps = [
         # tensorflow dep1,
     ],
 )

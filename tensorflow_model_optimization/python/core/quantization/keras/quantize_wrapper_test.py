@@ -23,13 +23,6 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python import keras
-from tensorflow.python.keras import layers
-from tensorflow.python.keras.layers import deserialize as deserialize_layer
-from tensorflow.python.keras.layers import serialize as serialize_layer
-from tensorflow.python.keras.utils import generic_utils
-from tensorflow.python.platform import test
-
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
@@ -38,8 +31,15 @@ QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 QuantizeWrapper = quantize_wrapper.QuantizeWrapper
 TFLiteQuantizeRegistry = tflite_quantize_registry.TFLiteQuantizeRegistry
 
+keras = tf.keras
+layers = tf.keras.layers
 
-class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
+custom_object_scope = tf.keras.utils.custom_object_scope
+deserialize_layer = tf.keras.layers.deserialize
+serialize_layer = tf.keras.layers.serialize
+
+
+class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(QuantizeWrapperTest, self).setUp()
@@ -71,40 +71,39 @@ class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
   #  3. RNN layers need to be added
 
   @parameterized.parameters(
-      (layers.convolutional.Conv1D, (3, 6), {
+      (layers.Conv1D, (3, 6), {
           'filters': 4,
           'kernel_size': 2
       }),
-      (layers.convolutional.Conv2D, (4, 6, 1), {
+      (layers.Conv2D, (4, 6, 1), {
           'filters': 4,
           'kernel_size': (2, 2)
       }),
-      (layers.convolutional.Conv2DTranspose, (7, 6, 3), {
+      (layers.Conv2DTranspose, (7, 6, 3), {
           'filters': 2,
           'kernel_size': (3, 3)
       }),
-      (layers.convolutional.Conv3D, (5, 7, 6, 3), {
+      (layers.Conv3D, (5, 7, 6, 3), {
           'filters': 2,
           'kernel_size': (3, 3, 3)
       }),
-      (layers.convolutional.Conv3DTranspose, (5, 7, 6, 3), {
+      (layers.Conv3DTranspose, (5, 7, 6, 3), {
           'filters': 2,
           'kernel_size': (3, 3, 3)
       }),
       # TODO(pulkitb): Add missing SeparableConv layers. The initializers are
       # different, so will need a change.
-      (layers.core.Dense, (3,), {
+      (layers.Dense, (3,), {
           'units': 2
       }),
-      (layers.local.LocallyConnected1D, (3, 6), {
+      (layers.LocallyConnected1D, (3, 6), {
           'filters': 4,
           'kernel_size': 2
       }),
-      (layers.local.LocallyConnected2D, (4, 6, 1), {
+      (layers.LocallyConnected2D, (4, 6, 1), {
           'filters': 4,
           'kernel_size': (2, 2)
-      })
-  )
+      }))
   def testQuantizesWeights_KerasLayers(self, layer_type, input_shape, kwargs):
     self.weights = None
 
@@ -176,7 +175,7 @@ class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
     custom_objects.update(tflite_quantize_registry._types_dict())
 
     serialized_wrapper = serialize_layer(wrapper)
-    with generic_utils.custom_object_scope(custom_objects):
+    with custom_object_scope(custom_objects):
       wrapper_from_config = deserialize_layer(serialized_wrapper)
 
     self.assertEqual(wrapper_from_config.get_config(), wrapper.get_config())
@@ -185,4 +184,4 @@ class QuantizeWrapperTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

@@ -21,7 +21,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.keras import layers
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_registry
@@ -31,6 +31,8 @@ from tensorflow_model_optimization.python.core.quantization.keras.tflite import 
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantizers
 
 QuantizeProvider = quantize_provider.QuantizeProvider
+
+layers = tf.keras.layers
 
 
 class _QuantizeInfo(object):
@@ -64,7 +66,7 @@ class _RNNHelper(object):
 
   def _get_rnn_cells(self, rnn_layer):
     """Returns the list of cells in an RNN layer."""
-    if isinstance(rnn_layer.cell, layers.recurrent.StackedRNNCells):
+    if isinstance(rnn_layer.cell, layers.StackedRNNCells):
       return rnn_layer.cell.cells
     else:
       return [rnn_layer.cell]
@@ -76,85 +78,85 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
   _LAYER_QUANTIZE_INFO = [
 
       # Activation Layers
-      _QuantizeInfo(layers.advanced_activations.ReLU, [], [], True),
-      _QuantizeInfo(layers.advanced_activations.Softmax, [], []),
+      _QuantizeInfo(layers.ReLU, [], [], True),
+      _QuantizeInfo(layers.Softmax, [], []),
       # Enable once verified.
-      # layers.advanced_activations.ELU,
-      # layers.advanced_activations.LeakyReLU,
-      # layers.advanced_activations.PReLU,
-      # layers.advanced_activations.ThresholdedReLU,
+      # layers.ELU,
+      # layers.LeakyReLU,
+      # layers.PReLU,
+      # layers.ThresholdedReLU,
 
       # Convolution Layers
-      _QuantizeInfo(layers.convolutional.Conv1D, ['kernel'], ['activation']),
-      _QuantizeInfo(layers.convolutional.Conv3D, ['kernel'], ['activation']),
+      _QuantizeInfo(layers.Conv1D, ['kernel'], ['activation']),
+      _QuantizeInfo(layers.Conv3D, ['kernel'], ['activation']),
       # TODO(pulkitb): Verify Transpose layers.
-      _QuantizeInfo(layers.convolutional.Conv2DTranspose,
-                    ['kernel'], ['activation']),
-      _QuantizeInfo(layers.convolutional.Conv3DTranspose,
-                    ['kernel'], ['activation']),
-      _no_quantize(layers.convolutional.Cropping1D),
-      _no_quantize(layers.convolutional.Cropping2D),
-      _no_quantize(layers.convolutional.Cropping3D),
-      _no_quantize(layers.convolutional.UpSampling1D),
-      _no_quantize(layers.convolutional.UpSampling2D),
-      _no_quantize(layers.convolutional.UpSampling3D),
-      _no_quantize(layers.convolutional.ZeroPadding1D),
-      _no_quantize(layers.convolutional.ZeroPadding2D),
-      _no_quantize(layers.convolutional.ZeroPadding3D),
+      _QuantizeInfo(layers.Conv2DTranspose, ['kernel'], ['activation']),
+      _QuantizeInfo(layers.Conv3DTranspose, ['kernel'], ['activation']),
+      _no_quantize(layers.Cropping1D),
+      _no_quantize(layers.Cropping2D),
+      _no_quantize(layers.Cropping3D),
+      _no_quantize(layers.UpSampling1D),
+      _no_quantize(layers.UpSampling2D),
+      _no_quantize(layers.UpSampling3D),
+      _no_quantize(layers.ZeroPadding1D),
+      _no_quantize(layers.ZeroPadding2D),
+      _no_quantize(layers.ZeroPadding3D),
       # Enable once verified.
-      # layers.convolutional.SeparableConv1D,
-      # layers.convolutional.SeparableConv2D,
+      # layers.SeparableConv1D,
+      # layers.SeparableConv2D,
 
       # Core Layers
-      _no_quantize(layers.core.ActivityRegularization),
-      _QuantizeInfo(layers.core.Dense, ['kernel'], ['activation']),
-      _no_quantize(layers.core.Dropout),
-      _no_quantize(layers.core.Flatten),
-      _no_quantize(layers.core.Masking),
-      _no_quantize(layers.core.Permute),
-      _no_quantize(layers.core.RepeatVector),
-      _no_quantize(layers.core.Reshape),
-      _no_quantize(layers.core.SpatialDropout1D),
-      _no_quantize(layers.core.SpatialDropout2D),
-      _no_quantize(layers.core.SpatialDropout3D),
-      # layers.core.Lambda needs custom handling by the user.
+      _no_quantize(layers.ActivityRegularization),
+      _QuantizeInfo(layers.Dense, ['kernel'], ['activation']),
+      _no_quantize(layers.Dropout),
+      _no_quantize(layers.Flatten),
+      _no_quantize(layers.Masking),
+      _no_quantize(layers.Permute),
+      _no_quantize(layers.RepeatVector),
+      _no_quantize(layers.Reshape),
+      _no_quantize(layers.SpatialDropout1D),
+      _no_quantize(layers.SpatialDropout2D),
+      _no_quantize(layers.SpatialDropout3D),
+      # layers.Lambda needs custom handling by the user.
 
       # Pooling Layers
-      _QuantizeInfo(layers.pooling.AveragePooling1D, [], [], True),
-      _QuantizeInfo(layers.pooling.AveragePooling2D, [], [], True),
-      _QuantizeInfo(layers.pooling.AveragePooling3D, [], [], True),
-      _QuantizeInfo(layers.pooling.GlobalAveragePooling1D, [], [], True),
-      _QuantizeInfo(layers.pooling.GlobalAveragePooling2D, [], [], True),
-      _QuantizeInfo(layers.pooling.GlobalAveragePooling3D, [], [], True),
-      _no_quantize(layers.pooling.GlobalMaxPooling1D),
-      _no_quantize(layers.pooling.GlobalMaxPooling2D),
-      _no_quantize(layers.pooling.GlobalMaxPooling3D),
-      _no_quantize(layers.pooling.MaxPooling1D),
-      _no_quantize(layers.pooling.MaxPooling2D),
-      _no_quantize(layers.pooling.MaxPooling3D),
+      _QuantizeInfo(layers.AveragePooling1D, [], [], True),
+      _QuantizeInfo(layers.AveragePooling2D, [], [], True),
+      _QuantizeInfo(layers.AveragePooling3D, [], [], True),
+      _QuantizeInfo(layers.GlobalAveragePooling1D, [], [], True),
+      _QuantizeInfo(layers.GlobalAveragePooling2D, [], [], True),
+      _QuantizeInfo(layers.GlobalAveragePooling3D, [], [], True),
+      _no_quantize(layers.GlobalMaxPooling1D),
+      _no_quantize(layers.GlobalMaxPooling2D),
+      _no_quantize(layers.GlobalMaxPooling3D),
+      _no_quantize(layers.MaxPooling1D),
+      _no_quantize(layers.MaxPooling2D),
+      _no_quantize(layers.MaxPooling3D),
 
       # TODO(pulkitb): Verify Locally Connected layers.
-      _QuantizeInfo(layers.local.LocallyConnected1D,
-                    ['kernel'], ['activation']),
-      _QuantizeInfo(layers.local.LocallyConnected2D,
-                    ['kernel'], ['activation']),
+      _QuantizeInfo(layers.LocallyConnected1D, ['kernel'], ['activation']),
+      _QuantizeInfo(layers.LocallyConnected2D, ['kernel'], ['activation']),
 
       # Enable once verified with TFLite behavior.
-      # layers.embeddings.Embedding: ['embeddings'],
-      # layers.normalization.BatchNormalization: [],
+      # layers.Embedding: ['embeddings'],
+      # layers.BatchNormalization: [],
 
       # Merge layers to be added.
 
       # RNN Cells
       # TODO(pulkitb): Verify RNN layers behavior.
-      _QuantizeInfo(layers.recurrent.GRUCell, ['kernel', 'recurrent_kernel'],
+      # TODO(tfmot): check if we still need to whitelist via compat.v1 and
+      # compat.v2 to support legacy TensorFlow 2.X
+      # behavior where the v2 RNN uses the v1 RNNCell instead of the v2 RNNCell.
+      # See b/145939875 for details.
+      _QuantizeInfo(tf.keras.layers.GRUCell, ['kernel', 'recurrent_kernel'],
                     ['activation', 'recurrent_activation']),
-      _QuantizeInfo(layers.recurrent.LSTMCell, ['kernel', 'recurrent_kernel'],
+      _QuantizeInfo(tf.keras.layers.LSTMCell, ['kernel', 'recurrent_kernel'],
                     ['activation', 'recurrent_activation']),
-      _QuantizeInfo(layers.recurrent.PeepholeLSTMCell,
+      _QuantizeInfo(tf.keras.experimental.PeepholeLSTMCell,
                     ['kernel', 'recurrent_kernel'],
                     ['activation', 'recurrent_activation']),
-      _QuantizeInfo(layers.recurrent.SimpleRNNCell,
+      _QuantizeInfo(tf.keras.layers.SimpleRNNCell,
                     ['kernel', 'recurrent_kernel'],
                     ['activation', 'recurrent_activation']),
 
@@ -181,10 +183,10 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
   def _is_rnn_layer(self, layer):
     return layer.__class__ in {
-        layers.recurrent.GRU,
-        layers.recurrent.LSTM,
-        layers.recurrent.RNN,
-        layers.recurrent.SimpleRNN,
+        layers.GRU,
+        layers.LSTM,
+        layers.RNN,
+        layers.SimpleRNN,
     }
 
   def _get_quantize_info(self, layer):

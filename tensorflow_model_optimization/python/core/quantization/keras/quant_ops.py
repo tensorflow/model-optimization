@@ -18,13 +18,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.framework import ops
-from tensorflow.python.ops import array_ops
-from tensorflow.python.ops import init_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import state_ops
-from tensorflow.python.ops import variable_scope
+import tensorflow as tf
+
+# TODO(b/139939526): move to public API.
 from tensorflow.python.training import moving_averages
+from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 
 
 def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
@@ -38,8 +36,11 @@ def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
   Returns:
     a tensor containing quantized values.
   """
-  with ops.name_scope(scope, 'FixedQuantize', values=[inputs]):
-    return array_ops.fake_quant_with_min_max_args(
+  if scope is None:
+    scope = 'FixedQuantize'
+
+  with tf.name_scope(scope):
+    return tf.quantization.fake_quant_with_min_max_args(
         inputs, min=init_min, max=init_max)
 
 
@@ -48,7 +49,6 @@ def LastValueQuantize(inputs,
                       max_var,
                       per_channel=False,
                       name_prefix='LastValueQuant',
-                      reuse=None,
                       is_training=True,
                       num_bits=8,
                       narrow_range=False,
@@ -65,8 +65,6 @@ def LastValueQuantize(inputs,
     init_min: a float scalar, the initial value for variable min.
     init_max: a float scalar, the initial value for variable max.
     name_prefix: name_prefix for created nodes.
-    reuse: whether or not the layer and its variables should be reused. To be
-      able to reuse the layer scope must be given.
     is_training: Whether the op is applied to a training or eval graph.
     num_bits: Number of bits to use for quantization, must be between 2 and 8.
     narrow_range: Whether to use the narrow quantization range
@@ -76,9 +74,7 @@ def LastValueQuantize(inputs,
   Returns:
     a tensor containing quantized values.
   """
-  with variable_scope.variable_scope(
-      None, default_name=name_prefix, values=[inputs], reuse=reuse) as scope:
-    scope.set_partitioner(None)
+  with tf.name_scope(name_prefix):
     input_shape = inputs.get_shape()
     input_dim = len(input_shape)
 
@@ -99,21 +95,21 @@ def LastValueQuantize(inputs,
 
     if per_channel:
       if input_dim >= 2:
-        batch_min = math_ops.reduce_min_v1(
-            inputs, reduction_indices=reduce_dims, name='BatchMin')
+        batch_min = tf.math.reduce_min(
+            inputs, axis=reduce_dims, name='BatchMin')
       else:
         batch_min = inputs
     else:
-      batch_min = math_ops.reduce_min_v1(inputs, name='BatchMin')
+      batch_min = tf.math.reduce_min(inputs, name='BatchMin')
 
     if per_channel:
       if input_dim >= 2:
-        batch_max = math_ops.reduce_max_v1(
-            inputs, reduction_indices=reduce_dims, name='BatchMax')
+        batch_max = tf.math.reduce_max(
+            inputs, axis=reduce_dims, name='BatchMax')
       else:
         batch_max = inputs
     else:
-      batch_max = math_ops.reduce_max_v1(inputs, name='BatchMax')
+      batch_max = tf.math.reduce_max(inputs, name='BatchMax')
 
     if symmetric:
       if narrow_range:
@@ -125,15 +121,15 @@ def LastValueQuantize(inputs,
 
       # TFLite requires that 0.0 if always in the [min; max] range. Because
       # batch_min <= batch_max, it follows that range_min <= 0 <= range_max.
-      range_min = math_ops.minimum(batch_min, batch_max / min_max_ratio)
-      range_max = math_ops.maximum(batch_max, batch_min * min_max_ratio)
+      range_min = tf.math.minimum(batch_min, batch_max / min_max_ratio)
+      range_max = tf.math.maximum(batch_max, batch_min * min_max_ratio)
     else:
       # TFLite requires that 0.0 if always in the [min; max] range.
-      range_min = math_ops.minimum(batch_min, 0.0)
-      range_max = math_ops.maximum(batch_max, 0.0)
+      range_min = tf.math.minimum(batch_min, 0.0)
+      range_max = tf.math.maximum(batch_max, 0.0)
 
-    assign_min = state_ops.assign(min_var, range_min, name='AssignMinLast')
-    assign_max = state_ops.assign(max_var, range_max, name='AssignMaxLast')
+    assign_min = tf_compat.assign(min_var, range_min, name='AssignMinLast')
+    assign_max = tf_compat.assign(max_var, range_max, name='AssignMaxLast')
 
     return _FakeQuantWithMinMaxVars(
         inputs,
@@ -150,7 +146,6 @@ def MovingAvgQuantize(inputs,
                       per_channel=False,
                       ema_decay=0.999,
                       name_prefix='MovingAvgQuantize',
-                      reuse=None,
                       is_training=True,
                       num_bits=8,
                       narrow_range=False,
@@ -168,8 +163,6 @@ def MovingAvgQuantize(inputs,
     init_max: a float scalar, the initial value for variable max.
     ema_decay: EMA decay parameter.
     name_prefix: name_prefix for created nodes.
-    reuse: whether or not the layer and its variables should be reused. To be
-      able to reuse the layer scope must be given.
     is_training: Whether the op is applied to a training or eval graph.
     num_bits: Number of bits to use for quantization, must be between 2 and 8.
     narrow_range: Whether to use the narrow quantization range
@@ -179,9 +172,7 @@ def MovingAvgQuantize(inputs,
   Returns:
     a tensor containing quantized values.
   """
-  with variable_scope.variable_scope(
-      None, default_name=name_prefix, values=[inputs], reuse=reuse) as scope:
-    scope.set_partitioner(None)
+  with tf.name_scope(name_prefix):
     input_shape = inputs.get_shape()
     input_dim = len(input_shape)
 
@@ -201,21 +192,21 @@ def MovingAvgQuantize(inputs,
 
     if per_channel:
       if input_dim >= 2:
-        batch_min = math_ops.reduce_min(
-            inputs, reduction_indices=reduce_dims, name='BatchMin')
+        batch_min = tf.math.reduce_min(
+            inputs, axis=reduce_dims, name='BatchMin')
       else:
         batch_min = inputs
     else:
-      batch_min = math_ops.reduce_min(inputs, name='BatchMin')
+      batch_min = tf.math.reduce_min(inputs, name='BatchMin')
 
     if per_channel:
       if input_dim >= 2:
-        batch_max = math_ops.reduce_max(
-            inputs, reduction_indices=reduce_dims, name='BatchMax')
+        batch_max = tf.math.reduce_max(
+            inputs, axis=reduce_dims, name='BatchMax')
       else:
         batch_max = inputs
     else:
-      batch_max = math_ops.reduce_max(inputs, name='BatchMax')
+      batch_max = tf.math.reduce_max(inputs, name='BatchMax')
 
     if symmetric:
       if narrow_range:
@@ -227,12 +218,12 @@ def MovingAvgQuantize(inputs,
 
       # TFLite requires that 0.0 if always in the [min; max] range. Because
       # batch_min <= batch_max, it follows that range_min <= 0 <= range_max.
-      range_min = math_ops.minimum(batch_min, batch_max / min_max_ratio)
-      range_max = math_ops.maximum(batch_max, batch_min * min_max_ratio)
+      range_min = tf.minimum(batch_min, batch_max / min_max_ratio)
+      range_max = tf.maximum(batch_max, batch_min * min_max_ratio)
     else:
       # TFLite requires that 0.0 if always in the [min; max] range.
-      range_min = math_ops.minimum(batch_min, 0.0)
-      range_max = math_ops.maximum(batch_max, 0.0)
+      range_min = tf.minimum(batch_min, 0.0)
+      range_max = tf.maximum(batch_max, 0.0)
 
     assign_min = moving_averages.assign_moving_average(
         min_var, range_min, ema_decay, zero_debias=False, name='AssignMinEma')
@@ -271,10 +262,10 @@ def _FakeQuantWithMinMaxVars(inputs, min_var, max_var, per_channel, num_bits,
   if per_channel:
     assert len(min_var.get_shape()) == 1
     assert len(max_var.get_shape()) == 1
-    return array_ops.fake_quant_with_min_max_vars_per_channel(
+    return tf.quantization.fake_quant_with_min_max_vars_per_channel(
         inputs, min_var, max_var, num_bits=num_bits, narrow_range=narrow_range)
   else:
     assert min_var.get_shape() == []  # pylint: disable=g-explicit-bool-comparison
     assert max_var.get_shape() == []  # pylint: disable=g-explicit-bool-comparison
-    return array_ops.fake_quant_with_min_max_vars(
+    return tf.quantization.fake_quant_with_min_max_vars(
         inputs, min_var, max_var, num_bits=num_bits, narrow_range=narrow_range)

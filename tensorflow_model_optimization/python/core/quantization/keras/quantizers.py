@@ -24,9 +24,11 @@ from __future__ import print_function
 import abc
 import six
 
-from tensorflow.python.keras import initializers
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
+
+keras = tf.keras
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -80,12 +82,18 @@ class Quantizer(object):
 
 
 class _QuantizeHelper(object):
+  """Mixin with helper functions for quantizers."""
 
   def _add_range_weights(self, layer, name):
+    """Add min and max vars to layer."""
     min_weight = layer.add_weight(
-        name + '_min', initializer=initializers.Constant(-6.0), trainable=False)
+        name + '_min',
+        initializer=keras.initializers.Constant(-6.0),
+        trainable=False)
     max_weight = layer.add_weight(
-        name + '_max', initializer=initializers.Constant(6.0), trainable=False)
+        name + '_max',
+        initializer=keras.initializers.Constant(6.0),
+        trainable=False)
 
     return [min_weight, max_weight]
 

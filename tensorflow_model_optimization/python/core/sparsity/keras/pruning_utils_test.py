@@ -22,6 +22,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 
 import tensorflow as tf
+from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 
 glorot_uniform_initializer = tf.keras.initializers.glorot_uniform
@@ -32,14 +33,9 @@ glorot_uniform_initializer = tf.keras.initializers.glorot_uniform
     ("4x1", [4, 1]), ("1x8", [1, 8]), ("8x1", [8, 1]))
 class PruningUtilsParameterizedTest(tf.test.TestCase, parameterized.TestCase):
 
-  def _initialize_variables(self):
-    if hasattr(tf,
-               "global_variables_initializer") and not tf.executing_eagerly():
-      self.evaluate(tf.global_variables_initializer())
-
   def _compare_pooling_methods(self, weights, pooling_kwargs):
     with self.cached_session():
-      self._initialize_variables()
+      compat.initialize_variables(self)
       pooled_weights_tf = tf.squeeze(
           tf.nn.pool(
               tf.reshape(
@@ -53,7 +49,7 @@ class PruningUtilsParameterizedTest(tf.test.TestCase, parameterized.TestCase):
 
   def _compare_expand_tensor_with_kronecker_product(self, tensor, block_dim):
     with self.cached_session() as session:
-      self._initialize_variables()
+      compat.initialize_variables(self)
       expanded_tensor = pruning_utils.expand_tensor(tensor, block_dim)
       kronecker_product = pruning_utils.kronecker_product(
           tensor, tf.ones(block_dim))

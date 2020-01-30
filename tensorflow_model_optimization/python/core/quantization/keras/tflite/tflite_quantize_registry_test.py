@@ -21,15 +21,15 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import layers as l
-from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
-from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
-from tensorflow.python.platform import test
-
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
+
+keras = tf.keras
+K = tf.keras.backend
+l = tf.keras.layers
+
+deserialize_keras_object = tf.keras.utils.deserialize_keras_object
+serialize_keras_object = tf.keras.utils.serialize_keras_object
 
 
 class _TestHelper(object):
@@ -76,7 +76,7 @@ class _TestHelper(object):
       self.assertAllEqual(a.numpy(), b.numpy())
 
 
-class TFLiteQuantizeRegistryTest(test.TestCase, _TestHelper):
+class TFLiteQuantizeRegistryTest(tf.test.TestCase, _TestHelper):
 
   def setUp(self):
     super(TFLiteQuantizeRegistryTest, self).setUp()
@@ -217,7 +217,7 @@ class TFLiteQuantizeRegistryTest(test.TestCase, _TestHelper):
         quantize_provider.get_output_quantizers(activation_layer))
 
 
-class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
+class TFLiteQuantizeProviderTest(tf.test.TestCase, _TestHelper):
 
   def _simple_dense_layer(self):
     layer = l.Dense(2)
@@ -347,7 +347,7 @@ class TFLiteQuantizeProviderTest(test.TestCase, _TestHelper):
     self.assertEqual(quantize_provider, quantize_provider_from_config)
 
 
-class TFLiteQuantizeProviderRNNTest(test.TestCase, _TestHelper):
+class TFLiteQuantizeProviderRNNTest(tf.test.TestCase, _TestHelper):
 
   def setUp(self):
     super(TFLiteQuantizeProviderRNNTest, self).setUp()
@@ -467,7 +467,7 @@ class TFLiteQuantizeProviderRNNTest(test.TestCase, _TestHelper):
     self.assertEqual(self.quantize_provider, quantize_provider_from_config)
 
 
-class ActivationQuantizeProviderTest(test.TestCase):
+class ActivationQuantizeProviderTest(tf.test.TestCase):
 
   def testRaisesErrorUnsupportedActivation(self):
     quantize_provider = tflite_quantize_registry.ActivationQuantizeProvider()
@@ -481,4 +481,4 @@ class ActivationQuantizeProviderTest(test.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

@@ -14,8 +14,7 @@
 # ==============================================================================
 """Quantization API functions for tf.keras models."""
 
-from tensorflow.python import keras
-from tensorflow.python.keras.utils.generic_utils import custom_object_scope
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
@@ -24,6 +23,8 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_layout_transform
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
+
+keras = tf.keras
 
 
 def quantize_scope(*args):
@@ -44,10 +45,10 @@ def quantize_scope(*args):
   Example:
 
   ```python
-  keras.models.save_model(quantized_model, keras_file)
+  tf.keras.models.save_model(quantized_model, keras_file)
 
   with quantize_scope():
-    loaded_model = keras.models.load_model(keras_file)
+    loaded_model = tf.keras.models.load_model(keras_file)
   ```
   """
   quantization_objects = {
@@ -63,7 +64,7 @@ def quantize_scope(*args):
   quantization_objects.update(tflite_quantize_registry._types_dict())  # pylint: disable=protected-access
   quantization_objects.update(quantizers._types_dict())  # pylint: disable=protected-access
 
-  return custom_object_scope(*(args + (quantization_objects,)))
+  return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
 
 
 def quantize(to_quantize):
