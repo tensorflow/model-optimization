@@ -19,13 +19,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.keras.layers import deserialize as deserialize_layer
-from tensorflow.python.keras.layers.wrappers import Wrapper
-from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
-from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
+import tensorflow as tf
+
+deserialize_keras_object = tf.keras.utils.deserialize_keras_object
+serialize_keras_object = tf.keras.utils.serialize_keras_object
 
 
-class QuantizeAnnotate(Wrapper):
+class QuantizeAnnotate(tf.keras.layers.Wrapper):
   """Annotates layers which quantization should be applied to.
 
   QuantizeAnnotate does not actually apply quantization to the underlying
@@ -76,7 +76,7 @@ class QuantizeAnnotate(Wrapper):
         module_objects=globals(),
         custom_objects=None)
 
-    layer = deserialize_layer(config.pop('layer'))
+    layer = tf.keras.layers.deserialize(config.pop('layer'))
 
     return cls(layer=layer, quantize_provider=quantize_provider, **config)
 

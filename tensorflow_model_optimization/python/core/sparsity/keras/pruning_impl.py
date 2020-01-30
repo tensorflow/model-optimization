@@ -22,6 +22,7 @@ import tensorflow as tf
 
 from tensorflow.python.ops import summary_ops_v2
 from tensorflow.python.summary import summary as summary_ops_v1
+from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 
 
@@ -52,13 +53,6 @@ class Pruning(object):
     self._step_fn = training_step_fn
 
     self._validate_block()
-
-  @staticmethod
-  def _assign(ref, value):
-    if hasattr(tf, 'assign'):
-      return tf.assign(ref, value)
-    else:
-      return ref.assign(value)
 
   def _validate_block(self):
     if self._block_size != [1, 1]:
@@ -171,7 +165,7 @@ class Pruning(object):
       values_and_vars = zip(reduced_values, var_list)
 
       def update_var(variable, reduced_value):
-        return self._assign(variable, reduced_value)
+        return tf_compat.assign(variable, reduced_value)
 
       update_objs = []
       for value, var in values_and_vars:
@@ -193,7 +187,7 @@ class Pruning(object):
     else:
       for weight, mask, _ in self._pruning_vars:
         masked_weight = tf.math.multiply(weight, mask)
-        assign_objs.append(self._assign(weight, masked_weight))
+        assign_objs.append(tf_compat.assign(weight, masked_weight))
 
     return assign_objs
 
@@ -217,8 +211,8 @@ class Pruning(object):
 
         for weight, mask, threshold in self._pruning_vars:
           new_threshold, new_mask = self._maybe_update_block_mask(weight)
-          assign_objs.append(self._assign(threshold, new_threshold))
-          assign_objs.append(self._assign(mask, new_mask))
+          assign_objs.append(tf_compat.assign(threshold, new_threshold))
+          assign_objs.append(tf_compat.assign(mask, new_mask))
 
         return tf.group(assign_objs)
 
@@ -228,7 +222,7 @@ class Pruning(object):
       """Updates mask with distribution strategy."""
 
       def update(var, value):
-        return self._assign(var, value)
+        return tf_compat.assign(var, value)
 
       def update_distributed():
         """Gather distributed update objs.

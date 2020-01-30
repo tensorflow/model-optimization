@@ -21,9 +21,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 
 import numpy as np
-
-from tensorflow.python import keras
-from tensorflow.python.platform import test
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
@@ -37,9 +35,11 @@ ModelTransformer = model_transformer.ModelTransformer
 Conv2DModel = conv_batchnorm_test_utils.Conv2DModel
 DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 
+keras = tf.keras
+
 
 # TODO(alanchiao): reduce redundancy by parameterizing on Depthwise vs Conv.
-class TFLiteTransformsTest(test.TestCase, parameterized.TestCase):
+class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
   def testTransformsConvBNReLUPattern(self):
     model = Conv2DModel.get_nonfolded_batchnorm_model(
@@ -216,4 +216,4 @@ class TFLiteTransformsTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

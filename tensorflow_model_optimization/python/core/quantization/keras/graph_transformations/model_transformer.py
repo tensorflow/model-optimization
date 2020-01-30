@@ -19,12 +19,14 @@ import collections
 import copy
 import re
 
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as K
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms as transforms_mod
 
 LayerNode = transforms_mod.LayerNode
+
+keras = tf.keras
+K = tf.keras.backend
 
 
 class ModelTransformer(object):

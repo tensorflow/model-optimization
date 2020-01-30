@@ -21,11 +21,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python import keras
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layout_transform
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_transforms
+
+keras = tf.keras
 
 
 class TFLiteQuantizeLayoutTransform(

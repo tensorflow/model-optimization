@@ -19,11 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.utils import generic_utils
-from tensorflow.python.platform import test
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
@@ -35,6 +31,10 @@ quantize_annotate = quantize.quantize_annotate
 quantize_apply = quantize.quantize_apply
 QuantizeAnnotate = quantize_annotate_mod.QuantizeAnnotate
 QuantizeWrapper = quantize_wrapper_mod.QuantizeWrapper
+
+keras = tf.keras
+K = tf.keras.backend
+custom_object_scope = tf.keras.utils.custom_object_scope
 
 
 class _TestQuantizeProvider(quantize_provider_mod.QuantizeProvider):
@@ -58,7 +58,7 @@ class _TestQuantizeProvider(quantize_provider_mod.QuantizeProvider):
     return {}
 
 
-class QuantizeAnnotateTest(test.TestCase):
+class QuantizeAnnotateTest(tf.test.TestCase):
 
   def _assertWrappedLayer(self, layer, quantize_provider=None):
     self.assertIsInstance(layer, quantize_annotate_mod.QuantizeAnnotate)
@@ -113,7 +113,7 @@ class QuantizeAnnotateTest(test.TestCase):
     self.assertAllEqual(model.predict(inputs), annotated_model.predict(inputs))
 
 
-class QuantizeApplyTest(test.TestCase):
+class QuantizeApplyTest(tf.test.TestCase):
 
   # Validation tests
 
@@ -222,7 +222,7 @@ class QuantizeApplyTest(test.TestCase):
     annotated_model = keras.Sequential([
         QuantizeAnnotate(self.CustomLayer(3), input_shape=(2,))])
 
-    with generic_utils.custom_object_scope({'CustomLayer': self.CustomLayer}):
+    with custom_object_scope({'CustomLayer': self.CustomLayer}):
       with self.assertRaises(RuntimeError):
         quantize_apply(annotated_model)
 
@@ -245,9 +245,10 @@ class QuantizeApplyTest(test.TestCase):
         QuantizeAnnotate(self.CustomLayer(3), input_shape=(2,),
                          quantize_provider=_TestQuantizeProvider())])
 
-    with generic_utils.custom_object_scope(
-        {'CustomLayer': self.CustomLayer,
-         '_TestQuantizeProvider': _TestQuantizeProvider}):
+    with custom_object_scope({
+        'CustomLayer': self.CustomLayer,
+        '_TestQuantizeProvider': _TestQuantizeProvider
+    }):
       quantized_model = quantize_apply(annotated_model)
     quantized_layer = quantized_model.layers[0]
 
@@ -260,8 +261,7 @@ class QuantizeApplyTest(test.TestCase):
         QuantizeAnnotate(keras.layers.Dense(3), input_shape=(2,),
                          quantize_provider=_TestQuantizeProvider())])
 
-    with generic_utils.custom_object_scope(
-        {'_TestQuantizeProvider': _TestQuantizeProvider}):
+    with custom_object_scope({'_TestQuantizeProvider': _TestQuantizeProvider}):
       quantized_model = quantize_apply(annotated_model)
     quantized_layer = quantized_model.layers[0]
 
@@ -293,4 +293,4 @@ class QuantizeApplyTest(test.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

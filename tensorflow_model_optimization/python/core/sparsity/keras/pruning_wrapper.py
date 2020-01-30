@@ -23,6 +23,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
+# b/(139939526): update to use public API.
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow.python.keras.utils import tf_utils
 

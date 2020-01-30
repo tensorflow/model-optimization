@@ -18,8 +18,12 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.keras import activations
+import tensorflow as tf
+
+# TODO(b/139939526): move to public API.
 from tensorflow.python.keras.utils import tf_utils
+
+activations = tf.keras.activations
 
 
 class NoOpActivation(object):

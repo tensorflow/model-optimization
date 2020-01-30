@@ -41,7 +41,6 @@ py_library(
         ":transforms",
         # six dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
     ],
 )
 
@@ -57,6 +56,5 @@ py_test(
         ":model_transformer",
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
     ],
 )

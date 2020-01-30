@@ -16,7 +16,7 @@
 
 import collections
 
-from tensorflow.python import keras
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
@@ -28,6 +28,8 @@ LayerPattern = transforms.LayerPattern
 
 _ConvBatchNorm2D = conv_batchnorm._ConvBatchNorm2D  # pylint: disable=protected-access
 _DepthwiseConvBatchNorm2D = conv_batchnorm._DepthwiseConvBatchNorm2D  # pylint: disable=protected-access
+
+keras = tf.keras
 
 
 def _get_conv_bn_layers(bn_layer_node):
