@@ -5,6 +5,15 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
+    name = "graph_transformations",
+    srcs = [
+        "__init__.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [],
+)
+
+py_library(
     name = "transforms",
     srcs = [
         "transforms.py",

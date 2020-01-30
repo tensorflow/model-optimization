@@ -13,6 +13,10 @@ py_library(
     srcs_version = "PY2AND3",
     deps = [
         ":quantize",
+        # APIs are not exposed, but still needed for internal imports.
+        "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations",
+        "//tensorflow_model_optimization/python/core/quantization/keras/layers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite",
     ],
 )
 

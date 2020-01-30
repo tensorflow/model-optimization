@@ -5,6 +5,15 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
+    name = "layers",
+    srcs = [
+        "__init__.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [],
+)
+
+py_library(
     name = "conv_batchnorm",
     srcs = ["conv_batchnorm.py"],
     srcs_version = "PY2AND3",
