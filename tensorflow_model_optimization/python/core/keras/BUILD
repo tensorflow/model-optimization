@@ -6,6 +6,14 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+py_library(
+    name = "keras",
+    srcs = ["__init__.py"],
+    deps = [
+        ":compat",
+    ],
+)
+
 # TODO(alanchiao): split into test_utils and utils.
 py_library(
     name = "test_utils",

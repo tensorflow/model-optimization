@@ -20,6 +20,8 @@ py_library(
         "//tensorflow_model_optimization/python",
         "//tensorflow_model_optimization/python/core/api",
         "//tensorflow_model_optimization/python/core/clustering",
+        "//tensorflow_model_optimization/python/core/keras:compat",
+        "//tensorflow_model_optimization/python/core/quantization",
         "//tensorflow_model_optimization/python/core/sparsity",
     ],
 )

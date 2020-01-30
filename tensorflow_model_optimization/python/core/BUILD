@@ -12,6 +12,8 @@ py_library(
         ":version",
         "//tensorflow_model_optimization/python/core/clustering",
         "//tensorflow_model_optimization/python/core/internal",
+        "//tensorflow_model_optimization/python/core/keras",
+        "//tensorflow_model_optimization/python/core/quantization",
         "//tensorflow_model_optimization/python/core/sparsity",
     ],
 )

@@ -5,6 +5,15 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
+    name = "tflite",
+    srcs = [
+        "__init__.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [],
+)
+
+py_library(
     name = "tflite_quantizers",
     srcs = [
         "tflite_quantizers.py",
