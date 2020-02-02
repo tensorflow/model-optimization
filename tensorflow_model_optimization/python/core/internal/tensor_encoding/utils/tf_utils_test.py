@@ -69,7 +69,9 @@ class FastWalshHadamardTransformTests(tf.test.TestCase, parameterized.TestCase):
 
   def test_illegal_inputs_dynamic_power_of_two(self):
     """Tests incorrect dynamic shape of the rank 2 input."""
-    rand = tf.random.uniform((), maxval=3, dtype=tf.int32)
+    rand = tf.random.uniform((), maxval=3, dtype=tf.int32) + 1
+    # The created x has shape (3, 3) or (3, 9) or (3, 27), chosen randomly and
+    # thus statically not known. In all cases, it is not a power of two.
     x = tf.random.normal((3, 3**rand))
     hx = tf_utils.fast_walsh_hadamard_transform(x)
     with self.assertRaisesOpError('The dimension of x must be a power of two.'):
