@@ -22,16 +22,17 @@ import tempfile
 
 from absl.testing import parameterized
 
-from tensorflow.lite.python import lite
+import tensorflow as tf
+
+# # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.platform import test
 from tensorflow_model_optimization.python.core.keras.testing import test_utils_mnist
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils as test_utils
 
 
 @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
-class QuantizeFunctionalTest(test.TestCase, parameterized.TestCase):
+class QuantizeFunctionalTest(tf.test.TestCase, parameterized.TestCase):
 
   # TODO(pulkitb): Parameterize test and include functional mnist, and
   # other RNN models.
@@ -61,7 +62,7 @@ class QuantizeFunctionalTest(test.TestCase, parameterized.TestCase):
           model=quantized_model,
           output_path=quantized_tflite_file,
           is_quantized=True,
-          inference_input_type=lite.constants.FLOAT)
+          inference_input_type=tf.lite.constants.FLOAT)
     quantized_model_tflite_accuracy = test_utils_mnist.eval_tflite(
         quantized_tflite_file)
 
@@ -77,4 +78,4 @@ class QuantizeFunctionalTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

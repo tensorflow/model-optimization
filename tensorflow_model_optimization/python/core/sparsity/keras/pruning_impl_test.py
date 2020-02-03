@@ -24,12 +24,12 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
+# TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
+from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
-
-# TODO(b/139939526): move to public API.
 
 K = tf.keras.backend
 dtypes = tf.dtypes
@@ -69,9 +69,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
       return self.global_step
     self.training_step_fn = training_step_fn
 
-    if hasattr(tf,
-               "global_variables_initializer") and not tf.executing_eagerly():
-      self.evaluate(tf.global_variables_initializer())
+    compat.initialize_variables(self)
 
   def testUpdateSingleMask(self):
     weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")

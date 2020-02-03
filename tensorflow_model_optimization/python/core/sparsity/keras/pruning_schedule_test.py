@@ -19,19 +19,11 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
+from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
 
-class _Helper(object):
-  """Helper functions for pruning schedule test."""
-
-  def _initialize_variables(self):
-    if hasattr(tf,
-               'global_variables_initializer') and not tf.executing_eagerly():
-      self.evaluate(tf.global_variables_initializer())
-
-
-class PruningScheduleTest(_Helper, tf.test.TestCase, parameterized.TestCase):
+class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
   """Test to verify PruningSchedule behavior for step parameters.
 
   This is a parameterized test which runs over all PruningSchedule classes
@@ -183,7 +175,7 @@ class PruningScheduleTest(_Helper, tf.test.TestCase, parameterized.TestCase):
     # After end step
     step_201 = tf.Variable(201)
     step_210 = tf.Variable(210)
-    self._initialize_variables()
+    compat.initialize_variables(self)
 
     self.assertFalse(self.evaluate(sparsity(step_90))[0])
     self.assertFalse(self.evaluate(sparsity(step_99))[0])
@@ -211,7 +203,7 @@ class PruningScheduleTest(_Helper, tf.test.TestCase, parameterized.TestCase):
     step_109 = tf.Variable(109)
     step_110 = tf.Variable(110)
     step_111 = tf.Variable(111)
-    self._initialize_variables()
+    compat.initialize_variables(self)
 
     self.assertFalse(self.evaluate(sparsity(step_109))[0])
     self.assertFalse(self.evaluate(sparsity(step_111))[0])
@@ -220,7 +212,7 @@ class PruningScheduleTest(_Helper, tf.test.TestCase, parameterized.TestCase):
     self.assertTrue(self.evaluate(sparsity(step_110))[0])
 
 
-class ConstantSparsityTest(_Helper, tf.test.TestCase, parameterized.TestCase):
+class ConstantSparsityTest(tf.test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testPrunesForeverIfEndStepIsNegativeOne(self):
@@ -228,7 +220,7 @@ class ConstantSparsityTest(_Helper, tf.test.TestCase, parameterized.TestCase):
 
     step_10000 = tf.Variable(10000)
     step_100000000 = tf.Variable(100000000)
-    self._initialize_variables()
+    compat.initialize_variables(self)
 
     self.assertTrue(self.evaluate(sparsity(step_10000))[0])
     self.assertTrue(self.evaluate(sparsity(step_100000000))[0])
@@ -243,7 +235,7 @@ class ConstantSparsityTest(_Helper, tf.test.TestCase, parameterized.TestCase):
     step_100 = tf.Variable(100)
     step_110 = tf.Variable(110)
     step_200 = tf.Variable(200)
-    self._initialize_variables()
+    compat.initialize_variables(self)
 
     self.assertAllClose(0.5, self.evaluate(sparsity(step_100))[1])
     self.assertAllClose(0.5, self.evaluate(sparsity(step_110))[1])
@@ -263,7 +255,7 @@ class ConstantSparsityTest(_Helper, tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(sparsity.__dict__, sparsity_deserialized.__dict__)
 
 
-class PolynomialDecayTest(_Helper, tf.test.TestCase, parameterized.TestCase):
+class PolynomialDecayTest(tf.test.TestCase, parameterized.TestCase):
 
   def testRaisesErrorIfEndStepIsNegative(self):
     with self.assertRaises(ValueError):
@@ -277,7 +269,7 @@ class PolynomialDecayTest(_Helper, tf.test.TestCase, parameterized.TestCase):
     step_102 = tf.Variable(102)
     step_105 = tf.Variable(105)
     step_110 = tf.Variable(110)
-    self._initialize_variables()
+    compat.initialize_variables(self)
 
     # These values were generated using tf.polynomial_decay with the same
     # params in a colab to verify.

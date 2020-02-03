@@ -26,19 +26,17 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from tensorflow.python.framework import dtypes
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import initializers
-from tensorflow.python.keras.layers import deserialize as deserialize_layer
-from tensorflow.python.keras.layers.wrappers import Wrapper
-from tensorflow.python.keras.utils import tf_utils
-from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
-from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
+import tensorflow as tf
 
+# TODO(b/139939526): move to public API.
+from tensorflow.python.keras.utils import tf_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 
+deserialize_keras_object = tf.keras.utils.deserialize_keras_object
+serialize_keras_object = tf.keras.utils.serialize_keras_object
 
-class QuantizeWrapper(Wrapper):
+
+class QuantizeWrapper(tf.keras.layers.Wrapper):
   """Quantizes the weights and activations of the keras layer it wraps."""
 
   def __init__(self, layer, quantize_provider, **kwargs):
@@ -89,8 +87,8 @@ class QuantizeWrapper(Wrapper):
 
     self.optimizer_step = self.add_weight(
         'optimizer_step',
-        initializer=initializers.Constant(-1),
-        dtype=dtypes.int32,
+        initializer=tf.keras.initializers.Constant(-1),
+        dtype=tf.dtypes.int32,
         trainable=False)
 
     self._weight_vars = []
@@ -134,7 +132,7 @@ class QuantizeWrapper(Wrapper):
 
   def call(self, inputs, training=None):
     if training is None:
-      training = K.learning_phase()
+      training = tf.keras.backend.learning_phase()
 
     # Quantize all weights, and replace them in the underlying layer.
 
@@ -197,7 +195,7 @@ class QuantizeWrapper(Wrapper):
         module_objects=globals(),
         custom_objects=None)
 
-    layer = deserialize_layer(config.pop('layer'))
+    layer = tf.keras.layers.deserialize(config.pop('layer'))
 
     return cls(layer=layer, quantize_provider=quantize_provider, **config)
 

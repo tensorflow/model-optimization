@@ -20,8 +20,7 @@ from __future__ import print_function
 
 import numpy as np
 
-from tensorflow.python import keras
-from tensorflow.python.platform import test
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
@@ -31,8 +30,10 @@ Transform = transforms.Transform
 LayerPattern = transforms.LayerPattern
 LayerNode = transforms.LayerNode
 
+keras = tf.keras
 
-class ModelTransformerTest(test.TestCase):
+
+class ModelTransformerTest(tf.test.TestCase):
 
   @staticmethod
   def _batch(dims, batch_size):
@@ -404,4 +405,4 @@ class ModelTransformerTest(test.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

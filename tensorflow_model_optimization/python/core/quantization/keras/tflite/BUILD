@@ -5,6 +5,15 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
+    name = "tflite",
+    srcs = [
+        "__init__.py",
+    ],
+    srcs_version = "PY2AND3",
+    deps = [],
+)
+
+py_library(
     name = "tflite_quantizers",
     srcs = [
         "tflite_quantizers.py",
@@ -13,7 +22,6 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
 )
@@ -30,7 +38,6 @@ py_test(
         ":tflite_quantizers",
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
     ],
 )
 
@@ -44,7 +51,6 @@ py_library(
     deps = [
         # six dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_provider",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
@@ -60,7 +66,6 @@ py_library(
     deps = [
         # six dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_provider",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
@@ -82,7 +87,6 @@ py_test(
         ":tflite_quantize_registry",
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
     ],
 )
 
@@ -95,7 +99,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
-        # python/keras tensorflow dep2,
+        # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:transforms",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
@@ -114,7 +118,7 @@ py_test(
     deps = [
         ":tflite_transforms",
         # numpy dep1,
-        # python/keras tensorflow dep2,
+        # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:model_transformer",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm_test_utils",
@@ -132,7 +136,6 @@ py_library(
         ":tflite_transforms",
         # six dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_layout_transform",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:model_transformer",
     ],

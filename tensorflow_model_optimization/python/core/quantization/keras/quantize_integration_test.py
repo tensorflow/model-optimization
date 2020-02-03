@@ -25,10 +25,10 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python import keras
+# TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.platform import test
 
+from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.keras import test_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils
@@ -38,7 +38,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import utils
 # on graph mode wraps everything in a graph, which is not compatible
 # with the TFLite converter's call to clear_session().
 @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
-class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
+class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
   @staticmethod
   def _batch(dims, batch_size):
@@ -65,26 +65,51 @@ class QuantizeIntegrationTest(test.TestCase, parameterized.TestCase):
         *self._batch(model1.input.get_shape().as_list(), 1))
     self.assertAllClose(model1.predict(inputs), model2.predict(inputs))
 
-  # TODO(pulkitb): Parameterize and add more model/runtime options.
-  def testSerialization(self):
-    model = test_utils.build_simple_dense_model()
+  # After saving a model to SavedModel and then loading it back,
+  # the class changes, which results in config differences. This
+  # may change after a sync (TF 2.2.0): TODO(alanchiao): try it.
+  def _assert_saved_models_equal(self, model1, model2):
+    inputs = np.random.randn(
+        *self._batch(model1.input.get_shape().as_list(), 1))
+    self.assertAllClose(model1.predict(inputs), model2.predict(inputs))
 
-    quantized_model = quantize.quantize(model)
-    quantized_model.compile(
+  # TODO(tfmot): use shared test util that is model-independent.
+  @staticmethod
+  def _train_model(model):
+    model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-    quantized_model.fit(
+    model.fit(
         np.random.rand(20, 10),
-        tf.keras.utils.to_categorical(
-            np.random.randint(5, size=(20, 1)), 5),
+        tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20)
 
+  # TODO(pulkitb): Parameterize and add more model/runtime options.
+  def testSerialization_KerasModel(self):
+    model = test_utils.build_simple_dense_model()
+    quantized_model = quantize.quantize(model)
+    self._train_model(quantized_model)
+
     _, model_file = tempfile.mkstemp('.h5')
-    keras.models.save_model(quantized_model, model_file)
+    tf.keras.models.save_model(quantized_model, model_file)
     with quantize.quantize_scope():
-      loaded_model = keras.models.load_model(model_file)
+      loaded_model = tf.keras.models.load_model(model_file)
 
     self._assert_models_equal(quantized_model, loaded_model)
 
+  def testSerialization_TF2SavedModel(self):
+    if compat.is_v1_apis():
+      return
+
+    model = test_utils.build_simple_dense_model()
+    quantized_model = quantize.quantize(model)
+    self._train_model(quantized_model)
+
+    model_dir = tempfile.mkdtemp()
+    tf.keras.models.save_model(quantized_model, model_dir)
+    loaded_model = tf.keras.models.load_model(model_dir)
+
+    self._assert_saved_models_equal(quantized_model, loaded_model)
+
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

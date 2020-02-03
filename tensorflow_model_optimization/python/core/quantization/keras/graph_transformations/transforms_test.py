@@ -20,14 +20,14 @@ from __future__ import print_function
 
 import copy
 
-from tensorflow.python.platform import test
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
 
 LayerNode = transforms.LayerNode
 
 
-class LayerNodeTest(test.TestCase):
+class LayerNodeTest(tf.test.TestCase):
 
   def testEqualityLayerNode(self):
     conv_layer = {
@@ -65,4 +65,4 @@ class LayerNodeTest(test.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

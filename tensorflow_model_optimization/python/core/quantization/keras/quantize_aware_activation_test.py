@@ -21,25 +21,24 @@ from __future__ import print_function
 from absl.testing import parameterized
 
 import numpy as np
+import tensorflow as tf
 
-from tensorflow.python import keras
-from tensorflow.python.keras import activations
-from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
-from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
-from tensorflow.python.ops import array_ops
-from tensorflow.python.platform import test
-
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+
+keras = tf.keras
+activations = tf.keras.activations
+K = tf.keras.backend
+deserialize_keras_object = tf.keras.utils.deserialize_keras_object
+serialize_keras_object = tf.keras.utils.serialize_keras_object
 
 QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 MovingAverageQuantizer = quantizers.MovingAverageQuantizer
 
 
 @keras_parameterized.run_all_keras_modes
-class QuantizeAwareQuantizationTest(test.TestCase, parameterized.TestCase):
+class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(QuantizeAwareQuantizationTest, self).setUp()
@@ -55,7 +54,7 @@ class QuantizeAwareQuantizationTest(test.TestCase, parameterized.TestCase):
       self.activation.training = training
       # Going through `identity` to create a new tensor. TF throws an error
       # if input tensor is fetched during a run.
-      return self.activation(array_ops.identity(inputs))
+      return self.activation(tf.identity(inputs))
 
     def compute_output_shape(self, input_shape):
       return input_shape
@@ -151,4 +150,4 @@ class QuantizeAwareQuantizationTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

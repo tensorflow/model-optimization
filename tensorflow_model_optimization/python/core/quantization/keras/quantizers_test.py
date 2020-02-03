@@ -21,24 +21,20 @@ from __future__ import print_function
 from absl.testing import parameterized
 
 import numpy as np
+import tensorflow as tf
 
-from tensorflow.python.client import session
-from tensorflow.python.framework import dtypes
-from tensorflow.python.framework import ops
 from tensorflow.python.keras import keras_parameterized
-from tensorflow.python.keras.utils.generic_utils import deserialize_keras_object
-from tensorflow.python.keras.utils.generic_utils import serialize_keras_object
-from tensorflow.python.ops import variable_scope
-from tensorflow.python.ops import variables
-from tensorflow.python.platform import test
-
+from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+
+deserialize_keras_object = tf.keras.utils.deserialize_keras_object
+serialize_keras_object = tf.keras.utils.serialize_keras_object
 
 
 @keras_parameterized.run_all_keras_modes
 @parameterized.parameters(
     quantizers.LastValueQuantizer, quantizers.MovingAverageQuantizer)
-class QuantizersTest(test.TestCase, parameterized.TestCase):
+class QuantizersTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(QuantizersTest, self).setUp()
@@ -49,28 +45,27 @@ class QuantizersTest(test.TestCase, parameterized.TestCase):
         'narrow_range': False
     }
 
-  @staticmethod
-  def _test_quantizer(quantizer):
-    with session.Session(graph=ops.Graph()) as sess:
-      inputs = variable_scope.get_variable(
-          'inputs', dtype=dtypes.float32,
-          initializer=np.array([[-1.0, 0.5], [0.0, 1.0]], dtype=np.float32))
-      min_var = variables.Variable(0.0)
-      max_var = variables.Variable(0.0)
+  def _test_quantizer(self, quantizer):
+    inputs = tf.Variable(
+        np.array([[-1.0, 0.5], [0.0, 1.0]]),
+        name='inputs',
+        dtype=tf.dtypes.float32)
+    min_var = tf.Variable(0.0)
+    max_var = tf.Variable(0.0)
 
-      kwargs = {'min_var': min_var, 'max_var': max_var}
-      quant_tensor = quantizer(inputs, step=0, training=True, **kwargs)
+    kwargs = {'min_var': min_var, 'max_var': max_var}
+    quant_tensor = quantizer(inputs, step=0, training=True, **kwargs)
 
-      sess.run(variables.global_variables_initializer())
-      results = sess.run(quant_tensor)
-      min_max_values = sess.run([min_var, max_var])
+    compat.initialize_variables(self)
+    results = self.evaluate(quant_tensor)
+    min_max_values = self.evaluate([min_var, max_var])
 
-      # TODO(pulkitb): Assert on expected values for testing.
-      # Since the underlying code is already tested in quant_ops_test.py, this
-      # just ensures the Quantizers code is wired properly.
-      print('Result: ', results)
-      print('min_var: ', min_max_values[0])
-      print('max_var: ', min_max_values[1])
+    # TODO(pulkitb): Assert on expected values for testing.
+    # Since the underlying code is already tested in quant_ops_test.py, this
+    # just ensures the Quantizers code is wired properly.
+    print('Result: ', results)
+    print('min_var: ', min_max_values[0])
+    print('max_var: ', min_max_values[1])
 
   def testQuantizer(self, quantizer_type):
     quantizer = quantizer_type(**self.quant_params)
@@ -102,4 +97,4 @@ class QuantizersTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

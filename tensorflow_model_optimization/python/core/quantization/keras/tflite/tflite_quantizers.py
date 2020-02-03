@@ -17,7 +17,7 @@
 Module: tfmot.quantization.keras.tflite
 """
 
-from tensorflow.python.keras import initializers
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
@@ -38,12 +38,12 @@ class ConvWeightsQuantizer(quantizers.LastValueQuantizer):
     min_weight = layer.add_weight(
         name + '_min',
         shape=(tensor_shape[-1],),
-        initializer=initializers.Constant(-6.0),
+        initializer=tf.keras.initializers.Constant(-6.0),
         trainable=False)
     max_weight = layer.add_weight(
         name + '_max',
         shape=(tensor_shape[-1],),
-        initializer=initializers.Constant(6.0),
+        initializer=tf.keras.initializers.Constant(6.0),
         trainable=False)
 
     return [min_weight, max_weight]
