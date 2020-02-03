@@ -92,9 +92,6 @@ class ClusterWeights(Wrapper):
     # A list for restoring the original order of weights later on, see the comments in the code for usage explanations
     self.restore = []
 
-    # To restore the weight array after clustering is done
-    self.weights_num = len(self.layer.weights)
-
     # setattr will remove the original weights from layer.weights array. We need to memorise the original
     # state of the array since saving the model relies on the variables order in layer.weights rather than on
     # values stored in e.g. kernel/bias attributes of the layer object.
@@ -127,9 +124,6 @@ class ClusterWeights(Wrapper):
     # Map automatically assigned TF variable name (e.g. 'dense/kernel:0') to provided human readable name
     # (e.g. as in Dense(10).kernel)
     clusterable_weights_to_variables = {}
-
-    # To restore the weight array after clustering is done
-    self.weights_num = len(self.layer.weights)
 
     for weight_name, weight in clusterable_weights:
       # If a variable appears in this loop, then it is going to be removed from self._trainable_weights.

@@ -185,7 +185,7 @@ def strip_clustering(model):
       # We reset both arrays of weights, so that we can guarantee the correct order of newly created weights
       layer.layer._trainable_weights = []
       layer.layer._non_trainable_weights = []
-      for i in range(layer.weights_num):
+      for i in range(len(layer.restore)):
         # This is why we used integers as keys
         name, weight = layer.restore[i]
         # In both cases we use k.batch_get_value since we need physical copies of the arrays to initialize a new tensor

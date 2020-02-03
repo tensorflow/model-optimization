@@ -299,6 +299,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     clustered_model = cluster.cluster_weights(model, **self.params)
     stripped_model = cluster.strip_clustering(clustered_model)
+
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertEqual(model.get_config(), stripped_model.get_config())
 
@@ -330,6 +331,33 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertEqual(len(stripped_model.get_weights()), cluster_weight_length)
+
+  @tf_test_util.run_in_graph_and_eager_modes
+  def testStripSelectivelyClusteredFunctionalModel(self):
+    i1 = keras.Input(shape=(10,))
+    i2 = keras.Input(shape=(10,))
+    x1 = cluster.cluster_weights(layers.Dense(10), **self.params)(i1)
+    x2 = layers.Dense(10)(i2)
+    outputs = layers.Add()([x1, x2])
+    clustered_model = keras.Model(inputs=[i1, i2], outputs=outputs)
+
+    stripped_model = cluster.strip_clustering(clustered_model)
+
+    self.assertEqual(self._count_clustered_layers(stripped_model), 0)
+    self.assertIsInstance(stripped_model.layers[2], layers.Dense)
+
+  @tf_test_util.run_in_graph_and_eager_modes
+  def testStripSelectivelyClusteredSequentialModel(self):
+    clustered_model = keras.Sequential([
+      cluster.cluster_weights(layers.Dense(10), **self.params),
+      layers.Dense(10),
+    ])
+    clustered_model.build(input_shape=(1, 10))
+
+    stripped_model = cluster.strip_clustering(clustered_model)
+
+    self.assertEqual(self._count_clustered_layers(stripped_model), 0)
+    self.assertIsInstance(stripped_model.layers[0], layers.Dense)
 
 if __name__ == '__main__':
   tf.disable_v2_behavior()
