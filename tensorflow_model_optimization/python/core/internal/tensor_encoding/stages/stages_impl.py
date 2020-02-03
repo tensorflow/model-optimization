@@ -454,7 +454,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
     """See base class."""
     del encode_params
     flat_x = tf.reshape(x, [-1])
-    packed_x = tf_utils.pack_into_int32(
+    packed_x = tf_utils.pack_into_int(
         tf.cast(flat_x, tf.int32), self._input_bits, self._target_bitrange)
 
     # The most common type will be tf.float32, which we keep as default.
@@ -477,7 +477,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
              shape=None):
     """See base class."""
     del decode_params, num_summands  # Unused.
-    unpacked_x = tf_utils.unpack_from_int32(
+    unpacked_x = tf_utils.unpack_from_int(
         encoded_tensors[self.ENCODED_VALUES_KEY], self._input_bits,
         self._target_bitrange, shape)
 

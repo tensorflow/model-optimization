@@ -49,7 +49,7 @@ py_library(
 
 py_test(
     name = "tf_utils_test",
-    size = "small",
+    size = "medium",
     srcs = ["tf_utils_test.py"],
     deps = [
         ":tf_utils",
