@@ -322,20 +322,20 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
         encoded_x, state_update_tensors = stage.encode(x, encode_params)
         updated_state = stage.update_state(state, state_update_tensors)
 
-      # Get all values out of TensorFlow as Python constants. This is a trivial
-      # example of communication happening outside of TensorFlow.
-      with self.session(graph=server_graph):
-        (x, decode_params, encoded_x, state, state_update_tensors,
-         updated_state, shape) = self.evaluate_tf_py_list([
-             x, decode_params, encoded_x, state, state_update_tensors,
-             updated_state, shape
-         ])
+        # Get all values out of TensorFlow as Python constants. This is a
+        # trivial example of communication happening outside of TensorFlow.
+        with self.session(graph=server_graph):
+          (x, decode_params, encoded_x, state, state_update_tensors,
+           updated_state, shape) = self.evaluate_tf_py_list([
+               x, decode_params, encoded_x, state, state_update_tensors,
+               updated_state, shape
+           ])
 
       client_graph = tf.Graph()
       with client_graph.as_default():
         decoded_x = stage.decode(encoded_x, decode_params, shape=shape)
-      with self.session(graph=client_graph):
-        decoded_x = self.evaluate(decoded_x)
+        with self.session(graph=client_graph):
+          decoded_x = self.evaluate(decoded_x)
 
       return TestData(x, encoded_x, decoded_x, state, state_update_tensors,
                       updated_state)
@@ -349,17 +349,17 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
         encode_params, decode_params = stage.get_params()
         encoded_x = stage.encode(x, encode_params)
 
-      # Get all values out of TensorFlow as Python constants. This is a trivial
-      # example of communication happening outside of TensorFlow.
-      with self.session(graph=server_graph):
-        x, decode_params, encoded_x, shape = self.evaluate_tf_py_list(
-            [x, decode_params, encoded_x, shape])
+        # Get all values out of TensorFlow as Python constants. This is a
+        # trivial example of communication happening outside of TensorFlow.
+        with self.session(graph=server_graph):
+          x, decode_params, encoded_x, shape = self.evaluate_tf_py_list(
+              [x, decode_params, encoded_x, shape])
 
       client_graph = tf.Graph()
       with client_graph.as_default():
         decoded_x = stage.decode(encoded_x, decode_params, shape=shape)
-      with self.session(graph=client_graph):
-        decoded_x = self.evaluate(decoded_x)
+        with self.session(graph=client_graph):
+          decoded_x = self.evaluate(decoded_x)
 
       return TestData(x, encoded_x, decoded_x)
 
@@ -403,20 +403,21 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
         if state is None:
           state = stage.initial_state()
         encode_params, decode_params = stage.get_params(state)
-      with self.session(server_graph) as sess:
-        encode_params, decode_params, state = self.evaluate_tf_py_list(
-            [encode_params, decode_params, state], sess)
+        with self.session(server_graph) as sess:
+          encode_params, decode_params, state = self.evaluate_tf_py_list(
+              [encode_params, decode_params, state], sess)
 
       client_test_data = []
       for x in input_values:
         client_graph = tf.Graph()
         with client_graph.as_default():
           encoded_x, state_update_tensors = stage.encode(x, encode_params)
-        with self.session(client_graph):
-          encoded_x, state_update_tensors = self.evaluate(
-              [encoded_x, state_update_tensors])
-          client_test_data.append(
-              TestData(x, encoded_x, state_update_tensors=state_update_tensors))
+          with self.session(client_graph):
+            encoded_x, state_update_tensors = self.evaluate(
+                [encoded_x, state_update_tensors])
+            client_test_data.append(
+                TestData(
+                    x, encoded_x, state_update_tensors=state_update_tensors))
 
       server_test_data = []
       with server_graph.as_default():
@@ -447,18 +448,18 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
       with server_graph.as_default():
         shape = input_values[0].shape
         encode_params, decode_params = stage.get_params()
-      with self.session(server_graph) as sess:
-        encode_params, decode_params = self.evaluate_tf_py_list(
-            [encode_params, decode_params], sess)
+        with self.session(server_graph) as sess:
+          encode_params, decode_params = self.evaluate_tf_py_list(
+              [encode_params, decode_params], sess)
 
       client_test_data = []
       for x in input_values:
         client_graph = tf.Graph()
         with client_graph.as_default():
           encoded_x = stage.encode(x, encode_params)
-        with self.session(client_graph):
-          encoded_x = self.evaluate(encoded_x)
-          client_test_data.append(TestData(x, encoded_x))
+          with self.session(client_graph):
+            encoded_x = self.evaluate(encoded_x)
+            client_test_data.append(TestData(x, encoded_x))
 
       server_test_data = []
       with server_graph.as_default():
@@ -588,15 +589,17 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
     # The encoded and decoded Tensors should have appropriate substrings in
     # their names, as long as the encode or decode methods are not identities.
     # If they are identities, encoded_x must be a dictionaty with a single key,
-    # mapping to the same Tensor as x or decoded_x, respectively.
-    if (len(test_data.encoded_x) > 1 or
-        test_data.x is not list(test_data.encoded_x.values())[0]):
-      for t in six.itervalues(test_data.encoded_x):
-        self.assertIn(encoding_stage.ENCODE_SCOPE_SUFFIX, t.name)
-    if (len(test_data.encoded_x) > 1 or
-        test_data.decoded_x is not list(test_data.encoded_x.values())[0]):
-      self.assertIn(encoding_stage.DECODE_SCOPE_SUFFIX,
-                    test_data.decoded_x.name)
+    # mapping to the same Tensor as x or decoded_x, respectively. Note this is
+    # only relevant for graph execution mode.
+    if not tf.executing_eagerly():
+      if (len(test_data.encoded_x) > 1 or
+          test_data.x is not list(test_data.encoded_x.values())[0]):
+        for t in six.itervalues(test_data.encoded_x):
+          self.assertIn(encoding_stage.ENCODE_SCOPE_SUFFIX, t.name)
+      if (len(test_data.encoded_x) > 1 or
+          test_data.decoded_x is not list(test_data.encoded_x.values())[0]):
+        self.assertIn(encoding_stage.DECODE_SCOPE_SUFFIX,
+                      test_data.decoded_x.name)
 
     if is_adaptive_stage(stage):
       # The property should have keys matching those of state_update_tensors.
@@ -614,12 +617,13 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
 
       # The state related Tensors should have appropriate substrings in their
       # names.
-      for tensor in six.itervalues(test_data.initial_state):
-        self.assertIn(encoding_stage.INITIAL_STATE_SCOPE_SUFFIX, tensor.name)
-      for tensor in six.itervalues(test_data.updated_state):
-        self.assertIn(encoding_stage.UPDATE_STATE_SCOPE_SUFFIX, tensor.name)
-      for tensor in six.itervalues(test_data.state_update_tensors):
-        self.assertIn(encoding_stage.ENCODE_SCOPE_SUFFIX, tensor.name)
+      if not tf.executing_eagerly():
+        for tensor in six.itervalues(test_data.initial_state):
+          self.assertIn(encoding_stage.INITIAL_STATE_SCOPE_SUFFIX, tensor.name)
+        for tensor in six.itervalues(test_data.updated_state):
+          self.assertIn(encoding_stage.UPDATE_STATE_SCOPE_SUFFIX, tensor.name)
+        for tensor in six.itervalues(test_data.state_update_tensors):
+          self.assertIn(encoding_stage.ENCODE_SCOPE_SUFFIX, tensor.name)
 
   def asserts_for_test_many_to_one_encode_decode(self, data):
     """Additional asserts for `test_many_to_one_encode_decode` method.
