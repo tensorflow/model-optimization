@@ -24,7 +24,9 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.py
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.py_utils import static_or_dynamic_shape
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.tf_utils import fast_walsh_hadamard_transform
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.tf_utils import pack_into_int
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.tf_utils import random_floats
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.tf_utils import random_floats_cmwc
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.tf_utils import random_signs
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.tf_utils import random_signs_cmwc
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils.tf_utils import unpack_from_int

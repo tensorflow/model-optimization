@@ -283,15 +283,15 @@ def random_floats_cmwc(num_elements, seed, dtype=tf.float32):
   return tf.cast(_cmwc_random_sequence(num_elements, seed), dtype)
 
 
-def pack_into_int32(value, input_bitrange, target_bitrange):
-  """Pack integers in range [0, 2**`input_bitrange`-1] into int32 values.
+def pack_into_int(value, input_bitrange, target_bitrange):
+  """Pack integers in range [0, 2**`input_bitrange`-1] into integer values.
 
   This utility simply concatenates the relevant bits of the input values into
-  a sequence of int32 values.
+  a sequence of integer values.
 
-  The `target_bitrange` can be used to not use all 32 bits of the int32 type.
+  The `target_bitrange` can be used to not use all bits of the return type.
   This can be useful for instance when the resulting values can be serialized as
-  a varint. In such case, using only `28` bits could be more desirable.
+  a varint. In such case, using only 7 bits per byte could be more desirable.
 
   NOTE: This only uses basic math operations to implement the bit manipulation,
   not any bitwise operations, which is relevant in environments where only a
@@ -300,13 +300,13 @@ def pack_into_int32(value, input_bitrange, target_bitrange):
   possibly returning an incorrect value.
 
   Args:
-    value: A `tf.int32` Tensor to be packed.
+    value: An integer Tensor to be packed.
     input_bitrange: An integer. The number of relevant bits in `value`.
     target_bitrange: An integer. The number of bits to be used in packed
       representation.
 
   Returns:
-    A `tf.int32` Tensor representing `value`.
+    An integer Tensor representing `value` of the same dtype as `value`.
   """
   if input_bitrange > 1:
     value = tf.reshape(value, [-1, 1])
@@ -314,17 +314,17 @@ def pack_into_int32(value, input_bitrange, target_bitrange):
   return _pack_binary_form(value, target_bitrange)
 
 
-def unpack_from_int32(value, original_bitrange, target_bitrange, shape):
+def unpack_from_int(value, original_bitrange, target_bitrange, shape):
   """Unpack integers into the range of [0, 2**`original_bitrange`-1].
 
-  This utility is to be used as the inverse of `pack_into_int32` utility.
+  This utility is to be used as the inverse of `pack_into_int` utility.
 
   The shape of the original input is needed for uniqueness of the inverse
   operation -- inputs of different shapes can be packed into the same
   representation.
 
   Args:
-    value: A `tf.int32` Tensor to be unpacked.
+    value: An integer Tensor to be unpacked.
     original_bitrange: An integer. The number of bits used in the original
       representation.
     target_bitrange: An integer. The number of bits used in the packed
@@ -332,7 +332,8 @@ def unpack_from_int32(value, original_bitrange, target_bitrange, shape):
     shape: The shape of the original input.
 
   Returns:
-    A `tf.int32` Tensor representing the unpacked `value`.
+    An integer Tensor representing the unpacked `value` of the same dtype as
+    `value`.
   """
   value = _expand_to_binary_form(value, target_bitrange)
   value = tf.slice(value, [0], [tf.reduce_prod(shape) * original_bitrange])
@@ -346,8 +347,10 @@ def _pack_binary_form(value, target_bits):
   # Reshape the binary input to have target_bits columns, padding with zeros if
   # necessary to fit the dimension. The bitpacked representation is computed
   # as product with vector [1, 2, 4, ..., 2**target_bits].
-  packing_vector = tf.constant([[2**i] for i in range(target_bits)], tf.int32)
-  extra_zeros = tf.zeros(tf.math.mod(-tf.shape(value), target_bits), tf.int32)
+  packing_vector = tf.constant([[2**i] for i in range(target_bits)],
+                               value.dtype)
+  extra_zeros = tf.zeros(
+      tf.math.mod(-tf.shape(value), target_bits), value.dtype)
   reshaped_x = tf.reshape(tf.concat([value, extra_zeros], 0), [-1, target_bits])
   return tf.matmul(reshaped_x, packing_vector)
 
@@ -355,6 +358,6 @@ def _pack_binary_form(value, target_bits):
 def _expand_to_binary_form(value, input_bits):
   # This operation is inverse of _pack_binary_form, except padded zeros are not
   # removed.
-  expand_vector = tf.constant([2**i for i in range(input_bits)], tf.int32)
-  return tf.reshape(
-      tf.math.mod(tf.math.floordiv(value, expand_vector), 2), [-1])
+  expand_vector = tf.constant([2**i for i in range(input_bits)], value.dtype)
+  bits = tf.math.mod(tf.math.floordiv(value, expand_vector), 2)
+  return tf.reshape(bits, [-1])
