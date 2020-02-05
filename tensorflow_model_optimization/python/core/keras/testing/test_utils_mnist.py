@@ -98,6 +98,9 @@ def eval_tflite(model_path):
   output_index = interpreter.get_output_details()[0]['index']
 
   _, _, x_test, y_test = preprocessed_data()
+  # Testing the entire dataset is too slow. Verifying only 300 of 10k samples.
+  x_test = x_test[0:300, :]
+  y_test = y_test[0:300, :]
 
   total_seen = 0
   num_correct = 0
