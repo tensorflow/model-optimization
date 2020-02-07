@@ -28,16 +28,11 @@ keras = tf.keras
 
 
 def quantize_scope(*args):
-  """Provides a scope in which Quantized layers and models can be deserialized.
-
-  If a keras h5 model or layer has been quantized, it needs to be within this
-  scope
-  to be successfully deserialized. This is not needed for TF checkpoints or
-  SavedModel, which are the recommended serialization formats in TF 2.X.
+  """Required scope to deserialize quantized models stored in tf.keras h5 format.
 
   Args:
     *args: Variable length list of dictionaries of name, class pairs to add to
-    the scope created by this method.
+      the scope created by this method.
 
   Returns:
     Object of type `CustomObjectScope` with quantization objects included.
@@ -67,25 +62,40 @@ def quantize_scope(*args):
   return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
 
 
-def quantize(to_quantize):
-  """Quantize a whole tf.keras model.
+# TODO(tfmot): link to docs to explain what quantization implementation means.
+def quantize_model(to_quantize):
+  """Quantize a whole tf.keras model with the default quantization implementation.
 
-  To be more precise, `quantize` creates a model that emulates
+  To be more precise, `quantize_model` creates a model that emulates
   quantization during training and stores information that downstream
   tools will use to produce actually quantized models.
 
-  For quantizing individual tf.keras layers, use the `quantize_annotate`
-  and `quantize_apply` APIs.
+  Quantize a model:
+
+  ```python
+  model = quantize_model(
+      keras.Sequential([
+          layers.Dense(10, activation='relu', input_shape=(100,)),
+          layers.Dense(2, activation='sigmoid')
+      ]))
+  ```
+
+  Note that this function removes the optimizer from the original model.
+  Additionally, training the model returned by `quantize_model` will not affect
+  the weights of the original model.
 
   Args:
-    to_quantize: tf.keras model to be quantized.
+    to_quantize: tf.keras model to be quantized. It can have pre-trained
+      weights.
 
   Returns:
-    Returns a new tf.keras model prepared for quantization. It has the following
-    properties:
-    - Pre-trained weights are copied over, but the optimizer is removed.
-    - Training this model will not affect the weights of the original model.
+    Returns a new tf.keras model prepared for quantization.
   """
+  if not isinstance(to_quantize, keras.Model):
+    raise ValueError(
+        '`to_quantize` can only be a tf.keras `Model` instance. Use '
+        'the `quantize_annotate` API to handle individual layers.')
+
   annotated_model = quantize_annotate(to_quantize)
   return quantize_apply(annotated_model)
 
@@ -97,8 +107,19 @@ def quantize_annotate(to_quantize, **kwargs):
   tf.keras layer (or each layer in the model) with `QuantizeAnnotate` to note
   which layers need to be quantized.
 
+  Annotate a layer:
+
+  ```python
+  model = keras.Sequential([
+      layers.Dense(10, activation='relu', input_shape=(100,)),
+      quantize_annotate(layers.Dense(2, activation='sigmoid'))
+  ]))
+  ```
+
+  Note that this function removes the optimizer from the original model.
+
   Args:
-    to_quantize: tf.keras layer or model to be quantized.
+    to_quantize: tf.keras layer to be quantized.
     **kwargs: Additional keyword arguments to be passed to the keras layer.
 
   Returns:
@@ -136,15 +157,23 @@ def quantize_apply(model):
   and store information that downstream tools will use to produce
   an actually quantized model.
 
+  Apply quantization to a model:
+
+  ```python
+  model = quantize_apply(annotated_model)
+  ```
+
+  Note that this function removes the optimizer from the original model.
+  Additionally, training the model returned by `quantize_apply` will not affect
+  the weights of the original model.
+
   Args:
     model: A tf.keras Sequential or Functional model which has been annotated
-    with `quantize_annotate`.
+    with `quantize_annotate`. It can have pre-trained weights.
 
   Returns:
     Returns a new tf.keras model in which the annotated layers have been
-    prepared for quantization. It has the following properties:
-    - Pre-trained weights are copied over, but the optimizer is removed.
-    - Training this model will not affect the weights of the original model.
+    prepared for quantization.
   """
 
   if not isinstance(model, keras.Model):
@@ -163,8 +192,8 @@ def quantize_apply(model):
                      'to quantize.')
 
   if not model.built:
-    raise ValueError('quantization cannot be applied to a model which has not'
-                     'been built yet. Please call `model.build(input_shape)`'
+    raise ValueError('quantization cannot be applied to a model which has not '
+                     'been built yet. Please call `model.build(input_shape)` '
                      'before quantizing your model.')
 
   def _clone_model_with_weights(model_to_clone):

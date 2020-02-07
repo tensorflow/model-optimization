@@ -21,6 +21,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider as quantize_provider_mod
@@ -56,6 +57,22 @@ class _TestQuantizeProvider(quantize_provider_mod.QuantizeProvider):
 
   def get_config(self):
     return {}
+
+
+class QuantizeTest(tf.test.TestCase):
+
+  def testQuantizeModel_Passes(self):
+    model = keras.Sequential(
+        [keras.layers.Dense(10, input_shape=(5,)),
+         keras.layers.Dropout(0.4)])
+
+    quantize.quantize_model(model)
+
+  def testQuantizeLayer_Fails(self):
+    layer = keras.layers.Dense(10, input_shape=(5,))
+
+    with self.assertRaises(ValueError):
+      quantize.quantize_model(layer)
 
 
 class QuantizeAnnotateTest(tf.test.TestCase):
@@ -111,6 +128,20 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
     inputs = np.random.rand(1, 5)
     self.assertAllEqual(model.predict(inputs), annotated_model.predict(inputs))
+
+  # TODO(tfmot): this behavior may change in the future. If a user
+  # start training a model without quantization and then wants to apply
+  # it, not removing the optimizer would allow them to skip recompiling
+  # the model.
+  def testQuantizeAnnotateModel_RemovesOptimizer(self):
+    model = keras_test_utils.build_simple_dense_model()
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
+    self.assertIsNotNone(model.optimizer)
+
+    annotated_model = quantize_annotate(model)
+    self.assertIsNone(annotated_model.optimizer)
 
 
 class QuantizeApplyTest(tf.test.TestCase):
@@ -290,6 +321,21 @@ class QuantizeApplyTest(tf.test.TestCase):
     quantized_model = quantize_apply(model)
 
     self._assert_model_quantized(model, quantized_model, ['activation'])
+
+  # TODO(tfmot): this behavior may change in the future. If a user
+  # start training a model without quantization and then wants to apply
+  # it, not removing the optimizer would allow them to skip recompiling
+  # the model.
+  def testQuantizeApply_RemovesOptimizer(self):
+    model = keras_test_utils.build_simple_dense_model()
+    annotated_model = quantize_annotate(model)
+    annotated_model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
+    self.assertIsNotNone(annotated_model.optimizer)
+
+    quantized_model = quantize_apply(annotated_model)
+    self.assertIsNone(quantized_model.optimizer)
 
 
 if __name__ == '__main__':
