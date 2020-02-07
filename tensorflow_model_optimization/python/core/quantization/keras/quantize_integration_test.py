@@ -58,7 +58,11 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     return dims
 
   def _assert_models_equal(self, model1, model2):
-    self.assertEqual(model1.get_config(), model2.get_config())
+    model1_config = model1.get_config()
+    model1_config.pop('build_input_shape', None)
+    model2_config = model2.get_config()
+    model2_config.pop('build_input_shape', None)
+    self.assertEqual(model1_config, model2_config)
     self.assertAllClose(model1.get_weights(), model2.get_weights())
 
     inputs = np.random.randn(
