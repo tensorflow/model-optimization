@@ -291,9 +291,7 @@ class ModelTransformerTest(tf.test.TestCase):
 
   # Negative Tests
   # TODO(pulkitb): Add negative tests
-  # 1. Does not replace if any layer in the pattern has multiple nodes/consumers
-  # 2. Adding a single layer clone will lead to infinite loop. Fix and test.
-  # 3. Handles layer being part of multiple models.
+  # 1. Handles layer being part of multiple models.
 
   class VerifyMatch(Transform):
 
@@ -314,7 +312,7 @@ class ModelTransformerTest(tf.test.TestCase):
     def reset(self):
       self._matched = False
 
-  def testPatternShouldOnlyMatchCandidateLayers(self):
+  def testPatternShouldOnlyMatch_CandidateLayers(self):
     pattern = LayerPattern('ReLU', inputs=[LayerPattern('Dense')])
     transform = self.VerifyMatch(pattern)
 
@@ -340,7 +338,7 @@ class ModelTransformerTest(tf.test.TestCase):
     ModelTransformer(model, [transform], [model.layers[-1].name]).transform()
     self.assertFalse(transform.matched())
 
-  def testPatternCanMatchMultipleLayers(self):
+  def testPatternCanMatch_MultipleLayers(self):
     pattern = LayerPattern('Conv2D|DepthwiseConv2D')
     transform = self.VerifyMatch(pattern)
 
@@ -358,6 +356,48 @@ class ModelTransformerTest(tf.test.TestCase):
     transform.reset()
     ModelTransformer(depth_conv_model, [transform]).transform()
     self.assertTrue(transform.matched())
+
+  def testPatternCanMatch_HeadNodeWithMultipleConsumers(self):
+    # Dense -> Dense2  -> ReLU
+    #                  -> ReLU2
+    #
+    # where Dense2, the head node in the pattern, has multiple consumers
+    # (ReLU and ReLU2).
+    pattern = LayerPattern('Dense', inputs=[LayerPattern('Dense')])
+    transform = self.VerifyMatch(pattern)
+
+    inp = keras.layers.Input(3)
+    x = keras.layers.Dense(2)(inp)
+    y = keras.layers.Dense(2)(x)
+    out1 = keras.layers.ReLU(6.0)(y)
+    out2 = keras.layers.ReLU(6.0)(y)
+
+    model = keras.Model(inp, [out1, out2])
+
+    ModelTransformer(model, [transform]).transform()
+    self.assertTrue(transform.matched())
+
+  def testPatternDoesNotSupportMatch_IntermediateNodeWithMultipleConsumers(
+      self):
+    # Dense -> Dense2  -> ReLU
+    #                  -> ReLU2
+    #
+    # where Dense2, an intermediate node in the pattern, has multiple consumers
+    # (ReLU and ReLU2).
+    pattern = LayerPattern(
+        'ReLU', inputs=[LayerPattern('Dense', inputs=[LayerPattern('Dense')])])
+    transform = self.VerifyMatch(pattern)
+
+    inp = keras.layers.Input(3)
+    x = keras.layers.Dense(2)(inp)
+    y = keras.layers.Dense(2)(x)
+    out1 = keras.layers.ReLU(6.0)(y)
+    out2 = keras.layers.ReLU(6.0)(y)
+
+    model = keras.Model(inp, [out1, out2])
+
+    ModelTransformer(model, [transform]).transform()
+    self.assertFalse(transform.matched())
 
   def testLayerMetadataPassedAndReplacedInTransforms(self):
     class ReplaceLayerMetadata(Transform):
