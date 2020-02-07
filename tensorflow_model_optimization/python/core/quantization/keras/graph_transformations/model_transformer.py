@@ -113,7 +113,7 @@ class ModelTransformer(object):
 
     return True
 
-  def _match_layer_with_inputs(self, layer, pattern):
+  def _match_layer_with_inputs(self, layer, pattern, is_head_node):
     """Match pattern at this layer, and continue to match at its inputs."""
 
     if not self._match_layer(layer, pattern):
@@ -137,14 +137,15 @@ class ModelTransformer(object):
     output_consumers = self._get_output_consumers(layer)
     if len(consuming_layers) + len(output_consumers) > 1:
       # Even if a layer has only 1 incoming connection, multiple layers may
-      # still consume the output. This is problematic since transforming this
-      # layer can leave the other consuming nodes not part of the pattern
-      # dangling.
+      # still consume the output. Having multiple consumers is only supported
+      # for the head node, and not intermediate layers. Replacing intermediate
+      # nodes with >1 consumer will lead to dangling nodes.
       #
-      # Note that having multiple consumers is only a problem for intermediate
-      # layers, and not the head node of the sub-tree.
-      # TODO(pulkitb): Consider support for this exemption for tip of the tree.
-      return None
+      # Note that theoretically, intermediate layers can supported, as a part
+      # of a general layer transform tool. This is not supported given no
+      # motivating use case.
+      if not is_head_node:
+        return None
 
     if len(pattern.inputs) == 0:
       # Leaf layer in pattern.
@@ -172,7 +173,8 @@ class ModelTransformer(object):
     # TODO(pulkitb): Fix by checking all permutations.
     input_match_layer_nodes = []
     for input_layer, pattern in zip(input_layers, pattern.inputs):
-      match_layer_node = self._match_layer_with_inputs(input_layer, pattern)
+      match_layer_node = self._match_layer_with_inputs(
+          input_layer, pattern, is_head_node=False)
       if not match_layer_node:
         return None
       input_match_layer_nodes.append(match_layer_node)
@@ -183,7 +185,8 @@ class ModelTransformer(object):
 
   def _find_pattern(self, pattern):
     for layer in self._config['layers']:
-      match_layer = self._match_layer_with_inputs(layer, pattern)
+      match_layer = self._match_layer_with_inputs(
+          layer, pattern, is_head_node=True)
       if match_layer:
         return match_layer
 
