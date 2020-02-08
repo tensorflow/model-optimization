@@ -198,7 +198,7 @@ def strip_clustering(model):
       # order of newly created weights
       layer.layer._trainable_weights = []
       layer.layer._non_trainable_weights = []
-      for i in range(layer.weights_num):
+      for i in range(len(layer.restore)):
         # This is why we used integers as keys
         name, weight = layer.restore[i]
         # In both cases we use k.batch_get_value since we need physical copies
