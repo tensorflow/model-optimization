@@ -193,8 +193,36 @@ class ModelTransformerTest(tf.test.TestCase):
     self._assert_model_results_equal(model, transformed_model)
 
   def testReplaceSingleLayer_WithMultipleLayers(self):
-    # TODO(pulkitb): Implement
-    pass
+    class ReplaceInputWithInputAndActivation(transforms.Transform):
+      """InputLayer => (InputLayer -> Activation)."""
+
+      def pattern(self):
+        return LayerPattern('InputLayer')
+
+      def replacement(self, match_layer):
+        activation_layer = keras.layers.Activation('linear')
+        layer_config = keras.layers.serialize(activation_layer)
+        layer_config['name'] = activation_layer.name
+
+        activation_layer_node = LayerNode(
+            layer_config,
+            input_layers=[match_layer])
+
+        return activation_layer_node
+
+    inp1 = keras.layers.Input((3,))
+    inp2 = keras.layers.Input((3,))
+    out = keras.layers.Concatenate()([inp1, inp2])
+    model = keras.Model([inp1, inp2], out)
+
+    transformed_model, _ = ModelTransformer(
+        model, [ReplaceInputWithInputAndActivation()]).transform()
+
+    self.assertEqual(5, len(transformed_model.layers))
+    self.assertIsInstance(transformed_model.layers[0], keras.layers.InputLayer)
+    self.assertIsInstance(transformed_model.layers[1], keras.layers.InputLayer)
+    self.assertIsInstance(transformed_model.layers[2], keras.layers.Activation)
+    self.assertIsInstance(transformed_model.layers[3], keras.layers.Activation)
 
   def testReplaceChainOfLayers_WithSingleLayer(self):
     class FuseReLUIntoDense(transforms.Transform):
