@@ -25,6 +25,8 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
+from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
@@ -213,6 +215,23 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     inputs = np.random.standard_normal(input_shape)
     self.assertAllClose(
         transformed_model.predict(inputs), model.predict(inputs))
+
+  def testAddsQuantizeLayerAfterInputLayer(self):
+    inp1 = keras.layers.Input((3,))
+    inp2 = keras.layers.Input((3,))
+    x = keras.layers.Concatenate()([inp1, inp2])
+    model = keras.Model([inp1, inp2], x)
+
+    transformed_model, _ = ModelTransformer(
+        model, [tflite_transforms.InputLayerQuantize()]).transform()
+
+    for input_layer in transformed_model._input_layers:
+      layer_after_input = input_layer._outbound_nodes[0].outbound_layer
+      self.assertIsInstance(
+          layer_after_input,
+          quantize_layer.QuantizeLayer)
+      self.assertIsInstance(
+          layer_after_input.quantizer, quantizers.MovingAverageQuantizer)
 
 
 if __name__ == '__main__':
