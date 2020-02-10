@@ -125,7 +125,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(self.custom_non_clusterable_layer, **self.params)
 
-  def testClusterLayersSelectively(self):
+  @tf_test_util.run_in_graph_and_eager_modes
+  def testClusterSequentialModelSelectively(self):
     clustered_model = keras.Sequential()
     clustered_model.add(cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
     clustered_model.add(self.keras_clusterable_layer)
@@ -133,6 +134,18 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.assertIsInstance(clustered_model.layers[0], cluster_wrapper.ClusterWeights)
     self.assertNotIsInstance(clustered_model.layers[1], cluster_wrapper.ClusterWeights)
+
+  @tf_test_util.run_in_graph_and_eager_modes
+  def testClusterFunctionalModelSelectively(self):
+    i1 = keras.Input(shape=(10,))
+    i2 = keras.Input(shape=(10,))
+    x1 = cluster.cluster_weights(layers.Dense(10), **self.params)(i1)
+    x2 = layers.Dense(10)(i2)
+    outputs = layers.Add()([x1, x2])
+    clustered_model = keras.Model(inputs=[i1, i2], outputs=outputs)
+
+    self.assertIsInstance(clustered_model.layers[2], cluster_wrapper.ClusterWeights)
+    self.assertNotIsInstance(clustered_model.layers[3], cluster_wrapper.ClusterWeights)
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterModelValidLayersSuccessful(self):
