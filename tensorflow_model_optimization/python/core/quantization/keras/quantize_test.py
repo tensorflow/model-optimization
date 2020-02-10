@@ -24,6 +24,7 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider as quantize_provider_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper as quantize_wrapper_mod
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
@@ -311,16 +312,45 @@ class QuantizeApplyTest(tf.test.TestCase):
 
     self._assert_model_quantized(model, quantized_model, ['activation'])
 
-  def testAppliesQuantizationToAnnotatedModel_Functional(self):
+  def _get_simple_functional_model(self):
     inputs = keras.Input(shape=(28, 28, 1))
     x = keras.layers.Conv2D(32, 5, activation='relu')(inputs)
     x = QuantizeAnnotate(keras.layers.Dense(10, activation='relu'))(x)
     results = QuantizeAnnotate(keras.layers.Dense(5, activation='softmax'))(x)
-    model = keras.Model(inputs=inputs, outputs=results)
+    return keras.Model(inputs=inputs, outputs=results)
 
+  def testAppliesQuantizationToAnnotatedModel_Functional(self):
+    model = self._get_simple_functional_model()
     quantized_model = quantize_apply(model)
 
     self._assert_model_quantized(model, quantized_model, ['activation'])
+
+  def testDoesNotQuantizeInputLayer_OutboundLayerNotQuantized(self):
+    model = self._get_simple_functional_model()
+
+    quantized_model = quantize_apply(model)
+
+    # Since first layer is not quantized, QuantizeLayer does not get inserted
+    # after InputLayer.
+
+    input_layer = quantized_model._input_layers[0]
+    next_layer = input_layer._outbound_nodes[0].outbound_layer
+    self.assertNotIsInstance(next_layer, quantize_layer.QuantizeLayer)
+
+  def testQuantizesInputLayer_OutboundLayerIsQuantized(self):
+    inputs = keras.Input(shape=(28, 28, 1))
+    x = QuantizeAnnotate(keras.layers.Conv2D(32, 5, activation='relu'))(inputs)
+    x = QuantizeAnnotate(keras.layers.Dense(10, activation='relu'))(x)
+    model = keras.Model(inputs=inputs, outputs=x)
+
+    quantized_model = quantize_apply(model)
+
+    # First layer is quantized. Hence QuantizeLayer gets inserted after
+    # InputLayer.
+
+    input_layer = quantized_model._input_layers[0]
+    next_layer = input_layer._outbound_nodes[0].outbound_layer
+    self.assertIsInstance(next_layer, quantize_layer.QuantizeLayer)
 
   # TODO(tfmot): this behavior may change in the future. If a user
   # start training a model without quantization and then wants to apply

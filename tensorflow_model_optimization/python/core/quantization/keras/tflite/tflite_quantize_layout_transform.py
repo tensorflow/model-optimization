@@ -59,6 +59,7 @@ class TFLiteQuantizeLayoutTransform(
       return model, layer_quantize_map
 
     transforms = [
+        tflite_transforms.InputLayerQuantize(),
         tflite_transforms.Conv2DBatchNormReLUQuantize(),
         tflite_transforms.Conv2DBatchNormQuantize(),
     ]

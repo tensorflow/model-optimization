@@ -253,6 +253,14 @@ def quantize_apply(model):
   # extracts the original model structure (easier to transform), and
   # stores relevant quantization information in a map.
   unwrapped_model, layer_quantize_map = _extract_original_model(model_copy)
+  # Model cloning excludes input layers. Add input layers into the map
+  # since they need to be matched for patterns as well.
+  # pylint: disable=protected-access
+  for input_layer in unwrapped_model._input_layers:
+    for outbound_node in input_layer._outbound_nodes:
+      if outbound_node.outbound_layer.name in layer_quantize_map:
+        layer_quantize_map[input_layer.name] = {}
+  # pylint: enable=protected-access
 
   # 3. Apply the graph transformations required to match model passes on
   # target device/dialect.
