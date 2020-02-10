@@ -49,9 +49,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     folded_model = Conv2DModel.get_folded_batchnorm_model(
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
     self.assertAllClose(
@@ -65,9 +64,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         model_type='functional',
         random_init=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -98,10 +96,9 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         model_type='functional',
         random_init=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model,
-          [tflite_transforms.Conv2DBatchNormFold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model,
+        [tflite_transforms.Conv2DBatchNormFold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -117,10 +114,9 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     folded_model = DepthwiseConv2DModel.get_folded_batchnorm_model(
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model,
-          [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model,
+        [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
 
     inputs = np.random.standard_normal(
         DepthwiseConv2DModel.get_batched_input_shape())
@@ -135,10 +131,9 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         model_type='functional',
         random_init=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model,
-          [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model,
+        [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -173,11 +168,10 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     model = self._get_model(layer_type, False)
     input_shape = self._get_input_shape(layer_type)
 
-    with quantize.quantize_scope():
-      transformed_model, updated_metadata = ModelTransformer(
-          model,
-          [tflite_transforms.Conv2DBatchNormQuantize()],
-      ).transform()
+    transformed_model, updated_metadata = ModelTransformer(
+        model,
+        [tflite_transforms.Conv2DBatchNormQuantize()],
+    ).transform()
 
     conv_layer = transformed_model.layers[1]
     bn_layer = transformed_model.layers[2]
@@ -197,11 +191,10 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     model = self._get_model(layer_type, True)
     input_shape = self._get_input_shape(layer_type)
 
-    with quantize.quantize_scope():
-      transformed_model, updated_metadata = ModelTransformer(
-          model,
-          [tflite_transforms.Conv2DBatchNormReLUQuantize()],
-      ).transform()
+    transformed_model, updated_metadata = ModelTransformer(
+        model,
+        [tflite_transforms.Conv2DBatchNormReLUQuantize()],
+    ).transform()
 
     conv_layer = transformed_model.layers[1]
     bn_layer = transformed_model.layers[2]
