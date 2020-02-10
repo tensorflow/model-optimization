@@ -22,10 +22,11 @@ from tensorflow.python.keras import backend as k
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AbstractCentroidsInitialisation(object):
+class AbstractCentroidsInitialisation:
   """
-  Abstract base class for implementing different cluster centroids initialisation algorithms.
-  Must be initialised with a reference to the weights and implement the single method below.
+  Abstract base class for implementing different cluster centroid
+  initialisation algorithms. Must be initialised with a reference to the
+  weights and implement the single method below.
   """
 
   def __init__(self, weights, number_of_clusters):
@@ -45,13 +46,16 @@ class LinearCentroidsInitialisation(AbstractCentroidsInitialisation):
   def get_cluster_centroids(self):
     weight_min = tf.reduce_min(self.weights)
     weight_max = tf.reduce_max(self.weights)
-    cluster_centroids = tf.linspace(weight_min, weight_max, self.number_of_clusters)
+    cluster_centroids = tf.linspace(weight_min,
+                                    weight_max,
+                                    self.number_of_clusters)
     return cluster_centroids
 
 
 class RandomCentroidsInitialisation(AbstractCentroidsInitialisation):
   """
-  Sample centroids randomly and uniformly from the interval [min(weights), max(weights)]
+  Sample centroids randomly and uniformly from the interval
+  [min(weights), max(weights)]
   """
 
   def get_cluster_centroids(self):
@@ -114,23 +118,28 @@ class TFCumulativeDistributionFunction:
 
 class DensityBasedCentroidsInitialisation(AbstractCentroidsInitialisation):
   """
-  This initialisation means that we build a cumulative distribution function(CDF), then linearly space y-axis of this function
-  then find the corresponding x-axis points.
-  In order to simplify the implementation, here is a plan how it is achieved:
-  1. Calculate CDF values at points spaced linearly between weight_min and weight_max(e.g. 20 points)
+  This initialisation means that we build a cumulative distribution
+  function(CDF), then linearly space y-axis of this function then find the
+  corresponding x-axis points. In order to simplify the implementation, here is
+  a plan how it is achieved:
+  1. Calculate CDF values at points spaced linearly between weight_min and
+  weight_max(e.g. 20 points)
   2. Build an array of values linearly spaced between 0 and 1(probability)
-  3. Go through the second array and find segment of CDF that contains this y-axis value, \\hat{y}
+  3. Go through the second array and find segment of CDF that contains this
+  y-axis value, \\hat{y}
   4. interpolate linearly between those two points, get a line equation y=ax+b
-  5. solve equation \\hat{y}=ax+b for x. The found x value is a new cluster centroid
+  5. solve equation \\hat{y}=ax+b for x. The found x value is a new cluster
+  centroid
   """
 
   def get_cluster_centroids(self):
     weight_min = tf.reduce_min(self.weights)
     weight_max = tf.reduce_max(self.weights)
-    # Calculating interpolation nodes, +/- 0.01 is introduced to guarantee that CDF will have 0 and 1 and the
-    # first and last value respectively.
-    # The value 30 is a guess. We just need a sufficiently large number here since we are going to
-    # interpolate values linearly anyway and the initial guess will drift away. For these reasons we do not really
+    # Calculating interpolation nodes, +/- 0.01 is introduced to guarantee that
+    # CDF will have 0 and 1 and the first and last value respectively.
+    # The value 30 is a guess. We just need a sufficiently large number here
+    # since we are going to interpolate values linearly anyway and the initial
+    # guess will drift away. For these reasons we do not really
     # care about the granularity of the lookup.
     cdf_x_grid = tf.linspace(weight_min - 0.01, weight_max + 0.01, 30)
 
@@ -141,10 +150,12 @@ class DensityBasedCentroidsInitialisation(AbstractCentroidsInitialisation):
     probability_space = tf.linspace(0 + 0.01, 1, self.number_of_clusters)
 
     # Use upper-bound algorithm to find the appropriate bounds
-    matching_indices = tf.searchsorted(sorted_sequence=cdf_values, values=probability_space, side='right')
+    matching_indices = tf.searchsorted(sorted_sequence=cdf_values,
+                                       values=probability_space,
+                                       side='right')
 
-    # Interpolate linearly between every found indices I at position using I at pos n-1 as a second point
-    # The value of x is a new cluster centroid
+    # Interpolate linearly between every found indices I at position using I at
+    # pos n-1 as a second point. The value of x is a new cluster centroid
     def get_single_centroid(i):
       i_clipped = tf.minimum(i, tf.size(cdf_values) - 1)
       i_previous = tf.maximum(0, i_clipped - 1)
@@ -159,7 +170,9 @@ class DensityBasedCentroidsInitialisation(AbstractCentroidsInitialisation):
       single_centroid = s.solve_for_x(y)
       return single_centroid
 
-    centroids = k.map_fn(get_single_centroid, matching_indices, dtype=tf.float32)
+    centroids = k.map_fn(get_single_centroid,
+                         matching_indices,
+                         dtype=tf.float32)
     cluster_centroids = tf.reshape(centroids, (self.number_of_clusters,))
     return cluster_centroids
 
@@ -170,31 +183,32 @@ class CentroidsInitializerFactory:
   To implement a custom one, inherit from AbstractCentroidsInitialisation
   and implement all the required methods.
 
-  After this, update CentroidsInitialiserFactory.__initialisers hashtable to reflect new methods
-  available.
+  After this, update CentroidsInitialiserFactory.__initialisers hashtable to
+  reflect new methods available.
   """
-  __initialisers = {
-    'linear': LinearCentroidsInitialisation,
-    'random': RandomCentroidsInitialisation,
-    'density-based': DensityBasedCentroidsInitialisation
+  _initialisers = {
+      'linear': LinearCentroidsInitialisation,
+      'random': RandomCentroidsInitialisation,
+      'density-based': DensityBasedCentroidsInitialisation
   }
 
   @classmethod
   def init_is_supported(cls, init_method):
-    return init_method in cls.__initialisers
+    return init_method in cls._initialisers
 
   @classmethod
   def get_centroid_initializer(cls, init_method):
     """
-
     :param init_method: a string representation of the init methods requested
     :return: A concrete implementation of  AbstractCentroidsInitialisation
     :raises: ValueError if the string representation is not recognised
     """
     if not cls.init_is_supported(init_method):
-      raise ValueError("Unknown initialisation method: {init_method}. Allowed values are : {allowed}".format(
-        init_method=init_method,
-        allowed=','.join(cls.__initialisers.keys())
-      ))
+      raise ValueError(
+          "Unknown initialisation method: {init_method}. Allowed values are : "
+          "{allowed}".format(
+              init_method=init_method,
+              allowed=','.join(cls._initialisers.keys())
+          ))
 
-    return cls.__initialisers[init_method]
+    return cls._initialisers[init_method]

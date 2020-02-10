@@ -233,6 +233,7 @@ py_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
         "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_registry",
     ],
 )

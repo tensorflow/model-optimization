@@ -113,7 +113,7 @@ class ModelTransformer(object):
 
     return True
 
-  def _match_layer_with_inputs(self, layer, pattern):
+  def _match_layer_with_inputs(self, layer, pattern, is_head_node):
     """Match pattern at this layer, and continue to match at its inputs."""
 
     if not self._match_layer(layer, pattern):
@@ -137,14 +137,15 @@ class ModelTransformer(object):
     output_consumers = self._get_output_consumers(layer)
     if len(consuming_layers) + len(output_consumers) > 1:
       # Even if a layer has only 1 incoming connection, multiple layers may
-      # still consume the output. This is problematic since transforming this
-      # layer can leave the other consuming nodes not part of the pattern
-      # dangling.
+      # still consume the output. Having multiple consumers is only supported
+      # for the head node, and not intermediate layers. Replacing intermediate
+      # nodes with >1 consumer will lead to dangling nodes.
       #
-      # Note that having multiple consumers is only a problem for intermediate
-      # layers, and not the head node of the sub-tree.
-      # TODO(pulkitb): Consider support for this exemption for tip of the tree.
-      return None
+      # Note that theoretically, intermediate layers can supported, as a part
+      # of a general layer transform tool. This is not supported given no
+      # motivating use case.
+      if not is_head_node:
+        return None
 
     if len(pattern.inputs) == 0:
       # Leaf layer in pattern.
@@ -172,7 +173,8 @@ class ModelTransformer(object):
     # TODO(pulkitb): Fix by checking all permutations.
     input_match_layer_nodes = []
     for input_layer, pattern in zip(input_layers, pattern.inputs):
-      match_layer_node = self._match_layer_with_inputs(input_layer, pattern)
+      match_layer_node = self._match_layer_with_inputs(
+          input_layer, pattern, is_head_node=False)
       if not match_layer_node:
         return None
       input_match_layer_nodes.append(match_layer_node)
@@ -181,9 +183,12 @@ class ModelTransformer(object):
         layer, self._get_layer_weights(layer['name']), input_match_layer_nodes,
         self._get_layer_metadata(layer['name']))
 
-  def _find_pattern(self, pattern):
+  def _find_pattern(self, pattern, matched_layers=None):
     for layer in self._config['layers']:
-      match_layer = self._match_layer_with_inputs(layer, pattern)
+      if matched_layers and layer['name'] in matched_layers:
+        continue
+      match_layer = self._match_layer_with_inputs(
+          layer, pattern, is_head_node=True)
       if match_layer:
         return match_layer
 
@@ -341,6 +346,20 @@ class ModelTransformer(object):
 
     K.batch_set_value(weight_value_tuples)
 
+  @staticmethod
+  def _name(obj):
+    return obj.__class__.__name__
+
+  def _get_matched_layers(self, transform):
+    return self._transform_matched_layers_map.get(self._name(transform), [])
+
+  def _store_successful_match(self, transform, layer_node):
+    if self._name(transform) not in self._transform_matched_layers_map:
+      self._transform_matched_layers_map[self._name(transform)] = []
+
+    self._transform_matched_layers_map[self._name(transform)].append(
+        layer_node.layer['name'])
+
   def transform(self):
     """Transforms the Keras model by applying all the specified transforms.
 
@@ -371,6 +390,10 @@ class ModelTransformer(object):
     #
     self._config = self.model.get_config()
 
+    # Stores map of Transform -> List of layer names matched by transform.
+    # Same transform should not match+replace the same layer more than once
+    # to prevent infinite loops.
+    self._transform_matched_layers_map = {}
     self._layer_weights_map = {}
     for layer in self.model.layers:
       self._layer_weights_map[layer.name] = self._get_keras_layer_weights(layer)
@@ -390,9 +413,14 @@ class ModelTransformer(object):
         # A transform may find multiple instances of a pattern in the model.
         # Keep finding and replacing till done.
         while True:
-          match_layer_node = self._find_pattern(transform.pattern())
+          match_layer_node = self._find_pattern(
+              transform.pattern(), self._get_matched_layers(transform))
+
+          # Pattern did not match any layer. Move to next transform.
           if not match_layer_node:
             break
+
+          self._store_successful_match(transform, match_layer_node)
 
           # Copying the match_layer_node ensures the replacement code can
           # freely modify the match.
@@ -402,9 +430,9 @@ class ModelTransformer(object):
           # If equal, the matched layers are being replaced with exactly the
           # same set of layers that were matched with the same config.
           # For Transforms, that may inadvertently do this we can end up in
-          # an infinite loop. Break if no meaningful change has been made.
+          # an infinite loop. Move on if no meaningful change has been made.
           if match_layer_node == replacement_layer_node:
-            break
+            continue
 
           match_found = True
           self._replace(match_layer_node, replacement_layer_node)

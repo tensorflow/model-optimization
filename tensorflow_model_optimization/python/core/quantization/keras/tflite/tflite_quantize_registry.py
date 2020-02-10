@@ -136,6 +136,7 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       # TODO(pulkitb): Verify Locally Connected layers.
       _QuantizeInfo(layers.LocallyConnected1D, ['kernel'], ['activation']),
       _QuantizeInfo(layers.LocallyConnected2D, ['kernel'], ['activation']),
+      _QuantizeInfo(layers.Add, [], [], True),
 
       # Enable once verified with TFLite behavior.
       # layers.Embedding: ['embeddings'],

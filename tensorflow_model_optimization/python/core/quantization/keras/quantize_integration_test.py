@@ -58,17 +58,19 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     return dims
 
   def _assert_models_equal(self, model1, model2):
-    self.assertEqual(model1.get_config(), model2.get_config())
+    model1_config = model1.get_config()
+    model1_config.pop('build_input_shape', None)
+    model2_config = model2.get_config()
+    model2_config.pop('build_input_shape', None)
+    self.assertEqual(model1_config, model2_config)
     self.assertAllClose(model1.get_weights(), model2.get_weights())
 
-    inputs = np.random.randn(
-        *self._batch(model1.input.get_shape().as_list(), 1))
-    self.assertAllClose(model1.predict(inputs), model2.predict(inputs))
+    self._assert_outputs_equal(model1, model2)
 
   # After saving a model to SavedModel and then loading it back,
   # the class changes, which results in config differences. This
   # may change after a sync (TF 2.2.0): TODO(alanchiao): try it.
-  def _assert_saved_models_equal(self, model1, model2):
+  def _assert_outputs_equal(self, model1, model2):
     inputs = np.random.randn(
         *self._batch(model1.input.get_shape().as_list(), 1))
     self.assertAllClose(model1.predict(inputs), model2.predict(inputs))
@@ -83,10 +85,13 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20)
 
+  ####################################################################
+  # Tests for training with quantization with checkpointing.
+
   # TODO(pulkitb): Parameterize and add more model/runtime options.
   def testSerialization_KerasModel(self):
     model = test_utils.build_simple_dense_model()
-    quantized_model = quantize.quantize(model)
+    quantized_model = quantize.quantize_model(model)
     self._train_model(quantized_model)
 
     _, model_file = tempfile.mkstemp('.h5')
@@ -96,19 +101,65 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     self._assert_models_equal(quantized_model, loaded_model)
 
+  def testSerialization_KerasCheckpoint(self):
+    model = test_utils.build_simple_dense_model()
+    quantized_model = quantize.quantize_model(model)
+    self._train_model(quantized_model)
+
+    _, keras_weights = tempfile.mkstemp('.h5')
+    quantized_model.save_weights(keras_weights)
+
+    same_architecture_model = test_utils.build_simple_dense_model()
+    same_architecture_model = quantize.quantize_model(same_architecture_model)
+    same_architecture_model.load_weights(keras_weights)
+
+    self._assert_outputs_equal(quantized_model, same_architecture_model)
+
   def testSerialization_TF2SavedModel(self):
     if compat.is_v1_apis():
       return
 
     model = test_utils.build_simple_dense_model()
-    quantized_model = quantize.quantize(model)
+    quantized_model = quantize.quantize_model(model)
     self._train_model(quantized_model)
 
     model_dir = tempfile.mkdtemp()
     tf.keras.models.save_model(quantized_model, model_dir)
     loaded_model = tf.keras.models.load_model(model_dir)
 
-    self._assert_saved_models_equal(quantized_model, loaded_model)
+    self._assert_outputs_equal(quantized_model, loaded_model)
+
+  def testSerialization_TF1SavedModel(self):
+    if not compat.is_v1_apis():
+      return
+
+    model = test_utils.build_simple_dense_model()
+    quantized_model = quantize.quantize_model(model)
+    self._train_model(quantized_model)
+
+    saved_model_dir = tempfile.mkdtemp()
+    with quantize.quantize_scope():
+      tf.keras.experimental.export_saved_model(quantized_model, saved_model_dir)
+
+    with quantize.quantize_scope():
+      loaded_model = tf.keras.experimental.load_from_saved_model(
+          saved_model_dir)
+
+    self._assert_outputs_equal(quantized_model, loaded_model)
+
+  def testSerialization_TFCheckpoint(self):
+    model = test_utils.build_simple_dense_model()
+    quantized_model = quantize.quantize_model(model)
+    self._train_model(quantized_model)
+
+    _, tf_weights = tempfile.mkstemp('.tf')
+    quantized_model.save_weights(tf_weights)
+
+    same_architecture_model = test_utils.build_simple_dense_model()
+    same_architecture_model = quantize.quantize_model(same_architecture_model)
+    same_architecture_model.load_weights(tf_weights)
+
+    self._assert_outputs_equal(quantized_model, same_architecture_model)
 
 
 if __name__ == '__main__':

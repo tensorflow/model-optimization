@@ -20,10 +20,11 @@ import six
 
 
 @six.add_metaclass(abc.ABCMeta)
-class ClusterableLayer(object):
+class ClusterableLayer:
   """Abstract Base Class for making your own keras layer clusterable.
 
-  Custom keras layers that need to support clustering should implement this class.
+  Custom keras layers that need to support clustering should implement this
+  class.
 
   """
 

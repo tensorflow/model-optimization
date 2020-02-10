@@ -14,6 +14,16 @@
 # ==============================================================================
 """Tests for keras ClusterWeights wrapper API."""
 
+import itertools
+import numpy as np
+
+from tensorflow_model_optimization.python.core.clustering.keras import cluster
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
+from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
+from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+
+from tensorflow.python.framework import test_util as tf_test_util
+
 import tensorflow.compat.v1 as tf
 from absl.testing import parameterized
 
@@ -21,16 +31,6 @@ keras = tf.keras
 errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
-
-from tensorflow_model_optimization.python.core.clustering.keras import cluster
-from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
-from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
-from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
-
-import numpy as np
-import itertools
-
-from tensorflow.python.framework import test_util as tf_test_util
 
 layers = keras.layers
 ClusterRegistry = clustering_registry.ClusteringRegistry
@@ -52,7 +52,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   def testCannotBeInitializedWithNonLayerObject(self):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights({
-        'this': 'is not a Layer instance'
+          'this': 'is not a Layer instance'
       }, number_of_clusters=13, cluster_centroids_init='linear')
 
   def testCannotBeInitializedWithNonClusterableLayer(self):
@@ -74,19 +74,18 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
                                      cluster_centroids_init='linear')
 
   def testCannotBeInitializedWithFloatNumberOfClusters(self):
-
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters=13.4,
                                      cluster_centroids_init='linear')
 
   @parameterized.parameters(
-    (0),
-    (1),
-    (-32)
+      (0),
+      (1),
+      (-32)
   )
-
-  def testCannotBeInitializedWithNumberOfClustersLessThanOne(self, number_of_clusters):
+  def testCannotBeInitializedWithNumberOfClustersLessThanTwo(
+      self, number_of_clusters):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters=number_of_clusters,
@@ -107,18 +106,24 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
 
   # Makes it easier to test all possible parameters combinations.
   @parameterized.parameters(
-    *itertools.product(range(2, 16, 4), ('linear', 'random', 'density-based'))
+      *itertools.product(range(2, 16, 4), ('linear', 'random', 'density-based'))
   )
-  def testValuesAreClusteredAfterStripping(self, number_of_clusters, cluster_centroids_init):
-    # We want to make sure that for any number of clusters and any initializations methods
-    # there is always no more than number_of_clusters unique points after stripping the model
+  def testValuesAreClusteredAfterStripping(self,
+                                           number_of_clusters,
+                                           cluster_centroids_init):
+    # We want to make sure that for any number of clusters and any
+    # initializations methods there is always no more than number_of_clusters
+    # unique points after stripping the model
     original_model = tf.keras.Sequential([
-      layers.Dense(32, input_shape=(10,)),
+        layers.Dense(32, input_shape=(10,)),
     ])
-    clustered_model = cluster.cluster_weights(original_model, number_of_clusters=number_of_clusters,
-                                              cluster_centroids_init=cluster_centroids_init)
+    clustered_model = cluster.cluster_weights(
+        original_model,
+        number_of_clusters=number_of_clusters,
+        cluster_centroids_init=cluster_centroids_init
+    )
     stripped_model = cluster.strip_clustering(clustered_model)
-    weights_as_list = stripped_model.get_weights()[0].reshape(-1, ).tolist()
+    weights_as_list = stripped_model.get_weights()[0].reshape(-1,).tolist()
     unique_weights = set(weights_as_list)
     # Make sure numbers match
     self.assertLessEqual(len(unique_weights), number_of_clusters)
@@ -130,38 +135,42 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   def testValuesRemainClusteredAfterTraining(self):
     number_of_clusters = 10
     original_model = tf.keras.Sequential([
-      layers.Dense(2, input_shape=(2,)),
-      layers.Dense(2),
+        layers.Dense(2, input_shape=(2,)),
+        layers.Dense(2),
     ])
-    clustered_model = cluster.cluster_weights(original_model, number_of_clusters=number_of_clusters,
-                                              cluster_centroids_init='linear')
+    clustered_model = cluster.cluster_weights(
+        original_model,
+        number_of_clusters=number_of_clusters,
+        cluster_centroids_init='linear'
+    )
 
     clustered_model.compile(
-      loss=tf.keras.losses.categorical_crossentropy,
-      optimizer='adam',
-      metrics=['accuracy'])
+        loss=tf.keras.losses.categorical_crossentropy,
+        optimizer='adam',
+        metrics=['accuracy']
+    )
 
     def dataset_generator():
       x_train = np.array([
-        [0, 1],
-        [2, 0],
-        [0, 3],
-        [4, 1],
-        [5, 1],
+          [0, 1],
+          [2, 0],
+          [0, 3],
+          [4, 1],
+          [5, 1],
       ])
       y_train = np.array([
-        [0, 1],
-        [1, 0],
-        [1, 0],
-        [0, 1],
-        [0, 1],
+          [0, 1],
+          [1, 0],
+          [1, 0],
+          [0, 1],
+          [0, 1],
       ])
       for x, y in zip(x_train, y_train):
         yield np.array([x]), np.array([y])
 
     clustered_model.fit_generator(dataset_generator(), steps_per_epoch=1)
     stripped_model = cluster.strip_clustering(clustered_model)
-    weights_as_list = stripped_model.get_weights()[0].reshape(-1, ).tolist()
+    weights_as_list = stripped_model.get_weights()[0].reshape(-1,).tolist()
     unique_weights = set(weights_as_list)
     self.assertLessEqual(len(unique_weights), number_of_clusters)
 

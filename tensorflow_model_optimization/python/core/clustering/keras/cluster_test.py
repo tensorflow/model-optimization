@@ -16,6 +16,13 @@
 
 import json
 
+from tensorflow_model_optimization.python.core.clustering.keras import cluster
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
+from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
+from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+
+from tensorflow.python.framework import test_util as tf_test_util
+
 import tensorflow.compat.v1 as tf
 from absl.testing import parameterized
 
@@ -23,13 +30,6 @@ keras = tf.keras
 errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
-
-from tensorflow_model_optimization.python.core.clustering.keras import cluster
-from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
-from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
-from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
-
-from tensorflow.python.framework import test_util as tf_test_util
 
 class TestModel(keras.Model):
   """A model subclass."""
@@ -65,17 +65,17 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.custom_non_clusterable_layer = CustomNonClusterableLayer(10)
 
     clustering_registry.ClusteringLookupRegistry.register_new_implementation(
-      {
-        CustomClusterableLayer: {
-          'kernel': clustering_registry.DenseWeightsCA
+        {
+            CustomClusterableLayer: {
+                'kernel': clustering_registry.DenseWeightsCA
+            }
         }
-      }
     )
 
     self.model = keras.Sequential()
     self.params = {
-      'number_of_clusters': 8,
-      'cluster_centroids_init': 'density-based'
+        'number_of_clusters': 8,
+        'cluster_centroids_init': 'density-based'
     }
 
   def _build_clustered_layer_model(self, layer):
@@ -92,22 +92,25 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @staticmethod
   def _count_clustered_layers(model):
     count = 0
-    for layer in model._layers:
+    for layer in model.layers:
       if isinstance(layer, cluster_wrapper.ClusterWeights):
         count += 1
     return count
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterKerasClusterableLayer(self):
-    wrapped_layer = self._build_clustered_layer_model(self.keras_clusterable_layer)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_clusterable_layer)
 
     self._validate_clustered_layer(self.keras_clusterable_layer, wrapped_layer)
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterKerasNonClusterableLayer(self):
-    wrapped_layer = self._build_clustered_layer_model(self.keras_non_clusterable_layer)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_non_clusterable_layer)
 
-    self._validate_clustered_layer(self.keras_non_clusterable_layer, wrapped_layer)
+    self._validate_clustered_layer(self.keras_non_clusterable_layer,
+                                   wrapped_layer)
     self.assertEqual([], wrapped_layer.layer.get_clusterable_weights())
 
   def testClusterKerasUnsupportedLayer(self):
@@ -116,14 +119,17 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterCustomClusterableLayer(self):
-    wrapped_layer = self._build_clustered_layer_model(self.custom_clusterable_layer)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.custom_clusterable_layer)
 
     self._validate_clustered_layer(self.custom_clusterable_layer, wrapped_layer)
-    self.assertEqual([('kernel', wrapped_layer.layer.kernel)], wrapped_layer.layer.get_clusterable_weights())
+    self.assertEqual([('kernel', wrapped_layer.layer.kernel)],
+                     wrapped_layer.layer.get_clusterable_weights())
 
   def testClusterCustomNonClusterableLayer(self):
     with self.assertRaises(ValueError):
-      cluster_wrapper.ClusterWeights(self.custom_non_clusterable_layer, **self.params)
+      cluster_wrapper.ClusterWeights(self.custom_non_clusterable_layer,
+                                     **self.params)
 
   def testClusterLayersSelectively(self):
     clustered_model = keras.Sequential()
@@ -137,9 +143,9 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterModelValidLayersSuccessful(self):
     model = keras.Sequential([
-      self.keras_clusterable_layer,
-      self.keras_non_clusterable_layer,
-      self.custom_clusterable_layer
+        self.keras_clusterable_layer,
+        self.keras_non_clusterable_layer,
+        self.custom_clusterable_layer
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     clustered_model.build(input_shape=(1, 28, 28, 1))
@@ -151,26 +157,26 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testClusterModelUnsupportedKerasLayerRaisesError(self):
     with self.assertRaises(ValueError):
       cluster.cluster_weights(
-        keras.Sequential([
-          self.keras_clusterable_layer, self.keras_non_clusterable_layer,
-          self.custom_clusterable_layer, self.keras_unsupported_layer
-        ]), **self.params)
+          keras.Sequential([
+              self.keras_clusterable_layer, self.keras_non_clusterable_layer,
+              self.custom_clusterable_layer, self.keras_unsupported_layer
+          ]), **self.params)
 
   def testClusterModelCustomNonClusterableLayerRaisesError(self):
     with self.assertRaises(ValueError):
       cluster.cluster_weights(
-        keras.Sequential([
-          self.keras_clusterable_layer, self.keras_non_clusterable_layer,
-          self.custom_clusterable_layer, self.custom_non_clusterable_layer
-        ]), **self.params)
+          keras.Sequential([
+              self.keras_clusterable_layer, self.keras_non_clusterable_layer,
+              self.custom_clusterable_layer, self.custom_non_clusterable_layer
+          ]), **self.params)
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterModelDoesNotWrapAlreadyWrappedLayer(self):
     model = keras.Sequential(
-      [
-        layers.Flatten(),
-        cluster.cluster_weights(layers.Dense(10), **self.params),
-      ])
+        [
+            layers.Flatten(),
+            cluster.cluster_weights(layers.Dense(10), **self.params),
+        ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     clustered_model.build(input_shape=(10, 10, 1))
 
@@ -178,13 +184,14 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self._validate_clustered_layer(model.layers[0], clustered_model.layers[0])
     # Second layer is used as-is since it's already a clustered layer.
     self.assertEqual(model.layers[1], clustered_model.layers[1])
-    self._validate_clustered_layer(model.layers[1].layer, clustered_model.layers[1])
+    self._validate_clustered_layer(model.layers[1].layer,
+                                   clustered_model.layers[1])
 
   def testClusterValidLayersListSuccessful(self):
     model_layers = [
-      self.keras_clusterable_layer,
-      self.keras_non_clusterable_layer,
-      self.custom_clusterable_layer
+        self.keras_clusterable_layer,
+        self.keras_non_clusterable_layer,
+        self.custom_clusterable_layer
     ]
     clustered_list = cluster.cluster_weights(model_layers, **self.params)
 
@@ -195,8 +202,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testClusterSequentialModelNoInput(self):
     # No InputLayer
     model = keras.Sequential([
-      layers.Dense(10),
-      layers.Dense(10),
+        layers.Dense(10),
+        layers.Dense(10),
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     self.assertEqual(self._count_clustered_layers(clustered_model), 2)
@@ -205,8 +212,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testClusterSequentialModelWithInput(self):
     # With InputLayer
     model = keras.Sequential([
-      layers.Dense(10, input_shape=(10,)),
-      layers.Dense(10),
+        layers.Dense(10, input_shape=(10,)),
+        layers.Dense(10),
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     self.assertEqual(self._count_clustered_layers(clustered_model), 2)
@@ -214,8 +221,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testClusterSequentialModelPreservesBuiltStateNoInput(self):
     # No InputLayer
     model = keras.Sequential([
-      layers.Dense(10),
-      layers.Dense(10),
+        layers.Dense(10),
+        layers.Dense(10),
     ])
     self.assertEqual(model.built, False)
     clustered_model = cluster.cluster_weights(model, **self.params)
@@ -224,15 +231,15 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     # Test built state is preserved across serialization
     with cluster.cluster_scope():
       loaded_model = keras.models.model_from_config(
-        json.loads(clustered_model.to_json()))
+          json.loads(clustered_model.to_json()))
       self.assertEqual(loaded_model.built, False)
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterSequentialModelPreservesBuiltStateWithInput(self):
     # With InputLayer
     model = keras.Sequential([
-      layers.Dense(10, input_shape=(10,)),
-      layers.Dense(10),
+        layers.Dense(10, input_shape=(10,)),
+        layers.Dense(10),
     ])
     self.assertEqual(model.built, True)
     clustered_model = cluster.cluster_weights(model, **self.params)
@@ -241,7 +248,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     # Test built state is preserved across serialization
     with cluster.cluster_scope():
       loaded_model = keras.models.model_from_config(
-        json.loads(clustered_model.to_json()))
+          json.loads(clustered_model.to_json()))
     self.assertEqual(loaded_model.built, True)
 
   @tf_test_util.run_in_graph_and_eager_modes
@@ -259,7 +266,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     # Test built state preserves across serialization
     with cluster.cluster_scope():
       loaded_model = keras.models.model_from_config(
-        json.loads(clustered_model.to_json()))
+          json.loads(clustered_model.to_json()))
     self.assertEqual(loaded_model.built, True)
 
   @tf_test_util.run_in_graph_and_eager_modes
@@ -293,8 +300,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @tf_test_util.run_in_graph_and_eager_modes
   def testStripClusteringSequentialModel(self):
     model = keras.Sequential([
-      layers.Dense(10),
-      layers.Dense(10),
+        layers.Dense(10),
+        layers.Dense(10),
     ])
 
     clustered_model = cluster.cluster_weights(model, **self.params)

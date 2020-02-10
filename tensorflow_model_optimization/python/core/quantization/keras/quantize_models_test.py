@@ -44,7 +44,7 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
       # 'InceptionResNetV2',
       # 'InceptionV3',
       'MobileNet',
-      # 'MobileNetV2',
+      'MobileNetV2',
       # 'NASNetLarge',
       # 'NASNetMobile',
       # 'ResNet101',
@@ -105,7 +105,7 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
   def testModelEndToEnd(self, model_type):
     # 1. Check whether quantized model graph can be constructed.
     model = self._get_model(model_type)
-    model = quantize.quantize(model)
+    model = quantize.quantize_model(model)
 
     # 2. Sanity check to ensure basic training on random data works.
     x_train, y_train = self._create_test_data(model)

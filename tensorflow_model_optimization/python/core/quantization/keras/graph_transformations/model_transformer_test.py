@@ -193,8 +193,36 @@ class ModelTransformerTest(tf.test.TestCase):
     self._assert_model_results_equal(model, transformed_model)
 
   def testReplaceSingleLayer_WithMultipleLayers(self):
-    # TODO(pulkitb): Implement
-    pass
+    class ReplaceInputWithInputAndActivation(transforms.Transform):
+      """InputLayer => (InputLayer -> Activation)."""
+
+      def pattern(self):
+        return LayerPattern('InputLayer')
+
+      def replacement(self, match_layer):
+        activation_layer = keras.layers.Activation('linear')
+        layer_config = keras.layers.serialize(activation_layer)
+        layer_config['name'] = activation_layer.name
+
+        activation_layer_node = LayerNode(
+            layer_config,
+            input_layers=[match_layer])
+
+        return activation_layer_node
+
+    inp1 = keras.layers.Input((3,))
+    inp2 = keras.layers.Input((3,))
+    out = keras.layers.Concatenate()([inp1, inp2])
+    model = keras.Model([inp1, inp2], out)
+
+    transformed_model, _ = ModelTransformer(
+        model, [ReplaceInputWithInputAndActivation()]).transform()
+
+    self.assertEqual(5, len(transformed_model.layers))
+    self.assertIsInstance(transformed_model.layers[0], keras.layers.InputLayer)
+    self.assertIsInstance(transformed_model.layers[1], keras.layers.InputLayer)
+    self.assertIsInstance(transformed_model.layers[2], keras.layers.Activation)
+    self.assertIsInstance(transformed_model.layers[3], keras.layers.Activation)
 
   def testReplaceChainOfLayers_WithSingleLayer(self):
     class FuseReLUIntoDense(transforms.Transform):
@@ -291,9 +319,7 @@ class ModelTransformerTest(tf.test.TestCase):
 
   # Negative Tests
   # TODO(pulkitb): Add negative tests
-  # 1. Does not replace if any layer in the pattern has multiple nodes/consumers
-  # 2. Adding a single layer clone will lead to infinite loop. Fix and test.
-  # 3. Handles layer being part of multiple models.
+  # 1. Handles layer being part of multiple models.
 
   class VerifyMatch(Transform):
 
@@ -314,7 +340,7 @@ class ModelTransformerTest(tf.test.TestCase):
     def reset(self):
       self._matched = False
 
-  def testPatternShouldOnlyMatchCandidateLayers(self):
+  def testPatternShouldOnlyMatch_CandidateLayers(self):
     pattern = LayerPattern('ReLU', inputs=[LayerPattern('Dense')])
     transform = self.VerifyMatch(pattern)
 
@@ -340,7 +366,7 @@ class ModelTransformerTest(tf.test.TestCase):
     ModelTransformer(model, [transform], [model.layers[-1].name]).transform()
     self.assertFalse(transform.matched())
 
-  def testPatternCanMatchMultipleLayers(self):
+  def testPatternCanMatch_MultipleLayers(self):
     pattern = LayerPattern('Conv2D|DepthwiseConv2D')
     transform = self.VerifyMatch(pattern)
 
@@ -358,6 +384,48 @@ class ModelTransformerTest(tf.test.TestCase):
     transform.reset()
     ModelTransformer(depth_conv_model, [transform]).transform()
     self.assertTrue(transform.matched())
+
+  def testPatternCanMatch_HeadNodeWithMultipleConsumers(self):
+    # Dense -> Dense2  -> ReLU
+    #                  -> ReLU2
+    #
+    # where Dense2, the head node in the pattern, has multiple consumers
+    # (ReLU and ReLU2).
+    pattern = LayerPattern('Dense', inputs=[LayerPattern('Dense')])
+    transform = self.VerifyMatch(pattern)
+
+    inp = keras.layers.Input(3)
+    x = keras.layers.Dense(2)(inp)
+    y = keras.layers.Dense(2)(x)
+    out1 = keras.layers.ReLU(6.0)(y)
+    out2 = keras.layers.ReLU(6.0)(y)
+
+    model = keras.Model(inp, [out1, out2])
+
+    ModelTransformer(model, [transform]).transform()
+    self.assertTrue(transform.matched())
+
+  def testPatternDoesNotSupportMatch_IntermediateNodeWithMultipleConsumers(
+      self):
+    # Dense -> Dense2  -> ReLU
+    #                  -> ReLU2
+    #
+    # where Dense2, an intermediate node in the pattern, has multiple consumers
+    # (ReLU and ReLU2).
+    pattern = LayerPattern(
+        'ReLU', inputs=[LayerPattern('Dense', inputs=[LayerPattern('Dense')])])
+    transform = self.VerifyMatch(pattern)
+
+    inp = keras.layers.Input(3)
+    x = keras.layers.Dense(2)(inp)
+    y = keras.layers.Dense(2)(x)
+    out1 = keras.layers.ReLU(6.0)(y)
+    out2 = keras.layers.ReLU(6.0)(y)
+
+    model = keras.Model(inp, [out1, out2])
+
+    ModelTransformer(model, [transform]).transform()
+    self.assertFalse(transform.matched())
 
   def testLayerMetadataPassedAndReplacedInTransforms(self):
     class ReplaceLayerMetadata(Transform):
