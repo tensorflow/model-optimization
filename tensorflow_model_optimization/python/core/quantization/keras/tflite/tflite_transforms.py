@@ -19,6 +19,8 @@ import collections
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
+from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
@@ -177,8 +179,8 @@ class Conv2DBatchNormQuantize(transforms.Transform):
 
   def custom_objects(self):
     return {
-        'tflite_quantize_providers':
-            tflite_quantize_providers.OutputQuantizeProvider,
+        'NoOpQuantizeProvider':
+            tflite_quantize_providers.NoOpQuantizeProvider,
         'NoOpActivation': quantize_aware_activation.NoOpActivation
     }
 
@@ -210,7 +212,37 @@ class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
 
   def custom_objects(self):
     return {
-        'tflite_quantize_providers':
+        'NoOpQuantizeProvider':
             tflite_quantize_providers.NoOpQuantizeProvider,
         'NoOpActivation': quantize_aware_activation.NoOpActivation
+    }
+
+
+class InputLayerQuantize(transforms.Transform):
+  """Quantizes InputLayer, by adding QuantizeLayer after it.
+
+  InputLayer => InputLayer -> QuantizeLayer
+  """
+
+  def pattern(self):
+    return LayerPattern('InputLayer')
+
+  def replacement(self, match_layer):
+    # TODO(pulkitb): Replace quantizer with InputLayer specific quantizer.
+    quant_layer = quantize_layer.QuantizeLayer(
+        quantizers.MovingAverageQuantizer(
+            num_bits=8, per_axis=False, symmetric=False, narrow_range=False))
+    layer_config = keras.layers.serialize(quant_layer)
+    layer_config['name'] = quant_layer.name
+
+    quant_layer_node = LayerNode(
+        layer_config,
+        input_layers=[match_layer])
+
+    return quant_layer_node
+
+  def custom_objects(self):
+    return {
+        'QuantizeLayer': quantize_layer.QuantizeLayer,
+        'MovingAverageQuantizer': quantizers.MovingAverageQuantizer
     }

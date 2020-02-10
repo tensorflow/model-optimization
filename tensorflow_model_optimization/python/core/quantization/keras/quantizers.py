@@ -172,7 +172,7 @@ class MovingAverageQuantizer(_QuantizeHelper, Quantizer):
   """Quantize tensor based on a moving average of values across batches."""
 
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
-    """Construct a LastValueQuantizer.
+    """Construct a MovingAverageQuantizer.
 
     Args:
       num_bits: Number of bits for quantization
