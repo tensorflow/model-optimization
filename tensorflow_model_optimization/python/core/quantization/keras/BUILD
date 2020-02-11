@@ -172,6 +172,35 @@ py_test(
 )
 
 py_library(
+    name = "quantize_layer",
+    srcs = [
+        "quantize_layer.py",
+    ],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantizers",
+        # tensorflow dep1,
+    ],
+)
+
+py_test(
+    name = "quantize_layer_test",
+    srcs = [
+        "quantize_layer_test.py",
+    ],
+    python_version = "PY3",
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":quantize_layer",
+        # absl/testing:parameterized dep1,
+        # numpy dep1,
+        # tensorflow dep1,
+    ],
+)
+
+py_library(
     name = "quantize_wrapper",
     srcs = [
         "quantize_wrapper.py",
@@ -213,6 +242,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
+        ":quantize_layer",
         ":quantize_wrapper",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
