@@ -259,6 +259,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize",
+        ":quantize_layer",
         ":quantize_wrapper",
         # absl/testing:parameterized dep1,
         # numpy dep1,

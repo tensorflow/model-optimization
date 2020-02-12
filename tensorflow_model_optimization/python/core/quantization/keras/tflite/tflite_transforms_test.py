@@ -25,6 +25,8 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
+from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
@@ -47,9 +49,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     folded_model = Conv2DModel.get_folded_batchnorm_model(
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
     self.assertAllClose(
@@ -63,9 +64,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         model_type='functional',
         random_init=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -96,10 +96,9 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         model_type='functional',
         random_init=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model,
-          [tflite_transforms.Conv2DBatchNormFold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model,
+        [tflite_transforms.Conv2DBatchNormFold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -115,10 +114,9 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     folded_model = DepthwiseConv2DModel.get_folded_batchnorm_model(
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model,
-          [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model,
+        [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
 
     inputs = np.random.standard_normal(
         DepthwiseConv2DModel.get_batched_input_shape())
@@ -133,10 +131,9 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         model_type='functional',
         random_init=True)
 
-    with quantize.quantize_scope():
-      transformed_model, _ = ModelTransformer(
-          model,
-          [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
+    transformed_model, _ = ModelTransformer(
+        model,
+        [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -171,11 +168,10 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     model = self._get_model(layer_type, False)
     input_shape = self._get_input_shape(layer_type)
 
-    with quantize.quantize_scope():
-      transformed_model, updated_metadata = ModelTransformer(
-          model,
-          [tflite_transforms.Conv2DBatchNormQuantize()],
-      ).transform()
+    transformed_model, updated_metadata = ModelTransformer(
+        model,
+        [tflite_transforms.Conv2DBatchNormQuantize()],
+    ).transform()
 
     conv_layer = transformed_model.layers[1]
     bn_layer = transformed_model.layers[2]
@@ -195,11 +191,10 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     model = self._get_model(layer_type, True)
     input_shape = self._get_input_shape(layer_type)
 
-    with quantize.quantize_scope():
-      transformed_model, updated_metadata = ModelTransformer(
-          model,
-          [tflite_transforms.Conv2DBatchNormReLUQuantize()],
-      ).transform()
+    transformed_model, updated_metadata = ModelTransformer(
+        model,
+        [tflite_transforms.Conv2DBatchNormReLUQuantize()],
+    ).transform()
 
     conv_layer = transformed_model.layers[1]
     bn_layer = transformed_model.layers[2]
@@ -213,6 +208,23 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     inputs = np.random.standard_normal(input_shape)
     self.assertAllClose(
         transformed_model.predict(inputs), model.predict(inputs))
+
+  def testAddsQuantizeLayerAfterInputLayer(self):
+    inp1 = keras.layers.Input((3,))
+    inp2 = keras.layers.Input((3,))
+    x = keras.layers.Concatenate()([inp1, inp2])
+    model = keras.Model([inp1, inp2], x)
+
+    transformed_model, _ = ModelTransformer(
+        model, [tflite_transforms.InputLayerQuantize()]).transform()
+
+    for input_layer in transformed_model._input_layers:
+      layer_after_input = input_layer._outbound_nodes[0].outbound_layer
+      self.assertIsInstance(
+          layer_after_input,
+          quantize_layer.QuantizeLayer)
+      self.assertIsInstance(
+          layer_after_input.quantizer, quantizers.MovingAverageQuantizer)
 
 
 if __name__ == '__main__':
