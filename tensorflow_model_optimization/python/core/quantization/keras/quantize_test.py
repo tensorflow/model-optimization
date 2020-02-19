@@ -29,7 +29,8 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper as quantize_wrapper_mod
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
 
-quantize_annotate = quantize.quantize_annotate
+quantize_annotate_layer = quantize.quantize_annotate_layer
+quantize_annotate_model = quantize.quantize_annotate_model
 quantize_apply = quantize.quantize_apply
 QuantizeAnnotate = quantize_annotate_mod.QuantizeAnnotate
 QuantizeWrapper = quantize_wrapper_mod.QuantizeWrapper
@@ -88,7 +89,7 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
   def testQuantizeAnnotateLayer(self):
     layer = keras.layers.Dense(10, input_shape=(5,))
-    wrapped_layer = quantize_annotate(layer, input_shape=(5,))
+    wrapped_layer = quantize_annotate_layer(layer, input_shape=(5,))
 
     self._assertWrappedLayer(wrapped_layer)
 
@@ -100,12 +101,18 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     # not modify behavior.
     self.assertAllEqual(model.predict(inputs), wrapped_model.predict(inputs))
 
+  def testQuantizeAnnotateLayer_FailsWithModel(self):
+    model = keras_test_utils.build_simple_dense_model()
+
+    with self.assertRaises(ValueError):
+      quantize.quantize_annotate_layer(model)
+
   def testQuantizeAnnotateModel(self):
     model = keras.Sequential([
         keras.layers.Dense(10, input_shape=(5,)),
         keras.layers.Dropout(0.4)
     ])
-    annotated_model = quantize_annotate(model)
+    annotated_model = quantize_annotate_model(model)
 
     self._assertWrappedModel(annotated_model)
 
@@ -117,10 +124,10 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
     model = keras.Sequential([
         keras.layers.Dense(10, input_shape=(5,)),
-        quantize_annotate_mod.QuantizeAnnotate(
+        quantize_annotate_layer(
             keras.layers.Dense(5), quantize_config=quantize_config)
     ])
-    annotated_model = quantize_annotate(model)
+    annotated_model = quantize_annotate_model(model)
 
     self._assertWrappedLayer(annotated_model.layers[0])
     self._assertWrappedLayer(annotated_model.layers[1], quantize_config)
@@ -129,6 +136,12 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
     inputs = np.random.rand(1, 5)
     self.assertAllEqual(model.predict(inputs), annotated_model.predict(inputs))
+
+  def testQuantizeAnnotateModel_FailsWithLayer(self):
+    layer = keras.layers.Dense(10)
+
+    with self.assertRaises(ValueError):
+      quantize.quantize_annotate_model(layer)
 
   # TODO(tfmot): this behavior may change in the future. If a user
   # start training a model without quantization and then wants to apply
@@ -141,7 +154,7 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
     self.assertIsNotNone(model.optimizer)
 
-    annotated_model = quantize_annotate(model)
+    annotated_model = quantize_annotate_model(model)
     self.assertIsNone(annotated_model.optimizer)
 
 
@@ -178,8 +191,7 @@ class QuantizeApplyTest(tf.test.TestCase):
       quantize_apply(model)
 
   def testRaisesErrorModelNotBuilt(self):
-    model = keras.Sequential([
-        quantize_annotate(keras.layers.Dense(10))])
+    model = keras.Sequential([quantize_annotate_layer(keras.layers.Dense(10))])
 
     self.assertFalse(model.built)
     with self.assertRaises(ValueError):
@@ -362,7 +374,7 @@ class QuantizeApplyTest(tf.test.TestCase):
   # the model.
   def testQuantizeApply_RemovesOptimizer(self):
     model = keras_test_utils.build_simple_dense_model()
-    annotated_model = quantize_annotate(model)
+    annotated_model = quantize_annotate_model(model)
     annotated_model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
