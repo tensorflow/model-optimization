@@ -89,8 +89,7 @@ class QuantizeAwareActivation(object):
   _CUSTOM_ACTIVATION_ERR_MSG = (
       'Only some Keras activations under `tf.keras.activations` are supported. '
       'For other activations, use `Quantizer` directly, and update layer '
-      'config using `QuantizeProvider`.'
-  )
+      'config using `QuantizeConfig`.')
 
   def __init__(self, activation, quantizer, step, quantize_wrapper):
     """Constructs object, and initializes weights for quantization.

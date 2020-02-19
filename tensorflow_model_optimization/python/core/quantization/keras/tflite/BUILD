@@ -42,16 +42,16 @@ py_test(
 )
 
 py_library(
-    name = "tflite_quantize_providers",
+    name = "tflite_quantize_configs",
     srcs = [
-        "tflite_quantize_providers.py",
+        "tflite_quantize_configs.py",
     ],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_provider",
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
 )
@@ -66,11 +66,11 @@ py_library(
     deps = [
         # six dep1,
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_provider",
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
-        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_providers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_configs",
         "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantizers",
     ],
 )
@@ -105,7 +105,7 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:transforms",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
-        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_providers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_configs",
     ],
 )
 

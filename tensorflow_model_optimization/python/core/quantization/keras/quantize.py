@@ -146,7 +146,7 @@ def quantize_annotate(to_quantize, **kwargs):
     # This creates a discrepancy. It'll be better to just have separate APIs
     # for layer vs model.
     return quantize_annotate_mod.QuantizeAnnotate(
-        layer=to_quantize, quantize_provider=None, **kwargs)
+        layer=to_quantize, quantize_config=None, **kwargs)
 
 
 def quantize_apply(model):
@@ -214,7 +214,7 @@ def quantize_apply(model):
 
       annotate_wrapper = layer
       layer_quantize_map[annotate_wrapper.layer.name] = {
-          'quantize_provider': annotate_wrapper.quantize_provider
+          'quantize_config': annotate_wrapper.quantize_config
       }
       return annotate_wrapper.layer
 
@@ -227,12 +227,12 @@ def quantize_apply(model):
     if layer.name not in layer_quantize_map:
       return layer
 
-    quantize_provider = layer_quantize_map[layer.name].get('quantize_provider')
-    if not quantize_provider and quantize_registry.supports(layer):
-      quantize_provider = quantize_registry.get_quantize_provider(layer)
+    quantize_config = layer_quantize_map[layer.name].get('quantize_config')
+    if not quantize_config and quantize_registry.supports(layer):
+      quantize_config = quantize_registry.get_quantize_config(layer)
 
-    if not quantize_provider:
-      error_msg = ('Could not find a suitable QuantizeProvider for layer {}. '
+    if not quantize_config:
+      error_msg = ('Could not find a suitable QuantizeConfig for layer {}. '
                    'Either the registry {} should be provide one, or the user '
                    'should provide one while annotating the layer using '
                    'QuantizeAnnotate.')
@@ -243,7 +243,7 @@ def quantize_apply(model):
     # `QuantizeAnnotate`. This should generally be fine, but occasionally
     # `QuantizeAnnotate` wrapper may contain `batch_input_shape` like params.
     # TODO(pulkitb): Ensure this does not affect model cloning.
-    return quantize_wrapper.QuantizeWrapper(layer, quantize_provider)
+    return quantize_wrapper.QuantizeWrapper(layer, quantize_config)
 
   # 1. Create a copy of the model with the same weights. This ensures
   # modifications don't affect the original model, or its weights.
@@ -275,7 +275,7 @@ def quantize_apply(model):
 
   # 4. Actually quantize all the relevant layers in the model. This is done by
   # wrapping the layers with QuantizeWrapper, and passing the associated
-  # `QuantizeProvider`.
+  # `QuantizeConfig`.
 
   return keras.models.clone_model(
       transformed_model, input_tensors=None, clone_function=_quantize)
