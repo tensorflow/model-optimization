@@ -52,8 +52,7 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
     model = keras.Sequential([
         QuantizeWrapper(
             layer=layer,
-            quantize_provider=self.quantize_registry.get_quantize_provider(
-                layer),
+            quantize_config=self.quantize_registry.get_quantize_config(layer),
             input_shape=(2,))
     ])
 
@@ -122,8 +121,7 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
     quantized_model = keras.Sequential([
         QuantizeWrapper(
             layer=layer,
-            quantize_provider=self.quantize_registry.get_quantize_provider(
-                layer),
+            quantize_config=self.quantize_registry.get_quantize_config(layer),
             input_shape=input_shape)
     ])
     # `model` gets constructed with same parameters as `quantized_model`. The
@@ -149,9 +147,11 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
     # such as AveragePooling etc.
 
     layer = layers.ReLU()
-    quantized_model = keras.Sequential([QuantizeWrapper(
-        layers.ReLU(),
-        quantize_provider=self.quantize_registry.get_quantize_provider(layer))])
+    quantized_model = keras.Sequential([
+        QuantizeWrapper(
+            layers.ReLU(),
+            quantize_config=self.quantize_registry.get_quantize_config(layer))
+    ])
 
     model = keras.Sequential([layers.ReLU()])
 
@@ -165,7 +165,7 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
     layer = keras.layers.Dense(3)
     wrapper = QuantizeWrapper(
         layer=layer,
-        quantize_provider=self.quantize_registry.get_quantize_provider(layer),
+        quantize_config=self.quantize_registry.get_quantize_config(layer),
         input_shape=input_shape)
 
     custom_objects = {

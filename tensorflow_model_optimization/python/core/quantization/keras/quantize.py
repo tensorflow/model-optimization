@@ -96,39 +96,48 @@ def quantize_model(to_quantize):
   if not isinstance(to_quantize, keras.Model):
     raise ValueError(
         '`to_quantize` can only be a tf.keras `Model` instance. Use '
-        'the `quantize_annotate` API to handle individual layers.')
+        'the `quantize_annotate_layer` API to handle individual layers.')
 
-  annotated_model = quantize_annotate(to_quantize)
+  annotated_model = quantize_annotate_model(to_quantize)
   return quantize_apply(annotated_model)
 
 
-def quantize_annotate(to_quantize, **kwargs):
-  """Specify a layer or model to be quantized.
+def quantize_annotate_model(to_annotate):
+  """Annotate a model to be quantized.
 
-  This function does not actually quantize anything. It merely wraps the
-  tf.keras layer (or each layer in the model) with `QuantizeAnnotate` to note
-  which layers need to be quantized.
+  This function does not actually quantize anything. It is merely to specify
+  that the model needs to be quantized.
 
-  Annotate a layer:
+  This function is intended to be used in conjunction with the
+  `quantize_annotate_layer`
+  API. It's otherwise simpler to use `quantize_model`.
+
+  Annotate a model while overriding the default behavior for one layer:
 
   ```python
-  model = keras.Sequential([
+  quantize_config = MyDenseQuantizeConfig()
+
+  model = quantize_annotate_model(keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
-      quantize_annotate(layers.Dense(2, activation='sigmoid'))
-  ]))
+      quantize_annotate_layer(layers.Dense(2, activation='sigmoid'),
+      quantize_config=quantize_config)
+  ])))
   ```
 
   Note that this function removes the optimizer from the original model.
 
   Args:
-    to_quantize: tf.keras layer to be quantized.
-    **kwargs: Additional keyword arguments to be passed to the keras layer.
+    to_annotate: tf.keras model to annotate to be quantized.
 
   Returns:
-    tf.keras layer wrapped with `QuantizeAnnotate` if layer is passed. Else,
-    a new tf.keras model with each layer in the model wrapped with
+    New tf.keras model with each layer in the model wrapped with
     `QuantizeAnnotate`.
   """
+
+  if not isinstance(to_annotate, keras.Model):
+    raise ValueError(
+        '`to_annotate` can only be a tf.keras `Model` instance. Use '
+        'the `quantize_annotate_layer` API to handle individual layers.')
 
   def _add_quant_wrapper(layer):
     # Already annotated layer. No need to wrap.
@@ -137,16 +146,43 @@ def quantize_annotate(to_quantize, **kwargs):
 
     return quantize_annotate_mod.QuantizeAnnotate(layer)
 
-  if isinstance(to_quantize, keras.Model):
-    return keras.models.clone_model(
-        to_quantize, input_tensors=None, clone_function=_add_quant_wrapper)
-  elif isinstance(to_quantize, keras.layers.Layer):
-    # TODO(pulkitb): Consider removing support for annotating a single layer.
-    # Parameters for annotating a layer are different from annotating a model.
-    # This creates a discrepancy. It'll be better to just have separate APIs
-    # for layer vs model.
-    return quantize_annotate_mod.QuantizeAnnotate(
-        layer=to_quantize, quantize_provider=None, **kwargs)
+  return keras.models.clone_model(
+      to_annotate, input_tensors=None, clone_function=_add_quant_wrapper)
+
+
+def quantize_annotate_layer(to_annotate, quantize_config=None, **kwargs):
+  """Annotate a layer to be quantized.
+
+  This function does not actually quantize anything. It is merely to specify
+  that the layer needs to be quantized.
+
+  Annotate a layer:
+
+  ```python
+  model = keras.Sequential([
+      layers.Dense(10, activation='relu', input_shape=(100,)),
+      quantize_annotate_layer(layers.Dense(2, activation='sigmoid'))
+  ]))
+  ```
+
+  Note that this function removes the optimizer from the original model.
+
+  Args:
+    to_annotate: tf.keras layer to annotate to be quantized.
+    quantize_config: `QuantizeConfig` to quantize layer.
+    **kwargs: Additional keyword arguments to be passed to the keras layer.
+
+  Returns:
+    tf.keras layer wrapped with `QuantizeAnnotate`.
+  """
+
+  # Check against keras.Model since it is an instance of keras.layers.Layer.
+  if not isinstance(to_annotate, keras.layers.Layer) or isinstance(
+      to_annotate, keras.Model):
+    raise ValueError('`to_annotate` can only be a tf.keras `layer` instance.')
+
+  return quantize_annotate_mod.QuantizeAnnotate(
+      layer=to_annotate, quantize_config=quantize_config, **kwargs)
 
 
 def quantize_apply(model):
@@ -214,7 +250,7 @@ def quantize_apply(model):
 
       annotate_wrapper = layer
       layer_quantize_map[annotate_wrapper.layer.name] = {
-          'quantize_provider': annotate_wrapper.quantize_provider
+          'quantize_config': annotate_wrapper.quantize_config
       }
       return annotate_wrapper.layer
 
@@ -227,12 +263,12 @@ def quantize_apply(model):
     if layer.name not in layer_quantize_map:
       return layer
 
-    quantize_provider = layer_quantize_map[layer.name].get('quantize_provider')
-    if not quantize_provider and quantize_registry.supports(layer):
-      quantize_provider = quantize_registry.get_quantize_provider(layer)
+    quantize_config = layer_quantize_map[layer.name].get('quantize_config')
+    if not quantize_config and quantize_registry.supports(layer):
+      quantize_config = quantize_registry.get_quantize_config(layer)
 
-    if not quantize_provider:
-      error_msg = ('Could not find a suitable QuantizeProvider for layer {}. '
+    if not quantize_config:
+      error_msg = ('Could not find a suitable QuantizeConfig for layer {}. '
                    'Either the registry {} should be provide one, or the user '
                    'should provide one while annotating the layer using '
                    'QuantizeAnnotate.')
@@ -243,7 +279,7 @@ def quantize_apply(model):
     # `QuantizeAnnotate`. This should generally be fine, but occasionally
     # `QuantizeAnnotate` wrapper may contain `batch_input_shape` like params.
     # TODO(pulkitb): Ensure this does not affect model cloning.
-    return quantize_wrapper.QuantizeWrapper(layer, quantize_provider)
+    return quantize_wrapper.QuantizeWrapper(layer, quantize_config)
 
   # 1. Create a copy of the model with the same weights. This ensures
   # modifications don't affect the original model, or its weights.
@@ -275,7 +311,7 @@ def quantize_apply(model):
 
   # 4. Actually quantize all the relevant layers in the model. This is done by
   # wrapping the layers with QuantizeWrapper, and passing the associated
-  # `QuantizeProvider`.
+  # `QuantizeConfig`.
 
   return keras.models.clone_model(
       transformed_model, input_tensors=None, clone_function=_quantize)

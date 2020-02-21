@@ -29,7 +29,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_configs
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_transforms
 
 ModelTransformer = model_transformer.ModelTransformer
@@ -179,8 +179,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     self.assertIsInstance(
         conv_layer.activation, quantize_aware_activation.NoOpActivation)
     self.assertIsInstance(
-        updated_metadata.get(bn_layer.name).get('quantize_provider'),
-        tflite_quantize_providers.OutputQuantizeProvider)
+        updated_metadata.get(bn_layer.name).get('quantize_config'),
+        tflite_quantize_configs.OutputQuantizeConfig)
 
     inputs = np.random.standard_normal(input_shape)
     self.assertAllClose(
@@ -202,8 +202,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     self.assertIsInstance(
         conv_layer.activation, quantize_aware_activation.NoOpActivation)
     self.assertIsInstance(
-        updated_metadata.get(bn_layer.name).get('quantize_provider'),
-        tflite_quantize_providers.NoOpQuantizeProvider)
+        updated_metadata.get(bn_layer.name).get('quantize_config'),
+        tflite_quantize_configs.NoOpQuantizeConfig)
 
     inputs = np.random.standard_normal(input_shape)
     self.assertAllClose(

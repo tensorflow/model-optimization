@@ -39,24 +39,24 @@ serialize_keras_object = tf.keras.utils.serialize_keras_object
 class QuantizeWrapper(tf.keras.layers.Wrapper):
   """Quantizes the weights and activations of the keras layer it wraps."""
 
-  def __init__(self, layer, quantize_provider, **kwargs):
+  def __init__(self, layer, quantize_config, **kwargs):
     """Create a quantize emulate wrapper for a keras layer.
 
     Args:
       layer: The keras layer to be quantized.
-      quantize_provider: `QuantizeProvider` to quantize layer.
+      quantize_config: `QuantizeConfig` to quantize layer.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
 
-    if quantize_provider is None:
-      raise ValueError('quantize_provider cannot be None. It is needed to '
+    if quantize_config is None:
+      raise ValueError('quantize_config cannot be None. It is needed to '
                        'quantize a layer.')
 
     if 'name' not in kwargs:
       kwargs['name'] = self._make_layer_name(layer)
 
     super(QuantizeWrapper, self).__init__(layer, **kwargs)
-    self.quantize_provider = quantize_provider
+    self.quantize_config = quantize_config
 
     # Ensures cloning of already built layer works.
     if (not hasattr(self, '_batch_input_shape') and
@@ -93,7 +93,7 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
 
     self._weight_vars = []
     for weight, quantizer in \
-        self.quantize_provider.get_weights_and_quantizers(self.layer):
+        self.quantize_config.get_weights_and_quantizers(self.layer):
       min_var, max_var = quantizer.build(
           weight.shape, self._weight_name(weight.name), self)
 
@@ -103,13 +103,13 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
 
     self._quantize_activations = []
     for activation, quantizer in \
-        self.quantize_provider.get_activations_and_quantizers(self.layer):
+        self.quantize_config.get_activations_and_quantizers(self.layer):
       quantize_activation = quantize_aware_activation.QuantizeAwareActivation(
           activation, quantizer, self.optimizer_step, self)
 
       self._quantize_activations.append(quantize_activation)
 
-    self._output_quantizers = self.quantize_provider.get_output_quantizers(
+    self._output_quantizers = self.quantize_config.get_output_quantizers(
         self.layer)
     if self._output_quantizers:
       self._output_min_max = self._output_quantizers[0].build(
@@ -146,7 +146,7 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
               quantizer, unquantized_weight, False, min_var, max_var))
       quantized_weights.append(quantized_weight)
 
-    self.quantize_provider.set_quantize_weights(self.layer, quantized_weights)
+    self.quantize_config.set_quantize_weights(self.layer, quantized_weights)
 
     # Replace all activations with `QuantizeAwareActivation`s which can
     # quantize activation tensors during graph construction.
@@ -154,8 +154,8 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     for quantize_activation in self._quantize_activations:
       quantize_activation.training = training
 
-    self.quantize_provider.set_quantize_activations(
-        self.layer, self._quantize_activations)
+    self.quantize_config.set_quantize_activations(self.layer,
+                                                  self._quantize_activations)
 
     outputs = self.layer.call(inputs)
 
@@ -177,27 +177,25 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
 
   def get_config(self):
     base_config = super(QuantizeWrapper, self).get_config()
-    config = {
-        'quantize_provider': serialize_keras_object(self.quantize_provider)
-    }
+    config = {'quantize_config': serialize_keras_object(self.quantize_config)}
     return dict(list(base_config.items()) + list(config.items()))
 
   @classmethod
   def from_config(cls, config):
     config = config.copy()
 
-    # QuantizeWrapper may be constructed with any QuantizeProvider and the
-    # wrapper itself cannot know all the possible provider classes.
-    # The deserialization code should ensure the QuantizeProvider is in keras
+    # QuantizeWrapper may be constructed with any QuantizeConfig and the
+    # wrapper itself cannot know all the possible config classes.
+    # The deserialization code should ensure the QuantizeConfig is in keras
     # serialization scope.
-    quantize_provider = deserialize_keras_object(
-        config.pop('quantize_provider'),
+    quantize_config = deserialize_keras_object(
+        config.pop('quantize_config'),
         module_objects=globals(),
         custom_objects=None)
 
     layer = tf.keras.layers.deserialize(config.pop('layer'))
 
-    return cls(layer=layer, quantize_provider=quantize_provider, **config)
+    return cls(layer=layer, quantize_config=quantize_config, **config)
 
   @property
   def trainable(self):

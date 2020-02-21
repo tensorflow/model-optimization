@@ -45,7 +45,7 @@ class TFLiteQuantizeLayoutTransform(
     Args:
       model: Keras model to be quantized.
       layer_quantize_map: Map with keys as layer names, and values as dicts
-        containing custom `QuantizeProvider`s which may have been passed with
+        containing custom `QuantizeConfig`s which may have been passed with
         layers.
 
     Returns:

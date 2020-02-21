@@ -23,7 +23,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate
-from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider as quantize_provider_mod
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
 
 keras = tf.keras
 deserialize_layer = tf.keras.layers.deserialize
@@ -32,7 +32,7 @@ serialize_layer = tf.keras.layers.serialize
 
 class QuantizeAnnotateTest(tf.test.TestCase):
 
-  class TestQuantizeProvider(quantize_provider_mod.QuantizeProvider):
+  class TestQuantizeConfig(quantize_config_mod.QuantizeConfig):
 
     def get_weights_and_quantizers(self, layer):
       pass
@@ -56,14 +56,15 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     layer = keras.layers.Dense(5, activation='relu', input_shape=(10,))
     model = keras.Sequential([layer])
 
-    quantize_provider = self.TestQuantizeProvider()
+    quantize_config = self.TestQuantizeConfig()
     annotated_model = keras.Sequential([
         quantize_annotate.QuantizeAnnotate(
-            layer, quantize_provider=quantize_provider, input_shape=(10,))])
+            layer, quantize_config=quantize_config, input_shape=(10,))
+    ])
 
     annotated_layer = annotated_model.layers[0]
     self.assertEqual(layer, annotated_layer.layer)
-    self.assertEqual(quantize_provider, annotated_layer.quantize_provider)
+    self.assertEqual(quantize_config, annotated_layer.quantize_config)
 
     # Annotated model should not affect computation. Returns same results.
     x_test = np.random.rand(10, 10)
@@ -74,12 +75,12 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     layer = keras.layers.Dense(3)
     wrapper = quantize_annotate.QuantizeAnnotate(
         layer=layer,
-        quantize_provider=self.TestQuantizeProvider(),
+        quantize_config=self.TestQuantizeConfig(),
         input_shape=input_shape)
 
     custom_objects = {
         'QuantizeAnnotate': quantize_annotate.QuantizeAnnotate,
-        'TestQuantizeProvider': self.TestQuantizeProvider
+        'TestQuantizeConfig': self.TestQuantizeConfig
     }
 
     serialized_wrapper = serialize_layer(wrapper)

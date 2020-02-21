@@ -75,9 +75,9 @@ py_test(
 )
 
 py_library(
-    name = "quantize_provider",
+    name = "quantize_config",
     srcs = [
-        "quantize_provider.py",
+        "quantize_config.py",
     ],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
@@ -121,7 +121,7 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        ":quantize_provider",
+        ":quantize_config",
         # tensorflow dep1,
     ],
 )
@@ -136,7 +136,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
-        ":quantize_provider",
+        ":quantize_config",
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -209,7 +209,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
-        ":quantize_provider",
+        ":quantize_config",
         ":quantizers",
         # tensorflow dep1,
     ],

@@ -25,11 +25,11 @@ import six
 class QuantizeRegistry(object):
   """ABC interface which specifies specifies how layers should be quantized.
 
-  The Registry is designed to function as a repository of `QuantizeProvider`s
+  The Registry is designed to function as a repository of `QuantizeConfig`s
   linked to layers. The idea is that while applying quantization to the various
   layers within a Keras model, the registry can be used to query which
-  `QuantizeProvider` can be used to quantize a specific `layer`. The
-  `QuantizeProvider` itself contains information to quantize that specific
+  `QuantizeConfig` can be used to quantize a specific `layer`. The
+  `QuantizeConfig` itself contains information to quantize that specific
   layer.
 
   We provide a default registry for built-in Keras layers, but implementing this
@@ -39,13 +39,13 @@ class QuantizeRegistry(object):
   """
 
   @abc.abstractmethod
-  def get_quantize_provider(self, layer):
-    """Returns the quantization provider for the given layer.
+  def get_quantize_config(self, layer):
+    """Returns the quantization config for the given layer.
 
     Args:
-      layer: input layer to return quantize provider for.
+      layer: input layer to return quantize config for.
 
     Returns:
-      Returns the QuantizeProvider for the given layer.
+      Returns the QuantizeConfig for the given layer.
     """
     raise NotImplementedError('Must be implemented in subclasses.')

@@ -42,43 +42,38 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
       'Layer {} not supported for quantization. Layer should either inherit '
       'QuantizeEmulatableLayer or be a supported keras built-in layer.')
 
-  def __init__(self,
-               layer,
-               quantize_provider=None,
-               **kwargs):
+  def __init__(self, layer, quantize_config=None, **kwargs):
     """Create a quantize annotate wrapper over a keras layer.
 
     Args:
       layer: The keras layer to be quantized.
-      quantize_provider: `QuantizeProvider` to quantize layer.
+      quantize_config: `QuantizeConfig` to quantize layer.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
     super(QuantizeAnnotate, self).__init__(layer, **kwargs)
 
-    self.quantize_provider = quantize_provider
+    self.quantize_config = quantize_config
 
   def call(self, inputs, training=None):
     return self.layer.call(inputs)
 
   def get_config(self):
     base_config = super(QuantizeAnnotate, self).get_config()
-    config = {
-        'quantize_provider': serialize_keras_object(self.quantize_provider)
-    }
+    config = {'quantize_config': serialize_keras_object(self.quantize_config)}
     return dict(list(base_config.items()) + list(config.items()))
 
   @classmethod
   def from_config(cls, config):
     config = config.copy()
 
-    quantize_provider = deserialize_keras_object(
-        config.pop('quantize_provider'),
+    quantize_config = deserialize_keras_object(
+        config.pop('quantize_config'),
         module_objects=globals(),
         custom_objects=None)
 
     layer = tf.keras.layers.deserialize(config.pop('layer'))
 
-    return cls(layer=layer, quantize_provider=quantize_provider, **config)
+    return cls(layer=layer, quantize_config=quantize_config, **config)
 
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(input_shape)

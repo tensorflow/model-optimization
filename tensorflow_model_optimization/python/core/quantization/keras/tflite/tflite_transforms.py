@@ -23,7 +23,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_configs
 
 LayerNode = transforms.LayerNode
 LayerPattern = transforms.LayerPattern
@@ -76,8 +76,8 @@ def _get_layer_node(fused_layer, weights):
   layer_config = keras.layers.serialize(fused_layer)
   layer_config['name'] = layer_config['config']['name']
   # This config tracks which layers get quantized, and whether they have a
-  # custom QuantizeProvider.
-  layer_metadata = {'quantize_provider': None}
+  # custom QuantizeConfig.
+  layer_metadata = {'quantize_config': None}
 
   return LayerNode(layer_config, weights, metadata=layer_metadata)
 
@@ -155,32 +155,31 @@ class Conv2DBatchNormQuantize(transforms.Transform):
             'Conv2D|DepthwiseConv2D', config={'activation': 'linear'})])
 
   @staticmethod
-  def _get_quantize_provider(layer_node):
-    return layer_node.metadata.get('quantize_provider')
+  def _get_quantize_config(layer_node):
+    return layer_node.metadata.get('quantize_config')
 
-  def _has_custom_quantize_provider(self, *layer_nodes):
+  def _has_custom_quantize_config(self, *layer_nodes):
     for layer_node in layer_nodes:
-      if self._get_quantize_provider(layer_node) is not None:
+      if self._get_quantize_config(layer_node) is not None:
         return True
     return False
 
   def replacement(self, match_layer):
     bn_layer_node, conv_layer_node = match_layer, match_layer.input_layers[0]
 
-    if self._has_custom_quantize_provider(bn_layer_node, conv_layer_node):
+    if self._has_custom_quantize_config(bn_layer_node, conv_layer_node):
       return match_layer
 
     conv_layer_node.layer['config']['activation'] = \
       keras.activations.serialize(quantize_aware_activation.NoOpActivation())
-    bn_layer_node.metadata['quantize_provider'] = \
-      tflite_quantize_providers.OutputQuantizeProvider()
+    bn_layer_node.metadata['quantize_config'] = \
+      tflite_quantize_configs.OutputQuantizeConfig()
 
     return match_layer
 
   def custom_objects(self):
     return {
-        'NoOpQuantizeProvider':
-            tflite_quantize_providers.NoOpQuantizeProvider,
+        'NoOpQuantizeConfig': tflite_quantize_configs.NoOpQuantizeConfig,
         'NoOpActivation': quantize_aware_activation.NoOpActivation
     }
 
@@ -199,21 +198,20 @@ class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
     bn_layer_node = relu_layer_node.input_layers[0]
     conv_layer_node = bn_layer_node.input_layers[0]
 
-    if self._has_custom_quantize_provider(
-        relu_layer_node, bn_layer_node, conv_layer_node):
+    if self._has_custom_quantize_config(relu_layer_node, bn_layer_node,
+                                        conv_layer_node):
       return match_layer
 
     conv_layer_node.layer['config']['activation'] = \
       keras.activations.serialize(quantize_aware_activation.NoOpActivation())
-    bn_layer_node.metadata['quantize_provider'] = \
-      tflite_quantize_providers.NoOpQuantizeProvider()
+    bn_layer_node.metadata['quantize_config'] = \
+      tflite_quantize_configs.NoOpQuantizeConfig()
 
     return match_layer
 
   def custom_objects(self):
     return {
-        'NoOpQuantizeProvider':
-            tflite_quantize_providers.NoOpQuantizeProvider,
+        'NoOpQuantizeConfig': tflite_quantize_configs.NoOpQuantizeConfig,
         'NoOpActivation': quantize_aware_activation.NoOpActivation
     }
 

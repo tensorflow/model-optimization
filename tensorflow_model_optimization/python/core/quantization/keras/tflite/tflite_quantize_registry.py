@@ -23,14 +23,14 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow_model_optimization.python.core.quantization.keras import quantize_provider
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_providers
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_configs
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantizers
 
-QuantizeProvider = quantize_provider.QuantizeProvider
+QuantizeConfig = quantize_config.QuantizeConfig
 
 layers = tf.keras.layers
 
@@ -172,11 +172,12 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       self._layer_quantize_map[quantize_info.layer_type] = quantize_info
 
     # Hack for `Activation` layer. That is the only layer with a separate
-    # QuantizeProvider.
-    self._layer_quantize_map[layers.Activation] = ActivationQuantizeProvider()
-    self._layer_quantize_map[layers.Conv2D] = ConvQuantizeProvider(
-        ['kernel'], ['activation'], False)
-    self._layer_quantize_map[layers.DepthwiseConv2D] = ConvQuantizeProvider(
+    # QuantizeConfig.
+    self._layer_quantize_map[layers.Activation] = ActivationQuantizeConfig()
+    self._layer_quantize_map[layers.Conv2D] = ConvQuantizeConfig(['kernel'],
+                                                                 ['activation'],
+                                                                 False)
+    self._layer_quantize_map[layers.DepthwiseConv2D] = ConvQuantizeConfig(
         ['depthwise_kernel'], ['activation'], False)
 
   def _is_supported_layer(self, layer):
@@ -219,33 +220,33 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
     return False
 
-  def get_quantize_provider(self, layer):
-    """Returns the quantization provider for the given layer.
+  def get_quantize_config(self, layer):
+    """Returns the quantization config for the given layer.
 
     Args:
-      layer: input layer to return quantize provider for.
+      layer: input layer to return quantize config for.
 
     Returns:
-      Returns the QuantizeProvider for the given layer.
+      Returns the QuantizeConfig for the given layer.
     """
     if not self.supports(layer):
       raise ValueError(
-          '`get_quantize_provider()` called on an unsupported layer {}. Check '
+          '`get_quantize_config()` called on an unsupported layer {}. Check '
           'if layer is supported by calling `supports()`. Alternatively, you '
-          'can use `QuantizeProvider` to specify a behavior for your layer.'
+          'can use `QuantizeConfig` to specify a behavior for your layer.'
           .format(layer.__class__))
 
     if self._is_supported_layer(layer):
       quantize_info = self._get_quantize_info(layer)
 
       # In case of `Activation`, there is no `_QuantizeInfo` object. It
-      # directly stores a `QuantizeProvider`.
-      if isinstance(quantize_info, QuantizeProvider):
+      # directly stores a `QuantizeConfig`.
+      if isinstance(quantize_info, QuantizeConfig):
         return quantize_info
 
-      return TFLiteQuantizeProvider(
-          quantize_info.weight_attrs, quantize_info.activation_attrs,
-          quantize_info.quantize_output)
+      return TFLiteQuantizeConfig(quantize_info.weight_attrs,
+                                  quantize_info.activation_attrs,
+                                  quantize_info.quantize_output)
 
     if self._is_rnn_layer(layer):
       weight_attrs = []
@@ -257,14 +258,14 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
       # Result quantization for RNN isn't straight-forward like regular layers.
       # To implement during full RNN support.
-      return TFLiteQuantizeProviderRNN(weight_attrs, activation_attrs, False)
+      return TFLiteQuantizeConfigRNN(weight_attrs, activation_attrs, False)
 
     # Should never come here.
     raise ValueError('Invalid Layer type {}'.format(layer.__class__))
 
 
-class TFLiteQuantizeProvider(QuantizeProvider):
-  """QuantizeProvider for non recurrent Keras layers."""
+class TFLiteQuantizeConfig(QuantizeConfig):
+  """QuantizeConfig for non recurrent Keras layers."""
 
   def __init__(self, weight_attrs, activation_attrs, quantize_output):
     self.weight_attrs = weight_attrs
@@ -321,13 +322,13 @@ class TFLiteQuantizeProvider(QuantizeProvider):
 
   @classmethod
   def from_config(cls, config):
-    """Instantiates a `TFLiteQuantizeProvider` from its config.
+    """Instantiates a `TFLiteQuantizeConfig` from its config.
 
     Args:
         config: Output of `get_config()`.
 
     Returns:
-        A `TFLiteQuantizeProvider` instance.
+        A `TFLiteQuantizeConfig` instance.
     """
     return cls(**config)
 
@@ -342,7 +343,7 @@ class TFLiteQuantizeProvider(QuantizeProvider):
     }
 
   def __eq__(self, other):
-    if not isinstance(other, TFLiteQuantizeProvider):
+    if not isinstance(other, TFLiteQuantizeConfig):
       return False
 
     return (self.weight_attrs == other.weight_attrs and
@@ -355,8 +356,8 @@ class TFLiteQuantizeProvider(QuantizeProvider):
     return not self.__eq__(other)
 
 
-class TFLiteQuantizeProviderRNN(TFLiteQuantizeProvider, _RNNHelper):
-  """QuantizeProvider for RNN layers."""
+class TFLiteQuantizeConfigRNN(TFLiteQuantizeConfig, _RNNHelper):
+  """QuantizeConfig for RNN layers."""
 
   def get_weights_and_quantizers(self, layer):
     weights_quantizers = []
@@ -425,16 +426,16 @@ class TFLiteQuantizeProviderRNN(TFLiteQuantizeProvider, _RNNHelper):
         i += 1
 
 
-class ActivationQuantizeProvider(QuantizeProvider):
-  """QuantizeProvider for keras.layers.Activation.
+class ActivationQuantizeConfig(QuantizeConfig):
+  """QuantizeConfig for keras.layers.Activation.
 
-  `keras.layers.Activation` needs a separate `QuantizeProvider` since the
+  `keras.layers.Activation` needs a separate `QuantizeConfig` since the
   decision to quantize depends on the specific activation type.
   """
 
   def _assert_activation_layer(self, layer):
     if not isinstance(layer, layers.Activation):
-      raise RuntimeError('ActivationQuantizeProvider can only be used with '
+      raise RuntimeError('ActivationQuantizeConfig can only be used with '
                          '`keras.layers.Activation`.')
 
   def get_weights_and_quantizers(self, layer):
@@ -456,7 +457,7 @@ class ActivationQuantizeProvider(QuantizeProvider):
 
     if not hasattr(layer.activation, '__name__'):
       raise ValueError('Activation {} not supported by '
-                       'ActivationQuantizeProvider.'.format(layer.activation))
+                       'ActivationQuantizeConfig.'.format(layer.activation))
 
     if layer.activation.__name__ in ['relu']:
       # 'relu' should generally get fused into the previous layer.
@@ -466,28 +467,28 @@ class ActivationQuantizeProvider(QuantizeProvider):
       return []
 
     raise ValueError('Activation {} not supported by '
-                     'ActivationQuantizeProvider.'.format(layer.activation))
+                     'ActivationQuantizeConfig.'.format(layer.activation))
 
   def get_config(self):
     return {}
 
 
-class ConvQuantizeProvider(TFLiteQuantizeProvider):
-  """QuantizeProvider for Conv2D/DepthwiseConv2D layers."""
+class ConvQuantizeConfig(TFLiteQuantizeConfig):
+  """QuantizeConfig for Conv2D/DepthwiseConv2D layers."""
 
   def __init__(self, weight_attrs, activation_attrs, quantize_output):
-    super(ConvQuantizeProvider, self).__init__(
-        weight_attrs, activation_attrs, quantize_output)
+    super(ConvQuantizeConfig, self).__init__(weight_attrs, activation_attrs,
+                                             quantize_output)
 
     self.weight_quantizer = tflite_quantizers.ConvWeightsQuantizer()
 
 
 def _types_dict():
   return {
-      'TFLiteQuantizeProvider': TFLiteQuantizeProvider,
-      'TFLiteQuantizeProviderRNN': TFLiteQuantizeProviderRNN,
-      'ActivationQuantizeProvider': ActivationQuantizeProvider,
-      'ConvQuantizeProvider': ConvQuantizeProvider,
-      'NoOpQuantizeProvider': tflite_quantize_providers.NoOpQuantizeProvider,
-      'OutputQuantizeProvider': tflite_quantize_providers.OutputQuantizeProvider
+      'TFLiteQuantizeConfig': TFLiteQuantizeConfig,
+      'TFLiteQuantizeConfigRNN': TFLiteQuantizeConfigRNN,
+      'ActivationQuantizeConfig': ActivationQuantizeConfig,
+      'ConvQuantizeConfig': ConvQuantizeConfig,
+      'NoOpQuantizeConfig': tflite_quantize_configs.NoOpQuantizeConfig,
+      'OutputQuantizeConfig': tflite_quantize_configs.OutputQuantizeConfig
   }

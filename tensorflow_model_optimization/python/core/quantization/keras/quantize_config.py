@@ -19,7 +19,7 @@ import six
 
 
 @six.add_metaclass(abc.ABCMeta)
-class QuantizeProvider(object):
+class QuantizeConfig(object):
   """ABC interface for Keras layers to express how they should be quantized."""
 
   @abc.abstractmethod
@@ -101,4 +101,4 @@ class QuantizeProvider(object):
 
   @abc.abstractmethod
   def get_config(self):
-    raise NotImplementedError('QuantizeProvider should implement get_config().')
+    raise NotImplementedError('QuantizeConfig should implement get_config().')
