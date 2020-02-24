@@ -58,17 +58,17 @@ y_test = tf.keras.utils.to_categorical(y_test, num_classes)
 l = tf.keras.layers
 
 model = tf.keras.Sequential([
-    quantize.quantize_annotate(
+    quantize.quantize_annotate_layer(
         l.Conv2D(32, 5, padding='same', activation='relu'),
         input_shape=input_shape),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
-    quantize.quantize_annotate(
+    quantize.quantize_annotate_layer(
         l.Conv2D(64, 5, padding='same', activation='relu')),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
     l.Flatten(),
-    quantize.quantize_annotate(l.Dense(1024, activation='relu')),
+    quantize.quantize_annotate_layer(l.Dense(1024, activation='relu')),
     l.Dropout(0.4),
-    quantize.quantize_annotate(l.Dense(num_classes)),
+    quantize.quantize_annotate_layer(l.Dense(num_classes)),
     # TODO(alanchiao): fuse softmax once we've handled it.
     l.Softmax(),
 ])

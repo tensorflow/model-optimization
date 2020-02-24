@@ -5,7 +5,7 @@ py_binary(
     srcs = [
         "mnist_cnn.py",
     ],
-    python_version = "PY2",
+    python_version = "PY3",
     deps = [
         # numpy dep1,
         # tensorflow dep1,
