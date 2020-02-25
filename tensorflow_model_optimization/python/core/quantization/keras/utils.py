@@ -24,7 +24,8 @@ def convert_keras_to_tflite(model,
                             output_path,
                             custom_objects=None,
                             is_quantized=True,
-                            inference_input_type=None):
+                            inference_input_type=None,
+                            input_quant_params=(-128., 255.)):
   """Convert Keras model to TFLite."""
   if custom_objects is None:
     custom_objects = {}
@@ -55,9 +56,13 @@ def convert_keras_to_tflite(model,
     # TODO(tfmot): API not supported in TF 2.XX.
     input_arrays = converter.get_input_arrays()
     converter.quantized_input_stats = {
-        input_arrays[0]: (-128., 255.)
-    }  # mean, std_dev values for float [0, 1] quantized to [-128, 127]
+        input_arrays[0]: input_quant_params
+    }  # mean, std_dev values for float to quantized int8 values.
 
   tflite_model = converter.convert()
-  with open(output_path, 'wb') as f:
-    f.write(tflite_model)
+
+  if output_path is not None:
+    with open(output_path, 'wb') as f:
+      f.write(tflite_model)
+
+  return tflite_model
