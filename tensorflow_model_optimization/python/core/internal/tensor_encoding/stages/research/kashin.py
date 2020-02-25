@@ -18,7 +18,7 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import encoding_stage
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import tf_utils

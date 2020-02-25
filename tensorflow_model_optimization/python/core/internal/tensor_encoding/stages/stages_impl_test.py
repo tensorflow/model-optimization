@@ -20,7 +20,7 @@ import itertools
 
 from absl.testing import parameterized
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages import stages_impl
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing import test_utils

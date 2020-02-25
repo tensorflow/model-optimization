@@ -21,7 +21,7 @@ import mock
 import numpy as np
 from six.moves import range
 from six.moves import zip
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import encoding_stage
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.testing import test_utils

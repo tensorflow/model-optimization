@@ -17,7 +17,7 @@
 Module: tfmot.quantization.keras.tflite
 """
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 

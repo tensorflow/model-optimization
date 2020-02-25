@@ -22,7 +22,7 @@ import tempfile
 from absl import app as absl_app
 from absl import flags
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python import keras
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 

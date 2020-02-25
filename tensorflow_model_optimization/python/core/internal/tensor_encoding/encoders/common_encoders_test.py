@@ -17,7 +17,7 @@ from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import gather_encoder

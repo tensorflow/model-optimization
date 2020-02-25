@@ -15,7 +15,7 @@
 """Utils for testing MOT code with MNIST model/dataset."""
 
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow.python import keras
 l = keras.layers

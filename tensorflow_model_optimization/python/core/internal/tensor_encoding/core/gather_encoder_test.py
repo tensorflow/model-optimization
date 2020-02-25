@@ -20,7 +20,7 @@ import collections
 
 from absl.testing import parameterized
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 # TODO(b/139939526): Move to public API.
 from tensorflow.python.framework import test_util as tf_test_util

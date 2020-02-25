@@ -31,7 +31,7 @@ from absl.testing import parameterized
 import numpy as np
 import six
 from six.moves import range
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import encoding_stage
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import py_utils

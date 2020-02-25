@@ -21,7 +21,7 @@ from __future__ import print_function
 
 # import g3
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 # b/(139939526): update to use public API.
 from tensorflow.python.keras.utils import generic_utils

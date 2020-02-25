@@ -22,7 +22,7 @@ from __future__ import print_function
 
 # import g3
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def kronecker_product(mat1, mat2):

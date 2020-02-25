@@ -35,7 +35,7 @@ from __future__ import print_function
 import abc
 import enum
 import six
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 INITIAL_STATE_SCOPE_SUFFIX = '_initial_state'
 UPDATE_STATE_SCOPE_SUFFIX = '_update_state'

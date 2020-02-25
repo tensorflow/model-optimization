@@ -15,7 +15,7 @@
 # pylint: disable=protected-access,missing-docstring,unused-argument
 """Entry point for pruning models during training."""
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper

@@ -17,7 +17,7 @@
 
 import tempfile
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 
 def convert_keras_to_tflite(model,

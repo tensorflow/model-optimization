@@ -14,7 +14,7 @@
 # ==============================================================================
 """Registry responsible for built-in keras classes."""
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras.engine.base_layer import TensorFlowOpLayer

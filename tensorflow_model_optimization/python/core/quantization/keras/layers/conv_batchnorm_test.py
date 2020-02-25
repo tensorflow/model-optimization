@@ -26,7 +26,7 @@ import tempfile
 
 import numpy as np
 from six.moves import range
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow.python import keras
 from tensorflow.python.keras import activations

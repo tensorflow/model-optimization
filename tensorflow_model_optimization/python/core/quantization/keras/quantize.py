@@ -14,7 +14,7 @@
 # ==============================================================================
 """Quantization API functions for tf.keras models."""
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation

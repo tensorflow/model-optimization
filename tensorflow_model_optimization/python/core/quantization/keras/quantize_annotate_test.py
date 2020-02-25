@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import numpy as np
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod

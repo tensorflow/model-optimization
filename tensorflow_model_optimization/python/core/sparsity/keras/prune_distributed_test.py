@@ -17,7 +17,7 @@
 import tempfile
 from absl.testing import parameterized
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune

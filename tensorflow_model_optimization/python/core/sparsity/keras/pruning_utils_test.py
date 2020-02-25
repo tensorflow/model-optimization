@@ -21,7 +21,7 @@ from __future__ import print_function
 # import g3
 from absl.testing import parameterized
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 

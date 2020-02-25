@@ -16,7 +16,7 @@
 
 import collections
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer

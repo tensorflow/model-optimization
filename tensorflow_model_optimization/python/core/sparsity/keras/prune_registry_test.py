@@ -14,7 +14,7 @@
 # ==============================================================================
 """Tests for prune registry."""
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry

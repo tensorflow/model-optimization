@@ -19,7 +19,7 @@ import collections
 import copy
 import re
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms as transforms_mod
 

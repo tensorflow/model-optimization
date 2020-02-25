@@ -21,7 +21,7 @@ import itertools
 from absl.testing import parameterized
 import numpy as np
 import scipy.linalg
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.utils import tf_utils
 

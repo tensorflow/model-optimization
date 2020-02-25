@@ -21,7 +21,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation

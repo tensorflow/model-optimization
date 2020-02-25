@@ -19,7 +19,7 @@ from __future__ import print_function
 import collections
 
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import encoding_stage

@@ -16,7 +16,7 @@
 # TODO(tf-mot): dedup and migrate to testing/ directory.
 
 import numpy as np
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 l = tf.keras.layers
 

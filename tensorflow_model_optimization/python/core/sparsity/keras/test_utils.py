@@ -17,7 +17,7 @@
 import tempfile
 import numpy as np
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
