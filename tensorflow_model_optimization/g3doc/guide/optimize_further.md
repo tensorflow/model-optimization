@@ -3,7 +3,7 @@
 When pre-optimized models and post-training tools do not satisfy your use case,
 the next step is to try the different training-time tools.
 
-Training time tools piggyback on the model's loss function over th e training
+Training time tools piggyback on the model's loss function over the training
 data such that the model can "adapt" to the changes brought by the optimization
 technique.
 
