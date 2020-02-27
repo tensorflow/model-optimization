@@ -34,6 +34,7 @@ py_test(
     deps = [
         ":core_encoder",
         ":encoding_stage",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
@@ -56,6 +57,7 @@ py_test(
     srcs = ["encoding_stage_test.py"],
     deps = [
         ":encoding_stage",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # mock dep1,
         # numpy dep1,
@@ -82,6 +84,7 @@ py_test(
         ":core_encoder",
         ":encoding_stage",
         ":gather_encoder",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -107,6 +110,7 @@ py_test(
     deps = [
         ":core_encoder",
         ":simple_encoder",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
         # python:framework_test_lib tensorflow dep2,

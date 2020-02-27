@@ -32,6 +32,7 @@ py_test(
     srcs = ["test_utils_test.py"],
     deps = [
         ":test_utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # mock dep1,
         # numpy dep1,

@@ -18,6 +18,7 @@ py_binary(
     python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/flags dep1,
         # numpy dep1,
         # six dep1,
@@ -36,6 +37,7 @@ py_binary(
     python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl:app dep1,
         # absl/flags dep1,
         # tensorflow dep1,

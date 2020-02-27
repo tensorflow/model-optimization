@@ -38,6 +38,7 @@ py_test(
     deps = [
         ":conv_batchnorm",
         ":conv_batchnorm_test_utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",

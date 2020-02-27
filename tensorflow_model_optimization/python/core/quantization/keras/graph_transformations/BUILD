@@ -35,6 +35,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":transforms",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # tensorflow dep1,
     ],
 )
@@ -63,6 +64,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":model_transformer",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
     ],

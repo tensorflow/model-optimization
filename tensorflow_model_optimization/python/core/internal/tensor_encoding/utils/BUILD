@@ -32,6 +32,7 @@ py_test(
     srcs = ["py_utils_test.py"],
     deps = [
         ":py_utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -53,6 +54,7 @@ py_test(
     srcs = ["tf_utils_test.py"],
     deps = [
         ":tf_utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # scipy dep1,

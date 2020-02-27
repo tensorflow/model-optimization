@@ -68,6 +68,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # tensorflow dep1,
     ],
 )
@@ -80,6 +81,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":clustering_centroids",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # tensorflow dep1,
     ],
 )
@@ -96,6 +98,7 @@ py_test(
         ":clusterable_layer",
         ":clustering_centroids",
         ":clustering_registry",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # tensorflow dep1,
     ],
 )
@@ -110,6 +113,7 @@ py_test(
         ":cluster_wrapper",
         ":clusterable_layer",
         ":clustering_registry",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # tensorflow dep1,
     ],
 )

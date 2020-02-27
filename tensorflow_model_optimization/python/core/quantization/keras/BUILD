@@ -38,6 +38,7 @@ py_test(
     srcs_version = "PY2AND3",
     deps = [
         ":quant_ops",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
@@ -67,6 +68,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -137,6 +139,7 @@ py_test(
     deps = [
         ":quantize_annotate",
         ":quantize_config",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -166,6 +169,7 @@ py_test(
     deps = [
         ":quantize_aware_activation",
         ":quantizers",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -194,6 +198,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_layer",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -226,6 +231,7 @@ py_test(
     deps = [
         ":quantize_aware_activation",
         ":quantize_wrapper",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -261,6 +267,7 @@ py_test(
         ":quantize",
         ":quantize_layer",
         ":quantize_wrapper",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -276,6 +283,7 @@ py_test(
     deps = [
         ":quantize",
         ":utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -291,6 +299,7 @@ py_test(
     deps = [
         ":quantize",
         ":utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -309,6 +318,7 @@ py_test(
     deps = [
         ":quantize",
         ":utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,

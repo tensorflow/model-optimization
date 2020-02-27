@@ -7,6 +7,7 @@ py_binary(
     ],
     python_version = "PY3",
     deps = [
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,

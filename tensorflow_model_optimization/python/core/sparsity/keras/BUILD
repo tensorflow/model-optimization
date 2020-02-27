@@ -73,6 +73,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_schedule",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
@@ -119,6 +120,7 @@ py_test(
         ":prune",
         ":pruning_callbacks",
         ":pruning_schedule",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
@@ -189,6 +191,7 @@ py_test(
         ":pruning_callbacks",
         ":pruning_schedule",
         ":test_utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -209,6 +212,7 @@ py_test(
         ":pruning_schedule",
         ":pruning_wrapper",
         ":test_utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -228,6 +232,7 @@ py_test(
         ":pruning_callbacks",
         ":pruning_schedule",
         ":test_utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -244,6 +249,7 @@ py_test(
     deps = [
         ":prunable_layer",
         ":prune_registry",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
     ],
@@ -258,6 +264,7 @@ py_test(
     deps = [
         ":pruning_schedule",
         ":pruning_wrapper",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
     ],
 )
 
@@ -270,6 +277,7 @@ py_test(
     deps = [
         ":pruning_impl",
         ":pruning_schedule",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -284,6 +292,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_utils",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",

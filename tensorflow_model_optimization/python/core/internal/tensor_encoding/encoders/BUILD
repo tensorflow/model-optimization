@@ -31,6 +31,7 @@ py_test(
     srcs = ["common_encoders_test.py"],
     deps = [
         ":common_encoders",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:core_encoder",

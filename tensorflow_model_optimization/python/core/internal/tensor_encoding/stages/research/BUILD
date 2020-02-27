@@ -31,6 +31,7 @@ py_test(
     srcs = ["clipping_test.py"],
     deps = [
         ":clipping",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -55,6 +56,7 @@ py_test(
     srcs = ["kashin_test.py"],
     deps = [
         ":kashin",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -78,6 +80,7 @@ py_test(
     srcs = ["quantization_test.py"],
     deps = [
         ":quantization",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -100,6 +103,7 @@ py_test(
     srcs = ["misc_test.py"],
     deps = [
         ":misc",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,

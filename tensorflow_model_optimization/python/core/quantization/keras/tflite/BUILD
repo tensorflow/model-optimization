@@ -36,6 +36,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":tflite_quantizers",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
     ],
@@ -85,6 +86,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":tflite_quantize_registry",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -119,6 +121,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":tflite_transforms",
+        "//learning/brain/public:disable_tf2",  # build_cleaner: keep; go/disable_tf2
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
