@@ -179,7 +179,10 @@ class ClusterRegistryTest(test.TestCase):
                                   clusterable_layer.ClusterableLayer):
 
     def get_clusterable_weights(self):
-      return [self.kernel, self.recurrent_kernel]
+      return [
+          ('kernel', self.kernel),
+          ('recurrent_kernel', self.recurrent_kernel)
+      ]
 
   def testSupportsKerasClusterableLayer(self):
     self.assertTrue(ClusterRegistry.supports(layers.Dense(10)))
@@ -260,9 +263,11 @@ class ClusterRegistryTest(test.TestCase):
     ClusterRegistry.make_clusterable(layer)
     keras.Sequential([layer]).build(input_shape=(2, 3, 4))
 
-    self.assertEqual(
-        [layer.cell.kernel, layer.cell.recurrent_kernel],
-        layer.get_clusterable_weights())
+    expected_weights = [
+        ('kernel', layer.cell.kernel),
+        ('recurrent_kernel', layer.cell.recurrent_kernel)
+    ]
+    self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
   def testMakeClusterableWorksOnKerasRNNLayerWithRNNCellsParams(self):
     cell1 = layers.LSTMCell(10)
@@ -275,8 +280,10 @@ class ClusterRegistryTest(test.TestCase):
     keras.Sequential([layer]).build(input_shape=(2, 3, 4))
 
     expected_weights = [
-        cell1.kernel, cell1.recurrent_kernel, cell2.kernel,
-        cell2.recurrent_kernel
+        ('kernel', cell1.kernel),
+        ('recurrent_kernel', cell1.recurrent_kernel),
+        ('kernel', cell2.kernel),
+        ('recurrent_kernel', cell2.recurrent_kernel)
     ]
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
@@ -291,8 +298,10 @@ class ClusterRegistryTest(test.TestCase):
     keras.Sequential([layer]).build(input_shape=(2, 3, 4))
 
     expected_weights = [
-        cell1.kernel, cell1.recurrent_kernel, cell2.kernel,
-        cell2.recurrent_kernel
+        ('kernel', cell1.kernel),
+        ('recurrent_kernel', cell1.recurrent_kernel),
+        ('kernel', cell2.kernel),
+        ('recurrent_kernel', cell2.recurrent_kernel)
     ]
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 

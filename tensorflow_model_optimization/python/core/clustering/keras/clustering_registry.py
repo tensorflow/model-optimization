@@ -380,7 +380,7 @@ class ClusteringRegistry(object):
     def get_clusterable_weights_rnn():  # pylint: disable=missing-docstring
       def get_clusterable_weights_rnn_cell(cell):
         if cell.__class__ in cls._RNN_CELLS_WEIGHTS_MAP:
-          return [getattr(cell, weight)
+          return [(weight, getattr(cell, weight))
                   for weight in cls._RNN_CELLS_WEIGHTS_MAP[cell.__class__]]
 
         if isinstance(cell, clusterable_layer.ClusterableLayer):
