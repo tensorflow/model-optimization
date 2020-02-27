@@ -8,11 +8,14 @@ py_library(
     name = "api",
     srcs = [
         "__init__.py",
+        "quantization/__init__.py",
+        "quantization/keras/__init__.py",
         "sparsity/__init__.py",
         "sparsity/keras/__init__.py",
     ],
     srcs_version = "PY2AND3",
     deps = [
+        "//tensorflow_model_optimization/python/core/quantization/keras",
         "//tensorflow_model_optimization/python/core/sparsity/keras",
     ],
 )

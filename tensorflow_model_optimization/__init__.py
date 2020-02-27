@@ -87,6 +87,7 @@ from tensorflow_model_optimization.python.core.api import *
 
 
 # Use sparsity module to fetch the path for the `api` directory.
+# This handles all techniques, not just sparsity.
 _API_MODULE = sparsity  # pylint: disable=undefined-variable
 # Returns $(install_dir)/tensorflow_model_optimization/api
 _sparsity_api_dir = _os.path.dirname(
