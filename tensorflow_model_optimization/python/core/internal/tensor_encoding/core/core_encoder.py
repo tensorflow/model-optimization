@@ -97,7 +97,7 @@ class Encoder(object):
 
     Returns:
       A dictionary with two keys: `EncoderKeys.COMMUTE` and
-      `EncoderKeys.CHILDREN`. The `EncoderKeys.STATE` key maps to `True` or
+      `EncoderKeys.CHILDREN`. The `EncoderKeys.COMMUTE` key maps to `True` or
       `False`, based on whether the encoding stage controlled by this class
       comutes with sum. The `EncoderKeys.CHILDREN` key maps to a dictionary with
       the same keys as `self.children`, each of which maps to an object like
