@@ -14,7 +14,7 @@
 # ==============================================================================
 """Keras ClusterWeights wrapper API."""
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python.keras import initializers, backend as k
 from tensorflow.python.keras.layers import Wrapper
 

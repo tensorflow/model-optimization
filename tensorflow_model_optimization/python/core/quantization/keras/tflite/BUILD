@@ -87,6 +87,7 @@ py_test(
         ":tflite_quantize_registry",
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
