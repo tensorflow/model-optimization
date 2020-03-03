@@ -194,6 +194,31 @@ class GatherEncoderTest(tf.test.TestCase, parameterized.TestCase):
       self.assertAllClose(np.array([1.0, 3.0]) * num_summands, data.decoded_x)
 
   @tf_test_util.run_all_in_graph_and_eager_modes
+  def test_full_commutativity_with_sum(self):
+    """Tests that fully commutes with sum property works."""
+    spec = tf.TensorSpec((2,), tf.float32)
+
+    encoder = gather_encoder.GatherEncoder.from_encoder(
+        core_encoder.EncoderComposer(test_utils.TimesTwoEncodingStage()).make(),
+        spec)
+    self.assertTrue(encoder.fully_commutes_with_sum)
+
+    encoder = gather_encoder.GatherEncoder.from_encoder(
+        core_encoder.EncoderComposer(
+            test_utils.TimesTwoEncodingStage()).add_parent(
+                test_utils.TimesTwoEncodingStage(), T2_VALS).make(), spec)
+    self.assertTrue(encoder.fully_commutes_with_sum)
+
+    encoder = core_encoder.EncoderComposer(
+        test_utils.SignIntFloatEncodingStage())
+    encoder.add_child(test_utils.TimesTwoEncodingStage(), SIF_SIGNS)
+    encoder.add_child(test_utils.PlusOneEncodingStage(), SIF_INTS)
+    encoder.add_child(test_utils.TimesTwoEncodingStage(), SIF_FLOATS).add_child(
+        test_utils.PlusOneOverNEncodingStage(), T2_VALS)
+    encoder = gather_encoder.GatherEncoder.from_encoder(encoder.make(), spec)
+    self.assertFalse(encoder.fully_commutes_with_sum)
+
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_state_aggregation_modes(self):
     """Tests that all state updates tensors can be aggregated."""
     x_fn = lambda: tf.random.uniform((5,))
