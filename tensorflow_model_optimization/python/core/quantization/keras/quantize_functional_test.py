@@ -65,8 +65,7 @@ class QuantizeFunctionalTest(tf.test.TestCase, parameterized.TestCase):
       test_utils.convert_keras_to_tflite(
           model=quantized_model,
           output_path=quantized_tflite_file,
-          is_quantized=True,
-          inference_input_type=tf.lite.constants.FLOAT)
+          is_quantized=True)
     quantized_model_tflite_accuracy = test_utils_mnist.eval_tflite(
         quantized_tflite_file)
 

@@ -123,7 +123,8 @@ class FoldedBatchNormTestBase(tf.test.TestCase):
               '_ConvBatchNorm2D': _ConvBatchNorm2D,
               '_DepthwiseConvBatchNorm2D': _DepthwiseConvBatchNorm2D,
           },
-          is_quantized=is_tflite_quantized)
+          is_quantized=is_tflite_quantized,
+          inference_input_type=tf.lite.constants.INT8)
 
     interpreter = tf.lite.Interpreter(model_path=tflite_file)
     interpreter.allocate_tensors()

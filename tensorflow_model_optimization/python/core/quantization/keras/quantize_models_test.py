@@ -27,7 +27,6 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow.python.keras import keras_parameterized
-from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils
 
@@ -103,9 +102,6 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters(_KERAS_APPLICATION_MODELS)
   def testModelEndToEnd(self, model_type):
-    if not compat.is_v1_apis():
-      return
-
     # 1. Check whether quantized model graph can be constructed.
     model = self._get_model(model_type)
     model = quantize.quantize_model(model)
@@ -120,8 +116,7 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
     _, tflite_file = tempfile.mkstemp('.tflite')
     print('TFLite File: ', tflite_file)
     with quantize.quantize_scope():
-      utils.convert_keras_to_tflite(
-          model, tflite_file, inference_input_type=tf.lite.constants.FLOAT)
+      utils.convert_keras_to_tflite(model, tflite_file)
 
     # 4. Verify input runs on converted model.
     self._verify_tflite(tflite_file, x_train, y_train)
