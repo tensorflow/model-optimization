@@ -216,6 +216,16 @@ class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
     }
 
 
+class Conv2DBatchNormActivationQuantize(Conv2DBatchNormReLUQuantize):
+  """Ensure FQ does not get placed between Conv, BatchNorm and ReLU."""
+
+  def pattern(self):
+    return LayerPattern(
+        'Activation',
+        config={'activation': 'relu'},
+        inputs=[Conv2DBatchNormQuantize.pattern(self)])
+
+
 class InputLayerQuantize(transforms.Transform):
   """Quantizes InputLayer, by adding QuantizeLayer after it.
 

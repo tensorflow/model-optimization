@@ -39,6 +39,9 @@ DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 
 keras = tf.keras
 
+Conv2DBatchNormActivationQuantize = tflite_transforms.Conv2DBatchNormActivationQuantize
+Conv2DBatchNormReLUQuantize = tflite_transforms.Conv2DBatchNormReLUQuantize
+
 
 # TODO(alanchiao): reduce redundancy by parameterizing on Depthwise vs Conv.
 class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
@@ -144,10 +147,12 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
       self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
 
   @staticmethod
-  def _get_model(layer_type, include_activation):
+  def _get_model(layer_type, activation_type):
     activation = None
-    if include_activation:
+    if activation_type == 'relu':
       activation = keras.layers.ReLU(6.0)
+    elif activation_type == 'act_relu':
+      activation = keras.layers.Activation('relu')
 
     if layer_type == 'Conv2D':
       return Conv2DModel.get_nonfolded_batchnorm_model(
@@ -186,14 +191,20 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(
         transformed_model.predict(inputs), model.predict(inputs))
 
-  @parameterized.parameters('Conv2D', 'DepthwiseConv2D')
-  def testConv2DBatchNormReLUQuantize(self, layer_type):
-    model = self._get_model(layer_type, True)
+  @parameterized.parameters(
+      ('Conv2D', 'relu', Conv2DBatchNormReLUQuantize),
+      ('Conv2D', 'act_relu', Conv2DBatchNormActivationQuantize),
+      ('DepthwiseConv2D', 'relu', Conv2DBatchNormReLUQuantize),
+      ('DepthwiseConv2D', 'act_relu', Conv2DBatchNormActivationQuantize),
+  )
+  def testConv2DBatchNormReLUQuantize(
+      self, layer_type, activation_type, transform_type):
+    model = self._get_model(layer_type, activation_type)
     input_shape = self._get_input_shape(layer_type)
 
     transformed_model, updated_metadata = ModelTransformer(
         model,
-        [tflite_transforms.Conv2DBatchNormReLUQuantize()],
+        [transform_type()],
     ).transform()
 
     conv_layer = transformed_model.layers[1]
