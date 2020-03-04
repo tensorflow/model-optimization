@@ -21,6 +21,7 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
 
@@ -92,6 +93,9 @@ class TFLiteQuantizeRegistryTest(tf.test.TestCase, _TestHelper):
     self.assertTrue(self.quantize_registry.supports(l.Conv2D(10, (2, 2))))
 
   def testSupports_KerasRNNLayers(self):
+    if not compat.is_v1_apis():
+      return
+
     self.assertTrue(self.quantize_registry.supports(l.LSTM(10)))
     self.assertTrue(self.quantize_registry.supports(l.GRU(10)))
 
@@ -126,6 +130,9 @@ class TFLiteQuantizeRegistryTest(tf.test.TestCase, _TestHelper):
       self.quantize_registry.get_quantize_config(self.CustomLayer())
 
   def testReturnsConfig_KerasLayer(self):
+    if not compat.is_v1_apis():
+      return
+
     model = keras.Sequential([(
         l.Dense(2, input_shape=(3,)))])
     layer = model.layers[0]
@@ -162,6 +169,9 @@ class TFLiteQuantizeRegistryTest(tf.test.TestCase, _TestHelper):
     self._assert_activation_quantizers(output_quantizers)
 
   def testReturnsConfig_KerasRNNLayer(self):
+    if not compat.is_v1_apis():
+      return
+
     model = keras.Sequential([(
         l.LSTM(2, input_shape=(3, 2)))])
     layer = model.layers[0]
@@ -247,6 +257,9 @@ class TFLiteQuantizeConfigTest(tf.test.TestCase, _TestHelper):
     self.assertEqual([layer.activation], activations)
 
   def testSetsQuantizeWeights(self):
+    if not compat.is_v1_apis():
+      return
+
     layer = self._simple_dense_layer()
     quantize_kernel = K.variable(np.ones(layer.kernel.shape.as_list()))
 

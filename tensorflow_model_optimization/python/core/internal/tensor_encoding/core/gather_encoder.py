@@ -374,6 +374,11 @@ class GatherEncoder(object):
     return self._tensorspec
 
   @property
+  def fully_commutes_with_sum(self):
+    # If any element is not True, the whole thing does not fully commute.
+    return sum(tf.nest.flatten(self._commuting_structure))
+
+  @property
   def state_update_aggregation_modes(self):
     """Returns `state_update_aggregation_modes` of the underlying `Encoder`."""
     return self._state_update_aggregation_modes

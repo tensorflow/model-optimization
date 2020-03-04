@@ -17,7 +17,7 @@
 import abc
 
 import six
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python.keras import backend as k
 
 

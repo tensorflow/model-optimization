@@ -28,13 +28,14 @@ import numpy as np
 from six.moves import range
 import tensorflow as tf
 
-from tensorflow.python import keras
-from tensorflow.python.keras import activations
-from tensorflow.python.platform import test
+from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
+
+activations = tf.keras.activations
+keras = tf.keras
 
 _ConvBatchNorm2D = conv_batchnorm._ConvBatchNorm2D
 _DepthwiseConvBatchNorm2D = conv_batchnorm._DepthwiseConvBatchNorm2D
@@ -42,7 +43,7 @@ Conv2DModel = conv_batchnorm_test_utils.Conv2DModel
 DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 
 
-class FoldedBatchNormTestBase(test.TestCase):
+class FoldedBatchNormTestBase(tf.test.TestCase):
 
   @staticmethod
   def _get_asymmetric_quant_params(real_min, real_max, quant_min, quant_max):
@@ -184,10 +185,16 @@ class ConvBatchNorm2DTest(FoldedBatchNormTestBase):
         self._get_nonfolded_batchnorm_model())
 
   def testEquivalentToFloatTFLite(self):
+    if not compat.is_v1_apis():
+      return
+
     tf_model = self._get_folded_batchnorm_model(is_quantized=False)
     self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedEquivalentToQuantizedTFLite(self):
+    if not compat.is_v1_apis():
+      return
+
     tf_model = self._get_folded_batchnorm_model(is_quantized=True)
     self._test_equal_tf_and_tflite_outputs(tf_model, is_tflite_quantized=True)
 
@@ -243,10 +250,16 @@ class DepthwiseConvBatchNorm2DTest(FoldedBatchNormTestBase):
         self._get_nonfolded_batchnorm_model())
 
   def testEquivalentToFloatTFLite(self):
+    if not compat.is_v1_apis():
+      return
+
     tf_model = self._get_folded_batchnorm_model(is_quantized=False)
     self._test_equal_tf_and_tflite_outputs(tf_model)
 
   def testQuantizedEquivalentToQuantizedTFLite(self):
+    if not compat.is_v1_apis():
+      return
+
     tf_model = self._get_folded_batchnorm_model(is_quantized=True)
     self._test_equal_tf_and_tflite_outputs(tf_model, is_tflite_quantized=True)
 
@@ -276,4 +289,4 @@ class DepthwiseConvBatchNorm2DTest(FoldedBatchNormTestBase):
 
 
 if __name__ == '__main__':
-  test.main()
+  tf.test.main()

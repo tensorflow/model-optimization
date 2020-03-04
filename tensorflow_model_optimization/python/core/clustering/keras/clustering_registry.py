@@ -17,7 +17,7 @@
 import abc
 
 import six
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 from tensorflow.python.keras import layers
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
