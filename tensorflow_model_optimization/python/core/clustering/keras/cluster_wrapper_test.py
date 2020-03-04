@@ -38,42 +38,64 @@ ClusteringLookupRegistry = clustering_registry.ClusteringLookupRegistry
 
 
 class NonClusterableLayer(layers.Dense):
-  pass
+  """A custom layer that is not clusterable."""
 
 
 class AlreadyClusterableLayer(layers.Dense, clusterable_layer.ClusterableLayer):
+  """A custom layer that is clusterable."""
 
   def get_clusterable_weights(self):
     pass
 
 
 class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
+  """Unit tests for the cluster_wrapper module."""
 
   def testCannotBeInitializedWithNonLayerObject(self):
+    """
+    Verifies that ClusterWeights cannot be initialized with an object that is
+    not an instance of keras.layers.Layer.
+    """
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights({
           'this': 'is not a Layer instance'
       }, number_of_clusters=13, cluster_centroids_init='linear')
 
   def testCannotBeInitializedWithNonClusterableLayer(self):
+    """
+    Verifies that ClusterWeights cannot be initialized with a non-clusterable
+    custom layer.
+    """
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(NonClusterableLayer(10),
                                      number_of_clusters=13,
                                      cluster_centroids_init='linear')
 
   def testCanBeInitializedWithClusterableLayer(self):
+    """
+    Verifies that ClusterWeights can be initialized with a built-in clusterable
+    layer.
+    """
     l = cluster_wrapper.ClusterWeights(layers.Dense(10),
                                        number_of_clusters=13,
                                        cluster_centroids_init='linear')
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
   def testCannotBeInitializedWithNonIntegerNumberOfClusters(self):
+    """
+    Verifies that ClusterWeights cannot be initialized with a string value
+    provided for the number of clusters.
+    """
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters="13",
                                      cluster_centroids_init='linear')
 
   def testCannotBeInitializedWithFloatNumberOfClusters(self):
+    """
+    Verifies that ClusterWeights cannot be initialized with a decimal value
+    provided for the number of clusters.
+    """
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters=13.4,
@@ -86,12 +108,20 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   )
   def testCannotBeInitializedWithNumberOfClustersLessThanTwo(
       self, number_of_clusters):
+    """
+    Verifies that ClusterWeights cannot be initialized with less than two
+    clusters.
+    """
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(layers.Dense(10),
                                      number_of_clusters=number_of_clusters,
                                      cluster_centroids_init='linear')
 
   def testCanBeInitializedWithAlreadyClusterableLayer(self):
+    """
+    Verifies that ClusterWeights can be initialized with a custom clusterable
+    layer.
+    """
     layer = AlreadyClusterableLayer(10)
     l = cluster_wrapper.ClusterWeights(layer,
                                        number_of_clusters=13,
@@ -99,6 +129,10 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
   def testIfLayerHasBatchShapeClusterWeightsMustHaveIt(self):
+    """
+    Verifies that the ClusterWeights instance created from a layer that has
+    a batch shape attribute, will also have this attribute.
+    """
     l = cluster_wrapper.ClusterWeights(layers.Dense(10, input_shape=(10,)),
                                        number_of_clusters=13,
                                        cluster_centroids_init='linear')
@@ -111,9 +145,11 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   def testValuesAreClusteredAfterStripping(self,
                                            number_of_clusters,
                                            cluster_centroids_init):
-    # We want to make sure that for any number of clusters and any
-    # initializations methods there is always no more than number_of_clusters
-    # unique points after stripping the model
+    """
+    Verifies that, for any number of clusters and any centroid initialization
+    method, the number of unique weight values after stripping is always less
+    or equal to number_of_clusters.
+    """
     original_model = tf.keras.Sequential([
         layers.Dense(32, input_shape=(10,)),
     ])

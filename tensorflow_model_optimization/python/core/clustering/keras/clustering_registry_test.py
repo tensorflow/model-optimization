@@ -35,6 +35,7 @@ ClusteringLookupRegistry = clustering_registry.ClusteringLookupRegistry
 
 
 class ClusteringAlgorithmTest(parameterized.TestCase):
+  """Unit tests for clustering lookup algorithms"""
 
   def _pull_values(self, ca, pulling_indices, expected_output):
     pulling_indices_np = np.array(pulling_indices)
@@ -53,6 +54,9 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
                          clustering_centroids,
                          pulling_indices,
                          expected_output):
+    """
+    Verifies that DenseWeightsCA works as expected.
+    """
     ca = clustering_registry.DenseWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
 
@@ -64,6 +68,9 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
                         clustering_centroids,
                         pulling_indices,
                         expected_output):
+    """
+    Verifies that BiasWeightsCA works as expected.
+    """
     ca = clustering_registry.BiasWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
 
@@ -77,19 +84,25 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
                                  clustering_centroids,
                                  pulling_indices,
                                  expected_output):
+    """
+    Verifies that ConvolutionalWeightsCA works as expected.
+    """
     ca = clustering_registry.ConvolutionalWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
 
 
 class CustomLayer(layers.Layer):
-  pass
+  """A custom non-clusterable layer class."""
 
 
 class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
+  """Unit tests for the ClusteringLookupRegistry class."""
 
   def testLookupHasEverythingFromRegistry(self):
-    # So basically we want to make sure that every layer that has non-empty
-    # ClusteringRegistry records is also presented in the ClusteringLookup
+    """
+    Verifies that every layer that has non-empty ClusteringRegistry records is
+    also presented in the ClusteringLookup.
+    """
     for layer, clustering_record in ClusterRegistry._LAYERS_WEIGHTS_MAP.items():
       if clustering_record == []:
         continue
@@ -100,11 +113,19 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
         self.assertIn(cr, ClusteringLookupRegistry._LAYERS_RESHAPE_MAP[layer])
 
   def testGetClusteringImplFailsWithUnknonwClassUnknownWeight(self):
+    """
+    Verifies that get_clustering_impl() raises an error when invoked with an
+    unsupported layer class and an unsupported weight name.
+    """
     with self.assertRaises(ValueError):
       ClusteringLookupRegistry.get_clustering_impl(CustomLayer(),
                                                    'no_such_weight')
 
   def testGetClusteringImplFailsWithKnonwClassUnknownWeight(self):
+    """
+    Verifies that get_clustering_impl() raises an error when invoked with a
+    supported layer class and an unsupported weight name.
+    """
     with self.assertRaises(ValueError):
       ClusteringLookupRegistry.get_clustering_impl(layers.Dense(10),
                                                    'no_such_weight')
@@ -117,11 +138,19 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
                                                  layer_type,
                                                  weight,
                                                  expected):
+    """
+    Verifies that get_clustering_impl() returns the expected clustering lookup
+    algorithm for the inputs provided.
+    """
     # layer_type is a class, thus constructing an object here
     self.assertTrue(ClusteringLookupRegistry.get_clustering_impl(
         layer_type(32, 3), weight) is expected)
 
   def testRegisterNewImplWorks(self):
+    """
+    Verifies that registering a custom clustering lookup algorithm works as
+    expected.
+    """
     class NewKernelCA(clustering_registry.AbstractClusteringAlgorithm):
 
       def get_pulling_indices(self, weight):
@@ -138,10 +167,18 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
         CustomLayer(), 'new_kernel') is NewKernelCA)
 
   def testFailsIfNotADictIsGivenAsInput(self):
+    """
+    Verifies that registering a custom clustering lookup algorithm fails if the
+    input provided is not a dict.
+    """
     with self.assertRaises(TypeError):
       ClusteringLookupRegistry.register_new_implementation([1, 2, 3, 4])
 
   def testFailsIfNotADictIsGivenAsConcreteImplementation(self):
+    """
+    Verifies that registering a custom clustering lookup algorithm fails if the
+    input provided for the concrete implementation is not a dict.
+    """
     with self.assertRaises(TypeError):
       ClusteringLookupRegistry.register_new_implementation({
           ClusteringLookupRegistry: [('new_kernel', lambda x: x)]
@@ -149,10 +186,14 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
 
 
 class ClusterRegistryTest(test.TestCase):
+  """Unit tests for the ClusteringRegistry class."""
+
   class CustomLayerFromClusterableLayer(layers.Dense):
+    """A custom layer class derived from a built-in clusterable layer."""
     pass
 
   class MinimalRNNCell(keras.layers.Layer):
+    """A minimal RNN cell implementation."""
 
     def __init__(self, units, **kwargs):
       self.units = units
@@ -177,6 +218,7 @@ class ClusterRegistryTest(test.TestCase):
 
   class MinimalRNNCellClusterable(MinimalRNNCell,
                                   clusterable_layer.ClusterableLayer):
+    """A clusterable minimal RNN cell implementation."""
 
     def get_clusterable_weights(self):
       return [
@@ -185,56 +227,102 @@ class ClusterRegistryTest(test.TestCase):
       ]
 
   def testSupportsKerasClusterableLayer(self):
+    """
+    Verifies that ClusterRegistry supports a built-in clusterable layer.
+    """
     self.assertTrue(ClusterRegistry.supports(layers.Dense(10)))
 
   def testSupportsKerasClusterableLayerAlias(self):
+    """
+    Verifies that ClusterRegistry supports a built-in clusterable layer alias.
+    """
     # layers.Conv2D maps to layers.convolutional.Conv2D
     self.assertTrue(ClusterRegistry.supports(layers.Conv2D(10, 5)))
 
   def testSupportsKerasNonClusterableLayer(self):
+    """
+    Verifies that ClusterRegistry supports a built-in non-clusterable layer.
+    """
     # Dropout is a layer known to not be clusterable.
     self.assertTrue(ClusterRegistry.supports(layers.Dropout(0.5)))
 
   def testDoesNotSupportKerasUnsupportedLayer(self):
+    """
+    Verifies that ClusterRegistry does not support an unknown built-in layer.
+    """
     # ConvLSTM2D is a built-in keras layer but not supported.
     self.assertFalse(ClusterRegistry.supports(layers.ConvLSTM2D(2, (5, 5))))
 
   def testSupportsKerasRNNLayers(self):
+    """
+    Verifies that ClusterRegistry supports the expected built-in RNN layers.
+    """
     self.assertTrue(ClusterRegistry.supports(layers.LSTM(10)))
     self.assertTrue(ClusterRegistry.supports(layers.GRU(10)))
     self.assertTrue(ClusterRegistry.supports(layers.SimpleRNN(10)))
 
   def testDoesNotSupportKerasRNNLayerUnknownCell(self):
+    """
+    Verifies that ClusterRegistry does not support a custom non-clusterable RNN
+    cell.
+    """
     self.assertFalse(ClusterRegistry.supports(
         keras.layers.RNN(ClusterRegistryTest.MinimalRNNCell(32))))
 
   def testSupportsKerasRNNLayerClusterableCell(self):
+    """
+    Verifies that ClusterRegistry supports a custom clusterable RNN cell.
+    """
     self.assertTrue(ClusterRegistry.supports(
         keras.layers.RNN(ClusterRegistryTest.MinimalRNNCellClusterable(32))))
 
   def testDoesNotSupportCustomLayer(self):
+    """
+    Verifies that ClusterRegistry does not support a custom non-clusterable
+    layer.
+    """
     self.assertFalse(ClusterRegistry.supports(CustomLayer(10)))
 
   def testDoesNotSupportCustomLayerInheritedFromClusterableLayer(self):
+    """
+    Verifies that ClusterRegistry does not support a custom layer derived from
+    a clusterable layer.
+    """
     self.assertFalse(
         ClusterRegistry.supports(
             ClusterRegistryTest.CustomLayerFromClusterableLayer(10)))
 
   def testMakeClusterableRaisesErrorForKerasUnsupportedLayer(self):
+    """
+    Verifies that an unsupported built-in layer cannot be made clusterable by
+    calling make_clusterable().
+    """
     with self.assertRaises(ValueError):
       ClusterRegistry.make_clusterable(layers.ConvLSTM2D(2, (5, 5)))
 
   def testMakeClusterableRaisesErrorForCustomLayer(self):
+    """
+    Verifies that a custom non-clusterable layer cannot be made clusterable by
+    calling make_clusterable().
+    """
     with self.assertRaises(ValueError):
       ClusterRegistry.make_clusterable(CustomLayer(10))
 
   def testMakeClusterableRaisesErrorForCustomLayerInheritedFromClusterableLayer(
       self):
+    """
+    Verifies that a non-clusterable layer derived from a clusterable layer
+    cannot be made clusterable by calling make_clusterable().
+    """
     with self.assertRaises(ValueError):
       ClusterRegistry.make_clusterable(
           ClusterRegistryTest.CustomLayerFromClusterableLayer(10))
 
   def testMakeClusterableWorksOnKerasClusterableLayer(self):
+    """
+    Verifies that make_clusterable() works as expected on a built-in
+    clusterable layer.
+    """
     layer = layers.Dense(10)
     with self.assertRaises(AttributeError):
       layer.get_clusterable_weights()
@@ -247,6 +335,10 @@ class ClusterRegistryTest(test.TestCase):
                      layer.get_clusterable_weights())
 
   def testMakeClusterableWorksOnKerasNonClusterableLayer(self):
+    """
+    Verifies that make_clusterable() works as expected on a built-in
+    non-clusterable layer.
+    """
     layer = layers.Dropout(0.5)
     with self.assertRaises(AttributeError):
       layer.get_clusterable_weights()
@@ -256,6 +348,10 @@ class ClusterRegistryTest(test.TestCase):
     self.assertEqual([], layer.get_clusterable_weights())
 
   def testMakeClusterableWorksOnKerasRNNLayer(self):
+    """
+    Verifies that make_clusterable() works as expected on a built-in
+    RNN layer.
+    """
     layer = layers.LSTM(10)
     with self.assertRaises(AttributeError):
       layer.get_clusterable_weights()
@@ -270,6 +366,10 @@ class ClusterRegistryTest(test.TestCase):
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
   def testMakeClusterableWorksOnKerasRNNLayerWithRNNCellsParams(self):
+    """
+    Verifies that make_clusterable() works as expected on a built-in
+    RNN layer with built-in RNN cells.
+    """
     cell1 = layers.LSTMCell(10)
     cell2 = layers.GRUCell(5)
     layer = layers.RNN([cell1, cell2])
@@ -288,6 +388,10 @@ class ClusterRegistryTest(test.TestCase):
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
   def testMakeClusterableWorksOnKerasRNNLayerWithClusterableCell(self):
+    """
+    Verifies that make_clusterable() works as expected on a built-in
+    RNN layer with a custom clusterable RNN cell.
+    """
     cell1 = layers.LSTMCell(10)
     cell2 = ClusterRegistryTest.MinimalRNNCellClusterable(5)
     layer = layers.RNN([cell1, cell2])
@@ -306,6 +410,10 @@ class ClusterRegistryTest(test.TestCase):
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
   def testMakeClusterableRaisesErrorOnRNNLayersUnsupportedCell(self):
+    """
+    Verifies that make_clusterable() raises an exception when invoked with a
+    built-in RNN layer that contains a non-clusterable custom RNN cell.
+    """
     with self.assertRaises(ValueError):
       ClusterRegistry.make_clusterable(layers.RNN(
           [layers.LSTMCell(10), ClusterRegistryTest.MinimalRNNCell(5)]))

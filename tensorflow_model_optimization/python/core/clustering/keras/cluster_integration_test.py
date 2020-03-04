@@ -27,9 +27,13 @@ test = tf.test
 
 
 class ClusterIntegrationTest(test.TestCase):
+  """Integration tests for clustering."""
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testValuesRemainClusteredAfterTraining(self):
+    """
+    Verifies that training a clustered model does not destroy the clusters.
+    """
     number_of_clusters = 10
     original_model = keras.Sequential([
         layers.Dense(2, input_shape=(2,)),
