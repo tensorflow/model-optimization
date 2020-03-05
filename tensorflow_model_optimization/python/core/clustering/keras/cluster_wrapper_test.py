@@ -131,48 +131,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     # Make sure that the stripped layer is the Dense one
     self.assertIsInstance(stripped_model.layers[0], layers.Dense)
 
-  @tf_test_util.run_in_graph_and_eager_modes
-  def testValuesRemainClusteredAfterTraining(self):
-    number_of_clusters = 10
-    original_model = tf.keras.Sequential([
-        layers.Dense(2, input_shape=(2,)),
-        layers.Dense(2),
-    ])
-    clustered_model = cluster.cluster_weights(
-        original_model,
-        number_of_clusters=number_of_clusters,
-        cluster_centroids_init='linear'
-    )
-
-    clustered_model.compile(
-        loss=tf.keras.losses.categorical_crossentropy,
-        optimizer='adam',
-        metrics=['accuracy']
-    )
-
-    def dataset_generator():
-      x_train = np.array([
-          [0, 1],
-          [2, 0],
-          [0, 3],
-          [4, 1],
-          [5, 1],
-      ])
-      y_train = np.array([
-          [0, 1],
-          [1, 0],
-          [1, 0],
-          [0, 1],
-          [0, 1],
-      ])
-      for x, y in zip(x_train, y_train):
-        yield np.array([x]), np.array([y])
-
-    clustered_model.fit_generator(dataset_generator(), steps_per_epoch=1)
-    stripped_model = cluster.strip_clustering(clustered_model)
-    weights_as_list = stripped_model.get_weights()[0].reshape(-1,).tolist()
-    unique_weights = set(weights_as_list)
-    self.assertLessEqual(len(unique_weights), number_of_clusters)
 
 if __name__ == '__main__':
   tf.disable_v2_behavior()

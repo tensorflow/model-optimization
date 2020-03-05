@@ -113,3 +113,15 @@ py_test(
         # tensorflow dep1,
     ],
 )
+
+py_test(
+    name = "cluster_integration_test",
+    size = "medium",
+    srcs = ["cluster_integration_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cluster",
+        # tensorflow dep1,
+    ],
+)
