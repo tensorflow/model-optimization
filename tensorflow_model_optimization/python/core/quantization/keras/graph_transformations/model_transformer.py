@@ -40,7 +40,8 @@ class ModelTransformer(object):
       model: Keras model to be transformed.
       transforms: List of transforms to be applied to the model.
       candidate_layers: Names of layers which may be transformed. Only layers
-        whose names are in candidate_layers are matched against patterns.
+        whose names are in candidate_layers are matched against patterns. The
+        default is that all layers may be transformed.
       layer_metadata: Dictionary of metadata associated with each layer in the
         model. The keys are layer names.
     """
