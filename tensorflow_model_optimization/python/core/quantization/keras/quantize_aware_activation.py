@@ -112,8 +112,9 @@ class QuantizeAwareActivation(object):
       self._min_pre_activation, self._max_pre_activation = \
         quantizer.build(None, 'pre_activation', quantize_wrapper)
 
-    self._min_post_activation, self._max_post_activation = \
-        quantizer.build(None, 'post_activation', quantize_wrapper)
+    if self._should_post_quantize():
+      self._min_post_activation, self._max_post_activation = \
+          quantizer.build(None, 'post_activation', quantize_wrapper)
 
   @staticmethod
   def _name(activation):

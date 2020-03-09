@@ -92,6 +92,8 @@ class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
         [0.0, 0.0, 0.0, 0.04705906, 0.09411764, 3.011765,
          5.9764705]).reshape(7, 1)
 
+    for weight in layer.weights:
+      self.assertIn('post_activation', weight.name)
     self.assertAllClose(expected_activation, model.predict(x))
 
   def testAppliesQuantizationPreActivation(self):
@@ -110,6 +112,8 @@ class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
     # Softmax([0.9882355, 1.9764705]) = [0.27126083, 0.72873914]
     expected_activation = np.array([[0.27126083, 0.72873914]])
 
+    for weight in layer.weights:
+      self.assertIn('pre_activation', weight.name)
     self.assertAllClose(expected_activation, model.predict(x))
 
   def testDoesNotQuantizeNoOpActivation(self):
@@ -121,6 +125,7 @@ class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
 
     x = np.array([[-2.0, -1.0, 1.0, 2.0]])
     self.assertAllClose(x, model.predict(x))
+    self.assertEmpty(layer.weights)
 
   @parameterized.parameters(
       (activations.get('relu'), {'activation': 'relu'}),
