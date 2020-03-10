@@ -150,7 +150,7 @@ def quantize_annotate_model(to_annotate):
       to_annotate, input_tensors=None, clone_function=_add_quant_wrapper)
 
 
-def quantize_annotate_layer(to_annotate, quantize_config=None, **kwargs):
+def quantize_annotate_layer(to_annotate, quantize_config=None):
   """Annotate a layer to be quantized.
 
   This function does not actually quantize anything. It is merely to specify
@@ -170,7 +170,6 @@ def quantize_annotate_layer(to_annotate, quantize_config=None, **kwargs):
   Args:
     to_annotate: tf.keras layer to annotate to be quantized.
     quantize_config: `QuantizeConfig` to quantize layer.
-    **kwargs: Additional keyword arguments to be passed to the keras layer.
 
   Returns:
     tf.keras layer wrapped with `QuantizeAnnotate`.
@@ -182,7 +181,7 @@ def quantize_annotate_layer(to_annotate, quantize_config=None, **kwargs):
     raise ValueError('`to_annotate` can only be a tf.keras `layer` instance.')
 
   return quantize_annotate_mod.QuantizeAnnotate(
-      layer=to_annotate, quantize_config=quantize_config, **kwargs)
+      layer=to_annotate, quantize_config=quantize_config)
 
 
 def quantize_apply(model):

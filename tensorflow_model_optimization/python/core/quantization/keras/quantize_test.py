@@ -89,7 +89,7 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
   def testQuantizeAnnotateLayer(self):
     layer = keras.layers.Dense(10, input_shape=(5,))
-    wrapped_layer = quantize_annotate_layer(layer, input_shape=(5,))
+    wrapped_layer = quantize_annotate_layer(layer)
 
     self._assertWrappedLayer(wrapped_layer)
 
