@@ -158,10 +158,24 @@ class PruneLowMagnitude(Wrapper):
     # TODO(yunluli): Work-around to handle the first layer of Sequential model
     # properly. Can remove this when it is implemented in the Wrapper base
     # class.
-    # The _batch_input_shape attribute in the first layer makes a Sequential
-    # model to be built. This change makes sure that when we apply the wrapper
-    # to the whole model, this attribute is pulled into the wrapper to preserve
-    # the 'built' state of the model.
+    #
+    # Enables end-user to prune the first layer in Sequential models, while
+    # passing the input shape to the original layer.
+    #
+    # tf.keras.Sequential(
+    #   prune_low_magnitude(tf.keras.layers.Dense(2, input_shape=(3,)))
+    # )
+    #
+    # as opposed to
+    #
+    # tf.keras.Sequential(
+    #   prune_low_magnitude(tf.keras.layers.Dense(2), input_shape=(3,))
+    # )
+    #
+    # Without this code, the pruning wrapper doesn't have an input
+    # shape and being the first layer, this causes the model to not be
+    # built. Being not built is confusing since the end-user has passed an
+    # input shape.
     if not hasattr(self, '_batch_input_shape') and hasattr(
         layer, '_batch_input_shape'):
       self._batch_input_shape = self.layer._batch_input_shape

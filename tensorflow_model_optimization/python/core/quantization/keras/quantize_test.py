@@ -101,6 +101,14 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     # not modify behavior.
     self.assertAllEqual(model.predict(inputs), wrapped_model.predict(inputs))
 
+  def testQuantizeAnnotateSequentialFirstLayer_IsBuilt(self):
+    model = keras.Sequential([
+        quantize_annotate_layer(keras.layers.Dense(10, input_shape=(5,))),
+        keras.layers.Dropout(0.4)
+    ])
+
+    self.assertTrue(model.built)
+
   def testQuantizeAnnotateLayer_FailsWithModel(self):
     model = keras_test_utils.build_simple_dense_model()
 
@@ -272,7 +280,7 @@ class QuantizeApplyTest(tf.test.TestCase):
 
   def testQuantize_UsesBuiltinQuantizeConfig(self):
     annotated_model = keras.Sequential([
-        QuantizeAnnotate(keras.layers.Dense(3), input_shape=(2,))])
+        quantize_annotate_layer(keras.layers.Dense(3, input_shape=(2,)))])
 
     quantized_model = quantize_apply(annotated_model)
     quantized_layer = quantized_model.layers[0]
@@ -286,9 +294,8 @@ class QuantizeApplyTest(tf.test.TestCase):
 
   def testQuantize_UsesQuantizeConfigFromUser_NoBuiltIn(self):
     annotated_model = keras.Sequential([
-        QuantizeAnnotate(
-            self.CustomLayer(3),
-            input_shape=(2,),
+        quantize_annotate_layer(
+            self.CustomLayer(3, input_shape=(2,)),
             quantize_config=_TestQuantizeConfig())
     ])
 
@@ -304,9 +311,8 @@ class QuantizeApplyTest(tf.test.TestCase):
 
   def testQuantize_PreferenceToUserSpecifiedQuantizeConfig(self):
     annotated_model = keras.Sequential([
-        QuantizeAnnotate(
-            keras.layers.Dense(3),
-            input_shape=(2,),
+        quantize_annotate_layer(
+            keras.layers.Dense(3, input_shape=(2,)),
             quantize_config=_TestQuantizeConfig())
     ])
 
@@ -320,19 +326,31 @@ class QuantizeApplyTest(tf.test.TestCase):
   def testAppliesQuantizationToAnnotatedModel_Sequential(self):
     model = keras.Sequential([
         keras.layers.Conv2D(32, 5, input_shape=(28, 28, 1), activation='relu'),
-        QuantizeAnnotate(keras.layers.Dense(10, activation='relu')),
-        QuantizeAnnotate(keras.layers.Dense(5, activation='softmax')),
+        quantize_annotate_layer(keras.layers.Dense(10, activation='relu')),
+        quantize_annotate_layer(keras.layers.Dense(5, activation='softmax')),
     ])
 
     quantized_model = quantize_apply(model)
 
     self._assert_model_quantized(model, quantized_model, ['activation'])
 
+  def testAppliesQuantizationToAnnotatedModel_PreservesBuiltState(self):
+    model = keras_test_utils.build_simple_dense_model()
+    annotated_model = quantize_annotate_model(model)
+
+    self.assertTrue(annotated_model.built)
+
+    quantized_model = quantize_apply(annotated_model)
+
+    self.assertTrue(quantized_model.built)
+
   def _get_simple_functional_model(self):
     inputs = keras.Input(shape=(28, 28, 1))
     x = keras.layers.Conv2D(32, 5, activation='relu')(inputs)
-    x = QuantizeAnnotate(keras.layers.Dense(10, activation='relu'))(x)
-    results = QuantizeAnnotate(keras.layers.Dense(5, activation='softmax'))(x)
+    x = quantize_annotate_layer(keras.layers.Dense(10, activation='relu'))(x)
+    results = quantize_annotate_layer(
+        keras.layers.Dense(5, activation='softmax'))(
+            x)
     return keras.Model(inputs=inputs, outputs=results)
 
   def testAppliesQuantizationToAnnotatedModel_Functional(self):
@@ -355,8 +373,9 @@ class QuantizeApplyTest(tf.test.TestCase):
 
   def testQuantizesInputLayer_OutboundLayerIsQuantized(self):
     inputs = keras.Input(shape=(28, 28, 1))
-    x = QuantizeAnnotate(keras.layers.Conv2D(32, 5, activation='relu'))(inputs)
-    x = QuantizeAnnotate(keras.layers.Dense(10, activation='relu'))(x)
+    x = quantize_annotate_layer(keras.layers.Conv2D(32, 5, activation='relu'))(
+        inputs)
+    x = quantize_annotate_layer(keras.layers.Dense(10, activation='relu'))(x)
     model = keras.Model(inputs=inputs, outputs=x)
 
     quantized_model = quantize_apply(model)

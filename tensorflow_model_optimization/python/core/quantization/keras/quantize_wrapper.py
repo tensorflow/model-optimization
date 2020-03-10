@@ -58,10 +58,6 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     super(QuantizeWrapper, self).__init__(layer, **kwargs)
     self.quantize_config = quantize_config
 
-    # Ensures cloning of already built layer works.
-    if (not hasattr(self, '_batch_input_shape') and
-        hasattr(layer, '_batch_input_shape')):
-      self._batch_input_shape = self.layer._batch_input_shape  # pylint: disable=protected-access
     self._track_trackable(layer, name='layer')
 
   @staticmethod
