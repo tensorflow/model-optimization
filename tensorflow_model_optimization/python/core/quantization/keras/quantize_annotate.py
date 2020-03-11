@@ -54,6 +54,28 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
 
     self.quantize_config = quantize_config
 
+    self._track_trackable(layer, name='layer')
+    # Enables end-user to annotate the first layer in Sequential models, while
+    # passing the input shape to the original layer.
+    #
+    # tf.keras.Sequential(
+    #   quantize_annotate_layer(tf.keras.layers.Dense(2, input_shape=(3,)))
+    # )
+    #
+    # as opposed to
+    #
+    # tf.keras.Sequential(
+    #   quantize_annotate_layer(tf.keras.layers.Dense(2), input_shape=(3,))
+    # )
+    #
+    # Without this code, the QuantizeAnnotate wrapper doesn't have an input
+    # shape and being the first layer, this causes the model to not be
+    # built. Being not built is confusing since the end-user has passed an
+    # input shape.
+    if (not hasattr(self, '_batch_input_shape') and
+        hasattr(layer, '_batch_input_shape')):
+      self._batch_input_shape = self.layer._batch_input_shape  # pylint: disable=protected-access
+
   def call(self, inputs, training=None):
     return self.layer.call(inputs)
 
