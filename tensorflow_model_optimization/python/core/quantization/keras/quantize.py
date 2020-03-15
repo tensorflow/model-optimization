@@ -267,12 +267,12 @@ def quantize_apply(model):
       quantize_config = quantize_registry.get_quantize_config(layer)
 
     if not quantize_config:
-      error_msg = ('Could not find a suitable QuantizeConfig for layer {}. '
+      error_msg = ('Could not find a suitable QuantizeConfig for layer {}:{}. '
                    'Either the registry {} should be provide one, or the user '
                    'should provide one while annotating the layer using '
                    'QuantizeAnnotate.')
       raise RuntimeError(error_msg.format(
-          layer.__class__, quantize_registry.__class__))
+          layer.name, layer.__class__, quantize_registry.__class__))
 
     # `QuantizeWrapper` does not copy any additional layer params from
     # `QuantizeAnnotate`. This should generally be fine, but occasionally

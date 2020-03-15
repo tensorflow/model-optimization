@@ -237,6 +237,100 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
       self.assertIsInstance(
           layer_after_input.quantizer, quantizers.MovingAverageQuantizer)
 
+  def testConcatTransform(self):
+    r"""Tests the Concat Transform.
+
+               Input
+              /     \
+         Dense       Dense
+             \      /
+              Concat
+
+      One Dense layer has a pre-specified QuantizeConfig, whereas the other does
+      not. The Transform should ensure both the output FakeQuants are disabled,
+      and only a FakeQuant after Concat is present.
+    """
+    dense_1 = keras.layers.Dense(3)
+    dense_2 = keras.layers.Dense(3)
+    concat = keras.layers.Concatenate()
+
+    inp = keras.layers.Input((2,))
+    x1 = dense_1(inp)
+    x2 = dense_2(inp)
+    x = concat([x1, x2])
+    model = keras.Model(inp, x)
+
+    layer_metadata = {
+        # dense_1 has an existing quantize_config.
+        dense_1.name: {
+            'quantize_config': tflite_quantize_configs.OutputQuantizeConfig()}}
+    _, updated_metadata = ModelTransformer(
+        model, [tflite_transforms.ConcatTransform()],
+        layer_metadata=layer_metadata
+    ).transform()
+
+    concat_quantize_config = updated_metadata.get(
+        concat.name).get('quantize_config')
+    # Concat should quantize the output.
+    self.assertIsInstance(
+        concat_quantize_config, tflite_quantize_configs.OutputQuantizeConfig)
+    self.assertNotEmpty(concat_quantize_config.get_output_quantizers(None))
+
+    dense_1_quantize_config = updated_metadata.get(
+        dense_1.name).get('quantize_config')
+    # The existing quantize_config should do nothing for outputs.
+    self.assertIsInstance(
+        dense_1_quantize_config, tflite_quantize_configs.OutputQuantizeConfig)
+    self.assertEmpty(dense_1_quantize_config.get_output_quantizers(None))
+
+    dense_2_quantize_config = updated_metadata.get(
+        dense_2.name).get('quantize_config')
+    # The quantize_config from registry should do nothing at output.
+    self.assertEqual(
+        'TFLiteQuantizeConfig', dense_2_quantize_config.__class__.__name__)
+    self.assertEmpty(dense_2_quantize_config.get_output_quantizers(None))
+
+  def testConcatMultipleLevels(self):
+    r"""Tests case when concats applied to concats.
+
+            Input --------------.
+           /      \      |      |
+         Dense   Dense   |      |
+            \    /       |      |
+             Concat    Dense   Dense
+                 \     /        |
+                  Concat        |
+                        \      /
+                         Concat
+
+    The last Concat layer should be quantized but the rest
+    of the outputs should just feed into it.
+    """
+    inp = keras.layers.Input((3,))
+    x1 = keras.layers.Dense(3)(inp)
+    x2 = keras.layers.Dense(3)(inp)
+    x3 = keras.layers.Dense(3)(inp)
+    x4 = keras.layers.Dense(3)(inp)
+    c1 = keras.layers.Concatenate()([x1, x2])
+    c2 = keras.layers.Concatenate()([c1, x3])
+    c3 = keras.layers.Concatenate()([c2, x4])
+    model = keras.Model(inp, c3)
+    model.summary()
+
+    _, layer_metadata = ModelTransformer(
+        model, [tflite_transforms.ConcatTransform()]
+    ).transform()
+
+    for layer in model.layers[1:-1]:
+      quantize_config = layer_metadata[layer.name].get('quantize_config')
+      self.assertEmpty(quantize_config.get_output_quantizers(None))
+
+    c3_layer = model.layers[-1]
+    quantize_config = layer_metadata[c3_layer.name].get('quantize_config')
+    self.assertIsInstance(
+        quantize_config, tflite_quantize_configs.OutputQuantizeConfig)
+    self.assertNotEmpty(quantize_config.get_output_quantizers(None))
+
 
 if __name__ == '__main__':
   tf.test.main()
