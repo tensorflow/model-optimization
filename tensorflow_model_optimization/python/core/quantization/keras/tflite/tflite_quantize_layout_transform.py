@@ -53,11 +53,6 @@ class TFLiteQuantizeLayoutTransform(
       layer quantize map.)
     """
 
-    # TODO(pulkitb): Sequential models not supported yet. Remove once support is
-    # added.
-    if isinstance(model, keras.Sequential):
-      return model, layer_quantize_map
-
     transforms = [
         tflite_transforms.InputLayerQuantize(),
         tflite_transforms.Conv2DBatchNormReLUQuantize(),
