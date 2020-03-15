@@ -63,6 +63,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":model_transformer",
+        # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
     ],
