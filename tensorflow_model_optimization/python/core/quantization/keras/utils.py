@@ -56,6 +56,9 @@ def convert_keras_to_tflite(model,
           input_arrays[0]: input_quant_params
       }  # mean, std_dev values for float to quantized int8 values.
 
+    # Force full-integer for testing purposes.
+    converter.target_spec.supported_ops = [tf.lite.OpsSet.TFLITE_BUILTINS_INT8]
+
   tflite_model = converter.convert()
 
   if output_path is not None:
