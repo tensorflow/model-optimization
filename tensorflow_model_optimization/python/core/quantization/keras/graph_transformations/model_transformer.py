@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 # pylint: disable=g-explicit-length-test
-"""Apply graph transformations to a Keras model."""
+"""Apply graph transformations to a tf.keras model."""
 
 import collections
 import copy
@@ -30,7 +30,7 @@ K = tf.keras.backend
 
 
 class ModelTransformer(object):
-  """Matches patterns to apply transforms in a Keras model graph."""
+  """Matches patterns to apply transforms in a tf.keras model graph."""
 
   def __init__(
       self, model, transforms, candidate_layers=None, layer_metadata=None):
@@ -45,8 +45,9 @@ class ModelTransformer(object):
       layer_metadata: Dictionary of metadata associated with each layer in the
         model. The keys are layer names.
     """
-    if not self._is_functional_model(model):
-      raise ValueError('Only Keras functional models can be transformed.')
+    if not self._is_sequential_or_functional_model(model):
+      raise ValueError(
+          'Only tf.keras sequential or functional models can be transformed.')
 
     if layer_metadata is None:
       layer_metadata = {}
@@ -55,6 +56,11 @@ class ModelTransformer(object):
     self.transforms = transforms
     self.candidate_layers = candidate_layers
     self.layer_metadata = layer_metadata
+
+  @staticmethod
+  def _is_sequential_or_functional_model(model):
+    return ModelTransformer._is_functional_model(model) or isinstance(
+        model, keras.Sequential)
 
   @staticmethod
   def _is_functional_model(model):
@@ -68,7 +74,7 @@ class ModelTransformer(object):
     for layer in self._config['layers']:
       for inbound_node in layer['inbound_nodes']:
         for connection_info in inbound_node:
-          if connection_info[0] == check_layer['name']:
+          if connection_info[0] == check_layer['config']['name']:
             consuming_layers.append(layer)
     return consuming_layers
 
@@ -76,14 +82,14 @@ class ModelTransformer(object):
     """Returns if any tensors from the layer are outputs of the model."""
     output_consumers = []
     for output_layer in self._config['output_layers']:
-      if output_layer[0] == check_layer['name']:
+      if output_layer[0] == check_layer['config']['name']:
         output_consumers.append(output_layer)
     return output_consumers
 
   def _get_layers(self, layer_names):
     return [
         layer for layer in self._config['layers']
-        if layer['name'] in layer_names
+        if layer['config']['name'] in layer_names
     ]
 
   def _get_layer_weights(self, layer_name):
@@ -98,7 +104,8 @@ class ModelTransformer(object):
   def _match_layer(self, layer, pattern):
     """Check if specific layer matches the pattern."""
 
-    if self.candidate_layers and layer['name'] not in self.candidate_layers:
+    if self.candidate_layers and layer['config'][
+        'name'] not in self.candidate_layers:
       return False
 
     if not self._match_pattern(layer['class_name'], pattern.class_name):
@@ -114,13 +121,20 @@ class ModelTransformer(object):
 
     return True
 
-  def _match_layer_with_inputs(self, layer, pattern, is_head_node):
-    """Match pattern at this layer, and continue to match at its inputs."""
+  def _is_match_supported(self, layer, is_head_node):
+    """Check if ModelTransformer supports transformations given number of inputs and outputs at a layer.
 
-    if not self._match_layer(layer, pattern):
-      return None
+    Args:
+      layer: layer for pattern matching. Must come from a Functional model.
+      is_head_node: whether this is the head node (e.g. in A -> B , B is the
+        head node).
+
+    Returns:
+      whether match is supported.
+    """
 
     inbound_nodes = layer['inbound_nodes']
+
     if len(inbound_nodes) > 1:
       # `layer` is re-used for more than 1 connection from previous layers. If
       # a pattern matches one set of inputs and is replaced, it will break the
@@ -129,7 +143,7 @@ class ModelTransformer(object):
       # Note that theoretically it's possible to have multiple connections have
       # exactly the same pattern, and in that case the transform might be
       # applied. But that's a very complicated edge case not worth handling.
-      return None
+      return False
 
     # If a layer has multiple inbound nodes, it will produce multiple outbound
     # connections as well. Hence no need to explicitly check that.
@@ -146,18 +160,43 @@ class ModelTransformer(object):
       # of a general layer transform tool. This is not supported given no
       # motivating use case.
       if not is_head_node:
-        return None
+        return False
+
+    return True
+
+  def _get_input_layer_names(self, layer):
+    """Get the names of a layer's input layers."""
+    if self._is_functional_model(self.model):
+      inbound_nodes = layer['inbound_nodes']
+      return [connection_info[0] for connection_info in inbound_nodes[0]]
+    else:  # Sequential model.
+      layers = self._config['layers']
+      i = layers.index(layer)
+      if i == 0:
+        # First layer has no inputs.
+        return []
+      else:
+        return [layers[i - 1]['config']['name']]
+
+  def _match_layer_with_inputs(self, layer, pattern, is_head_node):
+    """Match pattern at this layer, and continue to match at its inputs."""
+
+    if not self._match_layer(layer, pattern):
+      return None
+
+    if self._is_functional_model(
+        self.model) and not self._is_match_supported(layer, is_head_node):
+      return None
 
     if len(pattern.inputs) == 0:
       # Leaf layer in pattern.
-      return LayerNode(layer, self._get_layer_weights(layer['name']), [],
-                       self._get_layer_metadata(layer['name']))
+      return LayerNode(layer, self._get_layer_weights(layer['config']['name']),
+                       [], self._get_layer_metadata(layer['config']['name']))
 
     # There is a possible edge case where a single layer may output multiple
     # tensors and multiple tensors from that layer may be used by the
     # connection. Ignoring those for now.
-    input_layer_names = [
-        connection_info[0] for connection_info in inbound_nodes[0]]
+    input_layer_names = self._get_input_layer_names(layer)
     input_layers = self._get_layers(input_layer_names)
 
     if len(input_layers) != len(pattern.inputs):
@@ -180,13 +219,13 @@ class ModelTransformer(object):
         return None
       input_match_layer_nodes.append(match_layer_node)
 
-    return LayerNode(
-        layer, self._get_layer_weights(layer['name']), input_match_layer_nodes,
-        self._get_layer_metadata(layer['name']))
+    return LayerNode(layer, self._get_layer_weights(layer['config']['name']),
+                     input_match_layer_nodes,
+                     self._get_layer_metadata(layer['config']['name']))
 
   def _find_pattern(self, pattern, matched_layers=None):
     for layer in self._config['layers']:
-      if matched_layers and layer['name'] in matched_layers:
+      if matched_layers and layer['config']['name'] in matched_layers:
         continue
       match_layer = self._match_layer_with_inputs(
           layer, pattern, is_head_node=True)
@@ -211,8 +250,32 @@ class ModelTransformer(object):
 
     return leaf_layers
 
+  @staticmethod
+  def _get_layer_names(layer_node):
+    result = [layer_node.layer['config']['name']]
+    for input_layer in layer_node.input_layers:
+      result.extend(ModelTransformer._get_layer_names(input_layer))
+    return result
+
+  def _remove_layers(self, layers_to_remove, layers_to_remove_names):
+    # Remove layers.
+    for layer_to_remove in layers_to_remove:
+      self._config['layers'].remove(layer_to_remove)
+    # Remove entry from weight and metadata maps,
+    # now that layer has been removed.
+    for layer_name in layers_to_remove_names:
+      self._layer_weights_map.pop(layer_name, None)
+      self._layer_metadata_map.pop(layer_name, None)
+
   def _replace(self, match_layer_node, replacement_layer_node):
-    """Replace the tree of match_layer_node with replacement_layer_node."""
+    """Replace the tree or chain of match_layer_node with replacement_layer_node."""
+    if self._is_functional_model(self.model):
+      self._replace_functional(match_layer_node, replacement_layer_node)
+    else:
+      self._replace_sequential(match_layer_node, replacement_layer_node)
+
+  def _replace_functional(self, match_layer_node, replacement_layer_node):
+    """Functional model: replace the tree of match_layer_node with replacement_layer_node."""
 
     # 1. Point all consumers of the head of the matching sub-tree to the head
     # replacement layer.
@@ -225,12 +288,12 @@ class ModelTransformer(object):
     for consumer in consuming_layers:
       for inbound_node in consumer['inbound_nodes']:
         for connection_info in inbound_node:
-          if connection_info[0] == match_layer_node.layer['name']:
-            connection_info[0] = replacement_layer_node.layer['name']
+          if connection_info[0] == match_layer_node.layer['config']['name']:
+            connection_info[0] = replacement_layer_node.layer['config']['name']
 
     output_consumers = self._get_output_consumers(match_layer_node.layer)
     for output_consumer in output_consumers:
-      output_consumer[0] = replacement_layer_node.layer['name']
+      output_consumer[0] = replacement_layer_node.layer['config']['name']
 
     # 2. Create inbound nodes for the replacement layers. This connects all
     # the replacement layers.
@@ -251,7 +314,7 @@ class ModelTransformer(object):
         # These are reasonable assumptions for almost all case we are
         # interested in.
         layer_node.layer['inbound_nodes'][0].append(
-            [input_layer.layer['name'], 0, 0, {}])
+            [input_layer.layer['config']['name'], 0, 0, {}])
 
         _assign_inbounds_for_replacement(input_layer)
 
@@ -262,7 +325,8 @@ class ModelTransformer(object):
 
     original_leaf_layers = self._get_leaf_layers(match_layer_node)
     original_inbound_nodes = [
-        layer['inbound_nodes'] for layer in original_leaf_layers]
+        layer['inbound_nodes'] for layer in original_leaf_layers
+    ]
 
     replacement_leaf_layers = self._get_leaf_layers(replacement_layer_node)
 
@@ -281,36 +345,70 @@ class ModelTransformer(object):
       replacement_leaf_layer['inbound_nodes'] = original_inbound_nodes
 
     # 4. Remove the original matched layers
-
-    def _get_layer_names(layer_node):
-      result = [layer_node.layer['name']]
-      for input_layer in layer_node.input_layers:
-        result.extend(_get_layer_names(input_layer))
-      return result
-
-    layers_to_remove_names = _get_layer_names(match_layer_node)
+    layers_to_remove_names = self._get_layer_names(match_layer_node)
     layers_to_remove = self._get_layers(layers_to_remove_names)
 
-    for layer_to_remove in layers_to_remove:
-      self._config['layers'].remove(layer_to_remove)
-    # Remove entry from weight map, now that layer has been removed.
-    for layer_name in layers_to_remove_names:
-      self._layer_weights_map.pop(layer_name, None)
-      self._layer_metadata_map.pop(layer_name, None)
+    self._remove_layers(layers_to_remove, layers_to_remove_names)
 
     # 5. Add in the new layers.
-
     def _add_replacement_layer(layer_node):
+      """Recursively add new layers."""
       self._config['layers'].append(layer_node.layer)
       if layer_node.weights:
-        self._layer_weights_map[layer_node.layer['name']] = layer_node.weights
+        self._layer_weights_map[layer_node.layer['config']
+                                ['name']] = layer_node.weights
       if layer_node.metadata:
-        self._layer_metadata_map[layer_node.layer['name']] = layer_node.metadata
+        self._layer_metadata_map[layer_node.layer['config']
+                                 ['name']] = layer_node.metadata
 
       for input_layer in layer_node.input_layers:
         _add_replacement_layer(input_layer)
 
     _add_replacement_layer(replacement_layer_node)
+
+  def _replace_sequential(self, match_layer_node, replacement_layer_node):
+    """Sequential model: replace the chain of match_layer_node with replacement_layer_node."""
+    # 1. Remove the original matched layers.
+    layers_to_remove_names = self._get_layer_names(match_layer_node)
+    layers_to_remove = self._get_layers(layers_to_remove_names)
+
+    # These variables are needed when adding the new layers
+    # and must be set before _remove_layers removes them.
+    first_layer_removed = layers_to_remove[-1]  # layers_to_remove is reversed.
+    first_layer_removed_index = self._config['layers'].index(
+        first_layer_removed)
+
+    self._remove_layers(layers_to_remove, layers_to_remove_names)
+
+    # 2. Add in the new layers.
+    def _get_replacement_nodes(replacement_node):
+      """Get list of replacement nodes in Sequential order."""
+      replacement_nodes = []
+
+      for input_layer in replacement_node.input_layers:
+        replacement_nodes.extend(_get_replacement_nodes(input_layer))
+
+      replacement_nodes.append(replacement_node)
+
+      return replacement_nodes
+
+    def _add_replacement_nodes(first_layer_removed_index, replacement_nodes):
+      """Add replacement nodes to Sequential model."""
+
+      # Potentially insert nodes into middle of model.
+      i = first_layer_removed_index
+      for replacement_node in replacement_nodes:
+        self._config['layers'].insert(i, replacement_node.layer)
+        if replacement_node.weights:
+          self._layer_weights_map[replacement_node.layer['config']
+                                  ['name']] = replacement_node.weights
+        if replacement_node.metadata:
+          self._layer_metadata_map[replacement_node.layer['config']
+                                   ['name']] = replacement_node.metadata
+        i += 1
+
+    replacement_nodes = _get_replacement_nodes(replacement_layer_node)
+    _add_replacement_nodes(first_layer_removed_index, replacement_nodes)
 
   @staticmethod
   def _weight_name(name):
@@ -359,7 +457,7 @@ class ModelTransformer(object):
       self._transform_matched_layers_map[self._name(transform)] = []
 
     self._transform_matched_layers_map[self._name(transform)].append(
-        layer_node.layer['name'])
+        layer_node.layer['config']['name'])
 
   def transform(self):
     """Transforms the Keras model by applying all the specified transforms.
@@ -447,7 +545,11 @@ class ModelTransformer(object):
       custom_objects.update(transform.custom_objects())
 
     # Reconstruct model from the config, using the cloned layers.
-    transformed_model = keras.Model.from_config(self._config, custom_objects)
+    if self._is_functional_model(self.model):
+      transformed_model = keras.Model.from_config(self._config, custom_objects)
+    else:
+      transformed_model = keras.Sequential.from_config(self._config,
+                                                       custom_objects)
 
     for layer in transformed_model.layers:
       weights = self._layer_weights_map.get(layer.name)

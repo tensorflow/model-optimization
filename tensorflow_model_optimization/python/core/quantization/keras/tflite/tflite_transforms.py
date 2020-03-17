@@ -15,7 +15,7 @@
 """TFLite transforms."""
 
 import collections
-
+import inspect
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
@@ -24,6 +24,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_configs
+from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
 
 LayerNode = transforms.LayerNode
 LayerPattern = transforms.LayerPattern
@@ -254,3 +255,105 @@ class InputLayerQuantize(transforms.Transform):
         'QuantizeLayer': quantize_layer.QuantizeLayer,
         'MovingAverageQuantizer': quantizers.MovingAverageQuantizer
     }
+
+
+class ConcatTransform(transforms.Transform):
+  """Transform for Concatenate. Quantize only after concatenation."""
+
+  # pylint:disable=protected-access
+
+  def pattern(self):
+    # TODO(pulkitb): Write a clean way to handle arbitrary length patterns.
+    return LayerPattern(
+        'Concatenate', inputs=[LayerPattern('.*'), LayerPattern('.*')])
+
+  def _get_layer_type(self, layer_class_name):
+    keras_layers = inspect.getmembers(tf.keras.layers, inspect.isclass)
+    for layer_name, layer_type in keras_layers:
+      if layer_name == layer_class_name:
+        return layer_type
+    return None
+
+  def _disable_output_quantize(self, quantize_config):
+    # TODO(pulkitb): Disabling quantize_config may also require handling
+    # activation quantizers. Handle that properly.
+    quantize_config.get_output_quantizers = lambda layer: []
+
+  def replacement(self, match_layer):
+    concat_layer_node = match_layer
+    feeding_layer_nodes = match_layer.input_layers
+
+    tflite_registry = tflite_quantize_registry.TFLiteQuantizeRegistry()
+
+    feed_quantize_configs = []
+    for feed_layer_node in feeding_layer_nodes:
+      quantize_config = feed_layer_node.metadata.get('quantize_config')
+      if not quantize_config:
+        layer_class = self._get_layer_type(feed_layer_node.layer['class_name'])
+        if layer_class is None:
+          # Concat has an input layer we don't recognize. Return.
+          return match_layer
+
+        if layer_class == keras.layers.Concatenate:
+          # Input layer to Concat is also Concat. Don't quantize it.
+          feed_layer_node.metadata['quantize_config'] = \
+            tflite_quantize_configs.NoOpQuantizeConfig()
+          continue
+
+        if not tflite_registry._is_supported_layer(layer_class):
+          # Feeding layer is not supported by registry
+          return match_layer
+
+        quantize_config = tflite_registry._get_quantize_config(layer_class)
+        feed_layer_node.metadata['quantize_config'] = quantize_config
+
+      feed_quantize_configs.append(quantize_config)
+
+    # TODO(pulkitb): this currently only disables output quantize config, but
+    # cannot properly handle if the FQ was added to the activation. Hand this
+    # properly.
+    for quantize_config in feed_quantize_configs:
+      self._disable_output_quantize(quantize_config)
+
+    if not concat_layer_node.metadata.get('quantize_config'):
+      concat_layer_node.metadata['quantize_config'] = \
+        tflite_quantize_configs.OutputQuantizeConfig()
+
+    return concat_layer_node
+
+  # pylint:enable=protected-access
+
+
+class ConcatTransform3Inputs(ConcatTransform):
+
+  def pattern(self):
+    return LayerPattern(
+        'Concatenate',
+        inputs=[LayerPattern('.*'), LayerPattern('.*'), LayerPattern('.*')])
+
+
+class ConcatTransform4Inputs(ConcatTransform):
+
+  def pattern(self):
+    return LayerPattern(
+        'Concatenate',
+        inputs=[LayerPattern('.*'), LayerPattern('.*'), LayerPattern('.*'),
+                LayerPattern('.*')])
+
+
+class ConcatTransform5Inputs(ConcatTransform):
+
+  def pattern(self):
+    return LayerPattern(
+        'Concatenate',
+        inputs=[LayerPattern('.*'), LayerPattern('.*'), LayerPattern('.*'),
+                LayerPattern('.*'), LayerPattern('.*')])
+
+
+class ConcatTransform6Inputs(ConcatTransform):
+
+  def pattern(self):
+    return LayerPattern(
+        'Concatenate',
+        inputs=[LayerPattern('.*'), LayerPattern('.*'), LayerPattern('.*'),
+                LayerPattern('.*'), LayerPattern('.*'), LayerPattern('.*')])

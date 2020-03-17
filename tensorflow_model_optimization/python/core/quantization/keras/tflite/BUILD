@@ -107,6 +107,7 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:transforms",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
         "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_configs",
+        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_registry",
     ],
 )
 

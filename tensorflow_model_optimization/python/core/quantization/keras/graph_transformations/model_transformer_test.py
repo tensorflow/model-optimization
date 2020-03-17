@@ -18,8 +18,9 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import numpy as np
+from absl.testing import parameterized
 
+import numpy as np
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
@@ -33,7 +34,7 @@ LayerNode = transforms.LayerNode
 keras = tf.keras
 
 
-class ModelTransformerTest(tf.test.TestCase):
+class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
 
   @staticmethod
   def _batch(dims, batch_size):
@@ -52,14 +53,27 @@ class ModelTransformerTest(tf.test.TestCase):
       dims[0] = batch_size
     return dims
 
+  @staticmethod
+  def _get_layer(model, n_excluding_input, model_type):
+    # Argument n excludes the input layer.
+    if model_type == 'functional':
+      return model.layers[n_excluding_input + 1]
+    else:
+      return model.layers[n_excluding_input]
+
   def _create_model_inputs(self, model):
     return np.random.randn(*self._batch(model.input.get_shape().as_list(), 1))
 
-  def _simple_dense_model(self):
-    inp = keras.layers.Input((3,))
-    x = keras.layers.Dense(2)(inp)
-    out = keras.layers.ReLU(6.0)(x)
-    return keras.Model(inp, out)
+  def _simple_dense_model(self, model_type='functional'):
+    if model_type == 'functional':
+      inp = keras.layers.Input((3,))
+      x = keras.layers.Dense(2)(inp)
+      out = keras.layers.ReLU(6.0)(x)
+      return keras.Model(inp, out)
+    elif model_type == 'sequential':
+      return keras.Sequential(
+          [keras.layers.Dense(2, input_shape=(3,)),
+           keras.layers.ReLU(6.0)])
 
   def _assert_config(self, expected_config, actual_config, exclude_keys=None):
     """Asserts that the two config dictionaries are equal.
@@ -129,37 +143,63 @@ class ModelTransformerTest(tf.test.TestCase):
     def custom_objects(self):
       return {'MyDense': self.MyDense}
 
-  def testReplaceSingleLayerWithSingleLayer_OneOccurrence(self):
-    model = self._simple_dense_model()
+  @parameterized.parameters(['sequential', 'functional'])
+  def testReplaceSingleLayerWithSingleLayer_OneOccurrence(self, model_type):
+    model = self._simple_dense_model(model_type)
 
     transformed_model, _ = ModelTransformer(
         model, [self.ReplaceDenseLayer()]).transform()
 
+    # build_input_shape is a TensorShape object and the two objects are not
+    # considered the same even though the shapes are the same.
     self._assert_config(model.get_config(), transformed_model.get_config(),
-                        ['class_name'])
-    self.assertEqual('MyDense', transformed_model.layers[1].__class__.__name__)
+                        ['class_name', 'build_input_shape'])
+
+    self.assertEqual(
+        'MyDense',
+        self._get_layer(transformed_model, 0, model_type).__class__.__name__)
 
     self._assert_model_results_equal(model, transformed_model)
 
-  def testReplaceSingleLayerWithSingleLayer_MultipleOccurrences(self):
-    inp = keras.layers.Input((3,))
-    x1 = keras.layers.Dense(2)(inp)
-    x2 = keras.layers.Dense(2)(inp)
-    out1 = keras.layers.ReLU(6.0)(x1)
-    out2 = keras.layers.ReLU(6.0)(x2)
-    model = keras.Model(inp, [out1, out2])
+  @parameterized.parameters(['sequential', 'functional'])
+  def testReplaceSingleLayerWithSingleLayer_MultipleOccurrences(
+      self, model_type):
+    # Note that the functional and sequential model architectures
+    # are different. The first is a tree and the second is a chain.
+    if model_type == 'functional':
+      inp = keras.layers.Input((3,))
+      x1 = keras.layers.Dense(2)(inp)
+      x2 = keras.layers.Dense(2)(inp)
+      out1 = keras.layers.ReLU(6.0)(x1)
+      out2 = keras.layers.ReLU(6.0)(x2)
+      model = keras.Model(inp, [out1, out2])
+    else:
+      model = keras.Sequential([
+          keras.layers.Dense(2, input_shape=(3,)),
+          keras.layers.Dense(2),
+          keras.layers.ReLU(6.0)
+      ])
 
     transformed_model, _ = ModelTransformer(
         model, [self.ReplaceDenseLayer()]).transform()
 
+    # build_input_shape is a TensorShape object and the two objects are not
+    # considered the same even though the shapes are the same.
     self._assert_config(model.get_config(), transformed_model.get_config(),
-                        ['class_name'])
-    self.assertEqual('MyDense', transformed_model.layers[1].__class__.__name__)
-    self.assertEqual('MyDense', transformed_model.layers[2].__class__.__name__)
+                        ['class_name', 'build_input_shape'])
+
+    self.assertEqual(
+        'MyDense',
+        self._get_layer(transformed_model, 0, model_type).__class__.__name__)
+    self.assertEqual(
+        'MyDense',
+        self._get_layer(transformed_model, 1, model_type).__class__.__name__)
 
     self._assert_model_results_equal(model, transformed_model)
 
-  def testReplaceSingleLayerWithSingleLayer_MatchParameters(self):
+  @parameterized.parameters(['sequential', 'functional'])
+  def testReplaceSingleLayerWithSingleLayer_MatchParameters(self, model_type):
+
     class RemoveBiasInDense(transforms.Transform):
       """Replaces Dense layers with matching layers with `use_bias=False`."""
 
@@ -180,19 +220,67 @@ class ModelTransformerTest(tf.test.TestCase):
 
         return LayerNode(replace_layer, match_layer_weights, [])
 
-    model = self._simple_dense_model()
+    model = self._simple_dense_model(model_type)
 
     transformed_model, _ = ModelTransformer(
         model, [RemoveBiasInDense()]).transform()
 
+    # build_input_shape is a TensorShape object and the two objects are not
+    # considered the same even though the shapes are the same.
     self._assert_config(model.get_config(), transformed_model.get_config(),
-                        ['use_bias'])
-    self.assertFalse(transformed_model.layers[1].use_bias)
+                        ['use_bias', 'build_input_shape'])
+
+    first_noninput_layer = self._get_layer(transformed_model, 0, model_type)
+    self.assertFalse(first_noninput_layer.use_bias)
 
     # Should match since bias is initialized with zeros.
     self._assert_model_results_equal(model, transformed_model)
 
-  def testReplaceSingleLayer_WithMultipleLayers(self):
+  @parameterized.parameters(['sequential', 'functional'])
+  def testReplaceSingleLayer_WithMultipleLayers(self, model_type):
+
+    class ReplaceDenseWithDenseAndActivation(transforms.Transform):
+      """Dense => (Dense -> ReLU)."""
+
+      def pattern(self):
+        return LayerPattern('Dense')
+
+      def replacement(self, match_layer):
+        activation_layer = keras.layers.Activation('linear')
+        layer_config = keras.layers.serialize(activation_layer)
+        layer_config['name'] = activation_layer.name
+
+        activation_layer_node = LayerNode(
+            layer_config, input_layers=[match_layer])
+
+        return activation_layer_node
+
+    if model_type == 'functional':
+      inp = keras.layers.Input((3,))
+      out = keras.layers.Dense(2)(inp)
+      model = keras.Model(inp, out)
+    elif model_type == 'sequential':
+      model = keras.Sequential([keras.layers.Dense(2, input_shape=(3,))])
+
+    transformed_model, _ = ModelTransformer(
+        model, [ReplaceDenseWithDenseAndActivation()]).transform()
+
+    if model_type == 'functional':
+      # Extra Input layer over Sequential.
+      num_expected_layers = 3
+    elif model_type == 'sequential':
+      num_expected_layers = 2
+
+    self.assertLen(transformed_model.layers, num_expected_layers)
+
+    self.assertIsInstance(
+        self._get_layer(transformed_model, 0, model_type), keras.layers.Dense)
+    self.assertIsInstance(
+        self._get_layer(transformed_model, 1, model_type),
+        keras.layers.Activation)
+
+  def testReplaceSingleLayer_WithMultipleLayers_InputLayer(self):
+
     class ReplaceInputWithInputAndActivation(transforms.Transform):
       """InputLayer => (InputLayer -> Activation)."""
 
@@ -218,13 +306,15 @@ class ModelTransformerTest(tf.test.TestCase):
     transformed_model, _ = ModelTransformer(
         model, [ReplaceInputWithInputAndActivation()]).transform()
 
-    self.assertEqual(5, len(transformed_model.layers))
+    self.assertLen(transformed_model.layers, 5)
     self.assertIsInstance(transformed_model.layers[0], keras.layers.InputLayer)
     self.assertIsInstance(transformed_model.layers[1], keras.layers.InputLayer)
     self.assertIsInstance(transformed_model.layers[2], keras.layers.Activation)
     self.assertIsInstance(transformed_model.layers[3], keras.layers.Activation)
 
-  def testReplaceChainOfLayers_WithSingleLayer(self):
+  @parameterized.parameters(['sequential', 'functional'])
+  def testReplaceChainOfLayers_WithSingleLayer(self, model_type):
+
     class FuseReLUIntoDense(transforms.Transform):
       """Fuse ReLU into Dense layers."""
 
@@ -243,29 +333,47 @@ class ModelTransformerTest(tf.test.TestCase):
 
         return LayerNode(replace_layer, dense_layer_weights, [])
 
-    inp = keras.layers.Input((3,))
-    out = keras.layers.Dense(2, activation='relu')(inp)
-    model_fused = keras.Model(inp, out)
+    if model_type == 'functional':
+      inp = keras.layers.Input((3,))
+      out = keras.layers.Dense(2, activation='relu')(inp)
+      model_fused = keras.Model(inp, out)
+    else:
+      model_fused = keras.Sequential(
+          [keras.layers.Dense(2, activation='relu', input_shape=(3,))])
 
-    inp = keras.layers.Input((3,))
-    x = keras.layers.Dense(2)(inp)
-    out = keras.layers.ReLU()(x)
-    model = keras.Model(inp, out)
+    if model_type == 'functional':
+      inp = keras.layers.Input((3,))
+      x = keras.layers.Dense(2)(inp)
+      out = keras.layers.ReLU()(x)
+      model = keras.Model(inp, out)
+    else:
+      model = keras.Sequential(
+          [keras.layers.Dense(2, input_shape=(3,)),
+           keras.layers.ReLU()])
     model.set_weights(model_fused.get_weights())
 
     transformed_model, _ = ModelTransformer(
         model, [FuseReLUIntoDense()]).transform()
 
     self._assert_config(
-        model_fused.get_config(), transformed_model.get_config(),
+        model_fused.get_config(),
+        transformed_model.get_config(),
         # Layers have different names in the models, but same config.
         # Consider verifying the names loosely.
-        ['input_layers', 'output_layers', 'name', 'inbound_nodes'])
+        #
+        # build_input_shape is a TensorShape object and the two objects are not
+        # considered the same even though the shapes are the same.
+        [
+            'input_layers', 'output_layers', 'name', 'inbound_nodes',
+            'build_input_shape'
+        ])
 
     self._assert_model_results_equal(model, transformed_model)
     self._assert_model_results_equal(model_fused, transformed_model)
 
-  def testReplaceChainOfLayers_WithChainOfLayers(self):
+  @parameterized.parameters(['sequential', 'functional'])
+  def testReplaceChainOfLayers_WithChainOfLayers(self, model_type):
+
     class Replace2DenseLayers(transforms.Transform):
       """Replaces 2 Dense layers with the same dense layers.
 
@@ -282,16 +390,25 @@ class ModelTransformerTest(tf.test.TestCase):
         match_layer.metadata['key'] = 'value'
         return match_layer
 
-    inp = keras.layers.Input((3,))
-    x = keras.layers.Dense(3)(inp)
-    x = keras.layers.Dense(2)(x)
-    model = keras.Model(inp, x)
+    if model_type == 'functional':
+      inp = keras.layers.Input((3,))
+      x = keras.layers.Dense(3)(inp)
+      x = keras.layers.Dense(2)(x)
+      model = keras.Model(inp, x)
+    else:
+      model = keras.Sequential(
+          [keras.layers.Dense(3, input_shape=(3,)),
+           keras.layers.Dense(2)])
 
     transformed_model, _ = ModelTransformer(
         model, [Replace2DenseLayers()]).transform()
 
     self._assert_model_results_equal(model, transformed_model)
-    self._assert_config(model.get_config(), transformed_model.get_config())
+
+    # build_input_shape is a TensorShape object and the two objects are not
+    # considered the same even though the shapes are the same.
+    self._assert_config(model.get_config(), transformed_model.get_config(),
+                        ['build_input_shape'])
 
   def testReplaceTreeOfLayers_WithSingleLayer(self):
     # TODO(pulkitb): Implement
@@ -301,7 +418,9 @@ class ModelTransformerTest(tf.test.TestCase):
     # TODO(pulkitb): Implement
     pass
 
-  def testDoesNotMatchForever_IfReplacementEqualsMatch(self):
+  @parameterized.parameters(['sequential', 'functional'])
+  def testDoesNotMatchForever_IfReplacementEqualsMatch(self, model_type):
+
     class ReplaceWithSelf(Transform):
 
       def pattern(self):
@@ -310,12 +429,15 @@ class ModelTransformerTest(tf.test.TestCase):
       def replacement(self, match_layer):
         return match_layer
 
-    model = self._simple_dense_model()
+    model = self._simple_dense_model(model_type)
 
     transformed_model, _ = ModelTransformer(
         model, [ReplaceWithSelf()]).transform()
 
-    self._assert_config(model.get_config(), transformed_model.get_config())
+    # build_input_shape is a TensorShape object and the two objects are not
+    # considered the same even though the shapes are the same.
+    self._assert_config(model.get_config(), transformed_model.get_config(),
+                        ['build_input_shape'])
 
   # Negative Tests
   # TODO(pulkitb): Add negative tests
@@ -340,11 +462,12 @@ class ModelTransformerTest(tf.test.TestCase):
     def reset(self):
       self._matched = False
 
-  def testPatternShouldOnlyMatch_CandidateLayers(self):
+  @parameterized.parameters(['sequential', 'functional'])
+  def testPatternShouldOnlyMatch_CandidateLayers(self, model_type):
     pattern = LayerPattern('ReLU', inputs=[LayerPattern('Dense')])
     transform = self.VerifyMatch(pattern)
 
-    model = self._simple_dense_model()
+    model = self._simple_dense_model(model_type)
     layer_names = [layer.name for layer in model.layers]
 
     # By default matches everything.
@@ -366,20 +489,29 @@ class ModelTransformerTest(tf.test.TestCase):
     ModelTransformer(model, [transform], [model.layers[-1].name]).transform()
     self.assertFalse(transform.matched())
 
-  def testPatternCanMatch_MultipleLayers(self):
+  @parameterized.parameters(['sequential', 'functional'])
+  def testPatternCanMatch_MultipleLayers(self, model_type):
     pattern = LayerPattern('Conv2D|DepthwiseConv2D')
     transform = self.VerifyMatch(pattern)
 
-    inp = keras.layers.Input((3, 3, 3))
-    x = keras.layers.Conv2D(3, (2, 2))(inp)
-    conv_model = keras.Model(inp, x)
+    if model_type == 'functional':
+      inp = keras.layers.Input((3, 3, 3))
+      x = keras.layers.Conv2D(3, (2, 2))(inp)
+      conv_model = keras.Model(inp, x)
+    else:
+      conv_model = keras.Sequential(
+          [keras.layers.Conv2D(3, (2, 2), input_shape=(3, 3, 3))])
 
     ModelTransformer(conv_model, [transform]).transform()
     self.assertTrue(transform.matched())
 
-    inp = keras.layers.Input((3, 3, 3))
-    x = keras.layers.DepthwiseConv2D((2, 2))(inp)
-    depth_conv_model = keras.Model(inp, x)
+    if model_type == 'functional':
+      inp = keras.layers.Input((3, 3, 3))
+      x = keras.layers.DepthwiseConv2D((2, 2))(inp)
+      depth_conv_model = keras.Model(inp, x)
+    else:
+      depth_conv_model = keras.Sequential(
+          [keras.layers.DepthwiseConv2D((2, 2), input_shape=(3, 3, 3))])
 
     transform.reset()
     ModelTransformer(depth_conv_model, [transform]).transform()
@@ -427,7 +559,9 @@ class ModelTransformerTest(tf.test.TestCase):
     ModelTransformer(model, [transform]).transform()
     self.assertFalse(transform.matched())
 
-  def testLayerMetadataPassedAndReplacedInTransforms(self):
+  @parameterized.parameters(['sequential', 'functional'])
+  def testLayerMetadataPassedAndReplacedInTransforms(self, model_type):
+
     class ReplaceLayerMetadata(Transform):
 
       def pattern(self):
@@ -438,15 +572,27 @@ class ModelTransformerTest(tf.test.TestCase):
           match_layer.metadata['key'] = 'World'
         return match_layer
 
-    model = self._simple_dense_model()
+    model = self._simple_dense_model(model_type)
+
+    dense_layer = self._get_layer(model, 0, model_type)
+    relu_layer = self._get_layer(model, 1, model_type)
+
     layer_metadata = {
-        model.layers[1].name: {'key': 'Hello'},
-        model.layers[2].name: {'key': 'Hello'},
+        dense_layer.name: {
+            'key': 'Hello'
+        },
+        relu_layer.name: {
+            'key': 'Hello'
+        },
     }
 
     expected_metadata = {
-        model.layers[1].name: {'key': 'World'},
-        model.layers[2].name: {'key': 'Hello'}
+        dense_layer.name: {
+            'key': 'World'
+        },
+        relu_layer.name: {
+            'key': 'Hello'
+        }
     }
 
     transformer = ModelTransformer(
@@ -454,7 +600,11 @@ class ModelTransformerTest(tf.test.TestCase):
     transformed_model, updated_metadata = transformer.transform()
 
     self.assertEqual(expected_metadata, updated_metadata)
-    self._assert_config(model.get_config(), transformed_model.get_config())
+
+    # build_input_shape is a TensorShape object and the two objects are not
+    # considered the same even though the shapes are the same.
+    self._assert_config(model.get_config(), transformed_model.get_config(),
+                        ['build_input_shape'])
 
   # Validation Tests
 
@@ -464,13 +614,6 @@ class ModelTransformerTest(tf.test.TestCase):
 
     with self.assertRaises(ValueError):
       ModelTransformer(MyModel(), [self.ReplaceDenseLayer()]).transform()
-
-  def testRaisesErrorForSequentialModels(self):
-    sequential_model = keras.Sequential([keras.layers.Dense(2)])
-
-    with self.assertRaises(ValueError):
-      ModelTransformer(sequential_model, [self.ReplaceDenseLayer()]).transform()
-
 
 if __name__ == '__main__':
   tf.test.main()

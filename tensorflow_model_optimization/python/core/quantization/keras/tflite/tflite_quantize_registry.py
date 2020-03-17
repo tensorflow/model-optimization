@@ -180,8 +180,8 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
     self._layer_quantize_map[layers.DepthwiseConv2D] = ConvQuantizeConfig(
         ['depthwise_kernel'], ['activation'], False)
 
-  def _is_supported_layer(self, layer):
-    return layer.__class__ in self._layer_quantize_map
+  def _is_supported_layer(self, layer_class):
+    return layer_class in self._layer_quantize_map
 
   def _is_rnn_layer(self, layer):
     return layer.__class__ in {
@@ -191,8 +191,8 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
         layers.SimpleRNN,
     }
 
-  def _get_quantize_info(self, layer):
-    return self._layer_quantize_map[layer.__class__]
+  def _get_quantize_info(self, layer_class):
+    return self._layer_quantize_map[layer_class]
 
   # Interface functions.
 
@@ -208,17 +208,29 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       True/False whether the layer type is supported.
 
     """
-    if self._is_supported_layer(layer):
+    if self._is_supported_layer(layer.__class__):
       return True
 
     if self._is_rnn_layer(layer):
       for rnn_cell in self._get_rnn_cells(layer):
         # All cells in the RNN layer should be supported.
-        if not self._is_supported_layer(rnn_cell):
+        if not self._is_supported_layer(rnn_cell.__class__):
           return False
       return True
 
     return False
+
+  def _get_quantize_config(self, layer_type):
+    quantize_info = self._get_quantize_info(layer_type)
+
+    # In case of `Activation`, there is no `_QuantizeInfo` object. It
+    # directly stores a `QuantizeConfig`.
+    if isinstance(quantize_info, QuantizeConfig):
+      return quantize_info
+
+    return TFLiteQuantizeConfig(quantize_info.weight_attrs,
+                                quantize_info.activation_attrs,
+                                quantize_info.quantize_output)
 
   def get_quantize_config(self, layer):
     """Returns the quantization config for the given layer.
@@ -236,23 +248,14 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
           'can use `QuantizeConfig` to specify a behavior for your layer.'
           .format(layer.__class__))
 
-    if self._is_supported_layer(layer):
-      quantize_info = self._get_quantize_info(layer)
-
-      # In case of `Activation`, there is no `_QuantizeInfo` object. It
-      # directly stores a `QuantizeConfig`.
-      if isinstance(quantize_info, QuantizeConfig):
-        return quantize_info
-
-      return TFLiteQuantizeConfig(quantize_info.weight_attrs,
-                                  quantize_info.activation_attrs,
-                                  quantize_info.quantize_output)
+    if self._is_supported_layer(layer.__class__):
+      return self._get_quantize_config(layer.__class__)
 
     if self._is_rnn_layer(layer):
       weight_attrs = []
       activation_attrs = []
       for rnn_cell in self._get_rnn_cells(layer):
-        quantize_info = self._get_quantize_info(rnn_cell)
+        quantize_info = self._get_quantize_info(rnn_cell.__class__)
         weight_attrs.append(quantize_info.weight_attrs)
         activation_attrs.append(quantize_info.activation_attrs)
 
