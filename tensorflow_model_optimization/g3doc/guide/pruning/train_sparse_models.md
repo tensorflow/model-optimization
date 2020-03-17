@@ -138,7 +138,7 @@ final_model = strip_pruning(pruned_model)
 Then you can export the model for serving with:
 
 ```python
-tf.keras.model.save_model(final_model, file, include_optimizer=False)
+tf.keras.models.save_model(final_model, file, include_optimizer=False)
 ```
 
 ## Advanced usage patterns
