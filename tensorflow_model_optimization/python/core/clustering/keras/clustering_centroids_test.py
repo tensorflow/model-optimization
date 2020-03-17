@@ -28,6 +28,7 @@ test = tf.test
 
 
 class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
+  """Unit tests for the clustering_centroids module."""
 
   def setUp(self):
     self.factory = clustering_centroids.CentroidsInitializerFactory
@@ -38,6 +39,9 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
       ('density-based'),
   )
   def testExistingInitsAreSupported(self, init_type):
+    """
+    Verifies that the given centroid initialization methods are supported.
+    """
     self.assertTrue(self.factory.init_is_supported(init_type))
 
   def testNonExistingInitIsNotSupported(self):
@@ -52,9 +56,17 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
       ),
   )
   def testReturnsMethodForExistingInit(self, init_type, method):
+    """
+    Verifies that the centroid initializer factory method returns the expected
+    classes for the given initialization methods.
+    """
     self.assertEqual(self.factory.get_centroid_initializer(init_type), method)
 
   def testThrowsValueErrorForNonExistingInit(self):
+    """
+    Verifies that the centroid initializer factory method raises an exception
+    when invoked with an unsupported initialization method.
+    """
     with self.assertRaises(ValueError):
       self.factory.get_centroid_initializer("DEADBEEF")
 
@@ -66,6 +78,9 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
       (-5, 4, 7, 10, 1.0 / 2.0, 13.0 / 2.0),
   )
   def testLinearSolverConstruction(self, x1, y1, x2, y2, a, b):
+    """
+    Verifies that a TFLinearEquationSolver is constructed correctly.
+    """
     solver = clustering_centroids.TFLinearEquationSolver(float(x1),
                                                          float(y1),
                                                          float(x2),
@@ -81,6 +96,10 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
       (7, 12, 17, 22, 3, 8),
   )
   def testLinearSolverSolveForX(self, x1, y1, x2, y2, x, y):
+    """
+    Verifies that TFLinearEquationSolver solves the given equations correctly
+    for X.
+    """
     solver = clustering_centroids.TFLinearEquationSolver(float(x1),
                                                          float(y1),
                                                          float(x2),
@@ -95,6 +114,10 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
       (7, 12, 17, 22, 3, 8),
   )
   def testLinearSolverSolveForY(self, x1, y1, x2, y2, x, y):
+    """
+    Verifies that TFLinearEquationSolver solves the given equations correctly
+    for Y.
+    """
     solver = clustering_centroids.TFLinearEquationSolver(float(x1),
                                                          float(y1),
                                                          float(x2),
@@ -110,6 +133,10 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
       ([1, 2, 3, 4, 5, 6, 7, 8, 9], -20, 0.)
   )
   def testCDFValues(self, weights, point, probability):
+    """
+    Verifies that TFCumulativeDistributionFunction yields the expected output
+    for the inputs provided.
+    """
     cdf_calc = clustering_centroids.TFCumulativeDistributionFunction(weights)
     self.assertAlmostEqual(
         probability,
