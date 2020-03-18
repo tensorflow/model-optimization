@@ -90,10 +90,10 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     self._weight_vars = []
     for weight, quantizer in \
         self.quantize_config.get_weights_and_quantizers(self.layer):
-      min_var, max_var = quantizer.build(
-          weight.shape, self._weight_name(weight.name), self)
+      quantizer_vars = quantizer.build(weight.shape,
+                                       self._weight_name(weight.name), self)
 
-      self._weight_vars.append((weight, quantizer, min_var, max_var))
+      self._weight_vars.append((weight, quantizer, quantizer_vars))
       # Needed to ensure unquantized weights get trained as part of the wrapper.
       self._trainable_weights.append(weight)
 
@@ -108,21 +108,17 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     self._output_quantizers = self.quantize_config.get_output_quantizers(
         self.layer)
     if self._output_quantizers:
-      self._output_min_max = self._output_quantizers[0].build(
+      self._output_quantizer_vars = self._output_quantizers[0].build(
           self.layer.compute_output_shape(input_shape), 'output', self)
 
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(self.layer.input_shape)
 
-  def _dict_vars(self, min_var, max_var):
-    return {'min_var': min_var, 'max_var': max_var}
-
-  def _make_quantizer_fn(self, quantizer, x, training, min_var, max_var):
+  def _make_quantizer_fn(self, quantizer, x, training, quantizer_vars):
     """Use currying to return True/False specialized fns to the cond."""
 
     def quantizer_fn():
-      return quantizer(x, self.optimizer_step, training,
-                       **self._dict_vars(min_var, max_var))
+      return quantizer(x, self.optimizer_step, training, **quantizer_vars)
 
     return quantizer_fn
 
@@ -133,13 +129,13 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     # Quantize all weights, and replace them in the underlying layer.
 
     quantized_weights = []
-    for unquantized_weight, quantizer, min_var, max_var in self._weight_vars:
+    for unquantized_weight, quantizer, quantizer_vars in self._weight_vars:
       quantized_weight = tf_utils.smart_cond(
           training,
-          self._make_quantizer_fn(
-              quantizer, unquantized_weight, True, min_var, max_var),
-          self._make_quantizer_fn(
-              quantizer, unquantized_weight, False, min_var, max_var))
+          self._make_quantizer_fn(quantizer, unquantized_weight, True,
+                                  quantizer_vars),
+          self._make_quantizer_fn(quantizer, unquantized_weight, False,
+                                  quantizer_vars))
       quantized_weights.append(quantized_weight)
 
     self.quantize_config.set_quantize_weights(self.layer, quantized_weights)
@@ -167,9 +163,9 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     return tf_utils.smart_cond(
         training,
         self._make_quantizer_fn(output_quantizer, outputs, True,
-                                *self._output_min_max),
+                                self._output_quantizer_vars),
         self._make_quantizer_fn(output_quantizer, outputs, False,
-                                *self._output_min_max))
+                                self._output_quantizer_vars))
 
   def get_config(self):
     base_config = super(QuantizeWrapper, self).get_config()

@@ -109,12 +109,12 @@ class QuantizeAwareActivation(object):
       raise ValueError(self._CUSTOM_ACTIVATION_ERR_MSG)
 
     if self._should_pre_quantize():
-      self._min_pre_activation, self._max_pre_activation = \
-        quantizer.build(None, 'pre_activation', quantize_wrapper)
+      self._pre_activation_vars = quantizer.build(None, 'pre_activation',
+                                                  quantize_wrapper)
 
     if self._should_post_quantize():
-      self._min_post_activation, self._max_post_activation = \
-          quantizer.build(None, 'post_activation', quantize_wrapper)
+      self._post_activation_vars = quantizer.build(None, 'post_activation',
+                                                   quantize_wrapper)
 
   @staticmethod
   def _name(activation):
@@ -148,15 +148,14 @@ class QuantizeAwareActivation(object):
 
   def __call__(self, inputs, *args, **kwargs):
 
-    def make_quantizer_fn(training, x, min_var, max_var):
+    def make_quantizer_fn(training, x, quantizer_vars):
       """Use currying to return True/False specialized fns to the cond."""
 
       def quantizer_fn(x=x,
                        quantizer=self.quantizer,
-                       min_var=min_var,
-                       max_var=max_var):
+                       quantizer_vars=quantizer_vars):
         return quantizer(x, self.step, training,
-                         **self._dict_vars(min_var, max_var))
+                         **quantizer_vars)
 
       return quantizer_fn
 
@@ -164,20 +163,16 @@ class QuantizeAwareActivation(object):
     if self._should_pre_quantize():
       x = tf_utils.smart_cond(
           self._training,
-          make_quantizer_fn(True, x, self._min_pre_activation,
-                            self._max_pre_activation),
-          make_quantizer_fn(False, x, self._min_pre_activation,
-                            self._max_pre_activation))
+          make_quantizer_fn(True, x, self._pre_activation_vars),
+          make_quantizer_fn(False, x, self._pre_activation_vars))
 
     x = self.activation(x, *args, **kwargs)
 
     if self._should_post_quantize():
       x = tf_utils.smart_cond(
           self._training,
-          make_quantizer_fn(True, x, self._min_post_activation,
-                            self._max_post_activation),
-          make_quantizer_fn(False, x, self._min_post_activation,
-                            self._max_post_activation))
+          make_quantizer_fn(True, x, self._post_activation_vars),
+          make_quantizer_fn(False, x, self._post_activation_vars))
 
     return x
 

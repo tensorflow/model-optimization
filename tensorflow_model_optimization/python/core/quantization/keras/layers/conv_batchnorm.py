@@ -47,7 +47,7 @@ class _ConvBatchNormMixin(object):
     if not self.is_quantized:
       return
 
-    self._weight_min_var, self._weight_max_var = self.weight_quantizer.build(
+    self._weight_quantizer_vars = self.weight_quantizer.build(
         self.weights[0].shape, 'weight', self)
 
     self.optimizer_step = self.add_weight(
@@ -78,8 +78,7 @@ class _ConvBatchNormMixin(object):
             folded_conv_kernel,
             self.optimizer_step,
             training,
-            min_var=self._weight_min_var,  # pylint: disable=protected-access
-            max_var=self._weight_max_var)  # pylint: disable=protected-access
+            **self._weight_quantizer_vars)  # pylint: disable=protected-access
 
       return quantizer_fn
 

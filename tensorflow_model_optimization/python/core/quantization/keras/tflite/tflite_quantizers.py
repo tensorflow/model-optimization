@@ -46,4 +46,4 @@ class ConvWeightsQuantizer(quantizers.LastValueQuantizer):
         initializer=tf.keras.initializers.Constant(6.0),
         trainable=False)
 
-    return [min_weight, max_weight]
+    return {'min_var': min_weight, 'max_var': max_weight}
