@@ -54,6 +54,7 @@ class CustomNonClusterableLayer(layers.Dense):
 
 
 class ClusterTest(test.TestCase, parameterized.TestCase):
+  """Unit tests for the cluster module."""
 
   def setUp(self):
     super(ClusterTest, self).setUp()
@@ -99,6 +100,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterKerasClusterableLayer(self):
+    """
+    Verifies that a built-in keras layer marked as clusterable is being
+    clustered correctly.
+    """
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_clusterable_layer)
 
@@ -106,6 +111,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterKerasNonClusterableLayer(self):
+    """
+    Verifies that a built-in keras layer not marked as clusterable is
+    not being clustered.
+    """
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_non_clusterable_layer)
 
@@ -114,11 +123,18 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual([], wrapped_layer.layer.get_clusterable_weights())
 
   def testClusterKerasUnsupportedLayer(self):
+    """
+    Verifies that attempting to cluster an unsupported layer raises an
+    exception.
+    """
     with self.assertRaises(ValueError):
       cluster.cluster_weights(self.keras_unsupported_layer, **self.params)
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterCustomClusterableLayer(self):
+    """
+    Verifies that a custom clusterable layer is being clustered correctly.
+    """
     wrapped_layer = self._build_clustered_layer_model(
         self.custom_clusterable_layer)
 
@@ -127,12 +143,20 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
                      wrapped_layer.layer.get_clusterable_weights())
 
   def testClusterCustomNonClusterableLayer(self):
+    """
+    Verifies that attempting to cluster a custom non-clusterable layer raises
+    an exception.
+    """
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(self.custom_non_clusterable_layer,
                                      **self.params)
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterSequentialModelSelectively(self):
+    """
+    Verifies that layers within a sequential model can be clustered
+    selectively.
+    """
     clustered_model = keras.Sequential()
     clustered_model.add(cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
     clustered_model.add(self.keras_clusterable_layer)
@@ -143,6 +167,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterFunctionalModelSelectively(self):
+    """
+    Verifies that layers within a functional model can be clustered
+    selectively.
+    """
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = cluster.cluster_weights(layers.Dense(10), **self.params)(i1)
@@ -155,6 +183,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterModelValidLayersSuccessful(self):
+    """
+    Verifies that clustering a sequential model results in all clusterable
+    layers within the model being clustered.
+    """
     model = keras.Sequential([
         self.keras_clusterable_layer,
         self.keras_non_clusterable_layer,
@@ -168,6 +200,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       self._validate_clustered_layer(layer, clustered_layer)
 
   def testClusterModelUnsupportedKerasLayerRaisesError(self):
+    """
+    Verifies that attempting to cluster a model that contains an unsupported
+    layer raises an exception.
+    """
     with self.assertRaises(ValueError):
       cluster.cluster_weights(
           keras.Sequential([
@@ -176,6 +212,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
           ]), **self.params)
 
   def testClusterModelCustomNonClusterableLayerRaisesError(self):
+    """
+    Verifies that attempting to cluster a model that contains a custom
+    non-clusterable layer raises an exception.
+    """
     with self.assertRaises(ValueError):
       cluster.cluster_weights(
           keras.Sequential([
@@ -185,6 +225,11 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterModelDoesNotWrapAlreadyWrappedLayer(self):
+    """
+    Verifies that clustering a model that contains an already clustered layer
+    does not result in wrapping the clustered layer into another
+    cluster_wrapper.
+    """
     model = keras.Sequential(
         [
             layers.Flatten(),
@@ -201,6 +246,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
                                    clustered_model.layers[1])
 
   def testClusterValidLayersListSuccessful(self):
+    """
+    Verifies that clustering a list of layers results in all clusterable
+    layers within the list being clustered.
+    """
     model_layers = [
         self.keras_clusterable_layer,
         self.keras_non_clusterable_layer,
@@ -213,6 +262,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       self._validate_clustered_layer(layer, clustered_layer)
 
   def testClusterSequentialModelNoInput(self):
+    """
+    Verifies that a sequential model without an input layer is being clustered
+    correctly.
+    """
     # No InputLayer
     model = keras.Sequential([
         layers.Dense(10),
@@ -223,6 +276,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterSequentialModelWithInput(self):
+    """
+    Verifies that a sequential model with an input layer is being clustered
+    correctly.
+    """
     # With InputLayer
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
@@ -232,6 +289,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(self._count_clustered_layers(clustered_model), 2)
 
   def testClusterSequentialModelPreservesBuiltStateNoInput(self):
+    """
+    Verifies that clustering a sequential model without an input layer
+    preserves the built state of the model.
+    """
     # No InputLayer
     model = keras.Sequential([
         layers.Dense(10),
@@ -249,6 +310,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterSequentialModelPreservesBuiltStateWithInput(self):
+    """
+    Verifies that clustering a sequential model with an input layer preserves
+    the built state of the model.
+    """
     # With InputLayer
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
@@ -266,6 +331,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterFunctionalModelPreservesBuiltState(self):
+    """
+    Verifies that clustering a functional model preserves the built state of
+    the model.
+    """
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = layers.Dense(10)(i1)
@@ -284,6 +353,9 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterFunctionalModel(self):
+    """
+    Verifies that a functional model is being clustered correctly.
+    """
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = layers.Dense(10)(i1)
@@ -295,6 +367,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterFunctionalModelWithLayerReused(self):
+    """
+    Verifies that a layer reused within a functional model multiple times is
+    only being clustered once.
+    """
     # The model reuses the Dense() layer. Make sure it's only clustered once.
     inp = keras.Input(shape=(10,))
     dense_layer = layers.Dense(10)
@@ -306,12 +382,20 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterSubclassModel(self):
+    """
+    Verifies that attempting to cluster an instance of a subclass of
+    keras.Model raises an exception.
+    """
     model = TestModel()
     with self.assertRaises(ValueError):
       _ = cluster.cluster_weights(model, **self.params)
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testStripClusteringSequentialModel(self):
+    """
+    Verifies that stripping the clustering wrappers from a sequential model
+    produces the expected config.
+    """
     model = keras.Sequential([
         layers.Dense(10),
         layers.Dense(10),
@@ -325,6 +409,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterStrippingFunctionalModel(self):
+    """
+    Verifies that stripping the clustering wrappers from a functional model
+    produces the expected config.
+    """
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = layers.Dense(10)(i1)
@@ -340,6 +428,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testClusterWeightsStrippedWeights(self):
+    """
+    Verifies that stripping the clustering wrappers from a functional model
+    preserves the clustered weights.
+    """
     i1 = keras.Input(shape=(10,))
     x1 = layers.BatchNormalization()(i1)
     outputs = x1
@@ -354,6 +446,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testStripSelectivelyClusteredFunctionalModel(self):
+    """
+    Verifies that invoking strip_clustering() on a selectively clustered
+    functional model strips the clustering wrappers from the clustered layers.
+    """
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = cluster.cluster_weights(layers.Dense(10), **self.params)(i1)
@@ -368,6 +464,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @tf_test_util.run_in_graph_and_eager_modes
   def testStripSelectivelyClusteredSequentialModel(self):
+    """
+    Verifies that invoking strip_clustering() on a selectively clustered
+    sequential model strips the clustering wrappers from the clustered layers.
+    """
     clustered_model = keras.Sequential([
       cluster.cluster_weights(layers.Dense(10), **self.params),
       layers.Dense(10),

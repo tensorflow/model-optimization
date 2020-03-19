@@ -44,7 +44,7 @@ class QuantizeLayer(tf.keras.layers.Layer):
 
     if quantizer is None or not isinstance(quantizer, quantizers.Quantizer):
       raise ValueError('quantizer should not be None, and should be an instance'
-                       'of `tfmot.quantization.keras.Quantizer`.')
+                       'of `tfmot.quantization.keras.quantizers.Quantizer`.')
 
     self.quantizer = quantizer
 
