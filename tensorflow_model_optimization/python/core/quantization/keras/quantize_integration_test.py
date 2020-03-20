@@ -31,7 +31,15 @@ from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.keras import test_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
+from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
+from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras import utils
+
+QuantizeConfig = quantize_config.QuantizeConfig
+Quantizer = quantizers.Quantizer
+MovingAverageQuantizer = quantizers.MovingAverageQuantizer
+
+l = tf.keras.layers
 
 
 # TODO(tfmot): enable for v1. Currently fails because the decorator
@@ -84,6 +92,85 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         np.random.rand(20, 10),
         tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20)
+
+  ####################################################################
+  # Tests for research with quantization.
+
+  # Test example in quantization comprehensive guide
+  class _FixedRangeQuantizer(Quantizer):
+    """Quantizer which keeps values between -1 and 1."""
+
+    # Test build function that returns no weights.
+    def build(self, tensor_shape, name, layer):
+      return {}
+
+    def __call__(self, inputs, step, training, **kwargs):
+      return tf.keras.backend.clip(inputs, -1.0, 1.0)
+
+    def get_config(self):
+      return {}
+
+  @staticmethod
+  def _get_quant_params(quantizer_class):
+    if quantizer_class == quantizers.LastValueQuantizer:
+      return {
+          'num_bits': 8,
+          'per_axis': False,
+          'symmetric': False,
+          'narrow_range': False
+      }
+    else:
+      return {}
+
+  @parameterized.parameters(quantizers.LastValueQuantizer, _FixedRangeQuantizer)
+  def testCustomWeightQuantizers_Run(self, quantizer_type):
+    init_params = self._get_quant_params(quantizer_type)
+
+    # Additional test that same quantizer object can be shared
+    # between Configs, though we don't expicitly promote this
+    # anywhere in the documentation.
+    quantizer = quantizer_type(**init_params)
+
+    class DenseQuantizeConfig(QuantizeConfig):
+      """Custom QuantizeConfig for Dense layer."""
+
+      def get_weights_and_quantizers(self, layer):
+        return [(layer.kernel, quantizer)]
+
+      def get_activations_and_quantizers(self, layer):
+        # Defaults.
+        return [(layer.activation,
+                 MovingAverageQuantizer(
+                     num_bits=8,
+                     per_axis=False,
+                     symmetric=False,
+                     narrow_range=False))]
+
+      def set_quantize_weights(self, layer, quantize_weights):
+        layer.kernel = quantize_weights[0]
+
+      def set_quantize_activations(self, layer, quantize_activations):
+        return
+
+      def get_output_quantizers(self, layer):
+        return []
+
+      def get_config(self):
+        return {}
+
+    annotated_model = tf.keras.Sequential([
+        quantize.quantize_annotate_layer(
+            l.Dense(8, input_shape=(10,)), DenseQuantizeConfig()),
+        quantize.quantize_annotate_layer(
+            l.Dense(5), DenseQuantizeConfig())
+    ])
+
+    with quantize.quantize_scope(
+        {'DenseQuantizeConfig': DenseQuantizeConfig}):
+      quant_model = quantize.quantize_apply(annotated_model)
+
+    # Check no error happens.
+    self._train_model(quant_model)
 
   ####################################################################
   # Tests for training with quantization with checkpointing.

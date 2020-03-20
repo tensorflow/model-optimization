@@ -45,7 +45,8 @@ class Quantizer(object):
       layer: Keras layer which is quantizing the tensors. The layer is needed
         to construct the weights, and is also the owner of the weights.
 
-    Returns: List of constructed weights
+    Returns: Dictionary of constructed weights. This dictionary will be
+    unpacked and passed to the quantizer's __call__ function as kwargs.
     """
 
   @abc.abstractmethod
@@ -59,8 +60,8 @@ class Quantizer(object):
       inputs: Input tensor to be quantized.
       step: Current step in graph execution.
       training: Whether the graph is currently training.
-      **kwargs: Additional variables which may be passed to the quantizer.
-
+      **kwargs: Additional variables which may be passed to the quantizer,
+        including ones created in the quantizer's build() function.
     Returns: quantized tensor.
     """
 
@@ -95,7 +96,7 @@ class _QuantizeHelper(object):
         initializer=keras.initializers.Constant(6.0),
         trainable=False)
 
-    return [min_weight, max_weight]
+    return {'min_var': min_weight, 'max_var': max_weight}
 
 
 class LastValueQuantizer(_QuantizeHelper, Quantizer):

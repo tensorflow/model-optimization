@@ -50,13 +50,15 @@ class ConvWeightsQuantizerTest(tf.test.TestCase, parameterized.TestCase):
         layer_type(input_shape=(5, 2, 3), **kwargs)])
     layer = model.layers[0]
 
-    min_var, max_var = quantizer.build(
+    min_max_vars = quantizer.build(
         layer.weights[0].shape, 'kernel', layer)
     # TODO(pulkitb): Add value test to ensure per-axis quantization is
     # happening properly. Probably to quant_ops_test.py
     quantized_weight = quantizer(layer.weights[0], 0, True,  # pylint: disable=unused-variable
-                                 **{'min_var': min_var, 'max_var': max_var})
+                                 **min_max_vars)
 
+    min_var = min_max_vars['min_var']
+    max_var = min_max_vars['max_var']
     self.assertEqual(5, min_var.shape)
     self.assertEqual(5, max_var.shape)
 

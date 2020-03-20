@@ -49,7 +49,7 @@ class QuantizeLayer(tf.keras.layers.Layer):
     self.quantizer = quantizer
 
   def build(self, input_shape):
-    self.min_var, self. max_var = self.quantizer.build(
+    self.quantizer_vars = self.quantizer.build(
         input_shape, self.name, self)
 
     self.optimizer_step = self.add_weight(
@@ -57,9 +57,6 @@ class QuantizeLayer(tf.keras.layers.Layer):
         initializer=tf.keras.initializers.Constant(-1),
         dtype=tf.dtypes.int32,
         trainable=False)
-
-  def _dict_vars(self, min_var, max_var):
-    return {'min_var': min_var, 'max_var': max_var}
 
   def call(self, inputs, training=None):
     if training is None:
@@ -69,7 +66,7 @@ class QuantizeLayer(tf.keras.layers.Layer):
       def quantizer_fn():
         return self.quantizer(
             inputs, self.optimizer_step, train_var,
-            **self._dict_vars(self.min_var, self.max_var))
+            **self.quantizer_vars)
 
       return quantizer_fn
 
