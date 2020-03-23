@@ -29,6 +29,19 @@ K = tf.keras.backend
 callbacks = tf.keras.callbacks
 
 
+def _collect_prunable_layers(model):
+  """Recursively collect the prunable layers in the model."""
+  prunable_layers = []
+  for layer in model.layers:
+    # A keras model may have other models as layers.
+    if isinstance(layer, tf.keras.Model):
+      prunable_layers += _collect_prunable_layers(layer)
+    if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+      prunable_layers.append(layer)
+
+  return prunable_layers
+
+
 class UpdatePruningStep(callbacks.Callback):
   """Keras callback which updates pruning wrappers with the optimizer step.
 
@@ -48,13 +61,10 @@ class UpdatePruningStep(callbacks.Callback):
 
   def on_train_batch_begin(self, batch, logs=None):
     tuples = []
-    for layer in self.model.layers:
-      # TODO(pulkitb): There's a possibility that the layer is a wrapper which
-      # internally contains Prune. This should account for that. Else Prune
-      # wrappers will throw errors.
-      if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
-        # Assign iteration count from the optimizer to the layer pruning_step.
-        tuples.append((layer.pruning_step, self.step))
+
+    prunable_layers = _collect_prunable_layers(self.model)
+    for layer in prunable_layers:
+      tuples.append((layer.pruning_step, self.step))
 
     K.batch_set_value(tuples)
     self.step = self.step + 1
@@ -62,10 +72,10 @@ class UpdatePruningStep(callbacks.Callback):
   def on_epoch_end(self, batch, logs=None):
     # At the end of every epoch, remask the weights. This ensures that when
     # the model is saved after completion, the weights represent mask*weights.
-    layers = self.model.layers
     weight_mask_ops = []
 
-    for layer in layers:
+    prunable_layers = _collect_prunable_layers(self.model)
+    for layer in prunable_layers:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         if tf.executing_eagerly():
           layer.pruning_obj.weight_mask_op()
@@ -107,12 +117,12 @@ class PruningSummaries(callbacks.TensorBoard):
 
     pruning_logs = {}
     params = []
-    layers = self.model.layers
-    for layer in layers:
-      if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
-        for _, mask, threshold in layer.pruning_vars:
-          params.append(mask)
-          params.append(threshold)
+    prunable_layers = _collect_prunable_layers(self.model)
+    for layer in prunable_layers:
+      for _, mask, threshold in layer.pruning_vars:
+        params.append(mask)
+        params.append(threshold)
+
     params.append(self.model.optimizer.iterations)
 
     values = K.batch_get_value(params)
