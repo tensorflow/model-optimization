@@ -205,6 +205,14 @@ class QuantizeApplyTest(tf.test.TestCase):
     with self.assertRaises(ValueError):
       quantize_apply(model)
 
+  def testRaisesErrorNotInstanceOfQuantizeConfig(self):
+    with self.assertRaises(ValueError):
+      keras.Sequential([
+          quantize_annotate_layer(
+              keras.layers.Dense(10),
+              quantize_config=object())
+      ])
+
   # Helper functions to verify quantize wrapper applied correctly.
 
   def _assert_weights_equal_value(self, annotated_weights, emulated_weights):
