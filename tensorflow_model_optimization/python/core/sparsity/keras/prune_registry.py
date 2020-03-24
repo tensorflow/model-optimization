@@ -80,6 +80,7 @@ class PruneRegistry(object):
       layers.GaussianDropout: [],
       layers.GaussianNoise: [],
       layers.BatchNormalization: [],
+      tf.compat.v1.keras.layers.BatchNormalization: [],
       layers.LayerNormalization: [],
       layers.AveragePooling1D: [],
       layers.AveragePooling2D: [],
