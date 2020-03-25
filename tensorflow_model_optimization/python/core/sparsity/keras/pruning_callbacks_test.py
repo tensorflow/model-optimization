@@ -98,6 +98,7 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
 
     step_callback.on_train_begin()
     for _ in range(3):
+      log_callback.on_epoch_begin(epoch=unused_arg)
       # only one batch given batch_size = 20 and input shape.
       step_callback.on_train_batch_begin(batch=unused_arg)
       inp = np.reshape(x_train,
@@ -108,7 +109,6 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
         grads = tape.gradient(loss_value, pruned_model.trainable_variables)
         optimizer.apply_gradients(zip(grads, pruned_model.trainable_variables))
       step_callback.on_epoch_end(batch=unused_arg)
-      log_callback.on_epoch_end(batch=unused_arg)
 
     self.assertEqual(
         2, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))

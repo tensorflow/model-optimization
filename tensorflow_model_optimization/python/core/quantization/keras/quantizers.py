@@ -113,9 +113,9 @@ class LastValueQuantizer(_QuantizeHelper, Quantizer):
         used as the axis.
       symmetric: If true, use symmetric quantization limits instead of training
         the minimum and maximum of each quantization range separately.
-      narrow_range: In case of 8 bits, narrow_range nudges the quantized range
-        to be [-127, 127] instead of [-128, 127]. This ensures symmetric
-        range has 0 as the centre.
+      narrow_range: If true, in case of 8 bits, narrow_range nudges the
+        quantized range to be [-127, 127] instead of [-128, 127]. This ensures
+        symmetric range has 0 as the centre.
     """
     self.num_bits = num_bits
     self.per_axis = per_axis

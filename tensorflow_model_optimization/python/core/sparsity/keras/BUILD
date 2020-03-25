@@ -106,6 +106,7 @@ py_library(
         ":pruning_wrapper",
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
