@@ -28,7 +28,7 @@ py_library(
         # python/keras/utils:engine_utils tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
-        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantizers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
     ],
 )
 

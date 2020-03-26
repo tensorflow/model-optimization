@@ -25,11 +25,11 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 
 QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 QuantizeWrapper = quantize_wrapper.QuantizeWrapper
-TFLiteQuantizeRegistry = tflite_quantize_registry.TFLiteQuantizeRegistry
+QuantizeRegistry = default_8bit_quantize_registry.QuantizeRegistry
 
 keras = tf.keras
 layers = tf.keras.layers
@@ -43,7 +43,7 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(QuantizeWrapperTest, self).setUp()
-    self.quantize_registry = TFLiteQuantizeRegistry()
+    self.quantize_registry = QuantizeRegistry()
 
   def testQuantizesWeightsInLayer(self):
     weights = lambda shape, dtype: np.array([[-1.0, 0.0], [0.0, 1.0]])
@@ -113,7 +113,7 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
     def _get_quantized_weights(shape, dtype):  # pylint: disable=unused-argument
       assert tuple(shape) == self.weights.shape
 
-      # Default values used in TFLiteRegistry.
+      # Default values used in DefaultRegistry.
       return tf.quantization.fake_quant_with_min_max_vars(
           self.weights, -6.0, 6.0, num_bits=8, narrow_range=True)
 
@@ -172,7 +172,7 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
         'QuantizeAwareActivation': QuantizeAwareActivation,
         'QuantizeWrapper': QuantizeWrapper
     }
-    custom_objects.update(tflite_quantize_registry._types_dict())
+    custom_objects.update(default_8bit_quantize_registry._types_dict())
 
     serialized_wrapper = serialize_layer(wrapper)
     with custom_object_scope(custom_objects):

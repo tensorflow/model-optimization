@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Layout Transformation for quantization in TFLite.
-
-Module: tfmot.quantization.keras.tflite
-"""
+"""Default 8-bit layout transformation for quantization."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -24,18 +21,18 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layout_transform
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_transforms
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_transforms
 
 keras = tf.keras
 
 
-class TFLiteQuantizeLayoutTransform(
+class QuantizeLayoutTransform(
     quantize_layout_transform.QuantizeLayoutTransform):
-  """Model transformations for TFLite."""
+  """Default model transformations."""
 
   def apply(self, model, layer_quantize_map):
-    """Implement TFLite transforms.
+    """Implement default 8-bit transforms.
 
     Currently this means the following.
       1. Pull activations into layers, and apply fuse activations. (TODO)
@@ -54,15 +51,15 @@ class TFLiteQuantizeLayoutTransform(
     """
 
     transforms = [
-        tflite_transforms.InputLayerQuantize(),
-        tflite_transforms.Conv2DBatchNormReLUQuantize(),
-        tflite_transforms.Conv2DBatchNormActivationQuantize(),
-        tflite_transforms.Conv2DBatchNormQuantize(),
-        tflite_transforms.ConcatTransform6Inputs(),
-        tflite_transforms.ConcatTransform5Inputs(),
-        tflite_transforms.ConcatTransform4Inputs(),
-        tflite_transforms.ConcatTransform3Inputs(),
-        tflite_transforms.ConcatTransform(),
+        default_8bit_transforms.InputLayerQuantize(),
+        default_8bit_transforms.Conv2DBatchNormReLUQuantize(),
+        default_8bit_transforms.Conv2DBatchNormActivationQuantize(),
+        default_8bit_transforms.Conv2DBatchNormQuantize(),
+        default_8bit_transforms.ConcatTransform6Inputs(),
+        default_8bit_transforms.ConcatTransform5Inputs(),
+        default_8bit_transforms.ConcatTransform4Inputs(),
+        default_8bit_transforms.ConcatTransform3Inputs(),
+        default_8bit_transforms.ConcatTransform(),
     ]
 
     return model_transformer.ModelTransformer(

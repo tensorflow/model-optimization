@@ -22,9 +22,9 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_layout_transform
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_layout_transform
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
 
 keras = tf.keras
 
@@ -59,7 +59,7 @@ def quantize_scope(*args):
       '_DepthwiseConvBatchNorm2D': conv_batchnorm._DepthwiseConvBatchNorm2D,  # pylint: disable=protected-access
       '_ConvBatchNorm2D': conv_batchnorm._ConvBatchNorm2D  # pylint: disable=protected-access
   }
-  quantization_objects.update(tflite_quantize_registry._types_dict())  # pylint: disable=protected-access
+  quantization_objects.update(default_8bit_quantize_registry._types_dict())  # pylint: disable=protected-access
   quantization_objects.update(quantizers._types_dict())  # pylint: disable=protected-access
 
   return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
@@ -328,13 +328,14 @@ def quantize_apply(model):
   # 3. Apply the graph transformations required to match model passes on
   # target device/dialect.
   quantize_transform = \
-    tflite_quantize_layout_transform.TFLiteQuantizeLayoutTransform()
+    default_8bit_quantize_layout_transform.QuantizeLayoutTransform()
   # layer_quantize_map gets modified by the transformations.
   transformed_model, layer_quantize_map = quantize_transform.apply(
       unwrapped_model, layer_quantize_map)
 
-  # TODO(pulkitb): Think more about how to introduce TFLite specific code.
-  quantize_registry = tflite_quantize_registry.TFLiteQuantizeRegistry()
+  # TODO(pulkitb): Think more about how to introduce Default specific code.
+  quantize_registry = default_8bit_quantize_registry.QuantizeRegistry(
+  )
 
   # 4. Actually quantize all the relevant layers in the model. This is done by
   # wrapping the layers with QuantizeWrapper, and passing the associated

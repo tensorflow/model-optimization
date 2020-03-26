@@ -12,14 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for TFLite Transforms."""
+"""Tests for Default Transforms."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
-
 import numpy as np
 import tensorflow as tf
 
@@ -27,10 +26,10 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_configs
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_transforms
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_configs
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_transforms
 
 ModelTransformer = model_transformer.ModelTransformer
 
@@ -39,12 +38,12 @@ DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 
 keras = tf.keras
 
-Conv2DBatchNormActivationQuantize = tflite_transforms.Conv2DBatchNormActivationQuantize
-Conv2DBatchNormReLUQuantize = tflite_transforms.Conv2DBatchNormReLUQuantize
+Conv2DBatchNormActivationQuantize = default_8bit_transforms.Conv2DBatchNormActivationQuantize
+Conv2DBatchNormReLUQuantize = default_8bit_transforms.Conv2DBatchNormReLUQuantize
 
 
 # TODO(alanchiao): reduce redundancy by parameterizing on Depthwise vs Conv.
-class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
+class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
   def testTransformsConvBNReLUPattern(self):
     model = Conv2DModel.get_nonfolded_batchnorm_model(
@@ -53,7 +52,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
     transformed_model, _ = ModelTransformer(
-        model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
+        model,
+        [default_8bit_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
     self.assertAllClose(
@@ -68,7 +68,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         random_init=True)
 
     transformed_model, _ = ModelTransformer(
-        model, [tflite_transforms.Conv2DBatchNormReLU6Fold()]).transform()
+        model,
+        [default_8bit_transforms.Conv2DBatchNormReLU6Fold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -86,7 +87,7 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
     with quantize.quantize_scope():
       transformed_model, _ = ModelTransformer(
-          model, [tflite_transforms.Conv2DBatchNormFold()]).transform()
+          model, [default_8bit_transforms.Conv2DBatchNormFold()]).transform()
 
     inputs = np.random.standard_normal(Conv2DModel.get_batched_input_shape())
     self.assertAllClose(
@@ -100,8 +101,7 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         random_init=True)
 
     transformed_model, _ = ModelTransformer(
-        model,
-        [tflite_transforms.Conv2DBatchNormFold()]).transform()
+        model, [default_8bit_transforms.Conv2DBatchNormFold()]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -118,8 +118,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         post_bn_activation=keras.layers.ReLU(6.0), is_quantized=True)
 
     transformed_model, _ = ModelTransformer(
-        model,
-        [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
+        model, [default_8bit_transforms.DepthwiseConv2DBatchNormReLU6Fold()
+               ]).transform()
 
     inputs = np.random.standard_normal(
         DepthwiseConv2DModel.get_batched_input_shape())
@@ -135,8 +135,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         random_init=True)
 
     transformed_model, _ = ModelTransformer(
-        model,
-        [tflite_transforms.DepthwiseConv2DBatchNormReLU6Fold()]).transform()
+        model, [default_8bit_transforms.DepthwiseConv2DBatchNormReLU6Fold()
+               ]).transform()
 
     transformed_weights = transformed_model.get_weights()
     # Remove quantization related weights.
@@ -175,7 +175,7 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
     transformed_model, updated_metadata = ModelTransformer(
         model,
-        [tflite_transforms.Conv2DBatchNormQuantize()],
+        [default_8bit_transforms.Conv2DBatchNormQuantize()],
     ).transform()
 
     conv_layer = transformed_model.layers[1]
@@ -185,7 +185,7 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         conv_layer.activation, quantize_aware_activation.NoOpActivation)
     self.assertIsInstance(
         updated_metadata.get(bn_layer.name).get('quantize_config'),
-        tflite_quantize_configs.OutputQuantizeConfig)
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
 
     inputs = np.random.standard_normal(input_shape)
     self.assertAllClose(
@@ -195,7 +195,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
       ('Conv2D', 'relu', Conv2DBatchNormReLUQuantize),
       ('Conv2D', 'act_relu', Conv2DBatchNormActivationQuantize),
       ('DepthwiseConv2D', 'relu', Conv2DBatchNormReLUQuantize),
-      ('DepthwiseConv2D', 'act_relu', Conv2DBatchNormActivationQuantize),
+      ('DepthwiseConv2D', 'act_relu',
+       Conv2DBatchNormActivationQuantize),
   )
   def testConv2DBatchNormReLUQuantize(
       self, layer_type, activation_type, transform_type):
@@ -214,7 +215,7 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
         conv_layer.activation, quantize_aware_activation.NoOpActivation)
     self.assertIsInstance(
         updated_metadata.get(bn_layer.name).get('quantize_config'),
-        tflite_quantize_configs.NoOpQuantizeConfig)
+        default_8bit_quantize_configs.NoOpQuantizeConfig)
 
     inputs = np.random.standard_normal(input_shape)
     self.assertAllClose(
@@ -227,7 +228,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     model = keras.Model([inp1, inp2], x)
 
     transformed_model, _ = ModelTransformer(
-        model, [tflite_transforms.InputLayerQuantize()]).transform()
+        model,
+        [default_8bit_transforms.InputLayerQuantize()]).transform()
 
     for input_layer in transformed_model._input_layers:
       layer_after_input = input_layer._outbound_nodes[0].outbound_layer
@@ -263,31 +265,35 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     layer_metadata = {
         # dense_1 has an existing quantize_config.
         dense_1.name: {
-            'quantize_config': tflite_quantize_configs.OutputQuantizeConfig()}}
+            'quantize_config':
+                default_8bit_quantize_configs.Default8BitOutputQuantizeConfig()
+        }
+    }
     _, updated_metadata = ModelTransformer(
-        model, [tflite_transforms.ConcatTransform()],
-        layer_metadata=layer_metadata
-    ).transform()
+        model, [default_8bit_transforms.ConcatTransform()],
+        layer_metadata=layer_metadata).transform()
 
     concat_quantize_config = updated_metadata.get(
         concat.name).get('quantize_config')
     # Concat should quantize the output.
     self.assertIsInstance(
-        concat_quantize_config, tflite_quantize_configs.OutputQuantizeConfig)
+        concat_quantize_config,
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
     self.assertNotEmpty(concat_quantize_config.get_output_quantizers(None))
 
     dense_1_quantize_config = updated_metadata.get(
         dense_1.name).get('quantize_config')
     # The existing quantize_config should do nothing for outputs.
     self.assertIsInstance(
-        dense_1_quantize_config, tflite_quantize_configs.OutputQuantizeConfig)
+        dense_1_quantize_config,
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
     self.assertEmpty(dense_1_quantize_config.get_output_quantizers(None))
 
     dense_2_quantize_config = updated_metadata.get(
         dense_2.name).get('quantize_config')
     # The quantize_config from registry should do nothing at output.
-    self.assertEqual(
-        'TFLiteQuantizeConfig', dense_2_quantize_config.__class__.__name__)
+    self.assertEqual('Default8BitQuantizeConfig',
+                     dense_2_quantize_config.__class__.__name__)
     self.assertEmpty(dense_2_quantize_config.get_output_quantizers(None))
 
   def testConcatMultipleLevels(self):
@@ -318,8 +324,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     model.summary()
 
     _, layer_metadata = ModelTransformer(
-        model, [tflite_transforms.ConcatTransform()]
-    ).transform()
+        model,
+        [default_8bit_transforms.ConcatTransform()]).transform()
 
     for layer in model.layers[1:-1]:
       quantize_config = layer_metadata[layer.name].get('quantize_config')
@@ -328,7 +334,8 @@ class TFLiteTransformsTest(tf.test.TestCase, parameterized.TestCase):
     c3_layer = model.layers[-1]
     quantize_config = layer_metadata[c3_layer.name].get('quantize_config')
     self.assertIsInstance(
-        quantize_config, tflite_quantize_configs.OutputQuantizeConfig)
+        quantize_config,
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
     self.assertNotEmpty(quantize_config.get_output_quantizers(None))
 
 

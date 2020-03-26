@@ -12,10 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Quantization registry which specifies how layers should be quantized.
-
-Module: tfmot.quantization.keras.tflite
-"""
+"""Quantization registry which specifies how layers should be quantized."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -26,9 +23,9 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_configs
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_configs
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantizers
 
 QuantizeConfig = quantize_config.QuantizeConfig
 
@@ -72,8 +69,8 @@ class _RNNHelper(object):
       return [rnn_layer.cell]
 
 
-class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
-  """QuantizationRegistry for built-in Keras classes for TFLite scheme."""
+class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
+  """QuantizationRegistry for built-in Keras classes for default 8-bit scheme."""
 
   _LAYER_QUANTIZE_INFO = [
 
@@ -173,12 +170,13 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
     # Hack for `Activation` layer. That is the only layer with a separate
     # QuantizeConfig.
-    self._layer_quantize_map[layers.Activation] = ActivationQuantizeConfig()
-    self._layer_quantize_map[layers.Conv2D] = ConvQuantizeConfig(['kernel'],
-                                                                 ['activation'],
-                                                                 False)
-    self._layer_quantize_map[layers.DepthwiseConv2D] = ConvQuantizeConfig(
-        ['depthwise_kernel'], ['activation'], False)
+    self._layer_quantize_map[
+        layers.Activation] = Default8BitActivationQuantizeConfig()
+    self._layer_quantize_map[layers.Conv2D] = Default8BitConvQuantizeConfig(
+        ['kernel'], ['activation'], False)
+    self._layer_quantize_map[
+        layers.DepthwiseConv2D] = Default8BitConvQuantizeConfig(
+            ['depthwise_kernel'], ['activation'], False)
 
   def _is_supported_layer(self, layer_class):
     return layer_class in self._layer_quantize_map
@@ -228,9 +226,9 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
     if isinstance(quantize_info, QuantizeConfig):
       return quantize_info
 
-    return TFLiteQuantizeConfig(quantize_info.weight_attrs,
-                                quantize_info.activation_attrs,
-                                quantize_info.quantize_output)
+    return Default8BitQuantizeConfig(quantize_info.weight_attrs,
+                                     quantize_info.activation_attrs,
+                                     quantize_info.quantize_output)
 
   def get_quantize_config(self, layer):
     """Returns the quantization config for the given layer.
@@ -261,13 +259,13 @@ class TFLiteQuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
       # Result quantization for RNN isn't straight-forward like regular layers.
       # To implement during full RNN support.
-      return TFLiteQuantizeConfigRNN(weight_attrs, activation_attrs, False)
+      return Default8BitQuantizeConfigRNN(weight_attrs, activation_attrs, False)
 
     # Should never come here.
     raise ValueError('Invalid Layer type {}'.format(layer.__class__))
 
 
-class TFLiteQuantizeConfig(QuantizeConfig):
+class Default8BitQuantizeConfig(QuantizeConfig):
   """QuantizeConfig for non recurrent Keras layers."""
 
   def __init__(self, weight_attrs, activation_attrs, quantize_output):
@@ -325,13 +323,13 @@ class TFLiteQuantizeConfig(QuantizeConfig):
 
   @classmethod
   def from_config(cls, config):
-    """Instantiates a `TFLiteQuantizeConfig` from its config.
+    """Instantiates a `Default8BitQuantizeConfig` from its config.
 
     Args:
         config: Output of `get_config()`.
 
     Returns:
-        A `TFLiteQuantizeConfig` instance.
+        A `Default8BitQuantizeConfig` instance.
     """
     return cls(**config)
 
@@ -346,7 +344,7 @@ class TFLiteQuantizeConfig(QuantizeConfig):
     }
 
   def __eq__(self, other):
-    if not isinstance(other, TFLiteQuantizeConfig):
+    if not isinstance(other, Default8BitQuantizeConfig):
       return False
 
     return (self.weight_attrs == other.weight_attrs and
@@ -359,7 +357,7 @@ class TFLiteQuantizeConfig(QuantizeConfig):
     return not self.__eq__(other)
 
 
-class TFLiteQuantizeConfigRNN(TFLiteQuantizeConfig, _RNNHelper):
+class Default8BitQuantizeConfigRNN(Default8BitQuantizeConfig, _RNNHelper):
   """QuantizeConfig for RNN layers."""
 
   def get_weights_and_quantizers(self, layer):
@@ -429,7 +427,7 @@ class TFLiteQuantizeConfigRNN(TFLiteQuantizeConfig, _RNNHelper):
         i += 1
 
 
-class ActivationQuantizeConfig(QuantizeConfig):
+class Default8BitActivationQuantizeConfig(QuantizeConfig):
   """QuantizeConfig for keras.layers.Activation.
 
   `keras.layers.Activation` needs a separate `QuantizeConfig` since the
@@ -438,8 +436,9 @@ class ActivationQuantizeConfig(QuantizeConfig):
 
   def _assert_activation_layer(self, layer):
     if not isinstance(layer, layers.Activation):
-      raise RuntimeError('ActivationQuantizeConfig can only be used with '
-                         '`keras.layers.Activation`.')
+      raise RuntimeError(
+          'Default8BitActivationQuantizeConfig can only be used with '
+          '`keras.layers.Activation`.')
 
   def get_weights_and_quantizers(self, layer):
     self._assert_activation_layer(layer)
@@ -460,7 +459,8 @@ class ActivationQuantizeConfig(QuantizeConfig):
 
     if not hasattr(layer.activation, '__name__'):
       raise ValueError('Activation {} not supported by '
-                       'ActivationQuantizeConfig.'.format(layer.activation))
+                       'Default8BitActivationQuantizeConfig.'.format(
+                           layer.activation))
 
     if layer.activation.__name__ in ['relu']:
       # 'relu' should generally get fused into the previous layer.
@@ -470,28 +470,36 @@ class ActivationQuantizeConfig(QuantizeConfig):
       return []
 
     raise ValueError('Activation {} not supported by '
-                     'ActivationQuantizeConfig.'.format(layer.activation))
+                     'Default8BitActivationQuantizeConfig.'.format(
+                         layer.activation))
 
   def get_config(self):
     return {}
 
 
-class ConvQuantizeConfig(TFLiteQuantizeConfig):
+class Default8BitConvQuantizeConfig(Default8BitQuantizeConfig):
   """QuantizeConfig for Conv2D/DepthwiseConv2D layers."""
 
   def __init__(self, weight_attrs, activation_attrs, quantize_output):
-    super(ConvQuantizeConfig, self).__init__(weight_attrs, activation_attrs,
-                                             quantize_output)
+    super(Default8BitConvQuantizeConfig,
+          self).__init__(weight_attrs, activation_attrs, quantize_output)
 
-    self.weight_quantizer = tflite_quantizers.ConvWeightsQuantizer()
+    self.weight_quantizer = default_8bit_quantizers.Default8BitConvWeightsQuantizer(
+    )
 
 
 def _types_dict():
   return {
-      'TFLiteQuantizeConfig': TFLiteQuantizeConfig,
-      'TFLiteQuantizeConfigRNN': TFLiteQuantizeConfigRNN,
-      'ActivationQuantizeConfig': ActivationQuantizeConfig,
-      'ConvQuantizeConfig': ConvQuantizeConfig,
-      'NoOpQuantizeConfig': tflite_quantize_configs.NoOpQuantizeConfig,
-      'OutputQuantizeConfig': tflite_quantize_configs.OutputQuantizeConfig
+      'Default8BitQuantizeConfig':
+          Default8BitQuantizeConfig,
+      'Default8BitQuantizeConfigRNN':
+          Default8BitQuantizeConfigRNN,
+      'Default8BitActivationQuantizeConfig':
+          Default8BitActivationQuantizeConfig,
+      'Default8BitConvQuantizeConfig':
+          Default8BitConvQuantizeConfig,
+      'NoOpQuantizeConfig':
+          default_8bit_quantize_configs.NoOpQuantizeConfig,
+      'Default8BitOutputQuantizeConfig':
+          default_8bit_quantize_configs.Default8BitOutputQuantizeConfig
   }

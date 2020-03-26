@@ -34,7 +34,7 @@ from tensorflow.python.ops import nn
 from tensorflow.python.ops import nn_ops
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantizers
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
 keras = tf.keras
 
@@ -258,7 +258,8 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
 
     self.is_quantized = is_quantized
     if self.is_quantized:
-      self.weight_quantizer = tflite_quantizers.ConvWeightsQuantizer()
+      self.weight_quantizer = default_8bit_quantizers.Default8BitConvWeightsQuantizer(
+      )
 
       self.activation_quantizer = quantizers.MovingAverageQuantizer(
           num_bits=8, per_axis=False, symmetric=False, narrow_range=False)
@@ -440,7 +441,8 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
 
     self.is_quantized = is_quantized
     if self.is_quantized:
-      self.weight_quantizer = tflite_quantizers.ConvWeightsQuantizer()
+      self.weight_quantizer = default_8bit_quantizers.Default8BitConvWeightsQuantizer(
+      )
 
       self.activation_quantizer = quantizers.MovingAverageQuantizer(
           num_bits=8, per_axis=False, symmetric=False, narrow_range=False)

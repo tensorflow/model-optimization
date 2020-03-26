@@ -12,27 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Quantizers specific to TFLite.
-
-Module: tfmot.quantization.keras.tflite
-"""
+"""Quantizers specific to default 8-bit behavior."""
 
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
 
-class ConvWeightsQuantizer(quantizers.LastValueQuantizer):
+class Default8BitConvWeightsQuantizer(quantizers.LastValueQuantizer):
   """Quantizer for handling weights in Conv2D/DepthwiseConv2D layers."""
 
   def __init__(self):
     """Construct LastValueQuantizer with params specific for TFLite Convs."""
 
-    super(ConvWeightsQuantizer, self).__init__(
-        num_bits=8,
-        per_axis=True,
-        symmetric=True,
-        narrow_range=True)
+    super(Default8BitConvWeightsQuantizer, self).__init__(
+        num_bits=8, per_axis=True, symmetric=True, narrow_range=True)
 
   def build(self, tensor_shape, name, layer):
     min_weight = layer.add_weight(

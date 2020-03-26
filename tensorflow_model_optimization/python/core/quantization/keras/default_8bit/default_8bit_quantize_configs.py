@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""QuantizeConfigs specific for TFLite."""
+"""Default 8-bit QuantizeConfigs."""
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
 
-class OutputQuantizeConfig(quantize_config.QuantizeConfig):
+class Default8BitOutputQuantizeConfig(quantize_config.QuantizeConfig):
   """QuantizeConfig which only quantizes the output from a layer."""
 
   def get_weights_and_quantizers(self, layer):
