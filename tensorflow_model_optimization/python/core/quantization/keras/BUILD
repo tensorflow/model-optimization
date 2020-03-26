@@ -286,6 +286,7 @@ py_test(
 
 py_test(
     name = "quantize_models_test",
+    size = "large",
     srcs = ["quantize_models_test.py"],
     python_version = "PY3",
     deps = [
