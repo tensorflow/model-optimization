@@ -145,20 +145,16 @@ def _save_restore_keras_model(model):
   return loaded_model
 
 
-def _save_restore_saved_model(model):
+def _save_restore_tf_model(model):
   tmpdir = tempfile.mkdtemp()
-  tf.keras.experimental.export_saved_model(model, tmpdir)
-
+  tf.keras.models.save_model(model, tmpdir, save_format='tf')
   with prune.prune_scope():
-    loaded_model = tf.keras.experimental.load_from_saved_model(tmpdir)
-
-  loaded_model.compile(
-      loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    loaded_model = tf.keras.models.load_model(tmpdir)
   return loaded_model
 
 
 def save_restore_fns():
-  return [_save_restore_keras_model, _save_restore_saved_model]
+  return [_save_restore_keras_model, _save_restore_tf_model]
 
 
 # Assertion/Sparsity Verification functions.

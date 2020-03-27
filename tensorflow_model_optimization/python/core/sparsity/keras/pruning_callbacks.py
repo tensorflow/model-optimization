@@ -57,7 +57,14 @@ class UpdatePruningStep(callbacks.Callback):
   """
 
   def on_train_begin(self, logs=None):
-    self.step = K.get_value(self.model.optimizer.iterations)
+    prunable_layers = _collect_prunable_layers(self.model)
+    if prunable_layers:
+      if prunable_layers[0].pruning_step < 0:
+        self.step = K.get_value(self.model.optimizer.iterations)
+      else:
+        self.step = prunable_layers[0].pruning_step + 1
+    else:
+      self.step = 0
 
   def on_train_batch_begin(self, batch, logs=None):
     tuples = []
