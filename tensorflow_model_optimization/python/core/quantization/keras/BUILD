@@ -288,7 +288,9 @@ py_test(
     name = "quantize_models_test",
     size = "large",
     srcs = ["quantize_models_test.py"],
+    flaky = True,
     python_version = "PY3",
+    shard_count = 10,
     deps = [
         ":quantize",
         ":utils",

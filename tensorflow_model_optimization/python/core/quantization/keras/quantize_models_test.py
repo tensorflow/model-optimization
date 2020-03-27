@@ -81,9 +81,9 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
 
   def _create_test_data(self, model):
     x_train = np.random.randn(
-        *self._batch(model.input.get_shape().as_list(), 20)).astype('float32')
+        *self._batch(model.input.get_shape().as_list(), 2)).astype('float32')
     y_train = tf.keras.utils.to_categorical(
-        np.random.randint(1000, size=(20, 1)), 1000)
+        np.random.randint(1000, size=(2, 1)), 1000)
 
     return x_train, y_train
 
