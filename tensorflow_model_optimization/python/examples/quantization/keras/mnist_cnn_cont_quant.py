@@ -134,7 +134,7 @@ with quantize.quantize_scope():
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
 converter.representative_dataset = calibration_gen
-converter.experimental_new_quantizer = True
+converter._experimental_new_quantizer = True  # pylint: disable=protected-access
 converter.target_spec.supported_ops = [
     tf.lite.OpsSet.TFLITE_BUILTINS_INT8
 ]  # to enable post-training quantization with the representative dataset
