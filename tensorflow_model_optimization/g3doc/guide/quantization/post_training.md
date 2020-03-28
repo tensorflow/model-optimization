@@ -5,7 +5,17 @@ hardware accelerator latency, processing, power, and model size with little
 degradation in model accuracy. These techniques can be performed on an
 already-trained float TensorFlow model and applied during TensorFlow Lite
 conversion. These techniques are enabled as options in the
-[TensorFlow Lite converter](https://www.tensorflow.org/lite/convert/):
+[TensorFlow Lite converter](https://www.tensorflow.org/lite/convert/).
+
+To jump right into end-to-end examples, see the following tutorials:
+
+ - [Post-training dynamic range
+   quantization](https://www.tensorflow.org/lite/performance/post_training_quant)
+ - [Post-training full integer
+   quantization](https://www.tensorflow.org/lite/performance/post_training_integer_quant)
+ - [Post-training float16
+   quantization](https://www.tensorflow.org/lite/performance/post_training_float16_quant)
+
 
 ## Quantizing weights
 

@@ -31,17 +31,8 @@ upper_tabs:
         path: /model_optimization/guide/pruning/train_sparse_models
 
       - heading: Quantization
-      - title: Overview
-        path: /model_optimization/guide/quantization
       - title: Post-training quantization
-        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_quant.ipynb
-        status: external
-      - title: Post-training integer quantization
-        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_integer_quant.ipynb
-        status: external
-      - title: Post-training float16 quantization
-        path: https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_float16_quant.ipynb
-        status: external
+        path: /model_optimization/guide/quantization/post_training
 
     - name: API
       skip_translation: true
