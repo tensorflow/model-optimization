@@ -1,18 +1,28 @@
-# TensorFlow model optimization roadmap
-
-**Updated: May 14th, 2019**
+**Updated: Mar 27th, 2020**
 
 ## Quantization
 
-*   Post training quantization for hybrid kernels --
-    [Launched](https://medium.com/tensorflow/introducing-the-model-optimization-toolkit-for-tensorflow-254aca1ba0a3)
+*   Post training quantization for dynamic-range kernels --
+    [Launched](https://blog.tensorflow.org/2018/09/introducing-model-
+    optimization-toolkit.html)
 *   Post training quantization for (8b) fixed-point kernels --
-    [Launched](https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-post-training-integer-quantization-b4964a1ea9ba)
-*   Quantization-aware Training for (8b) fixed-point kernels
-*   Extend post and during training APIs to (8b) fixed-point RNNs
-*   Quantization tooling for low bit-width (< 8b) fixed-point kernels
+    [Launched](https://blog.tensorflow.org/2019/06/tensorflow-integer-
+    quantization.html)
+*   Training with quantization for (8b) fixed-point kernels -- WIP
+*   Post training quantization for (8b) fixed-point RNNs
+*   During training quantization for (8b) fixed-point RNNs
+*   Quality and performance improvements to post training dynamic-range
+quantization
 
 ## Pruning / Sparsity
-* Magnitude based weight pruning during training -- [Launched](https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-pruning-api-42cac9157a6a)
-* Support for sparse model execution
 
+*   During-training magnitude-based weight pruning --
+[Launched](https://blog.tensorflow.org/2019/05/tf-model-optimization-toolkit-
+pruning-API.html)
+*   Sparse model execution support in TensorFlow Lite --
+[WIP](https://github.com/tensorflow/model-optimization/issues/173)
+*   Weight clustering API
+
+## Compression
+
+*   Tensor compression API
