@@ -18,10 +18,13 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import unittest
+from absl.testing import parameterized
+
 import numpy as np
 import tensorflow as tf
 
-from tensorflow_model_optimization.python.core.keras import compat
+from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 
@@ -67,17 +70,12 @@ class _TestHelper(object):
       self.assertIsInstance(quantizer, quantizers.MovingAverageQuantizer)
 
   def _assert_kernel_equality(self, a, b):
-    # TODO(tfmot): branch on eager mode also.
-    if tf.__version__[0] == '1':
-      self.assertEqual(a, b)
-    # TODO(tfmot): find why self.assertAllEqual(a, b) doesn't work as
-    # https://www.tensorflow.org/api_docs/python/tf/test/TestCase#assertAllClose
-    # suggests).
-    else:
-      self.assertAllEqual(a.numpy(), b.numpy())
+    self.assertAllEqual(a.numpy(), b.numpy())
 
 
-class QuantizeRegistryTest(tf.test.TestCase, _TestHelper):
+@keras_parameterized.run_all_keras_modes
+class QuantizeRegistryTest(
+    tf.test.TestCase, parameterized.TestCase, _TestHelper):
 
   def setUp(self):
     super(QuantizeRegistryTest, self).setUp()
@@ -93,13 +91,12 @@ class QuantizeRegistryTest(tf.test.TestCase, _TestHelper):
     self.assertTrue(self.quantize_registry.supports(l.Dense(10)))
     self.assertTrue(self.quantize_registry.supports(l.Conv2D(10, (2, 2))))
 
+  @unittest.skip
   def testSupports_KerasRNNLayers(self):
-    if not compat.is_v1_apis():
-      return
-
     self.assertTrue(self.quantize_registry.supports(l.LSTM(10)))
     self.assertTrue(self.quantize_registry.supports(l.GRU(10)))
 
+  @unittest.skip
   def testSupports_KerasRNNLayerWithKerasRNNCells(self):
     self.assertTrue(self.quantize_registry.supports(l.RNN(cell=l.LSTMCell(10))))
     self.assertTrue(
@@ -109,6 +106,7 @@ class QuantizeRegistryTest(tf.test.TestCase, _TestHelper):
   def testDoesNotSupport_CustomLayer(self):
     self.assertFalse(self.quantize_registry.supports(self.CustomLayer()))
 
+  @unittest.skip
   def testDoesNotSupport_RNNLayerWithCustomRNNCell(self):
 
     class MinimalRNNCell(l.Layer):
@@ -131,9 +129,6 @@ class QuantizeRegistryTest(tf.test.TestCase, _TestHelper):
       self.quantize_registry.get_quantize_config(self.CustomLayer())
 
   def testReturnsConfig_KerasLayer(self):
-    if not compat.is_v1_apis():
-      return
-
     model = keras.Sequential([(
         l.Dense(2, input_shape=(3,)))])
     layer = model.layers[0]
@@ -169,10 +164,8 @@ class QuantizeRegistryTest(tf.test.TestCase, _TestHelper):
     self.assertLen(output_quantizers, 1)
     self._assert_activation_quantizers(output_quantizers)
 
+  @unittest.skip
   def testReturnsConfig_KerasRNNLayer(self):
-    if not compat.is_v1_apis():
-      return
-
     model = keras.Sequential([(
         l.LSTM(2, input_shape=(3, 2)))])
     layer = model.layers[0]
@@ -191,6 +184,7 @@ class QuantizeRegistryTest(tf.test.TestCase, _TestHelper):
     self.assertEqual(
         [layer.cell.activation, layer.cell.recurrent_activation], activations)
 
+  @unittest.skip
   def testReturnsConfig_KerasRNNLayerWithKerasRNNCells(self):
     lstm_cell = l.LSTMCell(3)
     gru_cell = l.GRUCell(2)
@@ -259,9 +253,6 @@ class Default8BitQuantizeConfigTest(tf.test.TestCase, _TestHelper):
     self.assertEqual([layer.activation], activations)
 
   def testSetsQuantizeWeights(self):
-    if not compat.is_v1_apis():
-      return
-
     layer = self._simple_dense_layer()
     quantize_kernel = K.variable(np.ones(layer.kernel.shape.as_list()))
 

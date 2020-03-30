@@ -147,16 +147,16 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       # compat.v2 to support legacy TensorFlow 2.X
       # behavior where the v2 RNN uses the v1 RNNCell instead of the v2 RNNCell.
       # See b/145939875 for details.
-      _QuantizeInfo(tf.keras.layers.GRUCell, ['kernel', 'recurrent_kernel'],
-                    ['activation', 'recurrent_activation']),
-      _QuantizeInfo(tf.keras.layers.LSTMCell, ['kernel', 'recurrent_kernel'],
-                    ['activation', 'recurrent_activation']),
-      _QuantizeInfo(tf.keras.experimental.PeepholeLSTMCell,
-                    ['kernel', 'recurrent_kernel'],
-                    ['activation', 'recurrent_activation']),
-      _QuantizeInfo(tf.keras.layers.SimpleRNNCell,
-                    ['kernel', 'recurrent_kernel'],
-                    ['activation', 'recurrent_activation']),
+      # _QuantizeInfo(tf.keras.layers.GRUCell, ['kernel', 'recurrent_kernel'],
+      #               ['activation', 'recurrent_activation']),
+      # _QuantizeInfo(tf.keras.layers.LSTMCell, ['kernel', 'recurrent_kernel'],
+      #               ['activation', 'recurrent_activation']),
+      # _QuantizeInfo(tf.keras.experimental.PeepholeLSTMCell,
+      #               ['kernel', 'recurrent_kernel'],
+      #               ['activation', 'recurrent_activation']),
+      # _QuantizeInfo(tf.keras.layers.SimpleRNNCell,
+      #               ['kernel', 'recurrent_kernel'],
+      #               ['activation', 'recurrent_activation']),
 
       # TODO(tf-mot): Move layers out once Transforms indicate quantization.
       _no_quantize(conv_batchnorm._ConvBatchNorm2D),  # pylint: disable=protected-access
