@@ -104,7 +104,7 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     def build(self, tensor_shape, name, layer):
       return {}
 
-    def __call__(self, inputs, training, **kwargs):
+    def __call__(self, inputs, training, weights, **kwargs):
       return tf.keras.backend.clip(inputs, -1.0, 1.0)
 
     def get_config(self):

@@ -66,7 +66,7 @@ class QuantizeLayer(tf.keras.layers.Layer):
       def quantizer_fn():
         return self.quantizer(
             inputs, train_var,
-            **self.quantizer_vars)
+            weights=self.quantizer_vars)
 
       return quantizer_fn
 
