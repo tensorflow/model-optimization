@@ -55,7 +55,7 @@ class Default8BitConvWeightsQuantizerTest(tf.test.TestCase,
         layer.weights[0].shape, 'kernel', layer)
     # TODO(pulkitb): Add value test to ensure per-axis quantization is
     # happening properly. Probably to quant_ops_test.py
-    quantized_weight = quantizer(layer.weights[0], 0, True,  # pylint: disable=unused-variable
+    quantized_weight = quantizer(layer.weights[0], True,  # pylint: disable=unused-variable
                                  **min_max_vars)
 
     min_var = min_max_vars['min_var']

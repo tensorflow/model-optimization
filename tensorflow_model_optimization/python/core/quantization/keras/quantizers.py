@@ -50,7 +50,7 @@ class Quantizer(object):
     """
 
   @abc.abstractmethod
-  def __call__(self, inputs, step, training, **kwargs):
+  def __call__(self, inputs, training, **kwargs):
     """Apply quantization to the input tensor.
 
     The `step` variable allows a user to design a custom quantizer which
@@ -58,7 +58,6 @@ class Quantizer(object):
 
     Args:
       inputs: Input tensor to be quantized.
-      step: Current step in graph execution.
       training: Whether the graph is currently training.
       **kwargs: Additional variables which may be passed to the quantizer,
         including ones created in the quantizer's build() function.
@@ -113,9 +112,9 @@ class LastValueQuantizer(_QuantizeHelper, Quantizer):
         used as the axis.
       symmetric: If true, use symmetric quantization limits instead of training
         the minimum and maximum of each quantization range separately.
-      narrow_range: If true, in case of 8 bits, narrow_range nudges the
-        quantized range to be [-127, 127] instead of [-128, 127]. This ensures
-        symmetric range has 0 as the centre.
+      narrow_range: In case of 8 bits, narrow_range nudges the quantized range
+        to be [-127, 127] instead of [-128, 127]. This ensures symmetric
+        range has 0 as the centre.
     """
     self.num_bits = num_bits
     self.per_axis = per_axis
@@ -125,12 +124,11 @@ class LastValueQuantizer(_QuantizeHelper, Quantizer):
   def build(self, tensor_shape, name, layer):
     return self._add_range_weights(layer, name)
 
-  def __call__(self, inputs, step, training, **kwargs):
+  def __call__(self, inputs, training, **kwargs):
     """Quantize tensor.
 
     Args:
       inputs: Input tensor to be quantized.
-      step: Current step in graph execution.
       training: Whether the graph is currently training.
       **kwargs: Contains `min_var` and `max_var` tf variables.
 
@@ -193,12 +191,11 @@ class MovingAverageQuantizer(_QuantizeHelper, Quantizer):
   def build(self, tensor_shape, name, layer):
     return self._add_range_weights(layer, name)
 
-  def __call__(self, inputs, step, training, **kwargs):
+  def __call__(self, inputs, training, **kwargs):
     """Quantize tensor.
 
     Args:
       inputs: Input tensor to be quantized.
-      step: Current step in graph execution.
       training: Whether the graph is currently training.
       **kwargs: Contains `min_var` and `max_var` tf variables.
 

@@ -118,7 +118,7 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     """Use currying to return True/False specialized fns to the cond."""
 
     def quantizer_fn():
-      return quantizer(x, self.optimizer_step, training, **quantizer_vars)
+      return quantizer(x, training, **quantizer_vars)
 
     return quantizer_fn
 

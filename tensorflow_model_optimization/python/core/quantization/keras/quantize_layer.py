@@ -65,7 +65,7 @@ class QuantizeLayer(tf.keras.layers.Layer):
     def _make_quantizer_fn(train_var):
       def quantizer_fn():
         return self.quantizer(
-            inputs, self.optimizer_step, train_var,
+            inputs, train_var,
             **self.quantizer_vars)
 
       return quantizer_fn

@@ -54,7 +54,7 @@ class QuantizersTest(tf.test.TestCase, parameterized.TestCase):
     max_var = tf.Variable(0.0)
 
     kwargs = {'min_var': min_var, 'max_var': max_var}
-    quant_tensor = quantizer(inputs, step=0, training=True, **kwargs)
+    quant_tensor = quantizer(inputs, training=True, **kwargs)
 
     compat.initialize_variables(self)
     results = self.evaluate(quant_tensor)
