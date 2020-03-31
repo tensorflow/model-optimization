@@ -1,23 +1,21 @@
-# Quantization-aware training
+# Quantization aware training
 
-<!-- TODO(tfmot): finalize on discussion of navigation vs overview sentence first. -->
 There are two forms of quantization: post-training quantization and
-quantization-aware training. We recommend starting with [the first](index.md)
-since it's easier to use, though the second is often better for model accuracy.
+quantization aware training. Start with [post-training quantization](post_training.md)
+since it's easier to use, though quantization aware training is often better for
+model accuracy.
 
-This page provides an overview on quantization-aware training to help you
+This page provides an overview on quantization aware training to help you
 determine how it fits with your use case.
 
-<!-- TODO(tfmot): fix urls once ready -->
-
 *   To dive right into an end-to-end example, see the
-    [quantization-aware training with Keras example](quantization_aware_training.ipynb).
+    [quantization aware training example](training_example.md).
 *   To quickly find the APIs you need for your use case, see the
-    [quantization-aware training comprehensive guide](quantization_aware_training_guide.md).
+    [quantization aware training comprehensive guide](training_comprehensive_guide.md).
 
 ### Overview
 
-Quantization-aware training emulates inference-time quantization, creating a
+Quantization aware training emulates inference-time quantization, creating a
 model that downstream tools will use to produce actually quantized models.
 The quantized models use lower-precision (e.g. 8-bit instead of 32-bit float),
 leading to benefits during deployment.
@@ -33,18 +31,21 @@ such as the [EdgeTPU](https://coral.ai/docs/edgetpu/benchmarks/) and NNAPI.
 The technique is used in production in speech, vision, text, and translate use
 cases. The code currently supports vision use cases and will expand over time.
 
-#### Research quantization and associated hardware
+#### Experiment with quantization and associated hardware
 
-Users can configure the quantization parameters (e.g. number of
-bits) and to some degree, the underlying algorithms. With these changes
-from the API defaults, there is no easy path to deployment.
+Users can configure the quantization parameters (e.g. number of bits) and to
+some degree, the underlying algorithms. With these changes from the API
+defaults, there is no supported path to deployment.
+
+APIs specific to this configuration are experimental and not subject to backward
+compatibility.
 
 #### API compatibility
 
 Users can apply quantization with the following APIs:
 
 *   Model building: `tf.keras` with only Sequential and Functional models.
-*   TensorFlow versions: TF 2.x for tf-nightly
+*   TensorFlow versions: TF 2.x for tf-nightly.
     *   `tf.compat.v1` with a TF 2.X package is not supported.
 *   TensorFlow execution mode: eager execution
 
@@ -59,44 +60,51 @@ It is on our roadmap to add support in the following areas:
 
 Support is available in the following areas:
 
-<!-- TODO(tfmot): link to layers when ready -->
-
-*   Model coverage: Mobilenet v1 and v2 and models using whitelisted layers.
-<!-- TODO(tfmot): add more details and ensure they are all correct. -->
+*   Model coverage: models using
+    [whitelisted layers](https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_registry.py),
+    BatchNormalization, and in limited cases, Concat.
+    <!-- TODO(tfmot): add more details and ensure they are all correct. -->
 *   Hardware acceleration: our API defaults are compatible with acceleration on
     EdgeTPU, NNAPI, and TFLite backends, amongst others.
+*   Deploy with quantization: only per-axis quantization for convolutional
+    layers, not per-tensor quantization, is currently supported.
 
 It is on our roadmap to add support in the following areas:
 
 <!-- TODO(tfmot): file Github issue. Update as more functionality is added prior
 to launch. -->
 
-*   Model coverage: extended coverage for vision and other use cases, including
-    concat support.
+*   Model coverage: extended to include RNN/LSTMs and general Concat support.
+*   Experiment with quantization use cases:
+    *   Experiment with quantization algorithms that span Keras layers or
+        require the training step.
+    *   Stabilize APIs.
 
 ### Results
 
 #### Image classification with tools
-
-<!-- TODO(tfmot): update numbers if new and old experiments have varying
-results -->
 
 <figure>
   <table>
     <tr>
       <th>Model</th>
       <th>Non-quantized Top-1 Accuracy </th>
-      <th>Quantized Accuracy </th>
+      <th>8-bit Quantized Accuracy </th>
     </tr>
     <tr>
       <td>MobilenetV1 224</td>
-      <td>71.02%</td>
-      <td>71.05%</td>
+      <td>71.03%</td>
+      <td>71.06%</td>
+    </tr>
+    <tr>
+      <td>Resnet v1 50</td>
+      <td>76.3%</td>
+      <td>76.1%</td>
     </tr>
     <tr>
       <td>MobilenetV2 224</td>
-      <td>71.9%</td>
-      <td>71.1%</td>
+      <td>70.77%</td>
+      <td>70.01%</td>
     </tr>
  </table>
 </figure>
@@ -110,16 +118,11 @@ The models were tested on Imagenet and evaluated in both TensorFlow and TFLite.
     <tr>
       <th>Model</th>
       <th>Non-quantized Top-1 Accuracy </th>
-      <th>Quantized Accuracy </th>
+      <th>8-Bit Quantized Accuracy </th>
     <tr>
       <td>Nasnet-Mobile</td>
       <td>74%</td>
       <td>73%</td>
-    </tr>
-    <tr>
-      <td>Resnet-v1 50</td>
-      <td>75.2%</td>
-      <td>75%</td>
     </tr>
     <tr>
       <td>Resnet-v2 50</td>
@@ -134,12 +137,12 @@ The models were tested on Imagenet and evaluated in both TensorFlow and TFLite.
 ### Examples
 
 In addition to the
-[quantization-aware training with Keras example](quantization_with_keras.ipynb),
+[quantization aware training example](training_example.md),
 see the following examples:
 
-*   Train a CNN model on the MNIST handwritten digit classification task with
+*   CNN model on the MNIST handwritten digit classification task with
     quantization:
-    [code](https://github.com/tensorflow/model-optimization/blob/master/tensorflow_model_optimization/python/examples/quantization/keras/mnist_cnn.py)
+    [code](https://github.com/tensorflow/model-optimization/blob/master/tensorflow_model_optimization/python/core/quantization/keras/quantize_functional_test.py)
 
 For background on something similar, see the *Quantization and Training of
 Neural Networks for Efficient Integer-Arithmetic-Only Inference*

@@ -12,19 +12,20 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""TFLite transforms."""
+"""Default 8-bit transforms."""
 
 import collections
 import inspect
+
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_configs
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_configs
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantize_registry
 
 LayerNode = transforms.LayerNode
 LayerPattern = transforms.LayerPattern
@@ -174,13 +175,13 @@ class Conv2DBatchNormQuantize(transforms.Transform):
     conv_layer_node.layer['config']['activation'] = \
       keras.activations.serialize(quantize_aware_activation.NoOpActivation())
     bn_layer_node.metadata['quantize_config'] = \
-      tflite_quantize_configs.OutputQuantizeConfig()
+      default_8bit_quantize_configs.Default8BitOutputQuantizeConfig()
 
     return match_layer
 
   def custom_objects(self):
     return {
-        'NoOpQuantizeConfig': tflite_quantize_configs.NoOpQuantizeConfig,
+        'NoOpQuantizeConfig': default_8bit_quantize_configs.NoOpQuantizeConfig,
         'NoOpActivation': quantize_aware_activation.NoOpActivation
     }
 
@@ -206,13 +207,13 @@ class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
     conv_layer_node.layer['config']['activation'] = \
       keras.activations.serialize(quantize_aware_activation.NoOpActivation())
     bn_layer_node.metadata['quantize_config'] = \
-      tflite_quantize_configs.NoOpQuantizeConfig()
+      default_8bit_quantize_configs.NoOpQuantizeConfig()
 
     return match_layer
 
   def custom_objects(self):
     return {
-        'NoOpQuantizeConfig': tflite_quantize_configs.NoOpQuantizeConfig,
+        'NoOpQuantizeConfig': default_8bit_quantize_configs.NoOpQuantizeConfig,
         'NoOpActivation': quantize_aware_activation.NoOpActivation
     }
 
@@ -283,7 +284,8 @@ class ConcatTransform(transforms.Transform):
     concat_layer_node = match_layer
     feeding_layer_nodes = match_layer.input_layers
 
-    tflite_registry = tflite_quantize_registry.TFLiteQuantizeRegistry()
+    default_registry = default_8bit_quantize_registry.QuantizeRegistry(
+    )
 
     feed_quantize_configs = []
     for feed_layer_node in feeding_layer_nodes:
@@ -297,14 +299,14 @@ class ConcatTransform(transforms.Transform):
         if layer_class == keras.layers.Concatenate:
           # Input layer to Concat is also Concat. Don't quantize it.
           feed_layer_node.metadata['quantize_config'] = \
-            tflite_quantize_configs.NoOpQuantizeConfig()
+            default_8bit_quantize_configs.NoOpQuantizeConfig()
           continue
 
-        if not tflite_registry._is_supported_layer(layer_class):
+        if not default_registry._is_supported_layer(layer_class):
           # Feeding layer is not supported by registry
           return match_layer
 
-        quantize_config = tflite_registry._get_quantize_config(layer_class)
+        quantize_config = default_registry._get_quantize_config(layer_class)
         feed_layer_node.metadata['quantize_config'] = quantize_config
 
       feed_quantize_configs.append(quantize_config)
@@ -317,7 +319,7 @@ class ConcatTransform(transforms.Transform):
 
     if not concat_layer_node.metadata.get('quantize_config'):
       concat_layer_node.metadata['quantize_config'] = \
-        tflite_quantize_configs.OutputQuantizeConfig()
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig()
 
     return concat_layer_node
 

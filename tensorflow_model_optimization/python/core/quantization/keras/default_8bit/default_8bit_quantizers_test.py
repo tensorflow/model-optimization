@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for TFLite Quantizers."""
+"""Tests for default Quantizers."""
 
 from __future__ import absolute_import
 from __future__ import division
@@ -23,15 +23,16 @@ from absl.testing import parameterized
 import tensorflow as tf
 
 from tensorflow.python.keras import keras_parameterized
-from tensorflow_model_optimization.python.core.quantization.keras.tflite import tflite_quantizers
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
-ConvWeightsQuantizer = tflite_quantizers.ConvWeightsQuantizer
+Default8BitConvWeightsQuantizer = default_8bit_quantizers.Default8BitConvWeightsQuantizer
 
 keras = tf.keras
 
 
 @keras_parameterized.run_all_keras_modes
-class ConvWeightsQuantizerTest(tf.test.TestCase, parameterized.TestCase):
+class Default8BitConvWeightsQuantizerTest(tf.test.TestCase,
+                                          parameterized.TestCase):
 
   @parameterized.parameters(
       (keras.layers.Conv2D, {
@@ -44,7 +45,7 @@ class ConvWeightsQuantizerTest(tf.test.TestCase, parameterized.TestCase):
       })
   )
   def testConstructsMinMaxVarsCorrectShape(self, layer_type, kwargs):
-    quantizer = ConvWeightsQuantizer()
+    quantizer = Default8BitConvWeightsQuantizer()
 
     model = keras.Sequential([
         layer_type(input_shape=(5, 2, 3), **kwargs)])

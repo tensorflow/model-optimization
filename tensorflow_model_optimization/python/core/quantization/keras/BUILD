@@ -16,7 +16,7 @@ py_library(
         # APIs are not exposed, but still needed for internal imports.
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers",
-        "//tensorflow_model_optimization/python/core/quantization/keras/tflite",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit",
     ],
 )
 
@@ -229,7 +229,7 @@ py_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_registry",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
     ],
 )
 
@@ -245,9 +245,9 @@ py_library(
         ":quantize_layer",
         ":quantize_wrapper",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_layout_transform",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
-        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_layout_transform",
-        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_registry",
     ],
 )
 
@@ -265,7 +265,7 @@ py_test(
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
-        "//tensorflow_model_optimization/python/core/quantization/keras/tflite:tflite_quantize_registry",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
     ],
 )
 
@@ -288,7 +288,9 @@ py_test(
     name = "quantize_models_test",
     size = "large",
     srcs = ["quantize_models_test.py"],
+    flaky = True,
     python_version = "PY3",
+    shard_count = 10,
     deps = [
         ":quantize",
         ":utils",
