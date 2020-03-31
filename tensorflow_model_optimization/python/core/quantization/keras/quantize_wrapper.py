@@ -47,6 +47,16 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
       quantize_config: `QuantizeConfig` to quantize layer.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
+    if layer is None:
+      raise ValueError('`layer` cannot be None.')
+
+    # Check against keras.Model since it is an instance of keras.layers.Layer.
+    if not isinstance(layer, tf.keras.layers.Layer) or isinstance(
+        layer, tf.keras.Model):
+      raise ValueError(
+          '`layer` can only be a `tf.keras.layers.Layer` instance. '
+          'You passed an instance of type: {input}.'.format(
+              input=layer.__class__.__name__))
 
     if quantize_config is None:
       raise ValueError('quantize_config cannot be None. It is needed to '

@@ -104,6 +104,12 @@ def quantize_model(to_quantize):
         'You passed an instance of type: {input}.'.format(
             input=to_quantize.__class__.__name__))
 
+  if not isinstance(to_quantize, keras.Sequential) \
+      and not to_quantize._is_graph_network:  # pylint: disable=protected-access
+    raise ValueError(
+        '`to_quantize` can only either be a tf.keras Sequential or '
+        'Functional model.')
+
   annotated_model = quantize_annotate_model(to_quantize)
   return quantize_apply(annotated_model)
 
@@ -149,10 +155,22 @@ def quantize_annotate_model(to_annotate):
         'You passed an instance of type: {input}.'.format(
             input=to_annotate.__class__.__name__))
 
+  if not isinstance(to_annotate, keras.Sequential) \
+      and not to_annotate._is_graph_network:  # pylint: disable=protected-access
+    raise ValueError(
+        '`to_annotate` can only either be a tf.keras Sequential or '
+        'Functional model.')
+
   def _add_quant_wrapper(layer):
+    """Add annotation wrapper."""
     # Already annotated layer. No need to wrap.
     if isinstance(layer, quantize_annotate_mod.QuantizeAnnotate):
       return layer
+
+    if isinstance(layer, tf.keras.Model):
+      raise ValueError(
+          'Quantizing a tf.keras Model inside another tf.keras Model is not supported.'
+      )
 
     return quantize_annotate_mod.QuantizeAnnotate(layer)
 

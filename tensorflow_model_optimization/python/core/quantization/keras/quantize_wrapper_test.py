@@ -180,6 +180,15 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
 
     self.assertEqual(wrapper_from_config.get_config(), wrapper.get_config())
 
+  def testQuantizeWrapper_FailsWithModel(self):
+    layer = keras.layers.Dense(5, activation='relu', input_shape=(10,))
+    model = keras.Sequential([layer])
+
+    with self.assertRaises(ValueError):
+      QuantizeWrapper(
+          model,
+          quantize_config=self.quantize_registry.get_quantize_config(layer))
+
   # TODO(pulkitb): Add test to ensure weights are also preserved.
 
 
