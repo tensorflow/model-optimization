@@ -76,9 +76,8 @@ class _ConvBatchNormMixin(object):
       def quantizer_fn():
         return self.weight_quantizer(
             folded_conv_kernel,
-            self.optimizer_step,
             training,
-            **self._weight_quantizer_vars)  # pylint: disable=protected-access
+            weights=self._weight_quantizer_vars)  # pylint: disable=protected-access
 
       return quantizer_fn
 
@@ -92,12 +91,13 @@ class _ConvBatchNormMixin(object):
       """Return quantizer conditioned on whether training or not."""
 
       def quantizer_fn():
+        weights = {
+            'min_var': self._activation_min_var,  # pylint: disable=protected-access
+            'max_var': self._activation_max_var}  # pylint: disable=protected-access
         return self.activation_quantizer(
             activation_output,
-            self.optimizer_step,
             training,
-            min_var=self._activation_min_var,  # pylint: disable=protected-access
-            max_var=self._activation_max_var)  # pylint: disable=protected-access
+            weights=weights)
 
       return quantizer_fn
 

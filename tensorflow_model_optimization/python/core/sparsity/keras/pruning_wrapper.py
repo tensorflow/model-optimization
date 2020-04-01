@@ -19,6 +19,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import inspect
 # import g3
 import numpy as np
 import tensorflow as tf
@@ -254,6 +255,12 @@ class PruneLowMagnitude(Wrapper):
     #
     # self.add_update does nothing during eager execution.
     self.add_update(self.pruning_obj.weight_mask_op())
+
+    args = inspect.getargspec(self.layer.call)[0]
+    # Propagate the training bool to the underlying layer if it accepts
+    # training as an arg.
+    if 'training' in args:
+      return self.layer.call(inputs, training=training)
 
     return self.layer.call(inputs)
 

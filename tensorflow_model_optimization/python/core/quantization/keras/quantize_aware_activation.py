@@ -154,8 +154,8 @@ class QuantizeAwareActivation(object):
       def quantizer_fn(x=x,
                        quantizer=self.quantizer,
                        quantizer_vars=quantizer_vars):
-        return quantizer(x, self.step, training,
-                         **quantizer_vars)
+        return quantizer(x, training,
+                         weights=quantizer_vars)
 
       return quantizer_fn
 

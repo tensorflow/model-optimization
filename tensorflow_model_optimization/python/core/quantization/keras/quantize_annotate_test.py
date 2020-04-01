@@ -89,6 +89,12 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
     self.assertEqual(wrapper_from_config.get_config(), wrapper.get_config())
 
+  def testQuantizeAnnotate_FailsWithModel(self):
+    layer = keras.layers.Dense(5, activation='relu', input_shape=(10,))
+    model = keras.Sequential([layer])
+
+    with self.assertRaises(ValueError):
+      quantize_annotate.QuantizeAnnotate(model)
 
 if __name__ == '__main__':
   tf.test.main()

@@ -52,6 +52,17 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
     """
     super(QuantizeAnnotate, self).__init__(layer, **kwargs)
 
+    if layer is None:
+      raise ValueError('`layer` cannot be None.')
+
+    # Check against keras.Model since it is an instance of keras.layers.Layer.
+    if not isinstance(layer, tf.keras.layers.Layer) or isinstance(
+        layer, tf.keras.Model):
+      raise ValueError(
+          '`layer` can only be a `tf.keras.layers.Layer` instance. '
+          'You passed an instance of type: {input}.'.format(
+              input=layer.__class__.__name__))
+
     self.quantize_config = quantize_config
 
     self._track_trackable(layer, name='layer')

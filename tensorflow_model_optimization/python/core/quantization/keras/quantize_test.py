@@ -165,6 +165,20 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     annotated_model = quantize_annotate_model(model)
     self.assertIsNone(annotated_model.optimizer)
 
+  def testQuantizeAnnotateModel_FailsWithSubclassedModel(self):
+    class MyModel(keras.Model):
+      def call(self, inputs, training=None, mask=None):  # pylint: disable=g-wrong-blank-lines
+        return inputs
+
+    with self.assertRaises(ValueError):
+      quantize_annotate_model(MyModel())
+
+  def testQuantizeAnnotateModel_FailsWithNestedModels(self):
+    with self.assertRaises(ValueError):
+      quantize_annotate_model(
+          keras.Sequential(
+              [keras.Sequential([keras.layers.Dense(10, input_shape=(2,))])]))
+
 
 class QuantizeApplyTest(tf.test.TestCase):
 
@@ -410,6 +424,14 @@ class QuantizeApplyTest(tf.test.TestCase):
 
     quantized_model = quantize_apply(annotated_model)
     self.assertIsNone(quantized_model.optimizer)
+
+  def testQuantizeApply_RunsWhenNestedModelNotAnnotated(self):
+    annotated_model = keras.Sequential([
+        keras.Sequential([keras.layers.Dense(10, input_shape=(2,))]),
+        quantize_annotate_layer(keras.layers.Dense(10)),
+    ])
+
+    quantize_apply(annotated_model)
 
 
 if __name__ == '__main__':
