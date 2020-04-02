@@ -68,41 +68,43 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
   #  1. Only layers with 'kernel' attribute work. Need to extend to others.
   #  2. Activations are not tested currently.
   #  3. RNN layers need to be added
-
+  # TODO(tfmot): reenable some of these once added back to whitelist
+  # after testing in quantize_functional_test.py.
   @parameterized.parameters(
-      (layers.Conv1D, (3, 6), {
-          'filters': 4,
-          'kernel_size': 2
-      }),
+      # (layers.Conv1D, (3, 6), {
+      #     'filters': 4,
+      #     'kernel_size': 2
+      # }),
       (layers.Conv2D, (4, 6, 1), {
           'filters': 4,
           'kernel_size': (2, 2)
       }),
-      (layers.Conv2DTranspose, (7, 6, 3), {
-          'filters': 2,
-          'kernel_size': (3, 3)
-      }),
-      (layers.Conv3D, (5, 7, 6, 3), {
-          'filters': 2,
-          'kernel_size': (3, 3, 3)
-      }),
-      (layers.Conv3DTranspose, (5, 7, 6, 3), {
-          'filters': 2,
-          'kernel_size': (3, 3, 3)
-      }),
+      # (layers.Conv2DTranspose, (7, 6, 3), {
+      #     'filters': 2,
+      #     'kernel_size': (3, 3)
+      # }),
+      # (layers.Conv3D, (5, 7, 6, 3), {
+      #     'filters': 2,
+      #     'kernel_size': (3, 3, 3)
+      # }),
+      # (layers.Conv3DTranspose, (5, 7, 6, 3), {
+      #     'filters': 2,
+      #    'kernel_size': (3, 3, 3)
+      # }),
       # TODO(pulkitb): Add missing SeparableConv layers. The initializers are
       # different, so will need a change.
       (layers.Dense, (3,), {
           'units': 2
       }),
-      (layers.LocallyConnected1D, (3, 6), {
-          'filters': 4,
-          'kernel_size': 2
-      }),
-      (layers.LocallyConnected2D, (4, 6, 1), {
-          'filters': 4,
-          'kernel_size': (2, 2)
-      }))
+      # (layers.LocallyConnected1D, (3, 6), {
+      #     'filters': 4,
+      #     'kernel_size': 2
+      # }),
+      # (layers.LocallyConnected2D, (4, 6, 1), {
+      #     'filters': 4,
+      #     'kernel_size': (2, 2)
+      # })
+  )
   def testQuantizesWeights_KerasLayers(self, layer_type, input_shape, kwargs):
     self.weights = None
 

@@ -72,6 +72,8 @@ class _RNNHelper(object):
 class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
   """QuantizationRegistry for built-in Keras classes for default 8-bit scheme."""
 
+  # TODO(tfmot): expand layers test in quantize_functional_test.py
+  # to add more layers to whitelist.
   _LAYER_QUANTIZE_INFO = [
 
       # Activation Layers
@@ -84,16 +86,18 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       # layers.ThresholdedReLU,
 
       # Convolution Layers
-      _QuantizeInfo(layers.Conv1D, ['kernel'], ['activation']),
-      _QuantizeInfo(layers.Conv3D, ['kernel'], ['activation']),
-      # TODO(pulkitb): Verify Transpose layers.
-      _QuantizeInfo(layers.Conv2DTranspose, ['kernel'], ['activation']),
-      _QuantizeInfo(layers.Conv3DTranspose, ['kernel'], ['activation']),
+      # _QuantizeInfo(layers.Conv1D, ['kernel'], ['activation']),
+
+      # layers.Conv2D is supported and handled in code below.
+
+      # _QuantizeInfo(layers.Conv3D, ['kernel'], ['activation']),
+      # _QuantizeInfo(layers.Conv2DTranspose, ['kernel'], ['activation']),
+      # _QuantizeInfo(layers.Conv3DTranspose, ['kernel'], ['activation']),
       _no_quantize(layers.Cropping1D),
       _no_quantize(layers.Cropping2D),
       _no_quantize(layers.Cropping3D),
       _no_quantize(layers.UpSampling1D),
-      _no_quantize(layers.UpSampling2D),
+      # _no_quantize(layers.UpSampling2D),
       _no_quantize(layers.UpSampling3D),
       _no_quantize(layers.ZeroPadding1D),
       _no_quantize(layers.ZeroPadding2D),
@@ -107,7 +111,7 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       _QuantizeInfo(layers.Dense, ['kernel'], ['activation']),
       _no_quantize(layers.Dropout),
       _no_quantize(layers.Flatten),
-      _no_quantize(layers.Masking),
+      # _no_quantize(layers.Masking),
       _no_quantize(layers.Permute),
       _no_quantize(layers.RepeatVector),
       _no_quantize(layers.Reshape),
@@ -119,7 +123,7 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       # Pooling Layers
       _QuantizeInfo(layers.AveragePooling1D, [], [], True),
       _QuantizeInfo(layers.AveragePooling2D, [], [], True),
-      _QuantizeInfo(layers.AveragePooling3D, [], [], True),
+      # _QuantizeInfo(layers.AveragePooling3D, [], [], True),
       _QuantizeInfo(layers.GlobalAveragePooling1D, [], [], True),
       _QuantizeInfo(layers.GlobalAveragePooling2D, [], [], True),
       _QuantizeInfo(layers.GlobalAveragePooling3D, [], [], True),
@@ -128,11 +132,10 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       _no_quantize(layers.GlobalMaxPooling3D),
       _no_quantize(layers.MaxPooling1D),
       _no_quantize(layers.MaxPooling2D),
-      _no_quantize(layers.MaxPooling3D),
+      # _no_quantize(layers.MaxPooling3D),
 
-      # TODO(pulkitb): Verify Locally Connected layers.
-      _QuantizeInfo(layers.LocallyConnected1D, ['kernel'], ['activation']),
-      _QuantizeInfo(layers.LocallyConnected2D, ['kernel'], ['activation']),
+      # _QuantizeInfo(layers.LocallyConnected1D, ['kernel'], ['activation']),
+      # _QuantizeInfo(layers.LocallyConnected2D, ['kernel'], ['activation']),
       _QuantizeInfo(layers.Add, [], [], True),
 
       # Enable once verified with TFLite behavior.
