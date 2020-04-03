@@ -1,6 +1,7 @@
 book_path: /model_optimization/_book.yaml
 project_path: /model_optimization/_project.yaml
-description: <!--no description-->
+description: A suite of tools for optimizing ML models for deployment and execution. Improve
+ performance and efficiency, reduce latency for inference at the edge.
 landing_page:
   custom_css_path: /site-assets/css/style.css
   rows:
