@@ -17,7 +17,7 @@ provide the efficiency required by your application.
 ## 3. Post-training tooling
 
 If you cannot use a pre-trained model for your application, try using
-[TensorFlow Lite post-training quantization tools](./quantization/index.md)
+[TensorFlow Lite post-training quantization tools](./quantization/post_training)
 during [TensorFlow Lite conversion](https://www.tensorflow.org/lite/convert),
 which can optimize your already-trained TensorFlow model.
 

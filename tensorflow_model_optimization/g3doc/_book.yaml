@@ -19,6 +19,8 @@ upper_tabs:
         path: /model_optimization/guide/get_started
       - title: Optimize further
         path: /model_optimization/guide/optimize_further
+      - title: Install
+        path: /model_optimization/guide/install
       - title: Roadmap
         path: /model_optimization/guide/roadmap
 

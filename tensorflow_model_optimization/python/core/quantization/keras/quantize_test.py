@@ -305,7 +305,7 @@ class QuantizeApplyTest(tf.test.TestCase):
         quantize_annotate_layer(keras.layers.Dense(3, input_shape=(2,)))])
 
     quantized_model = quantize_apply(annotated_model)
-    quantized_layer = quantized_model.layers[0]
+    quantized_layer = quantized_model.layers[1]
 
     # 'activation' gets replaced while quantizing the model. Hence excluded
     # from equality checks.
@@ -327,7 +327,7 @@ class QuantizeApplyTest(tf.test.TestCase):
         '_TestQuantizeConfig': _TestQuantizeConfig
     }):
       quantized_model = quantize_apply(annotated_model)
-    quantized_layer = quantized_model.layers[0]
+    quantized_layer = quantized_model.layers[1]
 
     self._assert_layer_quantized(annotated_model.layers[0], quantized_layer)
     self.assertIsInstance(quantized_layer.quantize_config, _TestQuantizeConfig)
@@ -341,7 +341,7 @@ class QuantizeApplyTest(tf.test.TestCase):
 
     with custom_object_scope({'_TestQuantizeConfig': _TestQuantizeConfig}):
       quantized_model = quantize_apply(annotated_model)
-    quantized_layer = quantized_model.layers[0]
+    quantized_layer = quantized_model.layers[1]
 
     self._assert_layer_quantized(annotated_model.layers[0], quantized_layer)
     self.assertIsInstance(quantized_layer.quantize_config, _TestQuantizeConfig)
