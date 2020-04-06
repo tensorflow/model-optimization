@@ -256,7 +256,7 @@ class PruneLowMagnitude(Wrapper):
     # self.add_update does nothing during eager execution.
     self.add_update(self.pruning_obj.weight_mask_op())
 
-    args = inspect.getargspec(self.layer.call)[0]
+    args = inspect.getfullargspec(self.layer.call)[0]
     # Propagate the training bool to the underlying layer if it accepts
     # training as an arg.
     if 'training' in args:
