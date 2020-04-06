@@ -75,7 +75,6 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
   # TODO(tfmot): expand layers test in quantize_functional_test.py
   # to add more layers to whitelist.
   _LAYER_QUANTIZE_INFO = [
-
       # Activation Layers
       _QuantizeInfo(layers.ReLU, [], [], True),
       _QuantizeInfo(layers.Softmax, [], []),
@@ -89,6 +88,7 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       # _QuantizeInfo(layers.Conv1D, ['kernel'], ['activation']),
 
       # layers.Conv2D is supported and handled in code below.
+      # layers.DepthwiseConv2D is supported and handled in code below.
 
       # _QuantizeInfo(layers.Conv3D, ['kernel'], ['activation']),
       # _QuantizeInfo(layers.Conv2DTranspose, ['kernel'], ['activation']),
@@ -96,12 +96,12 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       _no_quantize(layers.Cropping1D),
       _no_quantize(layers.Cropping2D),
       _no_quantize(layers.Cropping3D),
-      _no_quantize(layers.UpSampling1D),
+      # _no_quantize(layers.UpSampling1D),
       # _no_quantize(layers.UpSampling2D),
-      _no_quantize(layers.UpSampling3D),
+      # _no_quantize(layers.UpSampling3D),
       _no_quantize(layers.ZeroPadding1D),
       _no_quantize(layers.ZeroPadding2D),
-      _no_quantize(layers.ZeroPadding3D),
+      # _no_quantize(layers.ZeroPadding3D),
       # Enable once verified.
       # layers.SeparableConv1D,
       # layers.SeparableConv2D,
@@ -113,7 +113,7 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       _no_quantize(layers.Flatten),
       # _no_quantize(layers.Masking),
       _no_quantize(layers.Permute),
-      _no_quantize(layers.RepeatVector),
+      # _no_quantize(layers.RepeatVector),
       _no_quantize(layers.Reshape),
       _no_quantize(layers.SpatialDropout1D),
       _no_quantize(layers.SpatialDropout2D),
@@ -130,7 +130,7 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       _no_quantize(layers.GlobalMaxPooling1D),
       _no_quantize(layers.GlobalMaxPooling2D),
       _no_quantize(layers.GlobalMaxPooling3D),
-      _no_quantize(layers.MaxPooling1D),
+      # _no_quantize(layers.MaxPooling1D),
       _no_quantize(layers.MaxPooling2D),
       # _no_quantize(layers.MaxPooling3D),
 
@@ -140,7 +140,10 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
       # Enable once verified with TFLite behavior.
       # layers.Embedding: ['embeddings'],
-      # layers.BatchNormalization: [],
+
+      # BatchNormalization is handled elsewhere, in the cases
+      # where it's preceded by convolutional layers or a Dense layer.
+      #   layers.BatchNormalization: [],
 
       # Merge layers to be added.
 
