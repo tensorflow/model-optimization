@@ -23,7 +23,7 @@ import six
 
 @six.add_metaclass(abc.ABCMeta)
 class QuantizeRegistry(object):
-  """ABC interface which specifies specifies how layers should be quantized.
+  """ABC interface which specifies how layers should be quantized.
 
   The Registry is designed to function as a repository of `QuantizeConfig`s
   linked to layers. The idea is that while applying quantization to the various
