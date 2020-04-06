@@ -25,3 +25,13 @@ py_library(
         "//tensorflow_model_optimization/python/core/sparsity",
     ],
 )
+
+py_binary(
+    name = "build_docs",
+    srcs = ["build_docs.py"],
+    python_version = "PY3",
+    deps = [
+        # tensorflow_docs/api_generator:generate_lib dep1,
+        "//third_party/tensorflow_model_optimization",
+    ],
+)
