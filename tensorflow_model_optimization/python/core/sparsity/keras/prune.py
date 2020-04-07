@@ -227,6 +227,10 @@ def strip_pruning(model):
         'Expected model to be a `tf.keras.Model` instance but got: ', model)
 
   def _strip_pruning_wrapper(layer):
+    if isinstance(layer, tf.keras.Model):
+      # A keras model with prunable layers
+      return keras.models.clone_model(
+          layer, input_tensors=None, clone_function=_strip_pruning_wrapper)
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       # The _batch_input_shape attribute in the first layer makes a Sequential
       # model to be built. This makes sure that when we remove the wrapper from
