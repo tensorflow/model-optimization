@@ -24,12 +24,12 @@ leading to benefits during deployment.
 
 Quantization brings improvements via model compression and latency reduction.
 With the API defaults, the model size shrinks by 4x, and we typically see
-between 1.5 - 4x improvements in CPU latency in the tested backends. Further
+between 1.5 - 4x improvements in CPU latency in the tested backends. Eventually,
 latency improvements can be seen on compatible machine learning accelerators,
 such as the [EdgeTPU](https://coral.ai/docs/edgetpu/benchmarks/) and NNAPI.
 
 The technique is used in production in speech, vision, text, and translate use
-cases. The code currently supports vision use cases and will expand over time.
+cases. The code currently supports a subset of these models.
 
 #### Experiment with quantization and associated hardware
 
@@ -62,10 +62,12 @@ Support is available in the following areas:
 
 *   Model coverage: models using
     [whitelisted layers](https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_registry.py),
-    BatchNormalization, and in limited cases, Concat.
+    BatchNormalization when it follows a convolutional or `Dense` layer, and in
+    limited cases, `Concat`.
     <!-- TODO(tfmot): add more details and ensure they are all correct. -->
 *   Hardware acceleration: our API defaults are compatible with acceleration on
-    EdgeTPU, NNAPI, and TFLite backends, amongst others.
+    EdgeTPU, NNAPI, and TFLite backends, amongst others. See the caveat in the
+    roadmap.
 *   Deploy with quantization: only per-axis quantization for convolutional
     layers, not per-tensor quantization, is currently supported.
 
@@ -75,6 +77,9 @@ It is on our roadmap to add support in the following areas:
 to launch. -->
 
 *   Model coverage: extended to include RNN/LSTMs and general Concat support.
+*   Hardware acceleration: ensure the TFLite converter can produce full-integer
+    models. See [this
+    issue](https://github.com/tensorflow/tensorflow/issues/38285) for details.
 *   Experiment with quantization use cases:
     *   Experiment with quantization algorithms that span Keras layers or
         require the training step.
