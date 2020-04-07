@@ -292,6 +292,9 @@ class QuantizeFullIntegerModelTest(tf.test.TestCase, parameterized.TestCase):
           layers.MaxPooling1D,
           layers.UpSampling1D,
           layers.UpSampling3D,
+          # Not done since not registered since not per-axis yet.
+          layers.Conv1D,
+          layers.Conv2DTranspose,
       ]
   ])
   def testQuantizeSingleLayer_ProducesFullIntegerModel_TF2(
@@ -373,6 +376,16 @@ class QuantizeFullIntegerModelTest(tf.test.TestCase, parameterized.TestCase):
           layers.SpatialDropout1D,
           layers.SpatialDropout2D,
           layers.SpatialDropout3D,
+          # Note done because not support in TF2, so we had disabled it.
+          # Works fine in TF1 TOCO.
+          layers.MaxPooling1D,
+          layers.UpSampling3D,
+          layers.RepeatVector,
+          layers.ZeroPadding3D,
+          layers.Conv1D,
+          layers.Conv2DTranspose,
+          layers.UpSampling1D,
+          layers.UpSampling2D,
       ]
   ])
   def testQuantizeSingleLayer_ProducesFullIntegerModel_TF1(
