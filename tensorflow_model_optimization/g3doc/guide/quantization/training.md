@@ -13,14 +13,14 @@ determine how it fits with your use case.
 *   To quickly find the APIs you need for your use case, see the
     [quantization aware training comprehensive guide](training_comprehensive_guide.md).
 
-### Overview
+## Overview
 
 Quantization aware training emulates inference-time quantization, creating a
 model that downstream tools will use to produce actually quantized models.
 The quantized models use lower-precision (e.g. 8-bit instead of 32-bit float),
 leading to benefits during deployment.
 
-#### Deploy with quantization
+### Deploy with quantization
 
 Quantization brings improvements via model compression and latency reduction.
 With the API defaults, the model size shrinks by 4x, and we typically see
@@ -31,7 +31,7 @@ such as the [EdgeTPU](https://coral.ai/docs/edgetpu/benchmarks/) and NNAPI.
 The technique is used in production in speech, vision, text, and translate use
 cases. The code currently supports a subset of these models.
 
-#### Experiment with quantization and associated hardware
+### Experiment with quantization and associated hardware
 
 Users can configure the quantization parameters (e.g. number of bits) and to
 some degree, the underlying algorithms. With these changes from the API
@@ -40,7 +40,7 @@ defaults, there is no supported path to deployment.
 APIs specific to this configuration are experimental and not subject to backward
 compatibility.
 
-#### API compatibility
+### API compatibility
 
 Users can apply quantization with the following APIs:
 
@@ -56,7 +56,7 @@ It is on our roadmap to add support in the following areas:
 *   Model building: clarify how Subclassed Models have limited to no support
 *   Distributed training: `tf.distribute`
 
-#### General support matrix
+### General support matrix
 
 Support is available in the following areas:
 
@@ -85,9 +85,9 @@ to launch. -->
         require the training step.
     *   Stabilize APIs.
 
-### Results
+## Results
 
-#### Image classification with tools
+### Image classification with tools
 
 <figure>
   <table>
@@ -116,7 +116,7 @@ to launch. -->
 
 The models were tested on Imagenet and evaluated in both TensorFlow and TFLite.
 
-#### Image classification for technique
+### Image classification for technique
 
 <figure>
   <table>
@@ -139,7 +139,7 @@ The models were tested on Imagenet and evaluated in both TensorFlow and TFLite.
 
 The models were tested on Imagenet and evaluated in both TensorFlow and TFLite.
 
-### Examples
+## Examples
 
 In addition to the
 [quantization aware training example](training_example.md),
