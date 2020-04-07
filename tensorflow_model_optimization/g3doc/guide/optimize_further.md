@@ -15,4 +15,4 @@ tune.
 Training time tools available for you to try:
 
 * [Weight pruning](./pruning/)
-* Quantization (coming soon!)
+* [Quantization] (./quantization/training)
