@@ -22,6 +22,8 @@ import six
 class QuantizeConfig(object):
   """ABC interface for Keras layers to express how they should be quantized.
 
+  This is an experimental API not subject to backward compatibility.
+
   QuantizeConfig encapsulates all the information needed by the quantization
   code to quantize a layer. It specifies what parts of a layer should be
   quantized and how they should be quantized.

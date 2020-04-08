@@ -35,6 +35,8 @@ keras = tf.keras
 class Quantizer(object):
   """ABC interface which encapsulates the logic of how to quantize tensors.
 
+  This is an experimental API not subject to backward compatibility.
+
   A `Quantizer` is used by the library code to apply the mathematical
   transformations which actually quantize a tensor, hence allowing the user
   precise control over the algorithm with which tensors are quantized. When used
@@ -149,6 +151,8 @@ class LastValueQuantizer(_QuantizeHelper, Quantizer):
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
     """Construct a LastValueQuantizer.
 
+    This is an experimental API not subject to backward compatibility.
+
     Args:
       num_bits: Number of bits for quantization
       per_axis: Whether to apply per_axis quantization. The last dimension is
@@ -217,6 +221,8 @@ class MovingAverageQuantizer(_QuantizeHelper, Quantizer):
 
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
     """Construct a MovingAverageQuantizer.
+
+    This is an experimental API not subject to backward compatibility.
 
     Args:
       num_bits: Number of bits for quantization
