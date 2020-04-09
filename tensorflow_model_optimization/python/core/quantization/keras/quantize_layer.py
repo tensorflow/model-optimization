@@ -31,7 +31,7 @@ deserialize_keras_object = tf.keras.utils.deserialize_keras_object
 
 
 class QuantizeLayer(tf.keras.layers.Layer):
-  """Emulated quantization of tensors passed through the layer."""
+  """Emulate quantization of tensors passed through the layer."""
 
   def __init__(self, quantizer, **kwargs):
     """Create a QuantizeLayer.

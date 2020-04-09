@@ -26,8 +26,10 @@ def convert_keras_to_tflite(model,
                             output_path,
                             custom_objects=None,
                             is_quantized=True,
+                            inference_type=None,
                             inference_input_type=None,
-                            input_quant_params=(-128., 255.)):
+                            input_quant_params=(-128., 255.),
+                            experimental_new_converter=True):
   """Convert Keras model to TFLite."""
   if custom_objects is None:
     custom_objects = {}
@@ -40,7 +42,7 @@ def convert_keras_to_tflite(model,
     converter = tf.lite.TFLiteConverter.from_keras_model_file(
         keras_file, custom_objects=custom_objects)
 
-  converter.experimental_new_converter = True
+  converter.experimental_new_converter = experimental_new_converter
 
   if is_quantized:
     if not compat.is_v1_apis():
@@ -48,6 +50,10 @@ def convert_keras_to_tflite(model,
     else:
       converter.inference_type = tf.lite.constants.INT8
       converter.inference_input_type = tf.lite.constants.FLOAT
+      # TODO(tfmot): should be able to make everything use the
+      # same inference_type in TF 1.X tests.
+      if inference_type:
+        converter.inference_type = inference_type
       if inference_input_type:
         converter.inference_input_type = inference_input_type
 

@@ -47,7 +47,7 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
 
     Args:
       layer: The keras layer to be quantized.
-      quantize_config: `QuantizeConfig` to quantize layer.
+      quantize_config: Optional `QuantizeConfig` to quantize the layer.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
     super(QuantizeAnnotate, self).__init__(layer, **kwargs)

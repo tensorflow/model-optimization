@@ -33,6 +33,12 @@ upper_tabs:
         path: /model_optimization/guide/pruning/train_sparse_models
 
       - heading: Quantization
+      - title: Quantization aware training overview
+        path: /model_optimization/guide/quantization/training
+      - title: Quantization aware training example
+        path: /model_optimization/guide/quantization/training_example
+      - title: Quantization aware training comprehensive guide
+        path: /model_optimization/guide/quantization/training_comprehensive_guide
       - title: Post-training quantization
         path: /model_optimization/guide/quantization/post_training
 

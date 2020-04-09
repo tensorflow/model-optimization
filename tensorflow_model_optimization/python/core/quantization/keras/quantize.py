@@ -30,14 +30,12 @@ keras = tf.keras
 
 
 def quantize_scope(*args):
-  """Required scope to deserialize quantized models stored in tf.keras h5 format.
+  """Scope which can be used to deserialize quantized Keras models and layers.
 
-  Args:
-    *args: Variable length list of dictionaries of name, class pairs to add to
-      the scope created by this method.
-
-  Returns:
-    Object of type `CustomObjectScope` with quantization objects included.
+  Under `quantize_scope`, Keras methods such as `tf.keras.load_model` and
+  `tf.keras.models.model_from_config` will be able to deserialize Keras models
+  and layers which contain quantization classes such as `QuantizeConfig`
+  and `Quantizer`.
 
   Example:
 
@@ -46,7 +44,21 @@ def quantize_scope(*args):
 
   with quantize_scope():
     loaded_model = tf.keras.models.load_model(keras_file)
+
+  # If your quantized model uses custom objects such as a specific `Quantizer`,
+  # you can pass them to quantize_scope to deserialize your model.
+  with quantize_scope({'FixedRangeQuantizer', FixedRangeQuantizer}
+    loaded_model = tf.keras.models.load_model(keras_file)
   ```
+
+  For further understanding, see `tf.keras.utils.custom_object_scope`.
+
+  Args:
+    *args: Variable length list of dictionaries of `{name, class}` pairs to add
+      to the scope created by this method.
+
+  Returns:
+    Object of type `CustomObjectScope` with quantization objects included.
   """
   quantization_objects = {
       'QuantizeAnnotate': quantize_annotate_mod.QuantizeAnnotate,
@@ -65,34 +77,46 @@ def quantize_scope(*args):
   return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
 
 
-# TODO(tfmot): link to docs to explain what quantization implementation means.
 def quantize_model(to_quantize):
-  """Quantize a whole tf.keras model with the default quantization implementation.
+  """Quantize a `tf.keras` model with the default quantization implementation.
 
-  To be more precise, `quantize_model` creates a model that emulates
-  quantization during training and stores information that downstream
-  tools will use to produce actually quantized models.
+  Quantization constructs a model which emulates quantization during training.
+  This allows the model to learn parameters robust to quantization loss, and
+  also model the accuracy of a quantized model.
+
+  For more information, see
+  https://www.tensorflow.org/model_optimization/guide/quantization/training
 
   Quantize a model:
 
   ```python
+  # Quantize sequential model
   model = quantize_model(
       keras.Sequential([
           layers.Dense(10, activation='relu', input_shape=(100,)),
           layers.Dense(2, activation='sigmoid')
       ]))
+
+  # Quantize functional model
+  in = tf.keras.Input((3,))
+  out = tf.keras.Dense(2)(in)
+  model = tf.keras.Model(in, out)
+
+  quantized_model = quantize_model(model)
   ```
 
   Note that this function removes the optimizer from the original model.
-  Additionally, training the model returned by `quantize_model` will not affect
-  the weights of the original model.
+
+  The returned model copies over weights from the original model. So while
+  it preserves the original weights, training it will not modify the weights
+  of the original model.
 
   Args:
     to_quantize: tf.keras model to be quantized. It can have pre-trained
       weights.
 
   Returns:
-    Returns a new tf.keras model prepared for quantization.
+    Returns a new `tf.keras` model prepared for quantization.
   """
   if to_quantize is None:
     raise ValueError('`to_quantize` cannot be None')
@@ -115,35 +139,43 @@ def quantize_model(to_quantize):
 
 
 def quantize_annotate_model(to_annotate):
-  """Annotate a model to be quantized.
+  """Annotate a `tf.keras` model to be quantized.
 
-  This function does not actually quantize anything. It is merely to specify
-  that the model needs to be quantized.
+  This function does not actually quantize the model. It merely specifies
+  that the model needs to be quantized. `quantize_apply` can then be used
+  to quantize the model.
 
   This function is intended to be used in conjunction with the
-  `quantize_annotate_layer`
-  API. It's otherwise simpler to use `quantize_model`.
+  `quantize_annotate_layer` API. Otherwise, it is simpler to use
+  `quantize_model`.
 
-  Annotate a model while overriding the default behavior for one layer:
+  Annotate a model while overriding the default behavior for a layer:
 
   ```python
   quantize_config = MyDenseQuantizeConfig()
 
-  model = quantize_annotate_model(keras.Sequential([
+  model = quantize_annotate_model(
+    keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
-      quantize_annotate_layer(layers.Dense(2, activation='sigmoid'),
-      quantize_config=quantize_config)
-  ])))
+      quantize_annotate_layer(
+          layers.Dense(2, activation='sigmoid'),
+          quantize_config=quantize_config)
+    ]))
+
+  # The first Dense layer gets quantized with the default behavior,
+  # but the second layer uses `MyDenseQuantizeConfig` for quantization.
+  quantized_model = quantize_apply(model)
   ```
 
   Note that this function removes the optimizer from the original model.
 
   Args:
-    to_annotate: tf.keras model to annotate to be quantized.
+    to_annotate: `tf.keras` model which needs to be quantized.
 
   Returns:
     New tf.keras model with each layer in the model wrapped with
-    `QuantizeAnnotate`.
+    `QuantizeAnnotate`. The new model preserves weights from the original
+    model.
   """
   if to_annotate is None:
     raise ValueError('`to_annotate` cannot be None')
@@ -179,10 +211,15 @@ def quantize_annotate_model(to_annotate):
 
 
 def quantize_annotate_layer(to_annotate, quantize_config=None):
-  """Annotate a layer to be quantized.
+  """Annotate a `tf.keras` layer to be quantized.
 
-  This function does not actually quantize anything. It is merely to specify
-  that the layer needs to be quantized.
+  This function does not actually quantize the layer. It is merely used to
+  specify that the layer should be quantized. The layer then gets quantized
+  accordingly when `quantize_apply` is used.
+
+  This method should be used when the user wants to quantize only certain
+  layers of the model, or change the default behavior of how a layer is
+  quantized.
 
   Annotate a layer:
 
@@ -190,17 +227,19 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
   model = keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
       quantize_annotate_layer(layers.Dense(2, activation='sigmoid'))
-  ]))
+  ])
+
+  # Only the second Dense layer is quantized.
+  quantized_model = quantize_apply(model)
   ```
 
-  Note that this function removes the optimizer from the original model.
-
   Args:
-    to_annotate: tf.keras layer to annotate to be quantized.
-    quantize_config: `QuantizeConfig` to quantize layer.
+    to_annotate: `tf.keras` layer which needs to be quantized.
+    quantize_config: optional `QuantizeConfig` which controls how the layer is
+      quantized. In its absence, the default behavior for the layer is used.
 
   Returns:
-    tf.keras layer wrapped with `QuantizeAnnotate`.
+    `tf.keras` layer wrapped with `QuantizeAnnotate`.
   """
   if to_annotate is None:
     raise ValueError('`to_annotate` cannot be None')
@@ -225,31 +264,43 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
 
 
 def quantize_apply(model):
-  """Introduce quantization operations to a tf.keras model.
+  """Quantize a `tf.keras` model.
 
-  This function takes a tf.keras model which has been annotated with
-  `quantize_annotate` and constructs a new model in which each of the
-  annotated layers will ultimately be quantized. The new quantization
-  operations enable the model to **emulate* quantization during training
-  and store information that downstream tools will use to produce
-  an actually quantized model.
+  Quantization constructs a model which emulates quantization during training.
+  This allows the model to learn parameters robust to quantization loss, and
+  also model the accuracy of a quantized model.
 
-  Apply quantization to a model:
+  For more information, see
+  https://www.tensorflow.org/model_optimization/guide/quantization/training
+  TODO(tfmot): Link blog once launched.
 
+  This function takes a `tf.keras` model in which the desired layers for
+  quantization have already been annotated. See `quantize_annotate_model`
+  and `quantize_annotate_layer`.
+
+  Quantize model.
   ```python
-  model = quantize_apply(annotated_model)
+  model = keras.Sequential([
+      layers.Dense(10, activation='relu', input_shape=(100,)),
+      quantize_annotate_layer(layers.Dense(2, activation='sigmoid'))
+  ])
+
+  # Only the second Dense layer is quantized.
+  quantized_model = quantize_apply(model)
   ```
 
   Note that this function removes the optimizer from the original model.
-  Additionally, training the model returned by `quantize_apply` will not affect
-  the weights of the original model.
+
+  The returned model copies over weights from the original model. So while
+  it preserves the original weights, training it will not modify the weights
+  of the original model.
 
   Args:
-    model: A tf.keras Sequential or Functional model which has been annotated
-    with `quantize_annotate`. It can have pre-trained weights.
+    model: A `tf.keras` Sequential or Functional model which has been annotated
+      with `quantize_annotate`. It can have pre-trained weights.
 
   Returns:
-    Returns a new tf.keras model in which the annotated layers have been
+    Returns a new `tf.keras` model in which the annotated layers have been
     prepared for quantization.
   """
   if model is None:

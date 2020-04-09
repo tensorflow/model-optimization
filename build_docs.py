@@ -12,7 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tool to generate external api_docs for tensorflow_model_optimization.
+"""Tool to generate open source api_docs for tensorflow_model_optimization.
+
+To use, you must first install the tensorflow docs package:
+
+  pip install git+https://github.com/tensorflow/docs
+
 
 Note:
   If duplicate or spurious docs are generated (e.g. internal names), consider
@@ -31,7 +36,6 @@ from absl import flags
 from tensorflow_docs.api_generator import generate_lib
 
 import tensorflow_model_optimization as tfmot
-
 
 flags.DEFINE_string("output_dir", "/tmp/model_optimization_api",
                     "Where to output the docs")
