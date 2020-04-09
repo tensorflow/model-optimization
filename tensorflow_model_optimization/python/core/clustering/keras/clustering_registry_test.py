@@ -15,21 +15,19 @@
 """Tests for keras clustering registry API."""
 
 import numpy as np
+import tensorflow as tf
+
+from absl.testing import parameterized
+from tensorflow.keras import backend as K
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
-
-import tensorflow.compat.v1 as tf
-import tensorflow.compat.v1.keras.backend as K
-
-from absl.testing import parameterized
 
 keras = tf.keras
 errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
 
-layers = keras.layers
 ClusterRegistry = clustering_registry.ClusteringRegistry
 ClusteringLookupRegistry = clustering_registry.ClusteringLookupRegistry
 

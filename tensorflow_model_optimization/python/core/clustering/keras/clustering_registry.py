@@ -15,10 +15,10 @@
 """Registry responsible for built-in keras classes."""
 
 import abc
-
 import six
-import tensorflow.compat.v1 as tf
-from tensorflow.python.keras import layers
+import tensorflow as tf
+
+from tensorflow.keras import layers
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 
@@ -150,21 +150,18 @@ class ClusteringLookupRegistry(object):
   work on, or the strategy is not currently supported
   """
   _LAYERS_RESHAPE_MAP = {
-      layers.convolutional.Conv1D: {'kernel': ConvolutionalWeightsCA},
-      layers.convolutional.Conv2D: {'kernel': ConvolutionalWeightsCA},
-      layers.convolutional.Conv2DTranspose: {'kernel': ConvolutionalWeightsCA},
-      layers.convolutional.Conv3D: {'kernel': ConvolutionalWeightsCA},
-      layers.convolutional.Conv3DTranspose: {'kernel': ConvolutionalWeightsCA},
-      layers.convolutional.DepthwiseConv2D: {
-          'depthwise_kernel': ConvolutionalWeightsCA},
-      layers.convolutional.SeparableConv1D: {
-          'pointwise_kernel': ConvolutionalWeightsCA},
-      layers.convolutional.SeparableConv2D: {
-          'pointwise_kernel': ConvolutionalWeightsCA},
-      layers.core.Dense: {'kernel': DenseWeightsCA},
-      layers.embeddings.Embedding: {'embeddings': DenseWeightsCA},
-      layers.local.LocallyConnected1D: {'kernel': ConvolutionalWeightsCA},
-      layers.local.LocallyConnected2D: {'kernel': ConvolutionalWeightsCA},
+      layers.Conv1D: {'kernel': ConvolutionalWeightsCA},
+      layers.Conv2D: {'kernel': ConvolutionalWeightsCA},
+      layers.Conv2DTranspose: {'kernel': ConvolutionalWeightsCA},
+      layers.Conv3D: {'kernel': ConvolutionalWeightsCA},
+      layers.Conv3DTranspose: {'kernel': ConvolutionalWeightsCA},
+      layers.DepthwiseConv2D: {'depthwise_kernel': ConvolutionalWeightsCA},
+      layers.SeparableConv1D: {'pointwise_kernel': ConvolutionalWeightsCA},
+      layers.SeparableConv2D: {'pointwise_kernel': ConvolutionalWeightsCA},
+      layers.Dense: {'kernel': DenseWeightsCA},
+      layers.Embedding: {'embeddings': DenseWeightsCA},
+      layers.LocallyConnected1D: {'kernel': ConvolutionalWeightsCA},
+      layers.LocallyConnected2D: {'kernel': ConvolutionalWeightsCA},
   }
 
   @classmethod
@@ -234,83 +231,94 @@ class ClusteringRegistry(object):
   # the variables within the layers which hold the kernel weights. This
   # allows the wrapper to access and modify the weights.
   _LAYERS_WEIGHTS_MAP = {
-      layers.advanced_activations.ELU: [],
-      layers.advanced_activations.LeakyReLU: [],
-      layers.advanced_activations.ReLU: [],
-      layers.advanced_activations.Softmax: [],
-      layers.advanced_activations.ThresholdedReLU: [],
-      layers.convolutional.Conv1D: ['kernel'],
-      layers.convolutional.Conv2D: ['kernel'],
-      layers.convolutional.Conv2DTranspose: ['kernel'],
-      layers.convolutional.Conv3D: ['kernel'],
-      layers.convolutional.Conv3DTranspose: ['kernel'],
-      layers.convolutional.Cropping1D: [],
-      layers.convolutional.Cropping2D: [],
-      layers.convolutional.Cropping3D: [],
-      layers.convolutional.DepthwiseConv2D: ['depthwise_kernel'],
-      layers.convolutional.SeparableConv1D: ['pointwise_kernel'],
-      layers.convolutional.SeparableConv2D: ['pointwise_kernel'],
-      layers.convolutional.UpSampling1D: [],
-      layers.convolutional.UpSampling2D: [],
-      layers.convolutional.UpSampling3D: [],
-      layers.convolutional.ZeroPadding1D: [],
-      layers.convolutional.ZeroPadding2D: [],
-      layers.convolutional.ZeroPadding3D: [],
-      layers.core.Activation: [],
-      layers.core.ActivityRegularization: [],
-      layers.core.Dense: ['kernel'],
-      layers.core.Dropout: [],
-      layers.core.Flatten: [],
-      layers.core.Lambda: [],
-      layers.core.Masking: [],
-      layers.core.Permute: [],
-      layers.core.RepeatVector: [],
-      layers.core.Reshape: [],
-      layers.core.SpatialDropout1D: [],
-      layers.core.SpatialDropout2D: [],
-      layers.core.SpatialDropout3D: [],
-      layers.embeddings.Embedding: ['embeddings'],
-      layers.local.LocallyConnected1D: ['kernel'],
-      layers.local.LocallyConnected2D: ['kernel'],
-      layers.merge.Add: [],
-      layers.merge.Average: [],
-      layers.merge.Concatenate: [],
-      layers.merge.Dot: [],
-      layers.merge.Maximum: [],
-      layers.merge.Minimum: [],
-      layers.merge.Multiply: [],
-      layers.merge.Subtract: [],
-      layers.noise.AlphaDropout: [],
-      layers.noise.GaussianDropout: [],
-      layers.noise.GaussianNoise: [],
-      layers.normalization.BatchNormalization: [],
-      layers.normalization.LayerNormalization: [],
-      layers.pooling.AveragePooling1D: [],
-      layers.pooling.AveragePooling2D: [],
-      layers.pooling.AveragePooling3D: [],
-      layers.pooling.GlobalAveragePooling1D: [],
-      layers.pooling.GlobalAveragePooling2D: [],
-      layers.pooling.GlobalAveragePooling3D: [],
-      layers.pooling.GlobalMaxPooling1D: [],
-      layers.pooling.GlobalMaxPooling2D: [],
-      layers.pooling.GlobalMaxPooling3D: [],
-      layers.pooling.MaxPooling1D: [],
-      layers.pooling.MaxPooling2D: [],
-      layers.pooling.MaxPooling3D: [],
+      layers.ELU: [],
+      layers.LeakyReLU: [],
+      layers.ReLU: [],
+      layers.Softmax: [],
+      layers.ThresholdedReLU: [],
+      layers.Conv1D: ['kernel'],
+      layers.Conv2D: ['kernel'],
+      layers.Conv2DTranspose: ['kernel'],
+      layers.Conv3D: ['kernel'],
+      layers.Conv3DTranspose: ['kernel'],
+      layers.Cropping1D: [],
+      layers.Cropping2D: [],
+      layers.Cropping3D: [],
+      layers.DepthwiseConv2D: ['depthwise_kernel'],
+      layers.SeparableConv1D: ['pointwise_kernel'],
+      layers.SeparableConv2D: ['pointwise_kernel'],
+      layers.UpSampling1D: [],
+      layers.UpSampling2D: [],
+      layers.UpSampling3D: [],
+      layers.ZeroPadding1D: [],
+      layers.ZeroPadding2D: [],
+      layers.ZeroPadding3D: [],
+      layers.Activation: [],
+      layers.ActivityRegularization: [],
+      layers.Dense: ['kernel'],
+      layers.Dropout: [],
+      layers.Flatten: [],
+      layers.Lambda: [],
+      layers.Masking: [],
+      layers.Permute: [],
+      layers.RepeatVector: [],
+      layers.Reshape: [],
+      layers.SpatialDropout1D: [],
+      layers.SpatialDropout2D: [],
+      layers.SpatialDropout3D: [],
+      layers.Embedding: ['embeddings'],
+      layers.LocallyConnected1D: ['kernel'],
+      layers.LocallyConnected2D: ['kernel'],
+      layers.Add: [],
+      layers.Average: [],
+      layers.Concatenate: [],
+      layers.Dot: [],
+      layers.Maximum: [],
+      layers.Minimum: [],
+      layers.Multiply: [],
+      layers.Subtract: [],
+      layers.AlphaDropout: [],
+      layers.GaussianDropout: [],
+      layers.GaussianNoise: [],
+      layers.BatchNormalization: [],
+      layers.LayerNormalization: [],
+      layers.AveragePooling1D: [],
+      layers.AveragePooling2D: [],
+      layers.AveragePooling3D: [],
+      layers.GlobalAveragePooling1D: [],
+      layers.GlobalAveragePooling2D: [],
+      layers.GlobalAveragePooling3D: [],
+      layers.GlobalMaxPooling1D: [],
+      layers.GlobalMaxPooling2D: [],
+      layers.GlobalMaxPooling3D: [],
+      layers.MaxPooling1D: [],
+      layers.MaxPooling2D: [],
+      layers.MaxPooling3D: [],
   }
 
   _RNN_CELLS_WEIGHTS_MAP = {
-      layers.recurrent.GRUCell: ['kernel', 'recurrent_kernel'],
-      layers.recurrent.LSTMCell: ['kernel', 'recurrent_kernel'],
-      layers.recurrent.PeepholeLSTMCell: ['kernel', 'recurrent_kernel'],
-      layers.recurrent.SimpleRNNCell: ['kernel', 'recurrent_kernel'],
+      # NOTE: RNN cells are added via compat.v1 and compat.v2 to support legacy
+      # TensorFlow 2.X behavior where the v2 RNN uses the v1 RNNCell instead of
+      # the v2 RNNCell.
+      tf.compat.v1.keras.layers.GRUCell: ['kernel', 'recurrent_kernel'],
+      tf.compat.v2.keras.layers.GRUCell: ['kernel', 'recurrent_kernel'],
+      tf.compat.v1.keras.layers.LSTMCell: ['kernel', 'recurrent_kernel'],
+      tf.compat.v2.keras.layers.LSTMCell: ['kernel', 'recurrent_kernel'],
+      tf.compat.v1.keras.experimental.PeepholeLSTMCell: [
+          'kernel', 'recurrent_kernel'
+      ],
+      tf.compat.v2.keras.experimental.PeepholeLSTMCell: [
+          'kernel', 'recurrent_kernel'
+      ],
+      tf.compat.v1.keras.layers.SimpleRNNCell: ['kernel', 'recurrent_kernel'],
+      tf.compat.v2.keras.layers.SimpleRNNCell: ['kernel', 'recurrent_kernel'],
   }
 
   _RNN_LAYERS = {
-      layers.recurrent.GRU,
-      layers.recurrent.LSTM,
-      layers.recurrent.RNN,
-      layers.recurrent.SimpleRNN,
+      layers.GRU,
+      layers.LSTM,
+      layers.RNN,
+      layers.SimpleRNN,
   }
 
   _RNN_CELLS_STR = ', '.join(str(_RNN_CELLS_WEIGHTS_MAP.keys()))
@@ -346,7 +354,7 @@ class ClusteringRegistry(object):
 
   @staticmethod
   def _get_rnn_cells(rnn_layer):
-    if isinstance(rnn_layer.cell, layers.recurrent.StackedRNNCells):
+    if isinstance(rnn_layer.cell, layers.StackedRNNCells):
       return rnn_layer.cell.cells
     return [rnn_layer.cell]
 

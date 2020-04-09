@@ -16,16 +16,14 @@
 
 import itertools
 import numpy as np
+import tensorflow as tf
+
+from absl.testing import parameterized
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
-
-from tensorflow.python.framework import test_util as tf_test_util
-
-import tensorflow.compat.v1 as tf
-from absl.testing import parameterized
 
 keras = tf.keras
 errors_impl = tf.errors
@@ -169,5 +167,4 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  tf.disable_v2_behavior()
   test.main()

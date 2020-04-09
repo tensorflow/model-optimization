@@ -15,16 +15,15 @@
 """Tests for keras clustering API."""
 
 import json
+import tensorflow as tf
+
+from absl.testing import parameterized
+from tensorflow.python.keras import keras_parameterized
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
-
-from tensorflow.python.framework import test_util as tf_test_util
-
-import tensorflow.compat.v1 as tf
-from absl.testing import parameterized
 
 keras = tf.keras
 errors_impl = tf.errors
@@ -98,7 +97,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
         count += 1
     return count
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterKerasClusterableLayer(self):
     """
     Verifies that a built-in keras layer marked as clusterable is being
@@ -109,7 +108,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self._validate_clustered_layer(self.keras_clusterable_layer, wrapped_layer)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterKerasNonClusterableLayer(self):
     """
     Verifies that a built-in keras layer not marked as clusterable is
@@ -130,7 +129,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     with self.assertRaises(ValueError):
       cluster.cluster_weights(self.keras_unsupported_layer, **self.params)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterCustomClusterableLayer(self):
     """
     Verifies that a custom clusterable layer is being clustered correctly.
@@ -151,7 +150,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(self.custom_non_clusterable_layer,
                                      **self.params)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelSelectively(self):
     """
     Verifies that layers within a sequential model can be clustered
@@ -165,7 +164,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(clustered_model.layers[0], cluster_wrapper.ClusterWeights)
     self.assertNotIsInstance(clustered_model.layers[1], cluster_wrapper.ClusterWeights)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelSelectively(self):
     """
     Verifies that layers within a functional model can be clustered
@@ -181,7 +180,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(clustered_model.layers[2], cluster_wrapper.ClusterWeights)
     self.assertNotIsInstance(clustered_model.layers[3], cluster_wrapper.ClusterWeights)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterModelValidLayersSuccessful(self):
     """
     Verifies that clustering a sequential model results in all clusterable
@@ -223,7 +222,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
               self.custom_clusterable_layer, self.custom_non_clusterable_layer
           ]), **self.params)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterModelDoesNotWrapAlreadyWrappedLayer(self):
     """
     Verifies that clustering a model that contains an already clustered layer
@@ -274,7 +273,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     clustered_model = cluster.cluster_weights(model, **self.params)
     self.assertEqual(self._count_clustered_layers(clustered_model), 2)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelWithInput(self):
     """
     Verifies that a sequential model with an input layer is being clustered
@@ -308,7 +307,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
           json.loads(clustered_model.to_json()))
       self.assertEqual(loaded_model.built, False)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelPreservesBuiltStateWithInput(self):
     """
     Verifies that clustering a sequential model with an input layer preserves
@@ -329,7 +328,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
           json.loads(clustered_model.to_json()))
     self.assertEqual(loaded_model.built, True)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelPreservesBuiltState(self):
     """
     Verifies that clustering a functional model preserves the built state of
@@ -351,7 +350,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
           json.loads(clustered_model.to_json()))
     self.assertEqual(loaded_model.built, True)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModel(self):
     """
     Verifies that a functional model is being clustered correctly.
@@ -365,7 +364,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     clustered_model = cluster.cluster_weights(model, **self.params)
     self.assertEqual(self._count_clustered_layers(clustered_model), 3)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelWithLayerReused(self):
     """
     Verifies that a layer reused within a functional model multiple times is
@@ -380,7 +379,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     clustered_model = cluster.cluster_weights(model, **self.params)
     self.assertEqual(self._count_clustered_layers(clustered_model), 1)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterSubclassModel(self):
     """
     Verifies that attempting to cluster an instance of a subclass of
@@ -390,7 +389,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     with self.assertRaises(ValueError):
       _ = cluster.cluster_weights(model, **self.params)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testStripClusteringSequentialModel(self):
     """
     Verifies that stripping the clustering wrappers from a sequential model
@@ -407,7 +406,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertEqual(model.get_config(), stripped_model.get_config())
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterStrippingFunctionalModel(self):
     """
     Verifies that stripping the clustering wrappers from a functional model
@@ -426,7 +425,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertEqual(model.get_config(), stripped_model.get_config())
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testClusterWeightsStrippedWeights(self):
     """
     Verifies that stripping the clustering wrappers from a functional model
@@ -444,7 +443,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertEqual(len(stripped_model.get_weights()), cluster_weight_length)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testStripSelectivelyClusteredFunctionalModel(self):
     """
     Verifies that invoking strip_clustering() on a selectively clustered
@@ -462,7 +461,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertIsInstance(stripped_model.layers[2], layers.Dense)
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testStripSelectivelyClusteredSequentialModel(self):
     """
     Verifies that invoking strip_clustering() on a selectively clustered
@@ -480,5 +479,4 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(stripped_model.layers[0], layers.Dense)
 
 if __name__ == '__main__':
-  tf.disable_v2_behavior()
   test.main()

@@ -14,14 +14,13 @@
 # ==============================================================================
 """Keras ClusterWeights wrapper API."""
 
-import tensorflow.compat.v1 as tf
-from tensorflow.python.keras import initializers, backend as k
-from tensorflow.python.keras.layers import Wrapper
+import tensorflow as tf
+
+from tensorflow.keras import initializers, backend as k
+from tensorflow.keras.layers import Layer, Wrapper
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer, clustering_registry, \
   clustering_centroids
-
-Layer = tf.keras.layers.Layer
 
 
 class ClusterWeights(Wrapper):

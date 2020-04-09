@@ -14,12 +14,12 @@
 # ==============================================================================
 """Tests for keras clustering centroids initialisation API."""
 
-from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
-
-import tensorflow.compat.v1 as tf
-import tensorflow.compat.v1.keras.backend as K
+import tensorflow as tf
+import tensorflow.keras.backend as K
 
 from absl.testing import parameterized
+
+from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 
 keras = tf.keras
 errors_impl = tf.errors

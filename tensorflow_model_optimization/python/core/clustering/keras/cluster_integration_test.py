@@ -15,9 +15,10 @@
 """End-to-end tests for keras clustering API."""
 
 import numpy as np
-import tensorflow.compat.v1 as tf
+import tensorflow as tf
 
-from tensorflow.python.framework import test_util as tf_test_util
+from absl.testing import parameterized
+from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 
 
@@ -26,10 +27,10 @@ layers = keras.layers
 test = tf.test
 
 
-class ClusterIntegrationTest(test.TestCase):
+class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
   """Integration tests for clustering."""
 
-  @tf_test_util.run_in_graph_and_eager_modes
+  @keras_parameterized.run_all_keras_modes
   def testValuesRemainClusteredAfterTraining(self):
     """
     Verifies that training a clustered model does not destroy the clusters.
