@@ -1,4 +1,6 @@
-package(default_visibility = ["//visibility:public"])
+package(default_visibility = [
+    "//tensorflow_model_optimization:__subpackages__",
+])
 
 licenses(["notice"])  # Apache 2.0
 

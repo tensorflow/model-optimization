@@ -46,7 +46,6 @@ py_library(
     name = "prune_registry",
     srcs = ["prune_registry.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
         # tensorflow dep1,
@@ -70,7 +69,6 @@ py_test(
     size = "medium",
     srcs = ["pruning_schedule_test.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         ":pruning_schedule",
         # absl/testing:parameterized dep1,
@@ -84,7 +82,6 @@ py_library(
     name = "pruning_wrapper",
     srcs = ["pruning_wrapper.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
         ":prune_registry",
@@ -115,7 +112,6 @@ py_test(
     size = "medium",
     srcs = ["pruning_callbacks_test.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         ":prune",
         ":pruning_callbacks",
@@ -131,7 +127,6 @@ py_library(
     name = "pruning_impl",
     srcs = ["pruning_impl.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         ":pruning_utils",
         # tensorflow dep1,
@@ -144,7 +139,6 @@ py_library(
     name = "pruning_utils",
     srcs = ["pruning_utils.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
         # tensorflow dep1,
@@ -155,7 +149,6 @@ py_library(
     name = "estimator_utils",
     srcs = ["estimator_utils.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
         # tensorflow dep1,
@@ -167,7 +160,6 @@ py_library(
     testonly = 1,
     srcs = ["test_utils.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         ":prune",
         ":pruning_wrapper",
@@ -184,7 +176,6 @@ py_test(
     size = "medium",
     srcs = ["prune_test.py"],
     srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
     deps = [
         ":prune",
         ":pruning_callbacks",
