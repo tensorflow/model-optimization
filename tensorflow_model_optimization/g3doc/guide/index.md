@@ -36,8 +36,10 @@ The area of model optimization can involve various techniques:
     parameters or faster execution. For example, tensor decomposition methods
     and distillation
 
-Our toolkit supports [post-training quantization](./quantization/index.md) and
-[pruning](./pruning/index.md). Training-time quantization is coming soon.
+Our toolkit supports
+[post-training quantization](./quantization/post_training.md),
+[quantization aware training](./quantization/training.md), and
+[pruning](./pruning/index.md).
 
 ### Quantization
 
