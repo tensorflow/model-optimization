@@ -56,14 +56,18 @@ class UpdatePruningStep(callbacks.Callback):
   ```
   """
 
+  def __init__(self):
+    super(UpdatePruningStep, self).__init__()
+    self.prunable_layers = []
+
   def on_train_begin(self, logs=None):
+    # Collect all the prunable layers in the model.
+    self.prunable_layers = _collect_prunable_layers(self.model)
     self.step = K.get_value(self.model.optimizer.iterations)
 
   def on_train_batch_begin(self, batch, logs=None):
     tuples = []
-
-    prunable_layers = _collect_prunable_layers(self.model)
-    for layer in prunable_layers:
+    for layer in self.prunable_layers:
       tuples.append((layer.pruning_step, self.step))
 
     K.batch_set_value(tuples)
@@ -74,8 +78,7 @@ class UpdatePruningStep(callbacks.Callback):
     # the model is saved after completion, the weights represent mask*weights.
     weight_mask_ops = []
 
-    prunable_layers = _collect_prunable_layers(self.model)
-    for layer in prunable_layers:
+    for layer in self.prunable_layers:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         if tf.executing_eagerly():
           layer.pruning_obj.weight_mask_op()
