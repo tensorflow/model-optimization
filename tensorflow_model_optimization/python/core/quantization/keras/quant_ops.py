@@ -24,7 +24,6 @@ import tensorflow as tf
 from tensorflow.python.training import moving_averages
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 
-
 def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
   """Adds a fake quantize layer with fixed quantization interval.
 
@@ -39,6 +38,7 @@ def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
   if scope is None:
     scope = 'FixedQuantize'
 
+  # Test PR.
   with tf.name_scope(scope):
     return tf.quantization.fake_quant_with_min_max_args(
         inputs, min=init_min, max=init_max)
