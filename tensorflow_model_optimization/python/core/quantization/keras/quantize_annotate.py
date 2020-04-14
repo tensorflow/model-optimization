@@ -24,7 +24,7 @@ import tensorflow as tf
 deserialize_keras_object = tf.keras.utils.deserialize_keras_object
 serialize_keras_object = tf.keras.utils.serialize_keras_object
 
-
+# TEST PR
 class QuantizeAnnotate(tf.keras.layers.Wrapper):
   """Annotates layers which quantization should be applied to.
 
