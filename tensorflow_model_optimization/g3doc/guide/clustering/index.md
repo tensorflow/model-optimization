@@ -1,16 +1,16 @@
-# Weight Clustering
+# Weight clustering
 
-This document provides an overview on weight clustering to help you determine how it fits with your use case. To dive right into the code, see the [Clustering with Keras](clustering_with_keras.ipynb) tutorial and the [API docs](../../api_docs/python). For additional details on how to use the Keras API, a deep dive into weight clustering, and documentation on more advanced usage patterns, see the [API usage guide](train_clustered_models.md).
+This document provides an overview on weight clustering to help you determine how it fits with your use case. To dive right into the code, see the [weight clustering end-to-end example](clustering_example.ipynb) and the [API docs](../../api_docs/python). For additional details on how to use the Keras API, a deep dive into weight clustering, and documentation on more advanced usage patterns, see the [weight clustering comprehensive guide](clustering_comprehensive_guide.ipynb).
 
 ## Overview
 
-Clustering, or weight sharing, is a technique for reducing the number of unique weight values in a model. It first groups the weights of each layer into *N* clusters, then shares the cluster's centroid value for all the weights belonging to the cluster.
+Clustering, or weight sharing, reduces the number of unique weight values in a model, leading to benefits for deployment. It first groups the weights of each layer into *N* clusters, then shares the cluster's centroid value for all the weights belonging to the cluster.
 
-This technique brings improvements in terms of model compression. It reduces the number of bits used to represent the weights, thus saving memory bandwidth. This can be critical for deploying deep learning models on embedded systems with limited resources.
+This technique brings improvements in terms of model compression. By reducing the number of unique weight values, weigth clustering renders the weights suitable for compression via Huffman coding and similar techniques. Future framework support will, therefore, be able to provide memory bandwith improvements. This can be critical for deploying deep learning models on embedded systems with limited resources.
 
 We've seen up to 5x improvements in model compression with minimal loss of accuracy, as demonstrated by the [results](#results) presented below.
 
-### API Compatibility Matrix
+### API compatibility matrix
 
 Users can apply clustering with the following APIs:
 
@@ -19,11 +19,10 @@ Users can apply clustering with the following APIs:
     *   `tf.compat.v1` with a TF 2.X package and `tf.compat.v2` with a TF 1.X
         package are not supported.
 *   TensorFlow execution mode: both graph and eager
-*   Distributed training: `tf.distribute` with only graph execution
 
 ## Results
 
-### Image Classification
+### Image classification
 
 <table>
   <tr>
@@ -50,7 +49,7 @@ Users can apply clustering with the following APIs:
 
 The models were trained and tested on ImageNet.
 
-### Keyword Spotting
+### Keyword spotting
 
 <table>
   <tr>
@@ -96,7 +95,7 @@ In addition to the [Clustering with Keras](clustering_with_keras.ipynb) tutorial
 
 ## References
 
-The weight clustering implementation is based on the technique described in chapter 3, entitled *Trained Quantization and Weight Sharing*, of the conference paper referenced below.
+The weight clustering implementation is based on the technique described in chapter 3, titled *Trained Quantization and Weight Sharing*, of the conference paper referenced below.
 
 1.  **Deep Compression: Compressing Deep Neural Networks with Pruning, Trained Quantization and Huffman Coding** <br/>
     Song Han, Huizi Mao, William J. Dally <br/>
