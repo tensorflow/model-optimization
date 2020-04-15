@@ -72,6 +72,11 @@ landing_page:
 
   - classname: devsite-landing-row-cards
     items:
+    - heading: "TensorFlow Model Optimization Toolkit - Quantization Aware Training"
+      path: https://blog.tensorflow.org/2020/04/quantization-aware-training-with-tensorflow-model-optimization-toolkit.html
+      buttons:
+      - label: "Read on TensorFlow blog"
+        path: https://blog.tensorflow.org/2020/04/quantization-aware-training-with-tensorflow-model-optimization-toolkit.html
     - heading: "TensorFlow Model Optimization Toolkit - Post Training Integer Quantization"
       path: https://blog.tensorflow.org/2019/06/tensorflow-integer-quantization.html
       buttons:
@@ -82,13 +87,20 @@ landing_page:
       buttons:
       - label: "Read on TensorFlow blog"
         path: https://blog.tensorflow.org/2019/05/tf-model-optimization-toolkit-pruning-API.html
+
+  - classname: devsite-landing-row-cards
+    items:
     - heading: "Introducing the Model Optimization Toolkit for TensorFlow"
       path: https://blog.tensorflow.org/2018/09/introducing-model-optimization-toolkit.html
       buttons:
       - label: "Read on TensorFlow blog"
         path: https://blog.tensorflow.org/2018/09/introducing-model-optimization-toolkit.html
+
     - heading: "Model Optimization Toolkit on GitHub"
       path: https://github.com/tensorflow/model-optimization
       buttons:
       - label: "View on GitHub"
         path: https://github.com/tensorflow/model-optimization
+    - heading: ""
+      options:
+      - hidden

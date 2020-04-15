@@ -264,7 +264,7 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
 
 
 def quantize_apply(model):
-  """Quantize a `tf.keras` model.
+  """Quantize a `tf.keras` model that has been annotated for quantization.
 
   Quantization constructs a model which emulates quantization during training.
   This allows the model to learn parameters robust to quantization loss, and
