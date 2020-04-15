@@ -18,14 +18,15 @@ import numpy as np
 import tensorflow as tf
 
 from absl.testing import parameterized
-from tensorflow.keras import backend as K
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 
 keras = tf.keras
-errors_impl = tf.errors
+k = keras.backend
 layers = keras.layers
+
+errors_impl = tf.errors
 test = tf.test
 
 ClusterRegistry = clustering_registry.ClusteringRegistry
@@ -39,7 +40,7 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
     pulling_indices_np = np.array(pulling_indices)
     res_tf = ca.get_clustered_weight(pulling_indices_np)
 
-    res_np = K.batch_get_value([res_tf])[0]
+    res_np = k.batch_get_value([res_tf])[0]
     res_np_list = res_np.tolist()
 
     self.assertSequenceEqual(res_np_list, expected_output)
@@ -210,8 +211,8 @@ class ClusterRegistryTest(test.TestCase):
 
     def call(self, inputs, states):
       prev_output = states[0]
-      h = K.dot(inputs, self.kernel)
-      output = h + K.dot(prev_output, self.recurrent_kernel)
+      h = k.dot(inputs, self.kernel)
+      output = h + k.dot(prev_output, self.recurrent_kernel)
       return output, [output]
 
   class MinimalRNNCellClusterable(MinimalRNNCell,

@@ -15,13 +15,15 @@
 """Clustering API functions for Keras models."""
 
 from tensorflow import keras
-from tensorflow.keras import backend as k
 from tensorflow.keras import initializers
-from tensorflow.keras.layers import Layer, InputLayer
-from tensorflow.keras.utils import CustomObjectScope
 
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
+
+k = keras.backend
+CustomObjectScope = keras.utils.CustomObjectScope
+Layer = keras.layers.Layer
+InputLayer = keras.layers.InputLayer
 
 
 def cluster_scope():

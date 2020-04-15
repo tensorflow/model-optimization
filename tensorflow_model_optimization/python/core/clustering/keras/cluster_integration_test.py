@@ -21,7 +21,6 @@ from absl.testing import parameterized
 from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 
-
 keras = tf.keras
 layers = keras.layers
 test = tf.test

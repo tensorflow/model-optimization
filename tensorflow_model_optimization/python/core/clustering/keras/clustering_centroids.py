@@ -18,7 +18,7 @@ import abc
 import six
 import tensorflow as tf
 
-from tensorflow.python.keras import backend as k
+k = tf.keras.backend
 
 
 @six.add_metaclass(abc.ABCMeta)
