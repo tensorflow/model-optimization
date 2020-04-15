@@ -29,7 +29,8 @@ latency improvements can be seen on compatible machine learning accelerators,
 such as the [EdgeTPU](https://coral.ai/docs/edgetpu/benchmarks/) and NNAPI.
 
 The technique is used in production in speech, vision, text, and translate use
-cases. The code currently supports a subset of these models.
+cases. The code currently supports a
+[subset of these models](#general_support_matrix).
 
 ### Experiment with quantization and associated hardware
 
