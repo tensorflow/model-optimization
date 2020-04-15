@@ -13,46 +13,60 @@ making the project contributor-friendly
 having reproducible results.
 
 
-## Contribution Components
+## Contribution Process
 
-1. Please start by providing an [RFC](https://github.com/tensorflow/community/blob/master/governance/TF-RFCs.md) under [model-optimization/community/rfcs](https://github.com/tensorflow/model-optimization/blob/master/community/rfcs).
-   Consider the following guidelines:
-   * API and implementation should strive for similarity with existing
-     techniques to provide the best user experience.
-   * consider the end-to-end experience for the user of your technique.
-   * be prepared for a potential design discussion.
+1. Before anything else, provide a proposal RFC that focuses on what would motivate a user
+   to use this technique, rather than on the specifics of the API. If approved,
+   you will be matched with a sponsor, following the
+   [general TensorFlow RFC process](https://github.com/tensorflow/community/blob/master/governance/TF-RFCs.md).
+   Consider the following:
+   * The end to end user story. It's encouraged to consider how the technique fits with the other parts of the toolkit.
+   * Experiment results for real world models that support the user story, with not only accuracy but also deployment metrics
+     (e.g. model storage space, latency, memory, to mention a few).
+   * Contributing requires ownership of the technique. Select the type of
+     ownership. TODO(tfmot): link to ownership RFC.
+   * TODO(tfmot): link to sample pruning proposal RFC.
 
-2. Provide experimental results that demonstrate benefits to end-users across
-   models and tasks. This is probably the main criteria for us to consider, so
-   the stronger the validation the better. Some relevant aspects are:
-   * for Keras APIs, we recommend the following test tasks (and
-     hope to be adding more):
-     * [BERT task](https://github.com/tensorflow/models/tree/master/official/nlp/bert)
-     * [object detection](https://github.com/tensorflow/models/tree/master/research/object_detection)
-   * results in combination with other techniques (e.g. post-training integer
-     quantization).
-   * results include not only accuracy but also deployment metrics (e.g. model,
-     storage space, latency, memory, to mention a few).
-   * reproducible results are best: e.g. provide hyperparameters with minimal
-     scripts to reproduce results.
-   * when possible, include trained models that showcase those benefits.
+2. In parallel:
+   * Provide a design RFC under [model-optimization/community/rfcs](https://github.com/tensorflow/model-optimization/blob/master/community/rfcs). See the [TensorFlow process](https://github.com/tensorflow/community/blob/master/governance/TF-RFCs.md) for details.
+     * When reasonable, the API should strive for similarity with existing techniques to provide the
+       best user experience.
+     * TODO(tfmot): link to sample pruning design RFC.
+   * Start prototyping and building the library in a fork of TFMOT.
 
-3. Documentation and tutorials:
-   * overview page that requires minimal end-user domain knowledge. [Sample](https://www.tensorflow.org/model_optimization/guide/pruning)
-     * TODO(tfmot): template
-   * colab tutorial that covers the most common use cases and user
-     journeys. [Sample](https://www.tensorflow.org/model_optimization/guide/pruning/pruning_with_keras)
-   * advanced documentation that may cover:
-       * advanced use cases not in tutorial. [Sample](https://www.tensorflow.org/model_optimization/guide/pruning/train_sparse_models)
-       * internals not relevant to end-user (e.g. app and model developers) but relevant to
-         others in ecosystem (e.g. hardware developers and other contributors).
+3. Upon approval of design RFC, upstream existing code into TFMOT
+   and continue development there.
 
-4. Packaging and release:
-   * releases are managed by the TensorFlow Model Optimization team. Work with
-     them to produce releases.
-   * auto-generated API docs.
+4. Implement the design RFC. In parallel, create a training script
+   to reproduce the results in the RFC. This script
+   will serve as an example to users and come with tests to ensure that
+   results continue to be reproducible.
+      * TODO(tfmot): link to integration process and existing scripts
+      that can be extended.
 
-5. Collaborative blog post (optional)
+5. Documentation and tutorials:
+   * For a consistent user experience, these should strive for similarity with existing
+     documentation where it makes sense.
+     * TODO(tfmot): link to consistent user experience RFC.
+   * Overview page that requires minimal end-user domain knowledge.
+     * See [the one for quantization aware training](https://www.tensorflow.org/model_optimization/guide/quantization/training) as an example.
+   * Colab end to end example that covers the single most critical path.
+     * See [the one for quantization aware training](https://www.tensorflow.org/model_optimization/guide/quantization/training_example) as an example.
+   * Comprehensive guide that covers all usage patterns and navigates users
+     to the APIs for their use case.
+     * See [the one for quantization aware training](https://www.tensorflow.org/model_optimization/guide/quantization/training_comprehensive_guide) as an example.
+
+6. Packaging and release:
+   * Releases are managed by the TensorFlow Model Optimization team. Work with
+     them to produce and test pip packages as well as generate API docs.
+   * Days before the release date:
+     * The API docs will not be checked in, but should be tested and
+       ready to submit.
+     * The other documentation will be be checked in, but not linked in the
+       navigation bar. The colabs should use a stable TFMOT release, as opposed to
+       a test release.
+
+7. Collaborative blog post (optional)
    * samples: [pruning
      API](https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-pruning-api-42cac9157a6a)
      and [post-training integer quantization](https://medium.com/tensorflow/tensorflow-model-optimization-toolkit-post-training-integer-quantization-b4964a1ea9ba)
