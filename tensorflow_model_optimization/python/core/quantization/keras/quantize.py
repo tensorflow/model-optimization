@@ -379,7 +379,14 @@ def quantize_apply(model):
 
   # 1. Create a copy of the model with the same weights. This ensures
   # modifications don't affect the original model, or its weights.
-  model_copy = _clone_model_with_weights(model)
+  try:
+    model_copy = _clone_model_with_weights(model)
+  except ValueError:
+    raise ValueError(
+        'Unable to clone model. This generally happens if you used custom Keras layers or objects '
+        'in your model. Please specify them via `quantize_scope` for your calls to `quantize_model` '
+        'and `quantize_apply`.'
+    )
 
   # 2. Remove QuantizeAnnotate wrappers from the layers in the model. This
   # extracts the original model structure (easier to transform), and
