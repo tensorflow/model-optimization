@@ -33,7 +33,8 @@ class ModelTransformer(object):
   """Matches patterns to apply transforms in a tf.keras model graph."""
 
   def __init__(
-      self, model, transforms, candidate_layers=None, layer_metadata=None):
+      self, model, transforms, candidate_layers=None, layer_metadata=None,
+      custom_objects=None):
     """Construct ModelTransformer.
 
     Args:
@@ -44,6 +45,7 @@ class ModelTransformer(object):
         default is that all layers may be transformed.
       layer_metadata: Dictionary of metadata associated with each layer in the
         model. The keys are layer names.
+      custom_objects: Dictionary of custom Keras objects.
     """
     if not self._is_sequential_or_functional_model(model):
       raise ValueError(
@@ -56,6 +58,7 @@ class ModelTransformer(object):
     self.transforms = transforms
     self.candidate_layers = candidate_layers
     self.layer_metadata = layer_metadata
+    self.custom_objects = custom_objects
 
   @staticmethod
   def _is_sequential_or_functional_model(model):
@@ -410,6 +413,52 @@ class ModelTransformer(object):
     replacement_nodes = _get_replacement_nodes(replacement_layer_node)
     _add_replacement_nodes(first_layer_removed_index, replacement_nodes)
 
+  def _remove(self, match_layer_node):
+    """Remove the tree of match_layer_node."""
+    if self._is_functional_model(self.model):
+      self._remove_functional(match_layer_node)
+    else:
+      self._remove_sequential(match_layer_node)
+
+  def _remove_functional(self, match_layer_node):
+    """Functional model: remove the tree of match_layer_node."""
+
+    # 1. Point all consumers of the head of the matching sub-tree to the inbound
+    # node of the of leaves of the original layer.
+    #
+    # There are some assumptions baked in. The head layer only has 1 inbound and
+    # outbound node. The resulting number and shape of tensors from the
+    # replaced layer should equal the original layer.
+
+    original_leaf_layers = self._get_leaf_layers(match_layer_node)
+    original_inbound_nodes = [
+        layer['inbound_nodes'] for layer in original_leaf_layers]
+    if len(original_inbound_nodes) != 1:
+      raise RuntimeError('Only 1 inbound node is supported.')
+
+    consuming_layers = self._get_consuming_layers(match_layer_node.layer)
+    for consumer in consuming_layers:
+      for inbound_node in consumer['inbound_nodes']:
+        for connection_info in inbound_node:
+          if connection_info[0] == match_layer_node.layer['name']:
+            connection_info[0] = original_inbound_nodes[0][0][0][0]
+
+    output_consumers = self._get_output_consumers(match_layer_node.layer)
+    for output_consumer in output_consumers:
+      output_consumer[0] = original_inbound_nodes[0][0][0][0]
+
+    # 2. Remove the original matched layers
+    layers_to_remove_names = self._get_layer_names(match_layer_node)
+    layers_to_remove = self._get_layers(layers_to_remove_names)
+    self._remove_layers(layers_to_remove, layers_to_remove_names)
+
+  def _remove_sequential(self, match_layer_node):
+    """Sequential model: remove the tree of match_layer_node."""
+    # 1. Remove the original matched layers.
+    layers_to_remove_names = self._get_layer_names(match_layer_node)
+    layers_to_remove = self._get_layers(layers_to_remove_names)
+    self._remove_layers(layers_to_remove, layers_to_remove_names)
+
   @staticmethod
   def _weight_name(name):
     """Extracts the weight name by removing layer from TF variable name.
@@ -534,13 +583,18 @@ class ModelTransformer(object):
             continue
 
           match_found = True
-          self._replace(match_layer_node, replacement_layer_node)
+          if replacement_layer_node:
+            self._replace(match_layer_node, replacement_layer_node)
+          else:
+            self._remove(match_layer_node)
 
       # None of the transforms found a pattern. We can stop now.
       if not match_found:
         break
 
     custom_objects = {}
+    if self.custom_objects:
+      custom_objects.update(self.custom_objects)
     for transform in self.transforms:
       custom_objects.update(transform.custom_objects())
 
