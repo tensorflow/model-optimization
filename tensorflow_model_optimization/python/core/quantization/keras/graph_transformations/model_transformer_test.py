@@ -143,6 +143,20 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
     def custom_objects(self):
       return {'MyDense': self.MyDense}
 
+  def testCustomClassesWithoutTransform(self):
+
+    class MyDense(tf.keras.layers.Dense):
+      pass
+
+    x = inp = tf.keras.layers.Input((3,))
+    x = MyDense(2)(x)
+    out = x = tf.keras.layers.ReLU()(x)
+    model = tf.keras.Model(inp, out)
+
+    model_transformed, _ = ModelTransformer(
+        model, [], custom_objects={'MyDense': MyDense}).transform()
+    self._assert_model_results_equal(model, model_transformed)
+
   @parameterized.parameters(['sequential', 'functional'])
   def testReplaceSingleLayerWithSingleLayer_OneOccurrence(self, model_type):
     model = self._simple_dense_model(model_type)

@@ -33,7 +33,8 @@ class ModelTransformer(object):
   """Matches patterns to apply transforms in a tf.keras model graph."""
 
   def __init__(
-      self, model, transforms, candidate_layers=None, layer_metadata=None):
+      self, model, transforms, candidate_layers=None, layer_metadata=None,
+      custom_objects=None):
     """Construct ModelTransformer.
 
     Args:
@@ -44,6 +45,7 @@ class ModelTransformer(object):
         default is that all layers may be transformed.
       layer_metadata: Dictionary of metadata associated with each layer in the
         model. The keys are layer names.
+      custom_objects: Dictionary of custom Keras objects.
     """
     if not self._is_sequential_or_functional_model(model):
       raise ValueError(
@@ -56,6 +58,7 @@ class ModelTransformer(object):
     self.transforms = transforms
     self.candidate_layers = candidate_layers
     self.layer_metadata = layer_metadata
+    self.custom_objects = custom_objects
 
   @staticmethod
   def _is_sequential_or_functional_model(model):
@@ -541,6 +544,8 @@ class ModelTransformer(object):
         break
 
     custom_objects = {}
+    if self.custom_objects:
+      custom_objects.update(self.custom_objects)
     for transform in self.transforms:
       custom_objects.update(transform.custom_objects())
 
