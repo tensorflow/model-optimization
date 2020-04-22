@@ -40,9 +40,7 @@ having reproducible results.
 4. Implement the design RFC. In parallel, create a training script
    to reproduce the results in the RFC. This script
    will serve as an example to users and come with tests to ensure that
-   results continue to be reproducible.
-      * TODO(tfmot): link to integration process and existing scripts
-      that can be extended.
+   results continue to be reproducible. See [this page](OFFICIAL_MODELS.md) for details.
 
 5. Documentation and tutorials:
    * For a consistent user experience, these should strive for similarity with existing
