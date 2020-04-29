@@ -24,6 +24,7 @@ py_binary(
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/sparsity/keras:estimator_utils",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
+        "//third_party/tensorflow_models/official/r1/utils/logs",
         "//third_party/tensorflow_models/official/utils",
     ],
 )
