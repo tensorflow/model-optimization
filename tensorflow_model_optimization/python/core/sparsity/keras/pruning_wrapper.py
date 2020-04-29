@@ -255,8 +255,12 @@ class PruneLowMagnitude(Wrapper):
     #
     # self.add_update does nothing during eager execution.
     self.add_update(self.pruning_obj.weight_mask_op())
-
-    args = inspect.getargspec(self.layer.call)[0]
+    # TODO(evcu) remove this check after dropping py2 support. In py3 getargspec
+    # is deprecated.
+    if hasattr(inspect, 'getfullargspec'):
+      args = inspect.getfullargspec(self.layer.call).args
+    else:
+      args = inspect.getargspec(self.layer.call).args
     # Propagate the training bool to the underlying layer if it accepts
     # training as an arg.
     if 'training' in args:
