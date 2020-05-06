@@ -90,11 +90,6 @@ In addition to the [Clustering with Keras](clustering_with_keras.ipynb) tutorial
 * Cluster the weights of a CNN model trained on the MNIST handwritten digit classification databaset:
 [code](https://github.com/tensorflow/model-optimization/blob/master/tensorflow_model_optimization/python/examples/clustering/keras/mnist/mnist_cnn.py)
 
-## Tips
-
-1. The current clustering API works only with pre-trained models. Don't forget to train your model before attempting to cluster it.
-2. The centroid initialization technique you opt for has a significant impact on the accuracy of the clustered model. Experiments have shown that linear initialization outperforms density-based and random initialization in most cases.
-
 ## References
 
 The weight clustering implementation is based on the technique described in chapter 3, titled *Trained Quantization and Weight Sharing*, of the conference paper referenced below.
