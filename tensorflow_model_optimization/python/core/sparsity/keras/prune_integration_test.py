@@ -146,7 +146,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
   @staticmethod
   def _train_model(model, epochs=1, x_train=None, y_train=None, callbacks=None):
     if x_train is None:
-      x_train = np.random.rand(20, 10),
+      x_train = np.random.rand(20, 10)
     if y_train is None:
       y_train = keras.utils.to_categorical(
           np.random.randint(5, size=(20, 1)), 5)
@@ -224,6 +224,42 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
   def testPrunePretrainedModel_SameInferenceWithoutTraining(self):
     model = self._get_pretrained_model()
     pruned_model = prune.prune_low_magnitude(model, **self.params)
+
+    input_data = np.random.rand(10, 10)
+
+    out = model.predict(input_data)
+    pruned_out = pruned_model.predict(input_data)
+
+    self.assertTrue((out == pruned_out).all())
+
+  def testPrunePretrainedSubclassedModelAttributes_SameInferenceWithoutTraining(
+      self):
+
+    class TestSubclassedModel(keras.Model):
+      """A model subclass."""
+
+      def __init__(self):
+        """A test subclass model with one dense layer."""
+        super(TestSubclassedModel, self).__init__(name='test_model')
+        self.layer1 = keras.layers.Dense(8, activation='relu')
+        self.layer2 = keras.layers.Dense(5, activation='softmax')
+
+      def call(self, inputs):
+        x = self.layer1(inputs)
+        return self.layer2(x)
+
+    model = TestSubclassedModel()
+
+    self._train_model(model, epochs=1)
+
+    pruned_model = TestSubclassedModel()
+    pruned_model(np.random.rand(20, 10))
+    pruned_model.set_weights(model.get_weights())
+
+    pruned_model.layer1 = prune.prune_low_magnitude(pruned_model.layer1,
+                                                    **self.params)
+    pruned_model.layer2 = prune.prune_low_magnitude(pruned_model.layer2,
+                                                    **self.params)
 
     input_data = np.random.rand(10, 10)
 

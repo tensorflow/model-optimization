@@ -23,6 +23,7 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
+from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
@@ -312,6 +313,12 @@ class PruneTest(test.TestCase, parameterized.TestCase):
         str(e.exception),
         self.INVALID_TO_PRUNE_PARAM_ERROR.format(input='TestSubclassedModel'))
 
+  def testPruneSubclassedModelAttributes(self):
+    model = TestSubclassedModel()
+    model.layer1 = prune.prune_low_magnitude(model.layer1)
+
+    self.assertEqual(self._count_pruned_layers(model), 1)
+
   def testPruneMiscObject(self):
 
     model = object()
@@ -345,6 +352,13 @@ class PruneTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_pruned_layers(stripped_model), 0)
     self.assertEqual(model.get_config(), stripped_model.get_config())
+
+  def testStripPruningSubclassedModelAttributes(self):
+    model = TestSubclassedModel()
+    model.layer1 = prune.prune_low_magnitude(model.layer1)
+    model.layer1 = prune.strip_pruning(model.layer1)
+
+    self.assertEqual(self._count_pruned_layers(model), 0)
 
   def testPruneScope_NeededForKerasModel(self):
     model = keras_test_utils.build_simple_dense_model()
@@ -387,9 +401,7 @@ class PruneTest(test.TestCase, parameterized.TestCase):
     same_architecture_model.load_weights(tf_weights)
 
   def testPruneScope_NotNeededForTF2SavedModel(self):
-    # TODO(tfmot): replace with shared v1 test_util.
-    is_v1_apis = hasattr(tf, 'assign')
-    if is_v1_apis:
+    if compat.is_v1_apis():
       return
 
     model = keras_test_utils.build_simple_dense_model()
@@ -402,10 +414,21 @@ class PruneTest(test.TestCase, parameterized.TestCase):
     # would error if `prune_scope` was needed.
     tf.saved_model.load(saved_model_dir)
 
+  def testSerializePrunedSubclassedModel_TF2(self):
+    if compat.is_v1_apis():
+      return
+
+    pruned_model = TestSubclassedModel()
+    pruned_model.layer1 = prune.prune_low_magnitude(pruned_model.layer1)
+
+    saved_model_dir = tempfile.mkdtemp()
+
+    tf.saved_model.save(pruned_model, saved_model_dir)
+
+    tf.saved_model.load(saved_model_dir)
+
   def testPruneScope_NeededForTF1SavedModel(self):
-    # TODO(tfmot): replace with shared v1 test_util.
-    is_v1_apis = hasattr(tf, 'assign')
-    if not is_v1_apis:
+    if not compat.is_v1_apis():
       return
 
     model = keras_test_utils.build_simple_dense_model()
@@ -420,7 +443,6 @@ class PruneTest(test.TestCase, parameterized.TestCase):
     # works with `prune_scope`
     with prune.prune_scope():
       tf.keras.experimental.load_from_saved_model(saved_model_dir)
-
 
 if __name__ == '__main__':
   test.main()

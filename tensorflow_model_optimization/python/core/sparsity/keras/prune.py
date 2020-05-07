@@ -194,22 +194,25 @@ def prune_low_magnitude(to_prune,
         'an object of type: {input}.'.format(input=to_prune.__class__.__name__))
 
 
-def strip_pruning(model):
-  """Strip pruning wrappers from the model.
+def strip_pruning(to_strip):
+  """Strip pruning wrappers from the model or layer.
 
-  Once a model has been pruned to required sparsity, this method can be used
-  to restore the original model with the sparse weights.
+  Once a model or layer has been pruned to required sparsity, this method can be
+  used
+  to restore the original model or layer with the sparse weights.
 
   Only sequential and functional models are supported for now.
 
   Arguments:
-      model: A `tf.keras.Model` instance with pruned layers.
+      to_strip: A `tf.keras.Model` instance with pruned layers or a
+        `tf.keras.layers.Layer` instance.
 
   Returns:
-    A keras model with pruning wrappers removed.
+    A keras model or layer with pruning wrappers removed.
 
   Raises:
-    ValueError: if the model is not a `tf.keras.Model` instance.
+    ValueError: if the model is not a `tf.keras.Model` or
+    `tf.keras.layers.Layer` instance.
     NotImplementedError: if the model is a subclass model.
 
   Usage:
@@ -222,9 +225,11 @@ def strip_pruning(model):
   The exported_model and the orig_model share the same structure.
   """
 
-  if not isinstance(model, keras.Model):
+  if not isinstance(to_strip, keras.Model) and not isinstance(
+      to_strip, keras.layers.Layer):
     raise ValueError(
-        'Expected model to be a `tf.keras.Model` instance but got: ', model)
+        'Expected `to_strip` to be a `tf.keras.Model` or `tf.keras.layers.Layer` instance but got: ',
+        to_strip)
 
   def _strip_pruning_wrapper(layer):
     if isinstance(layer, tf.keras.Model):
@@ -241,5 +246,9 @@ def strip_pruning(model):
       return layer.layer
     return layer
 
-  return keras.models.clone_model(
-      model, input_tensors=None, clone_function=_strip_pruning_wrapper)
+  if isinstance(to_strip, keras.Model):
+    return keras.models.clone_model(
+        to_strip, input_tensors=None, clone_function=_strip_pruning_wrapper)
+
+  if isinstance(to_strip, keras.layers.Layer):
+    return _strip_pruning_wrapper(to_strip)
