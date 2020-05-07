@@ -21,7 +21,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-deserialize_keras_object = tf.keras.utils.deserialize_keras_object
+from tensorflow.keras.utils import deserialize_keras_object
 serialize_keras_object = tf.keras.utils.serialize_keras_object
 
 
