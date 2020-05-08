@@ -15,10 +15,10 @@
 """Clusters centroids initialization API for Keras clustering API."""
 
 import abc
-
 import six
-import tensorflow.compat.v1 as tf
-from tensorflow.python.keras import backend as k
+import tensorflow as tf
+
+k = tf.keras.backend
 
 
 @six.add_metaclass(abc.ABCMeta)

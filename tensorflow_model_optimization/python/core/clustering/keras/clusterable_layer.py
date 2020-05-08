@@ -15,7 +15,6 @@
 """Clusterable layer API class for Keras models."""
 
 import abc
-
 import six
 
 

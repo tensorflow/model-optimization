@@ -14,15 +14,16 @@
 # ==============================================================================
 """Clustering API functions for Keras models."""
 
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as k
-from tensorflow.python.keras import initializers
-from tensorflow.python.keras.engine.base_layer import Layer
-from tensorflow.python.keras.engine.input_layer import InputLayer
-from tensorflow.python.keras.utils.generic_utils import custom_object_scope
+from tensorflow import keras
+from tensorflow.keras import initializers
 
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
+
+k = keras.backend
+CustomObjectScope = keras.utils.CustomObjectScope
+Layer = keras.layers.Layer
+InputLayer = keras.layers.InputLayer
 
 
 def cluster_scope():
@@ -44,7 +45,7 @@ def cluster_scope():
     loaded_model = keras.models.load_model(keras_file)
   ```
   """
-  return custom_object_scope(
+  return CustomObjectScope(
       {
           'ClusterWeights': cluster_wrapper.ClusterWeights
       }
