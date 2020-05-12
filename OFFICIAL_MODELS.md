@@ -23,9 +23,10 @@ or in a fork of it, with the following process.
    the example and test by [building TFMOT pip packages from
    source](https://www.tensorflow.org/model_optimization/guide/install#installing_from_source).
 
-3. While reproducing the results, review the the TensorFlow Official Models standards.
+3. While reproducing the results, review the the TensorFlow Official Models standards
+   [here](https://github.com/tensorflow/models/wiki/Research-paper-code-contribution)
+   and [here](https://github.com/tensorflow/models/wiki/Coding-guidelines). 
    The example and test that will be merged must abide by the standards.
-     * TODO(TFMOT): link to standards.
 
 4. Once the library for the technique is implemented, as well as the example and
    test, create a single pull request (PR) with the example and test.
