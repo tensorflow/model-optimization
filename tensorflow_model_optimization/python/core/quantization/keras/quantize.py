@@ -77,7 +77,7 @@ def quantize_scope(*args):
   return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
 
 
-def quantize_model(to_quantize):
+def quantize_models(to_quantize):
   """Quantize a `tf.keras` model with the default quantization implementation.
 
   Quantization constructs a model which emulates quantization during training.

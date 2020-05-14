@@ -19,7 +19,7 @@
 from tensorflow_model_optimization.python.core.api.quantization.keras import quantizers
 
 # quantize all layers with default quantization implementation.
-from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_model
+from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_models
 
 # quantize some layers with default or custom quantization implementation.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_annotate_layer
