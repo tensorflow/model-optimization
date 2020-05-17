@@ -1,12 +1,12 @@
 # Trim insignificant weights
 
 This document provides an overview on model pruning to help you determine how it
-fits with your usecase. To dive right into the code, see the
-[Pruning with Keras](pruning_with_keras.ipynb) tutorial
-and the [API docs](../../api_docs/python). For additional details on how to use
-the Keras API, a deep dive into pruning, and documentation on more advanced
-usage patterns, see the
-[Train sparse models](train_sparse_models.md) guide.
+fits with your use case.
+
+*   To dive right into an end-to-end example, see the
+    [Pruning with Keras](pruning_with_keras.ipynb) example.
+*   To quickly find the APIs you need for your use case, see the
+    [pruning comprehensive guide](comprehensive_guide.ipynb).
 
 ## Overview
 
@@ -33,7 +33,9 @@ Users can apply pruning with the following APIs:
 *   Distributed training: `tf.distribute` with only graph execution
 
 It is on our roadmap to add support in the following areas:
-* [Minimal Subclassed model support](https://github.com/tensorflow/model-optimization/issues/155)
+
+*   [Minimal Subclassed model support](https://github.com/tensorflow/model-optimization/issues/155)
+*   [Framework support for latency improvements](https://github.com/tensorflow/model-optimization/issues/173)
 
 ## Results
 
@@ -117,19 +119,6 @@ pruning:
 [code](https://github.com/tensorflow/model-optimization/blob/master/tensorflow_model_optimization/python/examples/sparsity/keras/mnist/mnist_cnn.py)
 * Train a LSTM on the IMDB sentiment classification task with pruning:
 [code](https://github.com/tensorflow/model-optimization/blob/master/tensorflow_model_optimization/python/examples/sparsity/keras/imdb/imdb_lstm.py)
-
-## Tips
-
-1. Start with a pre-trained model or weights if possible. If not, create one
-   without pruning and start after.
-2. Do not prune very frequently to give the model time to recover. The toolkit
-   provides a default frequency.
-3. Try running an experiment where you prune a pre-trained model to the final
-   sparsity with begin step 0.
-4. Have a learning rate that's not too high or too low when the model is
-   pruning. Consider the pruning schedule to be a hyperparameter.
-
-<!-- TODO: include diagrams when learning rate is too high and when it's too low -->
 
 For background, see *To prune, or not to prune: exploring the efficacy of
 pruning for model compression* [[paper](https://arxiv.org/pdf/1710.01878.pdf)].
