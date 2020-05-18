@@ -14,10 +14,27 @@
 # ==============================================================================
 """Tool to generate open source api_docs for tensorflow_model_optimization.
 
-To use, you must first install the tensorflow docs package:
+To use:
 
-  pip install git+https://github.com/tensorflow/docs
+  1. Install the tensorflow docs package, which is only compatible with Python
 
+    python3 -m pip install git+https://github.com/tensorflow/docs
+
+  2. Install TensorFlow Model Optimization. The API docs are generated from
+  `tfmot` from the import of the tfmot package below, based on what is exposed
+  under
+   https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/api.
+
+    See https://www.tensorflow.org/model_optimization/guide/install.
+
+  3. Run build_docs.py.
+
+    python3 build_docs.py --output_dir=/tmp/model_optimization_api
+
+  4. View the generated markdown files on a viewer. One option is to fork
+     https://github.com/tensorflow/model-optimization/, push a change that
+     copies the files to tensorflow_model_optimization/g3doc, and then
+     view the files on Github.
 
 Note:
   If duplicate or spurious docs are generated (e.g. internal names), consider
