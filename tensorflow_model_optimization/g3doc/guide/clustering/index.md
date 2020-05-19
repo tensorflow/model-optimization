@@ -31,24 +31,51 @@ Users can apply clustering with the following APIs:
 
 <table>
   <tr>
-    <th rowspan=2>Model</th>
-    <th colspan=2>Original</th>
-    <th colspan=3>Clustered</th>
+    <th rowspan="2">Model</th>
+    <th colspan="2">Original</th>
+    <th colspan="4">Clustered</th>
   </tr>
   <tr>
-    <th>Top-1 accuracy</th>
-    <th>Size of compressed .tflite</th>
+  <th>Top-1 accuracy (%)</th>
+    <th>Size of compressed .tflite (MB)</th>
+    <th>Configuration</th>
     <th># of clusters</th>
-    <th>Top-1 accuracy</th>
-    <th>Size of compressed .tflite</th>
+    <th>Top-1 accuracy (%)</th>
+    <th>Size of compressed .tflite (MB)</th>
   </tr>
   <tr>
-    <td>MobileNetV2</td>
-    <td>72.29%</td>
-    <td>13.0 MB</td>
-    <td>32</td>
-    <td>69.33%</td>
-    <td>2.6 MB</td>
+    <td rowspan="3">MobileNetV1</td>
+    <td rowspan="3">71.02</td>
+    <td rowspan="3">14.96</td>
+  </tr>
+  <tr>
+    <td>Selective (last 3 Conv2D layers)</td>
+    <td>256, 256, 32</td>
+    <td>70.62</td>
+    <td>8.42</td>
+  </tr>
+  <tr>
+    <td>Full (all Conv2D layers)</td>
+    <td>64</td>
+    <td>66.07</td>
+    <td>2.98</td>
+  </tr>
+  <tr>
+    <td rowspan="3">MobileNetV2</td>
+    <td rowspan="3">72.29</td>
+    <td rowspan="3">12.90</td>
+  </tr>
+  <tr>
+    <td>Selective (last 3 Conv2D layers)</td>
+    <td>256, 256, 32</td>
+    <td>72.31</td>
+    <td>7.00</td>
+ </tr>
+ <tr>
+   <td>Full (all Conv2D layers)</td>
+   <td>32</td>
+   <td>69.33</td>
+   <td>2.60</td>
   </tr>
 </table>
 
@@ -60,22 +87,24 @@ The models were trained and tested on ImageNet.
   <tr>
     <th rowspan=2>Model</th>
     <th colspan=2>Original</th>
-    <th colspan=3>Clustered</th>
+    <th colspan=4>Clustered</th>
   </tr>
   <tr>
-    <th>Top-1 accuracy</th>
-    <th>Size of compressed .tflite</th>
+    <th>Top-1 accuracy (%)</th>
+    <th>Size of compressed .tflite (MB)</th>
+    <th>Configuration</th>
     <th># of clusters</th>
-    <th>Top-1 accuracy</th>
-    <th>Size of compressed .tflite</th>
+    <th>Top-1 accuracy (%)</th>
+    <th>Size of compressed .tflite (MB)</th>
   </tr>
   <tr>
     <td>DS-CNN-L</td>
-    <td>95.03%</td>
-    <td>1.5 MB</td>
+    <td>95.03</td>
+    <td>1.5</td>
+    <td>Full</td>
     <td>32</td>
-    <td>94.71%</td>
-    <td>0.3 MB</td>
+    <td>94.71</td>
+    <td>0.3</td>
   </tr>
 </table>
 
