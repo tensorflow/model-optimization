@@ -29,8 +29,8 @@ upper_tabs:
         path: /model_optimization/guide/pruning
       - title: Pruning with Keras
         path: /model_optimization/guide/pruning/pruning_with_keras
-      - title: Train sparse models
-        path: /model_optimization/guide/pruning/train_sparse_models
+      - title: Pruning comprehensive guide
+        path: /model_optimization/guide/pruning/comprehensive_guide
 
       - heading: Quantization
       - title: Quantization aware training overview
