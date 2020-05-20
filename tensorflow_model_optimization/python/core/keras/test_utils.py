@@ -96,9 +96,10 @@ def get_preprocessed_mnist_data(img_rows=28,
   return (x_train, y_train), (x_test, y_test), input_shape
 
 
-def eval_mnist_tflite(model_path, is_quantized=False):
+def eval_mnist_tflite(model_path=None, model_content=None, is_quantized=False):
   """Evaluate mnist in TFLite for accuracy."""
-  interpreter = tf.lite.Interpreter(model_path=model_path)
+  interpreter = tf.lite.Interpreter(
+      model_path=model_path, model_content=model_content)
   interpreter.allocate_tensors()
   input_index = interpreter.get_input_details()[0]['index']
   output_index = interpreter.get_output_details()[0]['index']
