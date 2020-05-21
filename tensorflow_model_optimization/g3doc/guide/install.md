@@ -1,5 +1,10 @@
 # Install TensorFlow Model Optimization
 
+It is recommended to create a Python virtual environment before proceeding to
+the installation. Please see the TensorFlow installation
+[guide](https://www.tensorflow.org/install/pip#2.-create-a-virtual-environment-recommended)
+for more information.
+
 ### Stable Builds
 
 To install the latest version, run the following:
