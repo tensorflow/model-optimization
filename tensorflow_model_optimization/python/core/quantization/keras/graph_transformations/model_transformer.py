@@ -374,7 +374,7 @@ class ModelTransformer(object):
 
     # These variables are needed when adding the new layers
     # and must be set before _remove_layers removes them.
-    first_layer_removed = layers_to_remove[-1]  # layers_to_remove is reversed.
+    first_layer_removed = layers_to_remove[0]
     first_layer_removed_index = self._config['layers'].index(
         first_layer_removed)
 

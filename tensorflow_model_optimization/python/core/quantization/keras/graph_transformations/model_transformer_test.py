@@ -410,6 +410,38 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
     self._assert_config(model.get_config(), transformed_model.get_config(),
                         ['build_input_shape'])
 
+  def testReplaceListOfLayers_Sequential(self):
+    class ReplaceConvBatchNorm(transforms.Transform):
+      """Replaces a ConvBatchNorm pattern with the same set of layers.
+
+      Doesn't make any meaningful change to the layer. Just verifies that
+      replacing multiple layers works as expected.
+      """
+
+      def pattern(self):
+        return LayerPattern('BatchNormalization',
+                            inputs=[LayerPattern('Conv2D')])
+
+      def replacement(self, match_layer):
+        # Adds a modification so the transform happens. If the layers are
+        # exactly the same, they get ignored by transformer.
+        match_layer.metadata['key'] = 'value'
+        return match_layer
+
+    model = tf.keras.Sequential([
+        tf.keras.layers.Conv2D(32, 5, input_shape=(28, 28, 1)),
+        tf.keras.layers.BatchNormalization(),
+        tf.keras.layers.ReLU(),
+    ])
+    model_layer_names = [layer.name for layer in model.layers]
+
+    transformed_model, _ = ModelTransformer(
+        model, [ReplaceConvBatchNorm()]).transform()
+    transformed_model_layer_names = [
+        layer.name for layer in transformed_model.layers]
+
+    self.assertEqual(model_layer_names, transformed_model_layer_names)
+
   def testReplaceTreeOfLayers_WithSingleLayer(self):
     # TODO(pulkitb): Implement
     pass
