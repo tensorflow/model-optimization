@@ -18,6 +18,7 @@ import tensorflow as tf
 
 from tensorflow.keras import initializers
 
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
@@ -273,7 +274,8 @@ class ClusterWeights(Wrapper):
     number_of_clusters = config.pop('number_of_clusters')
     cluster_centroids_init = config.pop('cluster_centroids_init')
     config['number_of_clusters'] = number_of_clusters
-    config['cluster_centroids_init'] = cluster_centroids_init
+    config['cluster_centroids_init'] = cluster_config.CentroidInitialization(
+        cluster_centroids_init)
 
     from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
     layer = deserialize_layer(config.pop('layer'),

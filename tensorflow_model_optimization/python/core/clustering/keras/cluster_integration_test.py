@@ -19,12 +19,15 @@ import tensorflow as tf
 
 from absl.testing import parameterized
 from tensorflow.python.keras import keras_parameterized
+
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 
 keras = tf.keras
 layers = keras.layers
 test = tf.test
 
+CentroidInitialization = cluster_config.CentroidInitialization
 
 class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
   """Integration tests for clustering."""
@@ -43,7 +46,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     clustered_model = cluster.cluster_weights(
         original_model,
         number_of_clusters=number_of_clusters,
-        cluster_centroids_init='linear'
+        cluster_centroids_init=CentroidInitialization.LINEAR
     )
 
     clustered_model.compile(
