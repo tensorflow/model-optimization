@@ -6,13 +6,7 @@ labels: bug
 assignees: ''
 
 ---
-Prior to filing: check that this should be a bug instead of a feature request.
-Everything
-supported, including the compatible versions of TensorFlow, is listed in the
-overview page of
-each technique. For example, the overview page of quantization-aware training is
-[here](https://www.tensorflow.org/model_optimization/guide/quantization/training).
-An issue for anything not supported should be a feature request.
+Prior to filing: check that this should be a bug instead of a feature request. Everything supported, including the compatible versions of TensorFlow, is listed in the overview page of each technique. For example, the overview page of quantization-aware training is [here](https://www.tensorflow.org/model_optimization/guide/quantization/training). An issue for anything not supported should be a feature request.
 
 **Describe the bug**
 A clear and concise description of what the bug is.
