@@ -63,7 +63,7 @@ Support is available in the following areas:
 
 *   Model coverage: models using
     [whitelisted layers](https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_registry.py),
-    BatchNormalization when it follows a convolutional or `Dense` layer, and in
+    BatchNormalization when it follows Conv2D and DepthwiseConv2D layers, and in
     limited cases, `Concat`.
     <!-- TODO(tfmot): add more details and ensure they are all correct. -->
 *   Hardware acceleration: our API defaults are compatible with acceleration on

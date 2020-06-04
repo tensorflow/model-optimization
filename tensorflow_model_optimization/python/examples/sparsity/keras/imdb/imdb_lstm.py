@@ -22,9 +22,9 @@ from __future__ import print_function
 # import g3
 import numpy as np
 
-from tensorflow.python import keras
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras.preprocessing import sequence
+import tensorflow.keras as keras
+import tensorflow.keras.backend as K
+import tensorflow.keras.preprocessing.sequence as sequence
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
