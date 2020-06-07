@@ -216,12 +216,9 @@ def strip_clustering(model):
           # If the value was not clustered(e.g. bias), we still store a valid
           # reference to the tensor. We use this reference to get the value
           new_weight_value = k.batch_get_value([weight])[0]
-        layer.layer.add_weight(
-            name=name,
-            shape=new_weight_value.shape,
-            initializer=initializers.Constant(new_weight_value),
-            trainable=True
-        )
+        setattr(layer.layer,
+                name,
+                k.variable(new_weight_value, name=name))
       # When all weights are filled with the values, just return the underlying
       # layer since it is now fully autonomous from its wrapper
       return layer.layer
