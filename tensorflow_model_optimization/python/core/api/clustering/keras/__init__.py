@@ -1,4 +1,4 @@
-# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,7 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Import API modules for Tensorflow Model Optimization."""
-from tensorflow_model_optimization.python.core.api import clustering
-from tensorflow_model_optimization.python.core.api import quantization
-from tensorflow_model_optimization.python.core.api import sparsity
+"""Module containing clustering code built on Keras abstractions."""
+# pylint: disable=g-bad-import-order
+from tensorflow_model_optimization.python.core.clustering.keras.cluster import cluster_scope
+from tensorflow_model_optimization.python.core.clustering.keras.cluster import cluster_weights
+from tensorflow_model_optimization.python.core.clustering.keras.cluster import strip_clustering
+
+from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import CentroidInitialization
+# pylint: enable=g-bad-import-order
