@@ -21,3 +21,4 @@ class CentroidInitialization(str, enum.Enum):
   LINEAR = "LINEAR"
   RANDOM = "RANDOM"
   DENSITY_BASED = "DENSITY_BASED"
+  KMEANS_PLUS_PLUS = "KMEANS_PLUS_PLUS"

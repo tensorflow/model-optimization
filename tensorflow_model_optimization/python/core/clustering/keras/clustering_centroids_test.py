@@ -40,6 +40,7 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
       (CentroidInitialization.LINEAR),
       (CentroidInitialization.RANDOM),
       (CentroidInitialization.DENSITY_BASED),
+      (CentroidInitialization.KMEANS_PLUS_PLUS),
   )
   def testExistingInitsAreSupported(self, init_type):
     """
@@ -63,6 +64,10 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
           CentroidInitialization.DENSITY_BASED,
           clustering_centroids.DensityBasedCentroidsInitialisation
       ),
+      (
+          CentroidInitialization.KMEANS_PLUS_PLUS,
+          clustering_centroids.KmeansPlusPlusCentroidsInitialisation
+       ),
   )
   def testReturnsMethodForExistingInit(self, init_type, method):
     """
@@ -177,6 +182,30 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
     calc_centroids = K.batch_get_value([dbci.get_cluster_centroids()])[0]
     self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
 
+  @parameterized.parameters(
+    (
+            [0, 1, 2, 3, 3.1, 3.2, 3.3, 3.4, 3.5],
+            5,
+            [3.1, 0., 2., 1., 3.4]
+    ),
+    (
+            [0, 1, 2, 3, 3.1, 3.2, 3.3, 3.4, 3.5],
+            3,
+            [3.1, 0., 2.]
+    ),
+    (
+            [0., 1., 2., 3., 4., 5., 6., 7., 8., 9.],
+            3,
+            [6., 1., 8.]
+    )
+  )
+  def testKmeanPlusPlusValues(self, weights, number_of_clusters, centroids):
+    kmci = clustering_centroids.KmeansPlusPlusCentroidsInitialisation(
+        weights,
+        number_of_clusters
+    )
+    calc_centroids = K.batch_get_value([kmci.get_cluster_centroids()])[0]
+    self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
 
 if __name__ == '__main__':
   test.main()

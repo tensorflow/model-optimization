@@ -18,6 +18,7 @@ import abc
 import six
 import tensorflow as tf
 
+from tensorflow.python.ops import clustering_ops
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 
 k = tf.keras.backend
@@ -53,6 +54,20 @@ class LinearCentroidsInitialisation(AbstractCentroidsInitialisation):
                                     self.number_of_clusters)
     return cluster_centroids
 
+class KmeansPlusPlusCentroidsInitialisation(AbstractCentroidsInitialisation):
+  """
+  Cluster centroids based on kmeans++ algorithm
+  """
+  def get_cluster_centroids(self):
+
+    weights = tf.reshape(self.weights, [-1, 1])
+
+    cluster_centroids = clustering_ops.kmeans_plus_plus_initialization(weights,
+                                                                       self.number_of_clusters,
+                                                                       seed=9,
+                                                                       num_retries_per_sample=-1)
+
+    return cluster_centroids
 
 class RandomCentroidsInitialisation(AbstractCentroidsInitialisation):
   """
@@ -192,7 +207,9 @@ class CentroidsInitializerFactory:
       CentroidInitialization.LINEAR : LinearCentroidsInitialisation,
       CentroidInitialization.RANDOM : RandomCentroidsInitialisation,
       CentroidInitialization.DENSITY_BASED :
-          DensityBasedCentroidsInitialisation
+          DensityBasedCentroidsInitialisation,
+      CentroidInitialization.KMEANS_PLUS_PLUS :
+          KmeansPlusPlusCentroidsInitialisation,
   }
 
   @classmethod
