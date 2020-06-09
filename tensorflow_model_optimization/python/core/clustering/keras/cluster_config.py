@@ -29,7 +29,9 @@ class CentroidInitialization(str, enum.Enum):
        axis is evenly spaced into as many regions as many clusters we want to
        have. After this the corresponding X values are obtained and used to
        initialize the clusters centroids.
+  * `KMEANS_PLUS_PLUS`: cluster centroids using the kmeans++ algorithm
   """
   LINEAR = "LINEAR"
   RANDOM = "RANDOM"
   DENSITY_BASED = "DENSITY_BASED"
+  KMEANS_PLUS_PLUS = "KMEANS_PLUS_PLUS"
