@@ -60,8 +60,9 @@ class QuantizeLayoutTransform(
         default_8bit_transforms.ConcatTransform4Inputs(),
         default_8bit_transforms.ConcatTransform3Inputs(),
         default_8bit_transforms.ConcatTransform(),
+        default_8bit_transforms.AddReLUQuantize(),
+        default_8bit_transforms.AddActivationQuantize(),
     ]
-
     return model_transformer.ModelTransformer(
         model, transforms,
         layer_quantize_map.keys(), layer_quantize_map).transform()

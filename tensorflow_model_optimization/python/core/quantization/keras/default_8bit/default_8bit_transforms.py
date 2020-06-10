@@ -228,6 +228,37 @@ class Conv2DBatchNormActivationQuantize(Conv2DBatchNormReLUQuantize):
         inputs=[Conv2DBatchNormQuantize.pattern(self)])
 
 
+class AddReLUQuantize(transforms.Transform):
+  """Ensure FQ does not get placed between Add and ReLU."""
+
+  def pattern(self):
+    return LayerPattern('ReLU', inputs=[LayerPattern('Add')])
+
+  def replacement(self, match_layer):
+    relu_layer_node = match_layer
+    add_layer_node = relu_layer_node.input_layers[0]
+
+    add_layer_node.metadata['quantize_config'] = \
+      default_8bit_quantize_configs.NoOpQuantizeConfig()
+
+    return match_layer
+
+  def custom_objects(self):
+    return {
+        'NoOpQuantizeConfig': default_8bit_quantize_configs.NoOpQuantizeConfig,
+    }
+
+
+class AddActivationQuantize(AddReLUQuantize):
+  """Ensure FQ does not get placed between Add and ReLU."""
+
+  def pattern(self):
+    return LayerPattern(
+        'Activation',
+        config={'activation': 'relu'},
+        inputs=[LayerPattern('Add')])
+
+
 class InputLayerQuantize(transforms.Transform):
   """Quantizes InputLayer, by adding QuantizeLayer after it.
 
