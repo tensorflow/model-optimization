@@ -221,6 +221,33 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(
         transformed_model.predict(inputs), model.predict(inputs))
 
+  @parameterized.parameters(
+      ('relu', default_8bit_transforms.AddReLUQuantize),
+      ('act_relu', default_8bit_transforms.AddActivationQuantize),
+  )
+  def testAddReLUQuantize(self, activation_type, transform_type):
+    add = keras.layers.Add()
+    if activation_type == 'relu':
+      activation = keras.layers.ReLU(6.0)
+    elif activation_type == 'act_relu':
+      activation = keras.layers.Activation('relu')
+
+    inp1 = keras.layers.Input((3,))
+    inp2 = keras.layers.Input((3,))
+    x = activation(add([inp1, inp2]))
+    model = keras.Model([inp1, inp2], x)
+
+    transformed_model, updated_metadata = ModelTransformer(
+        model,
+        [transform_type()],
+    ).transform()
+
+    add_layer = transformed_model.layers[2]
+
+    self.assertIsInstance(
+        updated_metadata.get(add_layer.name).get('quantize_config'),
+        default_8bit_quantize_configs.NoOpQuantizeConfig)
+
   def testAddsQuantizeLayerAfterInputLayer(self):
     inp1 = keras.layers.Input((3,))
     inp2 = keras.layers.Input((3,))
