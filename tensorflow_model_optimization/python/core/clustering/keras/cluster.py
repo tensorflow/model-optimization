@@ -56,6 +56,7 @@ def cluster_scope():
 def cluster_weights(to_cluster,
                     number_of_clusters,
                     cluster_centroids_init,
+                    preserve_sparsity=False,
                     **kwargs):
   """Modify a keras layer or model to be clustered during training.
 
@@ -119,6 +120,8 @@ def cluster_weights(to_cluster,
           values are obtained and used to initialize clusters centroids.
           3. LINEAR : cluster centroids are evenly spaced between the minimum
           and maximum values of a given weight
+      preserve_sparsity: optional boolean value that determines whether or not
+        sparsity preservation will be enforced during training
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 
@@ -143,6 +146,7 @@ def cluster_weights(to_cluster,
     return cluster_wrapper.ClusterWeights(layer,
                                           number_of_clusters,
                                           cluster_centroids_init,
+                                          preserve_sparsity,
                                           **kwargs)
 
   def _wrap_list(layers):

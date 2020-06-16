@@ -159,6 +159,57 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters(
       (
+          [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10],
+          5,
+          [0., 2.5, 5., 7.5, 10.]
+      ),
+      (
+          [0, 1, 2, 3, 3.1, 3.2, 3.3, 3.4, 3.5],
+          3,
+          [0., 1.75, 3.5]
+      ),
+      (
+          [-3., -2., -1., 0., 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.],
+          6,
+          [-3., -0.6, 1.8, 4.2, 6.6, 9.]
+      )
+  )
+  def testLinearClusterCentroids(self, weights, number_of_clusters, centroids):
+    dbci = clustering_centroids.LinearCentroidsInitialisation(
+        weights,
+        number_of_clusters
+    )
+    calc_centroids = K.batch_get_value([dbci.get_cluster_centroids()])[0]
+    self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
+
+  @parameterized.parameters(
+      (
+          [0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.],
+          5,
+          [0., 1., 4., 7., 10.]
+      ),
+      (
+          [0., 1., 2., 3., 3.1, 3.2, 3.3, 3.4, 3.5],
+          3,
+          [0., 1., 3.5]
+      ),
+      (
+          [-3., -2., -1., 0., 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.],
+          6,
+          [-3., 0., 1.1, 3.7333333, 6.366666, 9.]
+      )
+  )
+  def testLinearClusterCentroidsWithSparsityPreservation(self, weights, number_of_clusters, centroids):
+    dbci = clustering_centroids.LinearCentroidsInitialisation(
+        weights,
+        number_of_clusters,
+        True
+    )
+    calc_centroids = K.batch_get_value([dbci.get_cluster_centroids()])[0]
+    self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
+
+  @parameterized.parameters(
+      (
           [0, 1, 2, 3, 3.1, 3.2, 3.3, 3.4, 3.5],
           5,
           [0.11137931, 2.0534482, 3.145862, 3.3886206, 3.51]
@@ -174,13 +225,73 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
           [0.3010345, 5.2775865, 9.01]
       )
   )
-  def testClusterCentroids(self, weights, number_of_clusters, centroids):
+  def testDensityBasedClusterCentroids(self, weights, number_of_clusters, centroids):
     dbci = clustering_centroids.DensityBasedCentroidsInitialisation(
         weights,
         number_of_clusters
     )
     calc_centroids = K.batch_get_value([dbci.get_cluster_centroids()])[0]
     self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
+
+  @parameterized.parameters(
+      (
+          [0., -1., -2., -3., -4., -5., -6.],
+          4,
+          [-5.836897, -2.8941379, -0.98999995, 0.]
+      ),
+      (
+          [0., 0., 1., 2., 3., 4., 5., 6., 7., 8., 9.],
+          5,
+          [0., 1.2665517, 4.032069, 7.0741386, 9.01]
+      ),
+      (
+          [-4., -3., -2., -1., 0., 0., 0., 1., 2., 3., 4., 5., 6., 7.],
+          6,
+          [-3.9058623, -0.99,  0., 1.1975863, 4.103793, 7.01]
+      ),
+      (
+          [0., 1., 2., 3., -3.1, -3.2, -3.3, -0.005, 3.5],
+          3,
+          [-3.1887069, 0., 1.0768965]
+      ),
+      (
+          [0., 0., 0., 0.],
+          2,
+          [0.]
+      )
+  )
+  def testDensityBasedClusterCentroidsWithSparsityPreservation(
+      self, weights, number_of_clusters, centroids):
+    dbci = clustering_centroids.DensityBasedCentroidsInitialisation(
+        weights,
+        number_of_clusters,
+        True
+    )
+    calc_centroids = K.batch_get_value([dbci.get_cluster_centroids()])[0]
+    self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
+
+  @parameterized.parameters(
+      (
+          [0., 1., 2., 3., 4., 5., 6., 7., 8., 9., 10.],
+          5
+      ),
+      (
+          [0., 1., 2., 3., 3.1, 3.2, 3.3, 3.4, 3.5],
+          3
+      ),
+      (
+          [-3., -2., -1., 0., 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.],
+          6
+      )
+  )
+  def testRandomClusterCentroidsWithSparsityPreservation(self, weights, number_of_clusters):
+    dbci = clustering_centroids.RandomCentroidsInitialisation(
+        weights,
+        number_of_clusters,
+        True
+    )
+    calc_centroids = K.batch_get_value([dbci.get_cluster_centroids()])[0]
+    self.assertContainsSubset([0.], calc_centroids, msg="The centroids must include the zero-point cluster")
 
   @parameterized.parameters(
     (
@@ -199,10 +310,36 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
             [6., 1., 8.]
     )
   )
-  def testKmeanPlusPlusValues(self, weights, number_of_clusters, centroids):
+  def testKmeansPlusPlusClusterCentroids(self, weights, number_of_clusters, centroids):
     kmci = clustering_centroids.KmeansPlusPlusCentroidsInitialisation(
         weights,
         number_of_clusters
+    )
+    calc_centroids = K.batch_get_value([kmci.get_cluster_centroids()])[0]
+    self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
+
+  @parameterized.parameters(
+    (
+            [0, 1, 2, 3, 3.1, 3.2, 3.3, 3.4, 3.5],
+            5,
+            [0., 3., 1., 2., 3.3]
+    ),
+    (
+            [0, 1, 2, 3, 3.1, 3.2, 3.3, 3.4, 3.5],
+            3,
+            [0., 3., 1.]
+    ),
+    (
+            [-4., -3., -2., -1., 0., 1.1, 2.2, 3.3, 4.4, 5.5, 6.6, 7.7, 8.8, 9.],
+            6,
+            [-2., -4., 0., 5.5, 2.2, 8.8]
+    )
+  )
+  def testKmeansPlusPlusClusterCentroidsWithSparsityPreservation(self, weights, number_of_clusters, centroids):
+    kmci = clustering_centroids.KmeansPlusPlusCentroidsInitialisation(
+        weights,
+        number_of_clusters,
+        True
     )
     calc_centroids = K.batch_get_value([kmci.get_cluster_centroids()])[0]
     self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
