@@ -20,6 +20,7 @@ from __future__ import print_function
 
 # import g3
 import numpy as np
+import six
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import compat
@@ -95,6 +96,11 @@ class PruningSummaries(callbacks.TensorBoard):
   """
 
   def __init__(self, log_dir, update_freq='epoch', **kwargs):
+    if not isinstance(log_dir, six.string_types) or not log_dir:
+      raise ValueError(
+          '`log_dir` must be a non-empty string. You passed `log_dir`='
+          '{input}.'.format(input=log_dir))
+
     super(PruningSummaries, self).__init__(
         log_dir=log_dir, update_freq=update_freq, **kwargs)
 

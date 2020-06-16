@@ -137,6 +137,17 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
       with tf.GradientTape():
         pruned_model(inp, training=True)
 
+  @keras_parameterized.run_all_keras_modes
+  def testPruningSummariesRaisesError_LogDirNotNonEmptyString(self):
+    with self.assertRaises(ValueError):
+      pruning_callbacks.PruningSummaries(log_dir='')
+
+    with self.assertRaises(ValueError):
+      pruning_callbacks.PruningSummaries(log_dir=None)
+
+    with self.assertRaises(ValueError):
+      pruning_callbacks.PruningSummaries(log_dir=object())
+
 
 if __name__ == '__main__':
   tf.test.main()
