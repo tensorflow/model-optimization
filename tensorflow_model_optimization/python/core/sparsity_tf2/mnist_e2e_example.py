@@ -23,6 +23,7 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity_tf2 import prune
+from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_optimizer
 from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_model
 from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
@@ -51,20 +52,23 @@ def build_layerwise_model(input_shape, **pruning_params):
       l.ReLU(),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.Flatten(),
-      prune.prune_low_magnitude(
+      (
           l.Dense(1024, activation='relu')),
       l.Dropout(0.4),
-      prune.prune_low_magnitude(
+      (
           l.Dense(num_classes, activation='softmax'))
   ])
-  return pruning_model.PruningModel(model, pruning_impl.Pruner(
-      **pruning_params))
+  return model
 
 
-def train(model, x_train, y_train, x_test, y_test):
+def train(model, x_train, y_train, x_test, y_test, pruning_params):
+  model = pruning_model.PrunableModel(model)
+  pruning_config = prune.LowMagnitudePruningConfig(
+      **pruning_params
+  )
   model.compile(
       loss=tf.keras.losses.categorical_crossentropy,
-      optimizer='adam',
+      optimizer=pruning_optimizer.PruningOptimizer('adam', pruning_config),
       metrics=['accuracy'])
 
   # Print the model summary.
@@ -113,7 +117,7 @@ def main(unused_argv):
   }
 
   model = build_layerwise_model(input_shape, **pruning_params)
-  model = train(model, x_train, y_train, x_test, y_test)
+  model = train(model, x_train, y_train, x_test, y_test, pruning_params)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
   converter.experimental_new_converter = True
@@ -154,7 +158,7 @@ def main(unused_argv):
   }
 
   model = build_layerwise_model(input_shape, **pruning_params)
-  model = train(model, x_train, y_train, x_test, y_test)
+  model = train(model, x_train, y_train, x_test, y_test, pruning_params)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
   converter.experimental_new_converter = True

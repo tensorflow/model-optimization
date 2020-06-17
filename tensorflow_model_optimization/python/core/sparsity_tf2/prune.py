@@ -17,178 +17,80 @@
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
+from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
-from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_wrapper
+from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_impl
 
 keras = tf.keras
 custom_object_scope = tf.keras.utils.custom_object_scope
 
 
-def prune_scope():
-  """Provides a scope in which Pruned layers and models can be deserialized.
+# TODO serialization
+# TODO for serialization: find some way to save dynamic
+#  layer-specific logic in config? Might not be possible for an arbitrary
+#  lambda?, but should be possible for 'common patterns' e.g. switching based
+#  on layer type
+class LowMagnitudePruningConfig(object):
 
-  For TF 2.X: this is not needed for SavedModel or TF checkpoints, which are
-  the recommended serialization formats.
+  def __init__(
+      self,
+      pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
+      block_size=(1, 1),
+      block_pooling_type='AVG'
+  ):
+    self._model = None
+    self._variable_to_pruner_mapping = None
+    self._pruner = pruning_impl.Pruner(pruning_schedule=pruning_schedule,
+                                       block_size=block_size,
+                                       block_pooling_type=block_pooling_type)
 
-  For TF 1.X: if a tf.keras h5 model or layer has been pruned, it needs to be
-  within this
-  scope to be successfully deserialized. This is not needed for loading just
-  keras weights.
+  def get_config(self):
+    pass
 
-  Returns:
-      Object of type `CustomObjectScope` with pruning objects included.
+  @classmethod
+  def from_config(cls, config):
+    pass
 
-  Example:
+  def configure(self, model):
+    self._model = model
 
-  ```python
-  pruned_model = prune_low_magnitude(model, **self.params)
-  keras.models.save_model(pruned_model, keras_file)
+  def _build_pruner_map(self):
+    if self._model is None:
+      raise ValueError('You may be using a PruningOptimizer without wrapping'
+                       ' your model with a `PrunableModel`. You must configure'
+                       ' it with a model to prune before you can'
+                       ' look up a variable in a pruning configuration.'
+                       ' `PrunableModel`s automatically configure'
+                       ' when you compile them with a `PruningOptimizer`.')
 
-  with prune_scope():
-    loaded_model = keras.models.load_model(keras_file)
-  ```
-  """
-  return custom_object_scope(
-      {'PruneLowMagnitude': pruning_wrapper.PrunableWrapper})
+    self._variable_to_pruner_mapping = dict()
+    for var in self._model.trainable_weights:
+      self._variable_to_pruner_mapping[var.ref()] = None
 
+    def _process_layer(layer):
+      for sub_layer in layer.layers:
+        _process_layer(sub_layer)
 
-def prune_low_magnitude(to_prune,
-                        pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
-                        block_size=(1, 1),
-                        block_pooling_type='AVG',
-                        **kwargs):
-  """Modify a tf.keras layer or model to be pruned during training.
+      if isinstance(layer, prunable_layer.PrunableLayer):
+        for var in layer.get_prunable_weights():
+          self._variable_to_pruner_mapping[var.ref()] = self._pruner
+      elif prune_registry.PruneRegistry.supports(layer):
+        prune_registry.PruneRegistry.make_prunable(layer)
+        for var in layer.get_prunable_weights():
+          self._variable_to_pruner_mapping[var.ref()] = self._pruner
 
-  This function wraps a tf.keras model or layer with pruning functionality which
-  sparsifies the layer's weights during training. For example, using this with
-  50% sparsity will ensure that 50% of the layer's weights are zero.
+    _process_layer(self._model)
 
-  The function accepts either a single keras layer
-  (subclass of `tf.keras.layers.Layer`), list of keras layers or a Sequential
-  or Functional tf.keras model and handles them appropriately.
+  def get_pruner(self, var):
+    if not self._variable_to_pruner_mapping:
+      self._build_pruner_map()
 
-  If it encounters a layer it does not know how to handle, it will throw an
-  error. While pruning an entire model, even a single unknown layer would lead
-  to an error.
+    var_ref = var.ref()
+    if var_ref not in self._variable_to_pruner_mapping:
+      raise ValueError('variable %s did not appear '
+                       'in the configured model\'s trainable weights '
+                       'the first time the pruning config tried to'
+                       'look up a pruner for a variable.' % var.name)
 
-  Prune a model:
-
-  ```python
-  pruning_params = {
-      'pruning_schedule': ConstantSparsity(0.5, 0),
-      'block_size': (1, 1),
-      'block_pooling_type': 'AVG'
-  }
-
-  model = prune_low_magnitude(
-      keras.Sequential([
-          layers.Dense(10, activation='relu', input_shape=(100,)),
-          layers.Dense(2, activation='sigmoid')
-      ]), **pruning_params)
-  ```
-
-  Prune a layer:
-
-  ```python
-  pruning_params = {
-      'pruning_schedule': PolynomialDecay(initial_sparsity=0.2,
-          final_sparsity=0.8, begin_step=1000, end_step=2000),
-      'block_size': (2, 3),
-      'block_pooling_type': 'MAX'
-  }
-
-  model = keras.Sequential([
-      layers.Dense(10, activation='relu', input_shape=(100,)),
-      prune_low_magnitude(layers.Dense(2, activation='tanh'), **pruning_params)
-  ])
-  ```
-
-  Pretrained models: you must first load the weights and then apply the
-  prune API:
-
-  ```python
-  model.load_weights(...)
-  model = prune_low_magnitude(model)
-  ```
-
-  Optimizer: this function removes the optimizer. The user is expected to
-  compile the model
-  again. It's easiest to rely on the default (step starts at 0) and then
-  use that to determine the desired begin_step for the pruning_schedules.
-
-  Checkpointing: checkpointing should include the optimizer, not just the
-  weights. Pruning supports
-  checkpointing though
-  upon inspection, the weights of checkpoints are not sparse
-  (https://github.com/tensorflow/model-optimization/issues/206).
-
-  Arguments:
-      to_prune: A single keras layer, list of keras layers, or a
-        `tf.keras.Model` instance.
-      pruning_schedule: A `PruningSchedule` object that controls pruning rate
-        throughout training.
-      block_size: (optional) The dimensions (height, weight) for the block
-        sparse pattern in rank-2 weight tensors.
-      block_pooling_type: (optional) The function to use to pool weights in the
-        block. Must be 'AVG' or 'MAX'.
-      **kwargs: Additional keyword arguments to be passed to the keras layer.
-        Ignored when to_prune is not a keras layer.
-
-  Returns:
-    Layer or model modified with pruning wrappers. Optimizer is removed.
-
-  Raises:
-    ValueError: if the keras layer is unsupported, or the keras model contains
-    an unsupported layer.
-  """
-
-  def _prune_list(layers):
-    wrapped_layers = []
-
-    for layer in layers:
-      # Allow layer that is already wrapped by the pruning wrapper
-      # to be used as is.
-      # No need to wrap the input layer either.
-      if isinstance(layer, pruning_wrapper.PrunableWrapper):
-        wrapped_layers.append(layer)
-      elif isinstance(layer, keras.layers.InputLayer):
-        # TODO(yunluli): Replace with a clone function in keras.
-        wrapped_layers.append(layer.__class__.from_config(layer.get_config()))
-      else:
-        wrapped_layers.append(
-            pruning_wrapper.PrunableWrapper(layer))
-
-    return wrapped_layers
-
-  def _add_pruning_wrapper(layer):
-    if isinstance(layer, pruning_wrapper.PrunableWrapper):
-      return layer
-    return pruning_wrapper.PrunableWrapper(layer)
-
-  params = {
-      'pruning_schedule': pruning_schedule,
-      'block_size': block_size,
-      'block_pooling_type': block_pooling_type
-  }
-  is_sequential_or_functional = isinstance(
-      to_prune, keras.Model) and (isinstance(to_prune, keras.Sequential) or
-                                  to_prune._is_graph_network)
-
-  # A subclassed model is also a subclass of keras.layers.Layer.
-  is_keras_layer = isinstance(
-      to_prune, keras.layers.Layer) and not isinstance(to_prune, keras.Model)
-
-  if isinstance(to_prune, list):
-    return _prune_list(to_prune)
-  elif is_sequential_or_functional:
-    return keras.models.clone_model(
-        to_prune, input_tensors=None, clone_function=_add_pruning_wrapper)
-  elif is_keras_layer:
-    params.update(kwargs)
-    return pruning_wrapper.PrunableWrapper(to_prune)
-  else:
-    raise ValueError(
-        '`prune_low_magnitude` can only prune an object of the following '
-        'types: tf.keras.models.Sequential, tf.keras functional model, '
-        'tf.keras.layers.Layer, list of tf.keras.layers.Layer. You passed '
-        'an object of type: {input}.'.format(input=to_prune.__class__.__name__))
+    return self._variable_to_pruner_mapping[var_ref]

@@ -24,6 +24,7 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.sparsity_tf2 import prune
 from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_model
+from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_optimizer
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
 ConstantSparsity = pruning_schedule.ConstantSparsity
@@ -87,15 +88,17 @@ def build_layerwise_model(input_shape, **pruning_params):
       prune.prune_low_magnitude(
           l.Dense(num_classes, activation='softmax'))
   ])
-  return pruning_model.PruningModel(model, pruning_impl.Pruner(
-      **pruning_params))
+  return model
 
-
-def train_and_save(models, x_train, y_train, x_test, y_test):
+def train_and_save(models, x_train, y_train, x_test, y_test, pruning_params):
   for model in models:
+    model = pruning_model.PrunableModel(model)
+    pruning_config = prune.LowMagnitudePruningConfig(
+        **pruning_params
+    )
     model.compile(
         loss=tf.keras.losses.categorical_crossentropy,
-        optimizer='adam',
+        optimizer=pruning_optimizer.PruningOptimizer('adam', pruning_config),
         metrics=['accuracy'])
 
     # Print the model summary.
@@ -165,14 +168,11 @@ def main(unused_argv):
 
   layerwise_model = build_layerwise_model(input_shape, **pruning_params)
   sequential_model = build_sequential_model(input_shape)
-  sequential_model = pruning_model.PruningModel(prune.prune_low_magnitude(
-      sequential_model), pruning_impl.Pruner(**pruning_params))
   functional_model = build_functional_model(input_shape)
-  functional_model = pruning_model.PruningModel(prune.prune_low_magnitude(
-      functional_model), pruning_impl.Pruner(**pruning_params))
+
 
   models = [layerwise_model, sequential_model, functional_model]
-  train_and_save(models, x_train, y_train, x_test, y_test)
+  train_and_save(models, x_train, y_train, x_test, y_test, pruning_params)
 
 
 if __name__ == '__main__':

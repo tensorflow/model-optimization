@@ -166,3 +166,49 @@ class Pruner(object):
     for _, mask, threshold in pruning_vars:
       summary.scalar(mask.name + '/sparsity', 1.0 - tf.math.reduce_mean(mask))
       summary.scalar(threshold.name + '/threshold', threshold)
+
+  def _mask_weight(self, weight, mask):
+    """Directly masks the weights (updating the weight variables)."""
+
+    # TODO(Kaftan/xwinxu): figure out if this is totally unneeded now
+    def update_fn(distribution, values_and_vars):
+      # TODO(yunluli): Need this ReduceOp because the weight is created by the
+      # layer wrapped, so we don't have control of its aggregation policy. May
+      # be able to optimize this when distribution strategy supports easier
+      # update to mirrored variables in replica context.
+      reduced_values = distribution.extended.batch_reduce_to(
+          tf.distribute.ReduceOp.MEAN, values_and_vars)
+      var_list = [v for _, v in values_and_vars]
+      values_and_vars = zip(reduced_values, var_list)
+
+      def update_var(variable, reduced_value):
+        return variable.assign(reduced_value)
+
+      update_objs = []
+      for value, var in values_and_vars:
+        update_objs.append(
+            distribution.extended.update(var, update_var, args=(value,)))
+
+      return tf.group(update_objs)
+
+    if tf.distribute.get_replica_context():
+      values_and_vars = []
+      masked_weight = tf.math.multiply(weight, mask)
+      values_and_vars.append((masked_weight, weight))
+      if values_and_vars:
+        tf.distribute.get_replica_context().merge_call(
+            update_fn, args=(values_and_vars,))
+    else:
+      masked_weight = tf.math.multiply(weight, mask)
+      weight.assign(masked_weight)
+
+  def create_slots(self, optimizer, var):
+    optimizer.add_slot(var, 'mask', initializer='ones')
+    optimizer.add_slot(var, 'threshold', initializer=tf.zeros(shape=()))
+
+  def prune(self, optimizer, var, grad):
+    # Gradient is unused for low magnitude pruning
+    mask = optimizer.get_slot(var, 'mask')
+    threshold = optimizer.get_slot(var, 'threshold')
+    self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
+    self._mask_weight(var, mask)
