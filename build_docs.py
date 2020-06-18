@@ -80,13 +80,6 @@ def main(unused_argv):
       code_url_prefix=FLAGS.code_url_prefix,
       search_hints=FLAGS.search_hints,
       site_path=FLAGS.site_path,
-      private_map={
-          "tfmot.sparsity.keras": [
-              # List of internal classes which get exposed when imported.
-              "InputLayer", "custom_object_scope", "pruning_sched",
-              "pruning_wrapper", "absolute_import", "division", "print_function"
-          ]
-      },
   )
 
   doc_generator.build(output_dir=FLAGS.output_dir)

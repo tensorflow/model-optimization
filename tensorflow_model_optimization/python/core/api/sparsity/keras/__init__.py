@@ -13,9 +13,19 @@
 # limitations under the License.
 # ==============================================================================
 """Module containing sparsity code built on Keras abstractions."""
-# pylint: disable=wildcard-import
+# pylint: disable=g-bad-import-order
+
+from tensorflow_model_optimization.python.core.sparsity.keras.prune import prune_low_magnitude
+from tensorflow_model_optimization.python.core.sparsity.keras.prune import prune_scope
+from tensorflow_model_optimization.python.core.sparsity.keras.prune import strip_pruning
+
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_callbacks import UpdatePruningStep
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_callbacks import PruningSummaries
+
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_schedule import PruningSchedule
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_schedule import ConstantSparsity
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_schedule import PolynomialDecay
+
 from tensorflow_model_optimization.python.core.sparsity.keras.prunable_layer import PrunableLayer
-from tensorflow_model_optimization.python.core.sparsity.keras.prune import *
-from tensorflow_model_optimization.python.core.sparsity.keras.pruning_callbacks import *
-from tensorflow_model_optimization.python.core.sparsity.keras.pruning_schedule import *
-# pylint: enable=wildcard-import
+
+# pylint: enable=g-bad-import-order
