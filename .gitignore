@@ -1,0 +1,4 @@
+.vscode/
+testvm.py
+bazel*
+__pycache__
