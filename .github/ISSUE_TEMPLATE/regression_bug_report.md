@@ -1,8 +1,8 @@
 ---
-name: Bug report
-about: Create a report to help us improve
+name: Regression bug report
+about: Create a report for regressions
 title: ''
-labels: bug
+labels: regression bug
 assignees: ''
 
 ---
@@ -18,6 +18,11 @@ TensorFlow version (installed from source or binary):
 TensorFlow Model Optimization version (installed from source or binary):
 
 Python version:
+
+The behavior was correct previously when using versions:
+- If this behavior was never correct, please file a report for a regular
+bug, not a regression.
+- (Optional) Commit/PR that introduced the regression:
 
 **Describe the expected behavior**
 

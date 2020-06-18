@@ -15,6 +15,7 @@ py_library(
         "//tensorflow_model_optimization/python/core/keras",
         "//tensorflow_model_optimization/python/core/quantization",
         "//tensorflow_model_optimization/python/core/sparsity",
+        "//tensorflow_model_optimization/python/core/sparsity_tf2",
     ],
 )
 

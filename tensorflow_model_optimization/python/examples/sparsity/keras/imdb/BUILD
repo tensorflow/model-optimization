@@ -17,10 +17,8 @@ py_binary(
     python_version = "PY3",
     srcs_version = "PY2AND3",
     deps = [
-        # absl:app dep1,
-        # absl/flags dep1,
-        # python/keras tensorflow dep2,
-        # python/keras/optimizer_v2 tensorflow dep2,
+        # numpy dep1,
+        # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
