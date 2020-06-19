@@ -302,12 +302,11 @@ py_test(
     ],
 )
 
-# TODO(pulkitb): Using PY2 since MNIST data downloading code throws an SSL error on Sponge.
 py_test(
     name = "quantize_functional_test",
     size = "large",
     srcs = ["quantize_functional_test.py"],
-    python_version = "PY2",
+    python_version = "PY3",
     # To match parallel runs of run_all_keras_modes.
     shard_count = 4,
     deps = [
