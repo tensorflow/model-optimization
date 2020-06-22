@@ -19,12 +19,15 @@ import tensorflow.keras.backend as K
 
 from absl.testing import parameterized
 
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 
 keras = tf.keras
 errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
+
+CentroidInitialization = cluster_config.CentroidInitialization
 
 
 class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
@@ -34,9 +37,9 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
     self.factory = clustering_centroids.CentroidsInitializerFactory
 
   @parameterized.parameters(
-      ('linear'),
-      ('random'),
-      ('density-based'),
+      (CentroidInitialization.LINEAR),
+      (CentroidInitialization.RANDOM),
+      (CentroidInitialization.DENSITY_BASED),
   )
   def testExistingInitsAreSupported(self, init_type):
     """
@@ -48,10 +51,16 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
     self.assertFalse(self.factory.init_is_supported("DEADBEEF"))
 
   @parameterized.parameters(
-      ('linear', clustering_centroids.LinearCentroidsInitialisation),
-      ('random', clustering_centroids.RandomCentroidsInitialisation),
       (
-          'density-based',
+          CentroidInitialization.LINEAR,
+          clustering_centroids.LinearCentroidsInitialisation
+      ),
+      (
+          CentroidInitialization.RANDOM,
+          clustering_centroids.RandomCentroidsInitialisation
+      ),
+      (
+          CentroidInitialization.DENSITY_BASED,
           clustering_centroids.DensityBasedCentroidsInitialisation
       ),
   )

@@ -17,8 +17,9 @@
 from tensorflow import keras
 from tensorflow.keras import initializers
 
-from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
+from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 
 k = keras.backend
 CustomObjectScope = keras.utils.CustomObjectScope
@@ -47,7 +48,7 @@ def cluster_scope():
   """
   return CustomObjectScope(
       {
-          'ClusterWeights': cluster_wrapper.ClusterWeights
+          'ClusterWeights' : cluster_wrapper.ClusterWeights
       }
   )
 
@@ -79,7 +80,8 @@ def cluster_weights(to_cluster,
   ```python
   clustering_params = {
     'number_of_clusters': 8,
-    'cluster_centroids_init': 'density-based'
+    'cluster_centroids_init':
+        cluster_config.CentroidInitialization.DENSITY_BASED
   }
 
   clustered_model = cluster_weights(original_model, **clustering_params)
@@ -90,7 +92,8 @@ def cluster_weights(to_cluster,
   ```python
   clustering_params = {
     'number_of_clusters': 8,
-    'cluster_centroids_init': 'density-based'
+    'cluster_centroids_init':
+        cluster_config.CentroidInitialization.DENSITY_BASED
   }
 
   model = keras.Sequential([
@@ -105,15 +108,16 @@ def cluster_weights(to_cluster,
       number_of_clusters: the number of cluster centroids to form when
         clustering a layer/model. For example, if number_of_clusters=8 then only
         8 unique values will be used in each weight array.
-      cluster_centroids_init: how to initialize the cluster centroids.
+      cluster_centroids_init: enum value that determines how the cluster
+        centroids will be initialized.
         Can have following values:
-          1. 'random' : centroids are sampled using the uniform distribution
+          1. RANDOM : centroids are sampled using the uniform distribution
           between the minimum and maximum weight values in a given layer
-          2. 'density-based' : density-based sampling. First, cumulative
+          2. DENSITY_BASED : density-based sampling. First, cumulative
           distribution function is built for weights, then y-axis is evenly
           spaced into number_of_clusters regions. After this the corresponding x
           values are obtained and used to initialize clusters centroids.
-          3. 'linear' : cluster centroids are evenly spaced between the minimum
+          3. LINEAR : cluster centroids are evenly spaced between the minimum
           and maximum values of a given weight
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
@@ -127,8 +131,8 @@ def cluster_weights(to_cluster,
   """
   if not clustering_centroids.CentroidsInitializerFactory.\
       init_is_supported(cluster_centroids_init):
-    raise ValueError("cluster centroids can only be one of three values: "
-                     "random, density-based, linear")
+    raise ValueError("Cluster centroid initialization {} not supported".\
+        format(cluster_centroids_init))
 
   def _add_clustering_wrapper(layer):
     if isinstance(layer, cluster_wrapper.ClusterWeights):

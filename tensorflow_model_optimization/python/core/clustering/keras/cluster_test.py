@@ -21,6 +21,7 @@ from absl.testing import parameterized
 from tensorflow.python.keras import keras_parameterized
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
@@ -76,7 +77,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.model = keras.Sequential()
     self.params = {
         'number_of_clusters': 8,
-        'cluster_centroids_init': 'density-based'
+        'cluster_centroids_init':
+            cluster_config.CentroidInitialization.DENSITY_BASED
     }
 
   def _build_clustered_layer_model(self, layer):
