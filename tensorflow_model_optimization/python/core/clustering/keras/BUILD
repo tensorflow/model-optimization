@@ -137,5 +137,6 @@ py_test(
     deps = [
         ":cluster",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
