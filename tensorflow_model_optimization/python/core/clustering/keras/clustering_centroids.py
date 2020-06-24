@@ -18,8 +18,10 @@ import abc
 import six
 import tensorflow as tf
 
-k = tf.keras.backend
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 
+k = tf.keras.backend
+CentroidInitialization = cluster_config.CentroidInitialization
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractCentroidsInitialisation:
@@ -187,9 +189,10 @@ class CentroidsInitializerFactory:
   reflect new methods available.
   """
   _initialisers = {
-      'linear': LinearCentroidsInitialisation,
-      'random': RandomCentroidsInitialisation,
-      'density-based': DensityBasedCentroidsInitialisation
+      CentroidInitialization.LINEAR : LinearCentroidsInitialisation,
+      CentroidInitialization.RANDOM : RandomCentroidsInitialisation,
+      CentroidInitialization.DENSITY_BASED :
+          DensityBasedCentroidsInitialisation
   }
 
   @classmethod
@@ -199,9 +202,11 @@ class CentroidsInitializerFactory:
   @classmethod
   def get_centroid_initializer(cls, init_method):
     """
-    :param init_method: a string representation of the init methods requested
-    :return: A concrete implementation of  AbstractCentroidsInitialisation
-    :raises: ValueError if the string representation is not recognised
+    :param init_method: a CentroidInitialization value representing the init
+      method requested
+    :return: A concrete implementation of AbstractCentroidsInitialisation
+    :raises: ValueError if the requested centroid initialization method is not
+      recognised
     """
     if not cls.init_is_supported(init_method):
       raise ValueError(

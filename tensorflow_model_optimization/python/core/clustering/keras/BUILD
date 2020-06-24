@@ -23,10 +23,18 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        ":cluster_config",
         ":cluster_wrapper",
         ":clustering_centroids",
         ":clustering_registry",
     ],
+)
+
+py_library(
+    name = "cluster_config",
+    srcs = ["cluster_config.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
 )
 
 py_library(
@@ -51,6 +59,9 @@ py_library(
     srcs = ["clustering_centroids.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
+    deps = [
+        ":cluster_config",
+    ],
 )
 
 py_library(
@@ -58,6 +69,9 @@ py_library(
     srcs = ["cluster_wrapper.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
+    deps = [
+        ":cluster_config",
+    ],
 )
 
 py_test(

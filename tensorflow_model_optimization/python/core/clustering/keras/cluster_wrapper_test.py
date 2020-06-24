@@ -21,6 +21,7 @@ import tensorflow as tf
 from absl.testing import parameterized
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
@@ -30,7 +31,7 @@ errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
 
-layers = keras.layers
+CentroidInitialization = cluster_config.CentroidInitialization
 ClusterRegistry = clustering_registry.ClusteringRegistry
 ClusteringLookupRegistry = clustering_registry.ClusteringLookupRegistry
 
@@ -55,9 +56,11 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     not an instance of keras.layers.Layer.
     """
     with self.assertRaises(ValueError):
-      cluster_wrapper.ClusterWeights({
-          'this': 'is not a Layer instance'
-      }, number_of_clusters=13, cluster_centroids_init='linear')
+      cluster_wrapper.ClusterWeights(
+          {'this': 'is not a Layer instance'},
+          number_of_clusters=13,
+          cluster_centroids_init=CentroidInitialization.LINEAR
+      )
 
   def testCannotBeInitializedWithNonClusterableLayer(self):
     """
@@ -65,18 +68,22 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     custom layer.
     """
     with self.assertRaises(ValueError):
-      cluster_wrapper.ClusterWeights(NonClusterableLayer(10),
-                                     number_of_clusters=13,
-                                     cluster_centroids_init='linear')
+      cluster_wrapper.ClusterWeights(
+          NonClusterableLayer(10),
+          number_of_clusters=13,
+          cluster_centroids_init=CentroidInitialization.LINEAR
+      )
 
   def testCanBeInitializedWithClusterableLayer(self):
     """
     Verifies that ClusterWeights can be initialized with a built-in clusterable
     layer.
     """
-    l = cluster_wrapper.ClusterWeights(layers.Dense(10),
-                                       number_of_clusters=13,
-                                       cluster_centroids_init='linear')
+    l = cluster_wrapper.ClusterWeights(
+        layers.Dense(10),
+        number_of_clusters=13,
+        cluster_centroids_init=CentroidInitialization.LINEAR
+    )
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
   def testCannotBeInitializedWithNonIntegerNumberOfClusters(self):
@@ -85,9 +92,11 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     provided for the number of clusters.
     """
     with self.assertRaises(ValueError):
-      cluster_wrapper.ClusterWeights(layers.Dense(10),
-                                     number_of_clusters="13",
-                                     cluster_centroids_init='linear')
+      cluster_wrapper.ClusterWeights(
+          layers.Dense(10),
+          number_of_clusters="13",
+          cluster_centroids_init=CentroidInitialization.LINEAR
+      )
 
   def testCannotBeInitializedWithFloatNumberOfClusters(self):
     """
@@ -95,9 +104,11 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     provided for the number of clusters.
     """
     with self.assertRaises(ValueError):
-      cluster_wrapper.ClusterWeights(layers.Dense(10),
-                                     number_of_clusters=13.4,
-                                     cluster_centroids_init='linear')
+      cluster_wrapper.ClusterWeights(
+          layers.Dense(10),
+          number_of_clusters=13.4,
+          cluster_centroids_init=CentroidInitialization.LINEAR
+      )
 
   @parameterized.parameters(
       (0),
@@ -111,9 +122,11 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     clusters.
     """
     with self.assertRaises(ValueError):
-      cluster_wrapper.ClusterWeights(layers.Dense(10),
-                                     number_of_clusters=number_of_clusters,
-                                     cluster_centroids_init='linear')
+      cluster_wrapper.ClusterWeights(
+          layers.Dense(10),
+          number_of_clusters=number_of_clusters,
+          cluster_centroids_init=CentroidInitialization.LINEAR
+      )
 
   def testCanBeInitializedWithAlreadyClusterableLayer(self):
     """
@@ -121,9 +134,11 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     layer.
     """
     layer = AlreadyClusterableLayer(10)
-    l = cluster_wrapper.ClusterWeights(layer,
-                                       number_of_clusters=13,
-                                       cluster_centroids_init='linear')
+    l = cluster_wrapper.ClusterWeights(
+        layer,
+        number_of_clusters=13,
+        cluster_centroids_init=CentroidInitialization.LINEAR
+    )
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
   def testIfLayerHasBatchShapeClusterWeightsMustHaveIt(self):
@@ -131,14 +146,23 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     Verifies that the ClusterWeights instance created from a layer that has
     a batch shape attribute, will also have this attribute.
     """
-    l = cluster_wrapper.ClusterWeights(layers.Dense(10, input_shape=(10,)),
-                                       number_of_clusters=13,
-                                       cluster_centroids_init='linear')
+    l = cluster_wrapper.ClusterWeights(
+        layers.Dense(10, input_shape=(10,)),
+        number_of_clusters=13,
+        cluster_centroids_init=CentroidInitialization.LINEAR
+    )
     self.assertTrue(hasattr(l, '_batch_input_shape'))
 
   # Makes it easier to test all possible parameters combinations.
   @parameterized.parameters(
-      *itertools.product(range(2, 16, 4), ('linear', 'random', 'density-based'))
+      *itertools.product(
+          range(2, 16, 4),
+          (
+            CentroidInitialization.LINEAR,
+            CentroidInitialization.RANDOM,
+            CentroidInitialization.DENSITY_BASED
+          )
+      )
   )
   def testValuesAreClusteredAfterStripping(self,
                                            number_of_clusters,
