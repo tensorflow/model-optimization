@@ -117,7 +117,7 @@ class Pruner(object):
     # TODO(pulkitb): Check if squeeze operations should now be removed since
     # we are only accepting 2-D weights.
 
-    squeezed_weights = tf.squeeze(weights)
+    # squeezed_weights = tf.squeeze(weights)
     abs_weights = tf.math.abs(squeezed_weights)
     pooled_weights = pruning_utils.factorized_pool(
         abs_weights,
@@ -167,7 +167,7 @@ class Pruner(object):
       summary.scalar(mask.name + '/sparsity', 1.0 - tf.math.reduce_mean(mask))
       summary.scalar(threshold.name + '/threshold', threshold)
 
-  def _mask_weight(self, weight, mask):
+  def _apply_mask(self, weight, mask):
     """Directly masks the weights (updating the weight variables)."""
 
     # TODO(Kaftan/xwinxu): figure out if this is totally unneeded now
@@ -211,4 +211,61 @@ class Pruner(object):
     mask = optimizer.get_slot(var, 'mask')
     threshold = optimizer.get_slot(var, 'threshold')
     self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
-    self._mask_weight(var, mask)
+    self._apply_mask(var, mask)
+
+class LTHPruner(Pruner):
+  """
+  Implementation of Lottery Ticket Hypothesis experiments.
+  """
+
+  def __init__(self,
+      pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
+      reload_schedule=None,
+      save_schedule=None,
+      block_size=(1,1),
+      block_pooling_type='AVG',
+  ):
+  """The logic for magnitude-based pruning weight tensors.
+
+  Args:
+    pruning_schedule: A `PruningSchedule` object that controls pruning rate
+      throughout training.
+    reload_schedule: A `PruningSchedule` object that controls reloading of weights
+    throughout training. Default same as pruning schedule.
+    save_schedule: A `PruningSchedule` objeect that controls the saving of  weights
+    for relloading after checkpointing in LTH experiments.
+    block_size: The dimensions (height, weight) for the block sparse pattern
+      in rank-2 weight tensors.
+    block_pooling_type: (optional) The function to use to pool weights in the
+      block. Must be 'AVG' or 'MAX'.
+  """
+    super(Pruner, self).__init__(pruning_schedule, block_size, block_pooling_type)
+    self.load_itr = load_itr
+    self.reload_schedule = reload_schedule if reload_schedule else pruning_schedule
+    self.save_schedule = save_schedule if save_schedule else pruning_sched.ConstantSparsity(0.0, 0, 0)
+  
+  def create_slots(self, optimizer, var):
+    optimizer.add_slot(var, 'mask', initializer='ones')
+    optimizer.add_slot(var, 'threshold', initializer=tf.zeros(shape=()))
+    optimizer.add_slot(var, 'original_initialization', initializer='GlorotNormal')
+
+  def _maybe_save_weights(self, optimizer, var):
+    if self.save_schedule._should_prune_in_step(optimizer.iterations, 
+              self.save_schedule.begin_step, self.save_schedule.end_step, self.save_schedule.frequency):
+      optimizer.get_slot(var, 'original_initialization').assign(var)
+      
+  def _maybe_reload_weights(self, optimizer, var, mask):
+    if self.reload_schedule._should_prune_in_step(optimizer.iterations,
+                  self.reload_schedule.begin_step, self.reload_schedule.end_step, self.reload_schedule.frequency):
+      reload_weights = tf.math.multiply(var, mask)
+      optimizer.get_slot(var, 'original_initialization').assign(reload_weights)
+
+  
+  def prune(self, optimizer, var, grad):
+    # gradient is unused for lottery ticket pruning
+    self._maybe_save_weights(optimizer, var)
+    mask = optimizer.get_slot(var, 'mask')
+    threshold = optimizer.get_slot(var, 'threshold')
+    self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
+    self._maybe_reload_weights(optimizer, var)
+    self._apply_mask(var, mask)
