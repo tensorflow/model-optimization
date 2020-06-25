@@ -447,6 +447,28 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(len(stripped_model.get_weights()), cluster_weight_length)
 
   @keras_parameterized.run_all_keras_modes
+  def testStrippedKernel(self):
+    """
+    Verifies that stripping the clustering wrappers from a functional model
+    restores the layers kernel and the layers weight array to the new clustered weight value .
+    """
+    i1 = keras.Input(shape=(1, 1, 1))
+    x1 = layers.Conv2D(1, 1)(i1)
+    outputs = x1
+    model = keras.Model(inputs=[i1], outputs=outputs)
+
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    clustered_conv2d_layer = clustered_model.layers[1]
+    clustered_kernel = clustered_conv2d_layer.layer.kernel
+    stripped_model = cluster.strip_clustering(clustered_model)
+    stripped_conv2d_layer = stripped_model.layers[1]
+
+    self.assertEqual(self._count_clustered_layers(stripped_model), 0)
+    self.assertIsNot(stripped_conv2d_layer.kernel, clustered_kernel)
+    self.assertEqual(stripped_conv2d_layer.kernel,
+                     stripped_conv2d_layer.weights[0])
+
+  @keras_parameterized.run_all_keras_modes
   def testStripSelectivelyClusteredFunctionalModel(self):
     """
     Verifies that invoking strip_clustering() on a selectively clustered
