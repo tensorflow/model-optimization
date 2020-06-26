@@ -112,7 +112,6 @@ def main(unused_argv):
   model = train(model, x_train, y_train, x_test, y_test)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
-  converter.experimental_new_converter = True
 
   # Get a dense model as baseline
   tflite_model_dense = converter.convert()
@@ -153,7 +152,6 @@ def main(unused_argv):
   model = train(model, x_train, y_train, x_test, y_test)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
-  converter.experimental_new_converter = True
   converter._experimental_sparsify_model = True
 
   tflite_model = converter.convert()
