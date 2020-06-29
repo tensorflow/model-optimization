@@ -53,6 +53,12 @@ class PruningSchedule(object):
     Returns:
       True/False, if pruning should be applied in current step.
     """
+    # import pdb
+    # pdb.set_trace()
+    print(step)
+    print(begin_step)
+    print(end_step) 
+    print(frequency)
     is_in_pruning_range = tf.math.logical_and(
         tf.math.greater_equal(step, begin_step),
         # If end_pruning_step is negative, keep pruning forever!
@@ -119,7 +125,7 @@ class PruningSchedule(object):
   @abc.abstractmethod
   def get_config(self):
     raise NotImplementedError(
-        'PruningSchedule implementation override get_config')
+        'PruningSchedule implementation must override get_config')
 
   @classmethod
   def from_config(cls, config):
