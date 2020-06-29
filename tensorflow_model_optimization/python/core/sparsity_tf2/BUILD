@@ -6,6 +6,8 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+# load("@rules_python//python:defs.bzl")
+
 py_library(
     name = "keras",
     srcs = [
@@ -60,10 +62,10 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        ":prunable_layer",
+        "//tensorflow_model_optimization/python/core/keras:prunable_layer",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune_registry",
-        ":pruning_impl",
-        ":pruning_schedule",
+        ":pruner",
+        "//tensorflow_model_optimization/python/core/keras:pruning_schedule",
         # numpy dep1,
         # tensorflow dep1,
         # python/keras/utils:generic_utils tensorflow dep2,

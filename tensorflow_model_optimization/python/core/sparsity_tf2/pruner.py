@@ -92,7 +92,7 @@ class Pruner(object):
           tf.math.greater_equal(abs_weights, current_threshold), weights.dtype)
     return current_threshold, new_mask
 
-  def _maybe_update_block_mask(self, weights):
+  def _maybe_update_block_mask(self, step, weights):
     """Performs block-granular masking of the weights.
 
     Block pruning occurs only if the block_height or block_width is > 1 and
@@ -112,13 +112,13 @@ class Pruner(object):
       ValueError: if block pooling function is not AVG or MAX
     """
     if self._block_size == [1, 1]:
-      return self._update_mask(weights)
+      return self._update_mask(step, weights)
 
     # TODO(pulkitb): Check if squeeze operations should now be removed since
     # we are only accepting 2-D weights.
 
     # squeezed_weights = tf.squeeze(weights)
-    abs_weights = tf.math.abs(squeezed_weights)
+    abs_weights = tf.math.abs(weights)
     pooled_weights = pruning_utils.factorized_pool(
         abs_weights,
         window_shape=self._block_size,
@@ -129,13 +129,13 @@ class Pruner(object):
     if pooled_weights.get_shape().ndims != 2:
       pooled_weights = tf.squeeze(pooled_weights)
 
-    new_threshold, new_mask = self._update_mask(pooled_weights)
+    new_threshold, new_mask = self._update_mask(step, pooled_weights)
 
     updated_mask = pruning_utils.expand_tensor(new_mask, self._block_size)
     sliced_mask = tf.slice(
         updated_mask, [0, 0],
-        [squeezed_weights.get_shape()[0],
-         squeezed_weights.get_shape()[1]])
+        [weights.get_shape()[0],
+         weights.get_shape()[1]])
     return new_threshold, tf.reshape(sliced_mask, tf.shape(weights))
 
   def update_masks(self, pruning_vars, step):
@@ -152,7 +152,7 @@ class Pruner(object):
     # logic from the tf1 code. (Tomer is dubious that we need in in tf2 loops)
     if self._pruning_schedule(step)[0]:
       for weight, mask, threshold in pruning_vars:
-        new_threshold, new_mask = self._maybe_update_block_mask(weight)
+        new_threshold, new_mask = self._maybe_update_block_mask(step, weight)
         threshold.assign(new_threshold)
         mask.assign(new_mask)
 
@@ -220,46 +220,49 @@ class LTHPruner(Pruner):
 
   def __init__(self,
       pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
-      reload_schedule=None,
       save_schedule=None,
       block_size=(1,1),
       block_pooling_type='AVG',
   ):
-  """The logic for magnitude-based pruning weight tensors.
+    """The logic for magnitude-based pruning weight tensors.
 
-  Args:
-    pruning_schedule: A `PruningSchedule` object that controls pruning rate
-      throughout training.
-    reload_schedule: A `PruningSchedule` object that controls reloading of weights
-    throughout training. Default same as pruning schedule.
-    save_schedule: A `PruningSchedule` objeect that controls the saving of  weights
-    for relloading after checkpointing in LTH experiments.
-    block_size: The dimensions (height, weight) for the block sparse pattern
-      in rank-2 weight tensors.
-    block_pooling_type: (optional) The function to use to pool weights in the
-      block. Must be 'AVG' or 'MAX'.
-  """
-    super(Pruner, self).__init__(pruning_schedule, block_size, block_pooling_type)
-    self.load_itr = load_itr
-    self.reload_schedule = reload_schedule if reload_schedule else pruning_schedule
-    self.save_schedule = save_schedule if save_schedule else pruning_sched.ConstantSparsity(0.0, 0, 0)
+    Args:
+      pruning_schedule: A `PruningSchedule` object that controls pruning rate
+        throughout training.
+      reload_schedule: A `PruningSchedule` object that controls reloading of weights
+      throughout training. Default same as pruning schedule.
+      save_schedule: A integer representing the weights for relloading after checkpointing in LTH experiments.
+      block_size: The dimensions (height, weight) for the block sparse pattern
+        in rank-2 weight tensors.
+      block_pooling_type: (optional) The function to use to pool weights in the
+        block. Must be 'AVG' or 'MAX'.
+    """
+    super().__init__(pruning_schedule, block_size, block_pooling_type)
+    self.reload_schedule = pruning_schedule
+    self.save_step = save_schedule if save_schedule else 0
+    if issubclass(self.reload_schedule, pruning_sched.PruningSchedule) \
+      and tf.math.less(self.reload_schedule.get_config()['config']['begin_step'], self.save_step):
+      raise ValueError("Reloading should not occur before initializations are saved.")
+
   
   def create_slots(self, optimizer, var):
+    base_dtype = var.dtype
     optimizer.add_slot(var, 'mask', initializer='ones')
-    optimizer.add_slot(var, 'threshold', initializer=tf.zeros(shape=()))
-    optimizer.add_slot(var, 'original_initialization', initializer='GlorotNormal')
+    optimizer.add_slot(var, 'threshold', initializer=tf.zeros(shape=(), dtype=base_dtype))
+    optimizer.add_slot(var, 'original_initialization', initializer=var.read_value())
 
   def _maybe_save_weights(self, optimizer, var):
-    if self.save_schedule._should_prune_in_step(optimizer.iterations, 
-              self.save_schedule.begin_step, self.save_schedule.end_step, self.save_schedule.frequency):
+    """
+    Save weights right before the save iteration.
+    """
+    if tf.math.equal(self.save_step - 1, optimizer.iterations):
       optimizer.get_slot(var, 'original_initialization').assign(var)
       
   def _maybe_reload_weights(self, optimizer, var, mask):
     if self.reload_schedule._should_prune_in_step(optimizer.iterations,
                   self.reload_schedule.begin_step, self.reload_schedule.end_step, self.reload_schedule.frequency):
-      reload_weights = tf.math.multiply(var, mask)
-      optimizer.get_slot(var, 'original_initialization').assign(reload_weights)
-
+      reload_weights = tf.math.multiply(optimizer.get_slot(var, 'original_initialization'), mask) # ??
+      var.assign(reload_weights)
   
   def prune(self, optimizer, var, grad):
     # gradient is unused for lottery ticket pruning
@@ -267,5 +270,5 @@ class LTHPruner(Pruner):
     mask = optimizer.get_slot(var, 'mask')
     threshold = optimizer.get_slot(var, 'threshold')
     self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
-    self._maybe_reload_weights(optimizer, var)
+    self._maybe_reload_weights(optimizer, var, mask)
     self._apply_mask(var, mask)
