@@ -53,12 +53,6 @@ class PruningSchedule(object):
     Returns:
       True/False, if pruning should be applied in current step.
     """
-    # import pdb
-    # pdb.set_trace()
-    print(step)
-    print(begin_step)
-    print(end_step) 
-    print(frequency)
     is_in_pruning_range = tf.math.logical_and(
         tf.math.greater_equal(step, begin_step),
         # If end_pruning_step is negative, keep pruning forever!
@@ -160,7 +154,7 @@ class ConstantSparsity(PruningSchedule):
         continuing to prune till the end of training.
       frequency: Only apply pruning every `frequency` steps.
     """
-
+    print("target sparsity", target_sparsity)
     self.target_sparsity = target_sparsity
     self.begin_step = begin_step
     self.end_step = end_step

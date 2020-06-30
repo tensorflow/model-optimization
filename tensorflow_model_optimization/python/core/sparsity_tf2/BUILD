@@ -87,6 +87,19 @@ py_library(
 )
 
 py_library(
+    name = "lthpruner",
+    srcs = ["lthpruner.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
+        # tensorflow dep1,
+        # python:summary tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:compat",
+    ],
+)
+
+py_library(
     name = "pruning_utils",
     srcs = ["pruning_utils.py"],
     srcs_version = "PY2AND3",
@@ -204,6 +217,22 @@ py_test(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
+        ":pruner",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
+        # numpy dep1,
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:compat",
+    ],
+)
+
+py_test(
+    name = "lthpruner_test",
+    size = "medium",
+    srcs = ["lthpruner_test.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lthpruner",
         ":pruner",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
         # numpy dep1,

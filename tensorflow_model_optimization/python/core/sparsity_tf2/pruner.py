@@ -76,6 +76,7 @@ class Pruner(object):
       ValueError: if sparsity is not defined
     """
     sparsity = self._pruning_schedule(step)[1]
+    print("sparsity", sparsity)
     with tf.name_scope('pruning_ops'):
       abs_weights = tf.math.abs(weights)
       k = tf.dtypes.cast(
@@ -90,6 +91,7 @@ class Pruner(object):
       current_threshold = tf.gather(values, k - 1)
       new_mask = tf.dtypes.cast(
           tf.math.greater_equal(abs_weights, current_threshold), weights.dtype)
+      print(f"updated new mask: {new_mask} from current threshold {current_threshold}")
     return current_threshold, new_mask
 
   def _maybe_update_block_mask(self, step, weights):
@@ -114,10 +116,6 @@ class Pruner(object):
     if self._block_size == [1, 1]:
       return self._update_mask(step, weights)
 
-    # TODO(pulkitb): Check if squeeze operations should now be removed since
-    # we are only accepting 2-D weights.
-
-    # squeezed_weights = tf.squeeze(weights)
     abs_weights = tf.math.abs(weights)
     pooled_weights = pruning_utils.factorized_pool(
         abs_weights,
@@ -213,62 +211,3 @@ class Pruner(object):
     self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
     self._apply_mask(var, mask)
 
-class LTHPruner(Pruner):
-  """
-  Implementation of Lottery Ticket Hypothesis experiments.
-  """
-
-  def __init__(self,
-      pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
-      save_schedule=None,
-      block_size=(1,1),
-      block_pooling_type='AVG',
-  ):
-    """The logic for magnitude-based pruning weight tensors.
-
-    Args:
-      pruning_schedule: A `PruningSchedule` object that controls pruning rate
-        throughout training.
-      reload_schedule: A `PruningSchedule` object that controls reloading of weights
-      throughout training. Default same as pruning schedule.
-      save_schedule: A integer representing the weights for relloading after checkpointing in LTH experiments.
-      block_size: The dimensions (height, weight) for the block sparse pattern
-        in rank-2 weight tensors.
-      block_pooling_type: (optional) The function to use to pool weights in the
-        block. Must be 'AVG' or 'MAX'.
-    """
-    super().__init__(pruning_schedule, block_size, block_pooling_type)
-    self.reload_schedule = pruning_schedule
-    self.save_step = save_schedule if save_schedule else 0
-    if issubclass(self.reload_schedule, pruning_sched.PruningSchedule) \
-      and tf.math.less(self.reload_schedule.get_config()['config']['begin_step'], self.save_step):
-      raise ValueError("Reloading should not occur before initializations are saved.")
-
-  
-  def create_slots(self, optimizer, var):
-    base_dtype = var.dtype
-    optimizer.add_slot(var, 'mask', initializer='ones')
-    optimizer.add_slot(var, 'threshold', initializer=tf.zeros(shape=(), dtype=base_dtype))
-    optimizer.add_slot(var, 'original_initialization', initializer=var.read_value())
-
-  def _maybe_save_weights(self, optimizer, var):
-    """
-    Save weights right before the save iteration.
-    """
-    if tf.math.equal(self.save_step - 1, optimizer.iterations):
-      optimizer.get_slot(var, 'original_initialization').assign(var)
-      
-  def _maybe_reload_weights(self, optimizer, var, mask):
-    if self.reload_schedule._should_prune_in_step(optimizer.iterations,
-                  self.reload_schedule.begin_step, self.reload_schedule.end_step, self.reload_schedule.frequency):
-      reload_weights = tf.math.multiply(optimizer.get_slot(var, 'original_initialization'), mask) # ??
-      var.assign(reload_weights)
-  
-  def prune(self, optimizer, var, grad):
-    # gradient is unused for lottery ticket pruning
-    self._maybe_save_weights(optimizer, var)
-    mask = optimizer.get_slot(var, 'mask')
-    threshold = optimizer.get_slot(var, 'threshold')
-    self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
-    self._maybe_reload_weights(optimizer, var, mask)
-    self._apply_mask(var, mask)
