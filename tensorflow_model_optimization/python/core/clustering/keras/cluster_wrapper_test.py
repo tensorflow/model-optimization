@@ -24,7 +24,6 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
-from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 
 keras = tf.keras
 errors_impl = tf.errors
@@ -32,8 +31,6 @@ layers = keras.layers
 test = tf.test
 
 CentroidInitialization = cluster_config.CentroidInitialization
-ClusterRegistry = clustering_registry.ClusteringRegistry
-ClusteringLookupRegistry = clustering_registry.ClusteringLookupRegistry
 
 
 class NonClusterableLayer(layers.Dense):
