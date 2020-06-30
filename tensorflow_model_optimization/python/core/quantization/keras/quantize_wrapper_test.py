@@ -68,7 +68,7 @@ class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):
   #  1. Only layers with 'kernel' attribute work. Need to extend to others.
   #  2. Activations are not tested currently.
   #  3. RNN layers need to be added
-  # TODO(tfmot): reenable some of these once added back to whitelist
+  # TODO(tfmot): reenable some of these once added back to allowlist
   # after testing in quantize_functional_test.py.
   @parameterized.parameters(
       # (layers.Conv1D, (3, 6), {

@@ -73,7 +73,7 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
   """QuantizationRegistry for built-in Keras classes for default 8-bit scheme."""
 
   # TODO(tfmot): expand layers test in quantize_functional_test.py
-  # to add more layers to whitelist.
+  # to add more layers to allowlist.
   _LAYER_QUANTIZE_INFO = [
       # Activation Layers
       _QuantizeInfo(layers.ReLU, [], [], True),
@@ -149,7 +149,7 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
 
       # RNN Cells
       # TODO(pulkitb): Verify RNN layers behavior.
-      # TODO(tfmot): check if we still need to whitelist via compat.v1 and
+      # TODO(tfmot): check if we still need to allowlist via compat.v1 and
       # compat.v2 to support legacy TensorFlow 2.X
       # behavior where the v2 RNN uses the v1 RNNCell instead of the v2 RNNCell.
       # See b/145939875 for details.
