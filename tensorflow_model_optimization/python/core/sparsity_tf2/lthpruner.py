@@ -68,17 +68,22 @@ class LTHPruner(Pruner):
 
   def _maybe_save_weights(self, optimizer, var):
     """
-    Save weights right before the save iteration. No pruning should have been done.
+    Save the masked weights right before the save iteration (since the layer is applied before iteration updates). 
+    No pruning should have been done up until now.
     """
-    print(f"save step : {self._save_step}")
+    # print(f"save step : {self._save_step}")
     if tf.math.equal(self._save_step - 1, optimizer.iterations):
       print(f'HITTTTTT maybe save weights var: {var}')
       print(f"saving weights at {optimizer.iterations} | save step {self._save_step}")
       optimizer.get_slot(var, 'original_initialization').assign(var)
       
   def _maybe_reload_weights(self, optimizer, var, mask):
-    if self._reload_schedule._should_prune_in_step(optimizer.iterations,
-                  self._reload_schedule.begin_step, self._reload_schedule.end_step, self._reload_schedule.frequency):
+    """
+    Reload weights according to the pruning schedule, unless specified otherwise by `reload_schedule`.
+    """
+    should_prune = self._reload_schedule._should_prune_in_step(optimizer.iterations,
+                    self._reload_schedule.begin_step, self._reload_schedule.end_step, self._reload_schedule.frequency)
+    if should_prune:
       print(f"maybe reload weights iter: {optimizer.iterations} | begin: {self._reload_schedule.begin_step} | end: {self._reload_schedule.end_step} | freq: {self._reload_schedule.frequency}")
       reload_weights = tf.math.multiply(optimizer.get_slot(var, 'original_initialization'), mask)
       var.assign(reload_weights)
