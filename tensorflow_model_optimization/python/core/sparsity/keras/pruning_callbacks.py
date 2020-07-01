@@ -103,22 +103,21 @@ class PruningSummaries(callbacks.TensorBoard):
 
     super(PruningSummaries, self).__init__(
         log_dir=log_dir, update_freq=update_freq, **kwargs)
+    if not compat.is_v1_apis():  # TF 2.X
+      log_dir = self.log_dir + '/metrics'
+      self._file_writer = tf.summary.create_file_writer(log_dir)
 
   def _log_pruning_metrics(self, logs, prefix, step):
     if compat.is_v1_apis():
       # Safely depend on TF 1.X private API given
       # no more 1.X releases.
       self._write_custom_summaries(step, logs)
-    else:  # TF 2.X
-      log_dir = self.log_dir + '/metrics'
+    else:
+      with self._file_writer.as_default():
+        for name, value in logs.items():
+          tf.summary.scalar(name, value, step=step)
 
-      file_writer = tf.summary.create_file_writer(log_dir)
-      file_writer.set_as_default()
-
-      for name, value in logs.items():
-        tf.summary.scalar(name, value, step=step)
-
-      file_writer.flush()
+        self._file_writer.flush()
 
   def on_epoch_begin(self, epoch, logs=None):
     if logs is not None:
