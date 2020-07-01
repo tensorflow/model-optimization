@@ -89,7 +89,10 @@ class LTHPruner(Pruner):
       var.assign(reload_weights)
   
   def preprocess_weights(self, optimizer, var, grad):
-    # gradient is unused for lottery ticket pruning
+    """apply gradient update before first weight update, 
+    so that you don't save at start of current round specified.
+    """
+    # gradient is unused for lottery ticket pruning, but may be masked for others
     self._maybe_save_weights(optimizer, var)
     return grad
 

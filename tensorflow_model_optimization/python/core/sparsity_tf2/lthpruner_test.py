@@ -23,6 +23,7 @@ from __future__ import print_function
 from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
+print(tf.__version__)
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
@@ -53,8 +54,14 @@ def get_lth_sparsity(save_round, n_rounds, target_sparsity, end_epoch):
     percent to prune to after each cyle/round
   """
   # no pruning until weights are saved TODO: off by one??
+  n_rounds = tf.constant(n_rounds) # dtype='float32'
+  print("n_rounds", n_rounds)
   frequency = tf.math.floordiv(end_epoch - save_round + 1, n_rounds) # range(0, end, freq)
+  print("frequency", frequency)
+  print("target sparsity", target_sparsity)
+  print("denominator", tf.math.divide(1, n_rounds))
   prune_ratio_per_round = tf.math.pow(target_sparsity, tf.math.divide(1, n_rounds))
+  print("prune_ratio", prune_ratio_per_round)
   return tf.cast(frequency, tf.int64), prune_ratio_per_round
 
 def make_pruning_schedule(target_sparsity, begin, end, freq):
@@ -69,7 +76,9 @@ def _dummy_gradient(x, dtype=tf.float64):
     base_type = x.dtype
   except:
     base_type = dtype
-  return tf.ones_like(x, dtype=base_type)
+  grad = tf.ones_like(x, dtype=base_type)
+  print("dummy grad", grad)
+  return grad
 
 class PruningTest(test.TestCase, parameterized.TestCase):
 
@@ -292,60 +301,60 @@ class PruningTest(test.TestCase, parameterized.TestCase):
   #   self.assertAllEqual(initialization_slot, init_weights_before_pruning)
 
 
-  def testSaveWeightsIterK(self):
-    weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")
-    weight_dtype = weight.dtype.base_dtype
+  # def testSaveWeightsIterK(self):
+  #   weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")
+  #   weight_dtype = weight.dtype.base_dtype
 
-    save_round = 5
-    n_rounds = 24
-    end_iter = 100
-    frequency, prune_ratio_per_round = get_lth_sparsity(save_round, n_rounds, self.target_sparsity, end_iter)
-    # print(f"frequency {frequency} | ratio {prune_ratio_per_round}")
-    pruning_schedule = make_pruning_schedule(1 - prune_ratio_per_round, save_round + 1, end_iter, frequency)
+  #   save_round = 5
+  #   n_rounds = 24
+  #   end_iter = 100
+  #   frequency, prune_ratio_per_round = get_lth_sparsity(save_round, n_rounds, self.target_sparsity, end_iter)
+  #   # print(f"frequency {frequency} | ratio {prune_ratio_per_round}")
+  #   pruning_schedule = make_pruning_schedule(1 - prune_ratio_per_round, save_round, end_iter, frequency)
 
-    self.initialize()
+  #   self.initialize()
     
-    p = pruner.LTHPruner(
-        pruning_schedule=pruning_schedule,
-        save_iteration=save_round,
-        block_size=self.block_size,
-        block_pooling_type=self.block_pooling_type)
+  #   p = pruner.LTHPruner(
+  #       pruning_schedule=pruning_schedule,
+  #       save_iteration=save_round,
+  #       block_size=self.block_size,
+  #       block_pooling_type=self.block_pooling_type)
 
-    optimizer = self.dummy_optimizer
-    optimizer.iterations.assign(0)
-    expected_saved_initialization = None
+  #   optimizer = self.dummy_optimizer
+  #   optimizer.iterations.assign(0)
+  #   expected_saved_initialization = None
 
-    p.create_slots(optimizer, weight)
-    for i in range(7): # this should save and mask update once, assumes pruning works correctly as per above tests
-      p.preprocess_weights(optimizer, weight, self.grad(weight))
-      if optimizer.iterations == save_round:
-        expected_saved_initialization = weight.read_value()
-      # perturb weights
-      weight.assign(tf.math.add(weight, sample_noise(i)))
-      p.postprocess_weights(optimizer, weight, self.grad(weight))
-      # optimizer.iterations.assign_add(1)
-      # if i >= save_round:
-      # if True:
-        # print(f"prune iter {optimizer.iterations} og init {optimizer.get_slot(weight, 'original_initialization')}")
-        # print(f"prune iter {optimizer.iterations} weights {weight}")
-        # print(f"prune iter {optimizer.iterations} | mask {optimizer.get_slot(weight, 'mask')}")
-      # if save_round - 1 < 0 or optimizer.iterations == save_round - 1:
-      #   # print(f"hit round {optimizer.iterations} | expected {expected_saved_initialization}")
-      #   expected_saved_initialization = weight.read_value()
-        # print(f"iter {optimizer.iterations} | after expected {expected_saved_initialization}")
-      optimizer.iterations.assign_add(1)
+  #   p.create_slots(optimizer, weight)
+  #   for i in range(7): # this should save and mask update once, assumes pruning works correctly as per above tests
+  #     p.preprocess_weights(optimizer, weight, self.grad(weight))
+  #     if optimizer.iterations == save_round:
+  #       expected_saved_initialization = weight.read_value()
+  #     # perturb weights
+  #     weight.assign(tf.math.add(weight, sample_noise(i)))
+  #     p.postprocess_weights(optimizer, weight, self.grad(weight))
+  #     # optimizer.iterations.assign_add(1)
+  #     # if i >= save_round:
+  #     # if True:
+  #       # print(f"prune iter {optimizer.iterations} og init {optimizer.get_slot(weight, 'original_initialization')}")
+  #       # print(f"prune iter {optimizer.iterations} weights {weight}")
+  #       # print(f"prune iter {optimizer.iterations} | mask {optimizer.get_slot(weight, 'mask')}")
+  #     # if save_round - 1 < 0 or optimizer.iterations == save_round - 1:
+  #     #   # print(f"hit round {optimizer.iterations} | expected {expected_saved_initialization}")
+  #     #   expected_saved_initialization = weight.read_value()
+  #       # print(f"iter {optimizer.iterations} | after expected {expected_saved_initialization}")
+  #     optimizer.iterations.assign_add(1)
 
-    # print("original init", optimizer.get_slot(weight, "original_initialization"))
-    # print("expected init", expected_saved_initialization)
-    self.assertAllEqual(optimizer.get_slot(weight, "original_initialization"), expected_saved_initialization)
+  #   # print("original init", optimizer.get_slot(weight, "original_initialization"))
+  #   # print("expected init", expected_saved_initialization)
+  #   self.assertAllEqual(optimizer.get_slot(weight, "original_initialization"), expected_saved_initialization)
 
-    initialization_slot_k = tf.math.multiply(optimizer.get_slot(weight, "original_initialization"), optimizer.get_slot(weight, "mask"))
-    masked_expected = tf.math.multiply(expected_saved_initialization, optimizer.get_slot(weight, "mask"))
-    self.assertAllEqual(initialization_slot_k, masked_expected)
+  #   initialization_slot_k = tf.math.multiply(optimizer.get_slot(weight, "original_initialization"), optimizer.get_slot(weight, "mask"))
+  #   masked_expected = tf.math.multiply(expected_saved_initialization, optimizer.get_slot(weight, "mask"))
+  #   self.assertAllEqual(initialization_slot_k, masked_expected)
 
-    mask_after_pruning = optimizer.get_slot(weight, "mask").read_value()
-    # print(mask_after_pruning)
-    self.assertAllEqual(np.count_nonzero(mask_after_pruning), 97)
+  #   mask_after_pruning = optimizer.get_slot(weight, "mask").read_value()
+  #   # print(mask_after_pruning)
+  #   self.assertAllEqual(np.count_nonzero(mask_after_pruning), 97)
 
 
   def testReloadWeightsatInit(self): # TODO
@@ -357,7 +366,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     end_iter = 100
     frequency, prune_ratio_per_round = get_lth_sparsity(save_round, n_rounds, self.target_sparsity, end_iter)
     print(f"frequency {frequency} | ratio {prune_ratio_per_round}")
-    pruning_schedule = make_pruning_schedule(1 - prune_ratio_per_round, save_round + 1, end_iter, frequency)
+    pruning_schedule = make_pruning_schedule(1 - prune_ratio_per_round, save_round, end_iter, frequency)
 
     self.initialize()
     
@@ -372,68 +381,30 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     expected_saved_initialization = None
 
     p.create_slots(optimizer, weight)
-    for i in range(5): # this should save, reload, and update once
-      weight.assign(tf.math.add(weight, sample_noise(i)))
-      p.prune(optimizer, weight, self.grad(weight))
-      print(f"prune iter {optimizer.iterations} og init {optimizer.get_slot(weight, 'original_initialization')}")
-      print(f"prune iter {optimizer.iterations} weights {weight}")
+    for i in range(2): # this should save, reload, and update once
+      p.preprocess_weights(optimizer, weight, self.grad(weight))
+      # p.prune(optimizer, weight, self.grad(weight))
+      print(f"prune iter {optimizer.iterations} | og init {optimizer.get_slot(weight, 'original_initialization')}")
+      print(f"prune iter {optimizer.iterations} | weights {weight}")
       print(f"prune iter {optimizer.iterations} | mask {optimizer.get_slot(weight, 'mask')}")
       if i == save_round:
         expected_saved_initialization = weight.read_value()
         print(f"iter {optimizer.iterations} | after expected {expected_saved_initialization}")
+      weight.assign(tf.math.add(weight, sample_noise(i)))
+      p.postprocess_weights(optimizer, weight, self.grad(weight))
       optimizer.iterations.assign_add(1) # save weights right before iteration
 
     initialization_slot = optimizer.get_slot(weight, "original_initialization")
-    print("init slooooot", initialization_slot)
     self.assertAllEqual(initialization_slot, expected_saved_initialization)
 
     mask_after_pruning = optimizer.get_slot(weight, "mask").read_value()
-    self.assertAllEqual(np.count_nonzero(mask_after_pruning), 1 - tf.math.multiply(tf.math.pow(0.5, tf.math.divide(1, n_rounds)), 100))
+    masked_weight_expected = tf.math.multiply(initialization_slot, mask_after_pruning)
+    print("masked_weight_expected")
+    self.assertAllEqual(mask_after_pruning, weight)
+    # self.assertAllEqual(np.count_nonzero(mask_after_pruning), 1 - tf.math.multiply(tf.math.pow(0.5, tf.math.divide(1, n_rounds)), 100))
 
-    masked_weights_after_pruning = tf.multiply(optimizer.get_slot(weight, "mask"), initialization_slot)
-    self.assertAllEqual(masked_weights_after_pruning, weight)
-
-  # def testReloadAfterSaveInit(self): # TODO
-  #   weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")
-  #   print("initial", weight)
-  #   weight_dtype = weight.dtype.base_dtype
-  #   print('weight_dtype', weight_dtype)
-
-  #   save_round = 0
-  #   n_rounds = 20
-  #   end_iter = 100
-  #   frequency, prune_ratio_per_round = get_lth_sparsity(save_round, n_rounds, self.target_sparsity, end_iter)
-  #   pruning_schedule = make_pruning_schedule(prune_ratio_per_round, save_round, end_iter, frequency)
-
-
-  #   self.initialize()
-    
-  #   p = pruner.LTHPruner(
-  #       pruning_schedule=pruning_schedule,
-  #       save_iteration=self.save_init,
-  #       block_size=self.block_size,
-  #       block_pooling_type=self.block_pooling_type)
-
-  #   optimizer = self.dummy_optimizer
-  #   optimizer.iterations.assign(tf.cast(self.training_step_fn(), tf.int64))
-  #   expected_saved_initialization = None
-
-  #   p.create_slots(optimizer, weight)
-  #   for i in range(5): # this should save, reload, and update once
-  #     weight = tf.math.add(weight, sample_noise(i))
-  #     p.prune(optimizer, weight, self.grad(weight))
-  #     if i == save_round - 1: # TODO: minus 1???
-  #       expected_saved_initialization = weight.read_value()
-  #     optimizer.iterations.assign(tf.Variable(i))
-
-  #   initialization_slot = optimizer.get_slot(weight, "original_initialization")
-  #   self.assertAllEqual(initialization_slot, expected_saved_initialization)
-
-  #   mask_after_pruning = optimizer.get_slot(weight, "mask").read_value()
-  #   self.assertAllEqual(np.count_nonzero(mask_after_pruning), tf.math.multiply(tf.math.pow(0.5, tf.math.divide(1, n_rounds)), 100))
-
-  #   masked_weights_after_pruning = tf.multiply(optimizer.get_slot(weight, "mask"), initialization_slot)
-  #   self.assertAllEqual(masked_weights_after_pruning, weight)
+    # masked_weights_after_pruning = tf.multiply(optimizer.get_slot(weight, "mask"), initialization_slot)
+    # self.assertAllEqual(masked_weights_after_pruning, weight)
   
   # def testReloadWeightsIterationK(self):
   #   weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")
