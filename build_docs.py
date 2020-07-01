@@ -80,6 +80,23 @@ def main(unused_argv):
       code_url_prefix=FLAGS.code_url_prefix,
       search_hints=FLAGS.search_hints,
       site_path=FLAGS.site_path,
+      # TODO(tfmot): remove this once the next release after 0.3.0 happens.
+      # This is needed in the interim because the API docs reflect
+      # the latest release and the current release still wildcard imports
+      # all of the classes below.
+      private_map={
+          "tfmot.sparsity.keras": [
+              # List of internal classes which get exposed when imported.
+              "InputLayer",
+              "custom_object_scope",
+              "pruning_sched",
+              "pruning_wrapper",
+              "absolute_import",
+              "division",
+              "print_function",
+              "compat"
+          ]
+      },
   )
 
   doc_generator.build(output_dir=FLAGS.output_dir)
