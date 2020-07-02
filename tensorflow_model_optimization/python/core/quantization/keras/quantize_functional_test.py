@@ -82,7 +82,7 @@ class QuantizeFunctionalTest(tf.test.TestCase, parameterized.TestCase):
         rtol=0.2, atol=0.2)
 
 
-# Set of tests to determine what we can include in the whitelisted layers
+# Set of tests to determine what we can include in the allowlisted layers
 # for the default API.
 #
 # TFLite in TF 2.X currently does not support creation of full-integer models.

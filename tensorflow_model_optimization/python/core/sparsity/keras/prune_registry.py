@@ -97,7 +97,7 @@ class PruneRegistry(object):
   }
 
   _RNN_CELLS_WEIGHTS_MAP = {
-      # Whitelist via compat.v1 and compat.v2 to support legacy TensorFlow 2.X
+      # Allowlist via compat.v1 and compat.v2 to support legacy TensorFlow 2.X
       # behavior where the v2 RNN uses the v1 RNNCell instead of the v2 RNNCell.
       # See b/145939875 for details.
       tf.compat.v1.keras.layers.GRUCell: ['kernel', 'recurrent_kernel'],
