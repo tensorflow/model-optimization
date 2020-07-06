@@ -12,13 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Helper functions to add support for magnitude-based model pruning."""
+"""Helper functions to add support for iterative magnitude pruning as seen in the Lottery Ticket Hypothesis experiments."""
 
 from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+from absl import logging
 
 from tensorflow.python.ops import summary_ops_v2
 from tensorflow.python.summary import summary as summary_ops_v1
@@ -29,7 +30,7 @@ from tensorflow_model_optimization.python.core.sparsity_tf2.pruner import Pruner
 
 class LTHPruner(Pruner):
   """
-  Implementation of Lottery Ticket Hypothesis experiments.
+  Implementation of the lottery ticket iterative magnitude pruning algorithm.
   """
 
   def __init__(self,
@@ -53,9 +54,9 @@ class LTHPruner(Pruner):
     self._reload_schedule = pruning_schedule
     self._save_step = save_iteration if save_iteration else 0
 
-    # if not isinstance(self._reload_schedule, pruning_sched.PruningSchedule):
-    #   raise ValueError("Reload schedule should be a valid PruningSchedule object.")
-    # if
+    if not isinstance(self._reload_schedule, pruning_sched.PruningSchedule):
+      # log warning
+      logging.warning("Pruning schedule should be a PruningSchedule object.")
     if isinstance(self._reload_schedule, pruning_sched.PruningSchedule) \
       and self._save_step > self._reload_schedule.begin_step:
       raise ValueError("Reloading should not occur before initializations are saved.")
@@ -68,13 +69,9 @@ class LTHPruner(Pruner):
 
   def _maybe_save_weights(self, optimizer, var):
     """
-    Save the masked weights right before the save iteration (since the layer is applied before iteration updates). 
-    No pruning should have been done up until now.
+    Save the masked weights at the desired iteration. No pruning should have been done up until now.
     """
-    # print(f"save step : {self._save_step}")
-    if tf.math.equal(self._save_step, optimizer.iterations): # self._save_step - 1
-      # print(f'HITTTTTT maybe save weights var: {var}')
-      # print(f"saving weights at {optimizer.iterations} | save step {self._save_step}")
+    if self._save_step == optimizer.iterations:
       optimizer.get_slot(var, 'original_initialization').assign(var)
       
   def _maybe_reload_weights(self, optimizer, var, mask):
@@ -84,33 +81,21 @@ class LTHPruner(Pruner):
     should_prune = self._reload_schedule._should_prune_in_step(optimizer.iterations,
                     self._reload_schedule.begin_step, self._reload_schedule.end_step, self._reload_schedule.frequency)
     if should_prune:
-      print(f"maybe reload weights iter: {optimizer.iterations} | begin: {self._reload_schedule.begin_step} | end: {self._reload_schedule.end_step} | freq: {self._reload_schedule.frequency}")
       reload_weights = tf.math.multiply(optimizer.get_slot(var, 'original_initialization'), mask)
       var.assign(reload_weights)
   
   def preprocess_weights(self, optimizer, var, grad):
-    """apply gradient update before first weight update, 
-    so that you don't save at start of current round specified.
+    """Apply gradient update before the first weight update, so that you don't save at start of current round specified.
     """
     # gradient is unused for lottery ticket pruning, but may be masked for others
     self._maybe_save_weights(optimizer, var)
     return grad
 
   def postprocess_weights(self, optimizer, var, grad):
+    """Update the optimizer components after the weights have been updated by the optimizer.
+    """
     mask = optimizer.get_slot(var, 'mask')
     threshold = optimizer.get_slot(var, 'threshold')
     self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
     self._maybe_reload_weights(optimizer, var, mask)
     self._apply_mask(var, mask)
-
-  # def prune(self, optimizer, var, grad):
-  #   # gradient is unused for lottery ticket pruning
-  #   self._maybe_save_weights(optimizer, var)
-  #   mask = optimizer.get_slot(var, 'mask')
-  #   threshold = optimizer.get_slot(var, 'threshold')
-  #   self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
-  #   self._maybe_reload_weights(optimizer, var, mask)
-  #   self._apply_mask(var, mask)
-
-  # preprocesss : save,      return gradient
-  # p

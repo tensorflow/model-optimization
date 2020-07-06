@@ -154,7 +154,6 @@ class ConstantSparsity(PruningSchedule):
         continuing to prune till the end of training.
       frequency: Only apply pruning every `frequency` steps.
     """
-    print("target sparsity", target_sparsity)
     self.target_sparsity = target_sparsity
     self.begin_step = begin_step
     self.end_step = end_step
@@ -167,6 +166,7 @@ class ConstantSparsity(PruningSchedule):
     return (self._should_prune_in_step(step, self.begin_step, self.end_step,
                                        self.frequency),
             tf.constant(self.target_sparsity, dtype=tf.float32))
+            # tf.constant(self.target_sparsity, dtype=tf.float64))
 
   def get_config(self):
     return {

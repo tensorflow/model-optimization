@@ -76,7 +76,6 @@ class Pruner(object):
       ValueError: if sparsity is not defined
     """
     sparsity = self._pruning_schedule(step)[1]
-    print("sparsity", sparsity)
     with tf.name_scope('pruning_ops'):
       abs_weights = tf.math.abs(weights)
       k = tf.dtypes.cast(
@@ -91,7 +90,6 @@ class Pruner(object):
       current_threshold = tf.gather(values, k - 1)
       new_mask = tf.dtypes.cast(
           tf.math.greater_equal(abs_weights, current_threshold), weights.dtype)
-      print(f"updated new mask: {new_mask} from current threshold {current_threshold}")
     return current_threshold, new_mask
 
   def _maybe_update_block_mask(self, step, weights):
