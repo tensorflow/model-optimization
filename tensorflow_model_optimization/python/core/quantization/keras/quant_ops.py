@@ -44,6 +44,75 @@ def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
         inputs, min=init_min, max=init_max)
 
 
+def AllValuesQuantize(inputs,
+                      min_var,
+                      max_var,
+                      name_prefix='AllValuesQuantize',
+                      is_training=True,
+                      num_bits=8,
+                      narrow_range=False,
+                      symmetric=False):
+  """Adds a layer that collects quantization ranges as min/max of tensor values.
+
+  AllValuesQuantize creates variables called 'min' and 'max',
+  representing the interval used for quantization and clamping.
+
+  Args:
+    inputs: a tensor containing values to be quantized.
+    min_var: Variable which stores the min value of tensor.
+    max_var: Variable which stores the max value of tensor.
+    name_prefix: name_prefix for created nodes.
+    is_training: Whether the op is applied to a training or eval graph.
+    num_bits: Number of bits to use for quantization, must be between 2 and 8.
+    narrow_range: Whether to use the narrow quantization range
+      [1; 2^num_bits - 1] or wide range [0; 2^num_bits - 1].
+    symmetric: If true, use symmetric quantization limits instead of training
+      the minimum and maximum of each quantization range separately.
+  Returns:
+    a tensor containing quantized values.
+  """
+  with tf.name_scope(name_prefix):
+    if not is_training:
+      return _FakeQuantWithMinMaxVars(
+          inputs,
+          min_var,
+          max_var,
+          per_channel=False,
+          num_bits=num_bits,
+          narrow_range=narrow_range)
+
+    batch_min = tf.math.reduce_min(inputs, name='BatchMin')
+    batch_max = tf.math.reduce_max(inputs, name='BatchMax')
+
+    if symmetric:
+      if narrow_range:
+        min_max_ratio = -1
+      else:
+        # In two's complement notation, the negative range is slightly larger
+        # than the positive range.
+        min_max_ratio = -((1 << num_bits) - 2) / (1 << num_bits)
+
+      # TFLite requires that 0.0 is always in the [min; max] range. Because
+      # batch_min <= batch_max, it follows that range_min <= 0 <= range_max.
+      batch_min = tf.math.minimum(batch_min, batch_max / min_max_ratio)
+      batch_max = tf.math.maximum(batch_max, batch_min * min_max_ratio)
+
+    # TFLite requires that 0.0 if always in the [min; max] range.
+    range_min = tf.math.minimum(tf.math.minimum(min_var, batch_min), 0.0)
+    range_max = tf.math.maximum(tf.math.maximum(max_var, batch_max), 0.0)
+
+    assign_min = tf_compat.assign(min_var, range_min, name='AssignMinAllValue')
+    assign_max = tf_compat.assign(max_var, range_max, name='AssignMaxAllValue')
+
+    return _FakeQuantWithMinMaxVars(
+        inputs,
+        assign_min,
+        assign_max,
+        per_channel=False,
+        num_bits=num_bits,
+        narrow_range=narrow_range)
+
+
 def LastValueQuantize(inputs,
                       min_var,
                       max_var,

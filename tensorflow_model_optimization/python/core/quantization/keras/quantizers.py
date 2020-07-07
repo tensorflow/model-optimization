@@ -288,8 +288,87 @@ class MovingAverageQuantizer(_QuantizeHelper, Quantizer):
     return not self.__eq__(other)
 
 
+class AllValuesQuantizer(_QuantizeHelper, Quantizer):
+  """Quantize tensor based on min/max of tensor values across all batches."""
+
+  def __init__(self, num_bits, per_axis, symmetric, narrow_range):
+    """Construct an AllValuesQuantizer.
+
+    This is an experimental API not subject to backward compatibility.
+
+    Args:
+      num_bits: Number of bits for quantization
+      per_axis: Whether to apply per_axis quantization. The last dimension is
+        used as the axis.
+      symmetric: If true, use symmetric quantization limits instead of training
+        the minimum and maximum of each quantization range separately.
+      narrow_range: In case of 8 bits, narrow_range nudges the quantized range
+        to be [-127, 127] instead of [-128, 127]. This ensures symmetric
+        range has 0 as the centre.
+    """
+    self.num_bits = num_bits
+    self.per_axis = per_axis
+    self.symmetric = symmetric
+    self.narrow_range = narrow_range
+
+  def build(self, tensor_shape, name, layer):
+    min_weight = layer.add_weight(
+        name + '_min',
+        initializer=keras.initializers.Constant(0.0),
+        trainable=False)
+    max_weight = layer.add_weight(
+        name + '_max',
+        initializer=keras.initializers.Constant(0.0),
+        trainable=False)
+    return {'min_var': min_weight, 'max_var': max_weight}
+
+  def __call__(self, inputs, training, weights, **kwargs):
+    """Quantize tensor.
+
+    Args:
+      inputs: Input tensor to be quantized.
+      training: Whether the graph is currently training.
+      weights: Dictionary of weights the quantizer can use to quantize the
+        tensor. This contains the weights created in the `build` function.
+      **kwargs: Additional variables which may be passed to the quantizer.
+
+    Returns:
+      Quantized tensor.
+    """
+    return quant_ops.AllValuesQuantize(
+        inputs,
+        weights['min_var'],
+        weights['max_var'],
+        is_training=training,
+        num_bits=self.num_bits,
+        symmetric=self.symmetric,
+        narrow_range=self.narrow_range,
+    )
+
+  def get_config(self):
+    return {
+        'num_bits': self.num_bits,
+        'per_axis': self.per_axis,
+        'symmetric': self.symmetric,
+        'narrow_range': self.narrow_range
+    }
+
+  def __eq__(self, other):
+    if not isinstance(other, AllValuesQuantizer):
+      return False
+
+    return (self.num_bits == other.num_bits and
+            self.per_axis == other.per_axis and
+            self.symmetric == other.symmetric and
+            self.narrow_range == other.narrow_range)
+
+  def __ne__(self, other):
+    return not self.__eq__(other)
+
+
 def _types_dict():
   return {
+      'AllValuesQuantizer': AllValuesQuantizer,
       'LastValueQuantizer': LastValueQuantizer,
       'MovingAverageQuantizer': MovingAverageQuantizer
   }
