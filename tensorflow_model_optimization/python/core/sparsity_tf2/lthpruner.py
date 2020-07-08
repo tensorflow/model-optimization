@@ -25,10 +25,10 @@ from tensorflow.python.ops import summary_ops_v2
 from tensorflow.python.summary import summary as summary_ops_v1
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
-from tensorflow_model_optimization.python.core.sparsity_tf2.pruner import Pruner
+from tensorflow_model_optimization.python.core.sparsity_tf2 import pruner
 
 
-class LTHPruner(Pruner):
+class LTHPruner(pruner.Pruner):
   """
   Implementation of the lottery ticket iterative magnitude pruning algorithm.
   """
@@ -54,11 +54,12 @@ class LTHPruner(Pruner):
     self._reload_schedule = pruning_schedule
     self._save_step = save_iteration if save_iteration else 0
 
-    if not isinstance(self._reload_schedule, pruning_sched.PruningSchedule):
-      # log warning
-      logging.warning("Pruning schedule should be a PruningSchedule object.")
-    if isinstance(self._reload_schedule, pruning_sched.PruningSchedule) \
-      and self._save_step > self._reload_schedule.begin_step:
+    if not isinstance(self._reload_schedule, pruning_sched.PruningSchedule) and self._save_step > 0:
+      logging.warning(f"We could not statically verify if the lottery ticket initializations will be" + 
+      " saved before the first pruning. The weights will be saved at iteration {self._save_step} but the pruning" +
+      " schedule is not an analyzable PruningSchedule object.")
+    if (isinstance(self._reload_schedule, pruning_sched.PruningSchedule) 
+      and self._save_step > self._reload_schedule.begin_step):
       raise ValueError("Reloading should not occur before initializations are saved.")
   
   def create_slots(self, optimizer, var):
@@ -68,8 +69,7 @@ class LTHPruner(Pruner):
     optimizer.add_slot(var, 'original_initialization', initializer=var.read_value())
 
   def _maybe_save_weights(self, optimizer, var):
-    """
-    Save the masked weights at the desired iteration. No pruning should have been done up until now.
+    """Save the weights at the desired iteration as the original initialization.
     """
     if self._save_step == optimizer.iterations:
       optimizer.get_slot(var, 'original_initialization').assign(var)

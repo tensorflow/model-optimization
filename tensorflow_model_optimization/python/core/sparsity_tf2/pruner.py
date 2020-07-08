@@ -99,6 +99,7 @@ class Pruner(object):
     if the weight tensor, when squeezed, has ndims = 2. Otherwise, elementwise
     pruning occurs.
     Args:
+      step: the step tensor at which to update the mask.
       weights: The weight tensor that needs to be masked.
 
     Returns:

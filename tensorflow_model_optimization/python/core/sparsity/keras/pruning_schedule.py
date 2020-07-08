@@ -166,7 +166,6 @@ class ConstantSparsity(PruningSchedule):
     return (self._should_prune_in_step(step, self.begin_step, self.end_step,
                                        self.frequency),
             tf.constant(self.target_sparsity, dtype=tf.float32))
-            # tf.constant(self.target_sparsity, dtype=tf.float64))
 
   def get_config(self):
     return {

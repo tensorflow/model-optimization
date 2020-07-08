@@ -6,7 +6,6 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-# load("@rules_python//python:defs.bzl")
 
 py_library(
     name = "keras",
