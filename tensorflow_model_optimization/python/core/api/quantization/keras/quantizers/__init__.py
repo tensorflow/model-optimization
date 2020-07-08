@@ -16,6 +16,7 @@
 
 # quantize with custom quantization parameterization or implementation, or
 # handle custom Keras layers.
+from tensorflow_model_optimization.python.core.quantization.keras.quantizers import AllValuesQuantizer
 from tensorflow_model_optimization.python.core.quantization.keras.quantizers import LastValueQuantizer
 from tensorflow_model_optimization.python.core.quantization.keras.quantizers import MovingAverageQuantizer
 from tensorflow_model_optimization.python.core.quantization.keras.quantizers import Quantizer
