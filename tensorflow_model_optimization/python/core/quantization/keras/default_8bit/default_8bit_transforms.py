@@ -269,9 +269,8 @@ class InputLayerQuantize(transforms.Transform):
     return LayerPattern('InputLayer')
 
   def replacement(self, match_layer):
-    # TODO(pulkitb): Replace quantizer with InputLayer specific quantizer.
     quant_layer = quantize_layer.QuantizeLayer(
-        quantizers.MovingAverageQuantizer(
+        quantizers.AllValuesQuantizer(
             num_bits=8, per_axis=False, symmetric=False, narrow_range=False))
     layer_config = keras.layers.serialize(quant_layer)
     layer_config['name'] = quant_layer.name
@@ -285,7 +284,8 @@ class InputLayerQuantize(transforms.Transform):
   def custom_objects(self):
     return {
         'QuantizeLayer': quantize_layer.QuantizeLayer,
-        'MovingAverageQuantizer': quantizers.MovingAverageQuantizer
+        'MovingAverageQuantizer': quantizers.MovingAverageQuantizer,
+        'AllValuesQuantizer': quantizers.AllValuesQuantizer
     }
 
 
