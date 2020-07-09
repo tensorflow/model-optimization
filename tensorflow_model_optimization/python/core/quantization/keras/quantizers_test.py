@@ -33,7 +33,9 @@ serialize_keras_object = tf.keras.utils.serialize_keras_object
 
 @keras_parameterized.run_all_keras_modes
 @parameterized.parameters(
-    quantizers.LastValueQuantizer, quantizers.MovingAverageQuantizer)
+    quantizers.LastValueQuantizer,
+    quantizers.MovingAverageQuantizer,
+    quantizers.AllValuesQuantizer)
 class QuantizersTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):

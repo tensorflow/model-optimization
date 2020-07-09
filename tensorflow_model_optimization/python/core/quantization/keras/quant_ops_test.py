@@ -32,6 +32,31 @@ _SYMMETRIC_RANGE_RATIO = 0.9921875  # 127 / 128
 @keras_parameterized.run_all_keras_modes
 class QuantOpsTest(tf.test.TestCase, parameterized.TestCase):
 
+  def testAllValuesQuantiize_TrainingAssign(self):
+    min_value, max_value = self._GetMinMaxValues(
+        quant_ops.AllValuesQuantize,
+        [tf.constant([-5.0, 1.0]), tf.constant([-1.0, 5.0])])
+
+    self.assertEqual(min_value, -5.0)
+    self.assertEqual(max_value, 5.0)
+
+  def testAllValuesQuantiize_SymmetricTrainingAssign(self):
+    min_value, max_value = self._GetMinMaxValues(
+        quant_ops.AllValuesQuantize,
+        [tf.constant([-_SYMMETRIC_RANGE_RATIO, _SYMMETRIC_RANGE_RATIO])],
+        symmetric=True,
+        narrow_range=False)
+    self.assertEqual(min_value, -1.0)
+    self.assertEqual(max_value, _SYMMETRIC_RANGE_RATIO)
+
+  def testAllValuesQuantiize_SymmetricNarrowRangeTrainingAssign(self):
+    min_value, max_value = self._GetMinMaxValues(
+        quant_ops.AllValuesQuantize, [tf.constant([-1, 0.5])],
+        symmetric=True,
+        narrow_range=True)
+    self.assertEqual(min_value, -1.0)
+    self.assertEqual(max_value, 1)
+
   def testLastValueQuantizeTrainingAssign(self):
     min_value, max_value = self._GetMinMaxValues(quant_ops.LastValueQuantize,
                                                  [tf.constant([-1.0, 1.0])])

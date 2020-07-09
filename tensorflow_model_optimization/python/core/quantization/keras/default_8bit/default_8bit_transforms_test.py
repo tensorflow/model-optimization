@@ -264,7 +264,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
           layer_after_input,
           quantize_layer.QuantizeLayer)
       self.assertIsInstance(
-          layer_after_input.quantizer, quantizers.MovingAverageQuantizer)
+          layer_after_input.quantizer, quantizers.AllValuesQuantizer)
 
   def testConcatTransform(self):
     r"""Tests the Concat Transform.
