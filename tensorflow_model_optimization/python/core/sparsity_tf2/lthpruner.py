@@ -28,7 +28,7 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_sch
 from tensorflow_model_optimization.python.core.sparsity_tf2 import pruner
 
 
-class LTHPruner(pruner.Pruner):
+class LTHPruner(pruner.LowMagnitudePruner):
   """
   Implementation of the lottery ticket iterative magnitude pruning algorithm.
   """

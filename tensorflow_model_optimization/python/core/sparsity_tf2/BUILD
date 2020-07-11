@@ -8,22 +8,22 @@ exports_files(["LICENSE"])
 
 
 py_library(
-    name = "keras",
+    name = "sparsity_tf2",
     srcs = [
         "__init__.py",
     ],
     srcs_version = "PY2AND3",
     deps = [
         ":prunable_layer",
-        ":prune",
+        ":prunable_model",
         ":pruning_callbacks",
         ":pruning_schedule",
     ],
 )
 
 py_library(
-    name = "prune",
-    srcs = ["prune.py"],
+    name = "prunable_model",
+    srcs = ["prunable_model.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
@@ -220,7 +220,6 @@ py_test(
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
         # numpy dep1,
         # python/keras tensorflow dep2,
-        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 

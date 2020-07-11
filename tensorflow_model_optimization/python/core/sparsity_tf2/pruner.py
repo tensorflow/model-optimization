@@ -29,6 +29,21 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_sch
 class Pruner(object):
   """Implementation of magnitude-based weight pruning."""
 
+  def create_slots(self, optimizer, var):
+    raise NotImplementedError()
+
+  def preprocess_weights(self, optimizer, var, grad):
+    """Preprocess the gradient if necessary"""
+    # TODO: Figure out whether to mask gradient
+    return grad
+
+  def postprocess_weights(self, optimizer, var, grad):
+    """Prune if necessary"""
+    raise NotImplementedError()
+
+class LowMagnitudePruner(Pruner):
+  """Implementation of magnitude-based weight pruning."""
+
   def __init__(self,
       pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
       block_size=(1, 1),
@@ -201,9 +216,16 @@ class Pruner(object):
 
   def create_slots(self, optimizer, var):
     optimizer.add_slot(var, 'mask', initializer='ones')
-    optimizer.add_slot(var, 'threshold', initializer=tf.zeros(shape=()))
+    optimizer.add_slot(var, 'threshold',
+                       initializer=tf.zeros(shape=(), dtype=var.dtype))
 
-  def prune(self, optimizer, var, grad):
+  def preprocess_weights(self, optimizer, var, grad):
+    """Preprocess the gradient if necessary"""
+    # TODO: Figure out whether to mask gradient
+    return grad
+
+  def postprocess_weights(self, optimizer, var, grad):
+    """Prune if necessary"""
     # Gradient is unused for low magnitude pruning
     mask = optimizer.get_slot(var, 'mask')
     threshold = optimizer.get_slot(var, 'threshold')
