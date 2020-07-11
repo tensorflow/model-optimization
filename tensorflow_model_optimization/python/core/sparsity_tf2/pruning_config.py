@@ -20,30 +20,17 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
-from tensorflow_model_optimization.python.core.sparsity_tf2 import pruning_impl
+from tensorflow_model_optimization.python.core.sparsity_tf2 import pruner
 
 keras = tf.keras
 custom_object_scope = tf.keras.utils.custom_object_scope
 
 
-# TODO serialization
-# TODO for serialization: find some way to save dynamic
-#  layer-specific logic in config? Might not be possible for an arbitrary
-#  lambda?, but should be possible for 'common patterns' e.g. switching based
-#  on layer type
-class LowMagnitudePruningConfig(object):
+class PruningConfig(object):
 
-  def __init__(
-      self,
-      pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
-      block_size=(1, 1),
-      block_pooling_type='AVG'
-  ):
+  def __init__(self):
     self._model = None
     self._variable_to_pruner_mapping = None
-    self._pruner = pruning_impl.Pruner(pruning_schedule=pruning_schedule,
-                                       block_size=block_size,
-                                       block_pooling_type=block_pooling_type)
 
   def get_config(self):
     pass
@@ -51,6 +38,12 @@ class LowMagnitudePruningConfig(object):
   @classmethod
   def from_config(cls, config):
     pass
+
+  def _process_layer(self, layer):
+    # TODO: figure out if this method should directly update
+    # the pruner mapping, or just return a list of (variable, pruner) pairs
+    # also settle on a good name
+    raise NotImplementedError("Implement me!")
 
   def configure(self, model):
     self._model = model
@@ -68,19 +61,13 @@ class LowMagnitudePruningConfig(object):
     for var in self._model.trainable_weights:
       self._variable_to_pruner_mapping[var.ref()] = None
 
-    def _process_layer(layer):
+    def _process_layers_recursively(layer):
       for sub_layer in layer.layers:
-        _process_layer(sub_layer)
+        _process_layers_recursively(sub_layer)
 
-      if isinstance(layer, prunable_layer.PrunableLayer):
-        for var in layer.get_prunable_weights():
-          self._variable_to_pruner_mapping[var.ref()] = self._pruner
-      elif prune_registry.PruneRegistry.supports(layer):
-        prune_registry.PruneRegistry.make_prunable(layer)
-        for var in layer.get_prunable_weights():
-          self._variable_to_pruner_mapping[var.ref()] = self._pruner
+      self._process_layer(layer)
 
-    _process_layer(self._model)
+    _process_layers_recursively(self._model)
 
   def get_pruner(self, var):
     if not self._variable_to_pruner_mapping:
@@ -94,3 +81,39 @@ class LowMagnitudePruningConfig(object):
                        'look up a pruner for a variable.' % var.name)
 
     return self._variable_to_pruner_mapping[var_ref]
+
+
+# TODO serialization
+# TODO for serialization: find some way to save dynamic
+#  layer-specific logic in config? Might not be possible for an arbitrary
+#  lambda?, but should be possible for 'common patterns' e.g. switching based
+#  on layer type
+class LowMagnitudePruningConfig(PruningConfig):
+
+  def __init__(
+      self,
+      pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
+      block_size=(1, 1),
+      block_pooling_type='AVG'
+  ):
+    super(LowMagnitudePruningConfig, self).__init__()
+    self._pruner = pruner.LowMagnitudePruner(
+        pruning_schedule=pruning_schedule,
+        block_size=block_size,
+        block_pooling_type=block_pooling_type)
+
+  def get_config(self):
+    pass
+
+  @classmethod
+  def from_config(cls, config):
+    pass
+
+  def _process_layer(self, layer):
+    if isinstance(layer, prunable_layer.PrunableLayer):
+      for var in layer.get_prunable_weights():
+        self._variable_to_pruner_mapping[var.ref()] = self._pruner
+    elif prune_registry.PruneRegistry.supports(layer):
+      prune_registry.PruneRegistry.make_prunable(layer)
+      for var in layer.get_prunable_weights():
+        self._variable_to_pruner_mapping[var.ref()] = self._pruner

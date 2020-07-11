@@ -44,7 +44,8 @@ class Pruner(object):
 class LowMagnitudePruner(Pruner):
   """Implementation of magnitude-based weight pruning."""
 
-  def __init__(self,
+  def __init__(
+      self,
       pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
       block_size=(1, 1),
       block_pooling_type='AVG',
@@ -59,6 +60,7 @@ class LowMagnitudePruner(Pruner):
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
     """
+    super(LowMagnitudePruner, self).__init__()
     self._pruning_schedule = pruning_schedule
     self._block_size = list(block_size)
     self._block_pooling_type = block_pooling_type

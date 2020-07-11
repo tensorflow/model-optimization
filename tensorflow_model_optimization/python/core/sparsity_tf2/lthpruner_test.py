@@ -27,7 +27,6 @@ import tensorflow as tf
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
-from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity_tf2 import lthpruner as pruner
 
 dtypes = tf.dtypes
@@ -471,8 +470,6 @@ class PruningTest(test.TestCase, parameterized.TestCase):
           expected_first_saved_initialization = optimizer.get_slot(weight, "original_initialization").read_value()
         if i == save_round * 2:
           expected_second_saved_initialization = optimizer.get_slot(weight, "original_initialization").read_value()
-        should_reload = p._reload_schedule._should_prune_in_step(optimizer.iterations, p._reload_schedule.begin_step, p._reload_schedule.end_step, p._reload_schedule.frequency)
-        print(f"{should_reload} {i}")
         if i == reload_step1:
           reload1 = weight.read_value()
           mask1 = optimizer.get_slot(weight, "mask").read_value()

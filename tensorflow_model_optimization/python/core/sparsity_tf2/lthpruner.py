@@ -50,14 +50,16 @@ class LTHPruner(pruner.LowMagnitudePruner):
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
     """
-    super().__init__(pruning_schedule, block_size, block_pooling_type)
+    super(LTHPruner, self).__init__(
+        pruning_schedule, block_size, block_pooling_type)
     self._reload_schedule = pruning_schedule
     self._save_step = save_iteration if save_iteration else 0
 
     if not isinstance(self._reload_schedule, pruning_sched.PruningSchedule) and self._save_step > 0:
-      logging.warning(f"We could not statically verify if the lottery ticket initializations will be" + 
-      " saved before the first pruning. The weights will be saved at iteration {self._save_step} but the pruning" +
-      " schedule is not an analyzable PruningSchedule object.")
+      logging.warning("We could not statically verify if the lottery ticket initializations will be" +
+      " saved before the first pruning. The weights will be saved at iteration {} but the pruning" +
+      " schedule is not an analyzable PruningSchedule object.".format(
+          self._save_step))
     if (isinstance(self._reload_schedule, pruning_sched.PruningSchedule) 
       and self._save_step > self._reload_schedule.begin_step):
       raise ValueError("Reloading should not occur before initializations are saved.")

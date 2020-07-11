@@ -6,7 +6,6 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
-
 py_library(
     name = "sparsity_tf2",
     srcs = [
@@ -14,10 +13,11 @@ py_library(
     ],
     srcs_version = "PY2AND3",
     deps = [
-        ":prunable_layer",
+        ":lthpruner",
         ":prunable_model",
-        ":pruning_callbacks",
-        ":pruning_schedule",
+        ":pruner",
+        ":pruning_config",
+        ":pruning_optimizer",
     ],
 )
 
@@ -27,48 +27,32 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        ":pruning_schedule",
-        ":pruning_wrapper",
+        ":pruning_optimizer",
         # tensorflow dep1,
     ],
 )
 
 py_library(
-    name = "prunable_layer",
-    srcs = ["prunable_layer.py"],
+    name = "pruning_config",
+    srcs = ["pruning_config.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        # six dep1,
-    ],
-)
-
-py_library(
-    name = "prune_registry",
-    srcs = ["prune_registry.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":prunable_layer",
-        # tensorflow dep1,
-        # python/keras:base_layer tensorflow dep2,
-    ],
-)
-
-py_library(
-    name = "pruning_wrapper",
-    srcs = ["pruning_wrapper.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        "//tensorflow_model_optimization/python/core/keras:prunable_layer",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:prunable_layer",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune_registry",
         ":pruner",
-        "//tensorflow_model_optimization/python/core/keras:pruning_schedule",
-        # numpy dep1,
         # tensorflow dep1,
-        # python/keras/utils:generic_utils tensorflow dep2,
-        # python/keras/utils:tf_utils tensorflow dep2,
+    ],
+)
+
+py_library(
+    name = "pruning_optimizer",
+    srcs = ["pruning_optimizer.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
     ],
 )
 
@@ -81,7 +65,6 @@ py_library(
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
         # tensorflow dep1,
         # python:summary tensorflow dep2,
-        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -94,118 +77,6 @@ py_library(
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
         # tensorflow dep1,
         # python:summary tensorflow dep2,
-        "//tensorflow_model_optimization/python/core/keras:compat",
-    ],
-)
-
-py_library(
-    name = "pruning_utils",
-    srcs = ["pruning_utils.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        # numpy dep1,
-        # tensorflow dep1,
-    ],
-)
-
-py_library(
-    name = "test_utils",
-    testonly = 1,
-    srcs = ["test_utils.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":prune",
-        ":pruning_wrapper",
-        # numpy dep1,
-        # tensorflow dep1,
-        # python/keras tensorflow dep2,
-        # python/keras:backend tensorflow dep2,
-        # python/keras/saving tensorflow dep2,
-    ],
-)
-
-py_test(
-    name = "prune_test",
-    size = "medium",
-    srcs = ["prune_test.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":prune",
-        ":pruning_callbacks",
-        ":pruning_schedule",
-        ":test_utils",
-        # absl/testing:parameterized dep1,
-        # numpy dep1,
-        # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/keras:test_utils",
-    ],
-)
-
-py_test(
-    name = "prune_integration_test",
-    size = "medium",
-    timeout = "long",
-    srcs = ["prune_integration_test.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":prune",
-        ":pruning_callbacks",
-        ":pruning_schedule",
-        ":pruning_wrapper",
-        ":test_utils",
-        # absl/testing:parameterized dep1,
-        # numpy dep1,
-        # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/keras:test_utils",
-    ],
-)
-
-py_test(
-    name = "prune_distributed_test",
-    size = "medium",
-    timeout = "long",
-    srcs = ["prune_distributed_test.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":prune",
-        ":pruning_callbacks",
-        ":pruning_schedule",
-        ":test_utils",
-        # absl/testing:parameterized dep1,
-        # numpy dep1,
-        # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/keras:test_utils",
-    ],
-)
-
-py_test(
-    name = "prune_registry_test",
-    size = "medium",
-    srcs = ["prune_registry_test.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":prunable_layer",
-        ":prune_registry",
-        # absl/testing:parameterized dep1,
-        # tensorflow dep1,
-    ],
-)
-
-py_test(
-    name = "pruning_wrapper_test",
-    size = "medium",
-    srcs = ["pruning_wrapper_test.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":pruning_schedule",
-        ":pruning_wrapper",
     ],
 )
 
@@ -235,20 +106,5 @@ py_test(
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
         # numpy dep1,
         # python/keras tensorflow dep2,
-        "//tensorflow_model_optimization/python/core/keras:compat",
-    ],
-)
-
-py_test(
-    name = "pruning_utils_test",
-    size = "medium",
-    srcs = ["pruning_utils_test.py"],
-    srcs_version = "PY2AND3",
-    visibility = ["//visibility:public"],
-    deps = [
-        ":pruning_utils",
-        # absl/testing:parameterized dep1,
-        # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
