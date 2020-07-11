@@ -53,12 +53,12 @@ class PruningOptimizer(tf.keras.optimizers.Optimizer):
         pruner.create_slots(self, var)
 
   def _resource_apply_dense(self, grad, var, apply_state):
-    self.preprocess_weights(self, var, grad)
+    grad = self.preprocess_weights(self, var, grad)
     self._optimizer._resource_apply_dense(grad, var, apply_state)
     self.postprocess_weights(self, var, grad)
 
   def _resource_apply_sparse(self, grad, var, indices, **kwargs):
-    self.preprocess_weights(self, var, grad)
+    grad = self.preprocess_weights(self, var, grad)
     self._optimizer._resource_apply_sparse(grad, var, indices, **kwargs)
     self.postprocess_weights(self, var, grad)
 

@@ -334,6 +334,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     save_round = 0
     n_rounds = 20
     end_iter = 100
+    reload_step = 0
     frequency, prune_ratio_per_round = get_lth_sparsity(save_round, n_rounds, self.target_sparsity, end_iter)
     pruning_schedule = make_pruning_schedule(1 - prune_ratio_per_round, save_round, end_iter, frequency)
     
@@ -357,9 +358,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
           expected_saved_initialization = weight.read_value()
         weight.assign(tf.math.add(weight, sample_noise(i)))
         p.postprocess_weights(optimizer, weight, self.grad(weight))
-        should_reload = p._reload_schedule._should_prune_in_step(optimizer.iterations,
-                    p._reload_schedule.begin_step, p._reload_schedule.end_step, p._reload_schedule.frequency)
-        if should_reload:
+        if i == reload_step:
           expected_reload = weight.read_value()
         optimizer.iterations.assign_add(1) # save weights right before iteration
       return expected_saved_initialization, expected_reload
@@ -394,6 +393,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     save_round = 5
     n_rounds = 24
     end_iter = 100
+    reload_step = 6
     frequency, prune_ratio_per_round = get_lth_sparsity(save_round, n_rounds, self.target_sparsity, end_iter)
     # reload at step 6 (i.e. save + 1), save at step 5
     pruning_schedule = make_pruning_schedule(1 - prune_ratio_per_round, save_round + 1, end_iter, frequency)
@@ -414,9 +414,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         p.preprocess_weights(optimizer, weight, self.grad(weight))
         weight.assign(tf.math.add(weight, sample_noise(i)))
         p.postprocess_weights(optimizer, weight, self.grad(weight))
-        should_reload = p._reload_schedule._should_prune_in_step(optimizer.iterations,
-                    p._reload_schedule.begin_step, p._reload_schedule.end_step, p._reload_schedule.frequency)
-        if should_reload:
+        if i == reload_step:
           expected_reload = weight.read_value()
         optimizer.iterations.assign_add(1)
       return expected_reload
@@ -445,6 +443,8 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     save_round = 5
     n_rounds = 24
     end_iter = 100
+    reload_step1 = 5
+    reload_step2 = 11
     frequency, prune_ratio_per_round = get_lth_sparsity(save_round, n_rounds, self.target_sparsity, end_iter)
     pruning_schedule = make_pruning_schedule(1 - prune_ratio_per_round, save_round + 1, end_iter, frequency)
     
@@ -460,6 +460,10 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     def _train(optimizer, weight):
       expected_first_saved_initialization = tf.ones_like(weight, dtype=weight.dtype.base_dtype) * -1
       expected_second_saved_initialization = tf.ones_like(weight, dtype=weight.dtype.base_dtype) * -1
+      reload1 = tf.ones_like(weight, dtype=weight.dtype.base_dtype) * -1
+      reload2 = tf.ones_like(weight, dtype=weight.dtype.base_dtype) * -1
+      mask1 = tf.ones_like(weight, dtype=weight.dtype.base_dtype) * -1
+      mask2 = tf.ones_like(weight, dtype=weight.dtype.base_dtype) * -1
       p.create_slots(optimizer, weight)
       for i in tf.range(0, 13): # this should save, reload, and update exactly twice
         p.preprocess_weights(optimizer, weight, self.grad(weight))
@@ -467,27 +471,45 @@ class PruningTest(test.TestCase, parameterized.TestCase):
           expected_first_saved_initialization = optimizer.get_slot(weight, "original_initialization").read_value()
         if i == save_round * 2:
           expected_second_saved_initialization = optimizer.get_slot(weight, "original_initialization").read_value()
+        should_reload = p._reload_schedule._should_prune_in_step(optimizer.iterations, p._reload_schedule.begin_step, p._reload_schedule.end_step, p._reload_schedule.frequency)
+        print(f"{should_reload} {i}")
+        if i == reload_step1:
+          reload1 = weight.read_value()
+          mask1 = optimizer.get_slot(weight, "mask").read_value()
+        if i == reload_step2:
+          reload2 = weight.read_value()
+          mask2 = optimizer.get_slot(weight, "mask").read_value()
         weight.assign(tf.math.add(weight, sample_noise(i)))
         p.postprocess_weights(optimizer, weight, self.grad(weight))
         optimizer.iterations.assign_add(1)
-      return expected_first_saved_initialization, expected_second_saved_initialization
+      return expected_first_saved_initialization, expected_second_saved_initialization, reload1, mask1, reload2, mask2
 
-    expected_first_saved_initialization, expected_second_saved_initialization = _train(optimizer, weight)
+    expected_first_saved_initialization, expected_second_saved_initialization, reload1, mask1, reload2, mask2 = _train(optimizer, weight)
 
     self.assertAllEqual(expected_first_saved_initialization, expected_second_saved_initialization)
     initialization_slot = optimizer.get_slot(weight, "original_initialization")
     self.assertAllEqual(initialization_slot, expected_first_saved_initialization)
     self.assertAllEqual(initialization_slot, expected_second_saved_initialization)
+    masked_weight_expected1 = tf.math.multiply(initialization_slot, mask1)
+    # where the loop ends the mask in slot variable is also same as mask2
+    masked_weight_expected2 = tf.math.multiply(initialization_slot, optimizer.get_slot(weight, "mask"))
+    self.assertAllEqual(masked_weight_expected1, reload1)
+    self.assertAllEqual(masked_weight_expected2, reload2)
 
     weight = tf.Variable(np.linspace(1.0, 100.0, 100),  "weights")
     optimizer =   tf.keras.optimizers.SGD(learning_rate=0.01)
     optimizer.iterations.assign(0)
-    expected_first_saved_initialization, expected_second_saved_initialization = tf.function(_train)(optimizer, weight)
-    self.assertAllEqual(expected_first_saved_initialization, expected_second_saved_initialization)
+    expected_first_saved_initialization, expected_second_saved_initialization, reload1, mask1, reload2, mask2 = tf.function(_train)(optimizer, weight)
 
+    self.assertAllEqual(expected_first_saved_initialization, expected_second_saved_initialization)
     initialization_slot = optimizer.get_slot(weight, "original_initialization")
     self.assertAllEqual(initialization_slot, expected_first_saved_initialization)
     self.assertAllEqual(initialization_slot, expected_second_saved_initialization)
+    masked_weight_expected1 = tf.math.multiply(initialization_slot, mask1)
+    # where the loop ends the mask in slot variable is also same as mask2
+    masked_weight_expected2 = tf.math.multiply(initialization_slot, optimizer.get_slot(weight, "mask"))
+    self.assertAllEqual(masked_weight_expected1, reload1)
+    self.assertAllEqual(masked_weight_expected2, reload2)
 
 
 if __name__ == "__main__":
