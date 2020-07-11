@@ -92,13 +92,14 @@ class Pruner(object):
           tf.math.greater_equal(abs_weights, current_threshold), weights.dtype)
     return current_threshold, new_mask
 
-  def _maybe_update_block_mask(self, weights):
+  def _maybe_update_block_mask(self, step, weights):
     """Performs block-granular masking of the weights.
 
     Block pruning occurs only if the block_height or block_width is > 1 and
     if the weight tensor, when squeezed, has ndims = 2. Otherwise, elementwise
     pruning occurs.
     Args:
+      step: the step tensor at which to update the mask.
       weights: The weight tensor that needs to be masked.
 
     Returns:
@@ -112,13 +113,9 @@ class Pruner(object):
       ValueError: if block pooling function is not AVG or MAX
     """
     if self._block_size == [1, 1]:
-      return self._update_mask(weights)
+      return self._update_mask(step, weights)
 
-    # TODO(pulkitb): Check if squeeze operations should now be removed since
-    # we are only accepting 2-D weights.
-
-    squeezed_weights = tf.squeeze(weights)
-    abs_weights = tf.math.abs(squeezed_weights)
+    abs_weights = tf.math.abs(weights)
     pooled_weights = pruning_utils.factorized_pool(
         abs_weights,
         window_shape=self._block_size,
@@ -129,13 +126,13 @@ class Pruner(object):
     if pooled_weights.get_shape().ndims != 2:
       pooled_weights = tf.squeeze(pooled_weights)
 
-    new_threshold, new_mask = self._update_mask(pooled_weights)
+    new_threshold, new_mask = self._update_mask(step, pooled_weights)
 
     updated_mask = pruning_utils.expand_tensor(new_mask, self._block_size)
     sliced_mask = tf.slice(
         updated_mask, [0, 0],
-        [squeezed_weights.get_shape()[0],
-         squeezed_weights.get_shape()[1]])
+        [weights.get_shape()[0],
+         weights.get_shape()[1]])
     return new_threshold, tf.reshape(sliced_mask, tf.shape(weights))
 
   def update_masks(self, pruning_vars, step):
@@ -152,7 +149,7 @@ class Pruner(object):
     # logic from the tf1 code. (Tomer is dubious that we need in in tf2 loops)
     if self._pruning_schedule(step)[0]:
       for weight, mask, threshold in pruning_vars:
-        new_threshold, new_mask = self._maybe_update_block_mask(weight)
+        new_threshold, new_mask = self._maybe_update_block_mask(step, weight)
         threshold.assign(new_threshold)
         mask.assign(new_mask)
 
@@ -167,7 +164,7 @@ class Pruner(object):
       summary.scalar(mask.name + '/sparsity', 1.0 - tf.math.reduce_mean(mask))
       summary.scalar(threshold.name + '/threshold', threshold)
 
-  def _mask_weight(self, weight, mask):
+  def _apply_mask(self, weight, mask):
     """Directly masks the weights (updating the weight variables)."""
 
     # TODO(Kaftan/xwinxu): figure out if this is totally unneeded now
@@ -211,4 +208,5 @@ class Pruner(object):
     mask = optimizer.get_slot(var, 'mask')
     threshold = optimizer.get_slot(var, 'threshold')
     self.update_masks([(var, mask, threshold)], step=optimizer.iterations)
-    self._mask_weight(var, mask)
+    self._apply_mask(var, mask)
+

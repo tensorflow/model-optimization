@@ -119,7 +119,7 @@ class PruningSchedule(object):
   @abc.abstractmethod
   def get_config(self):
     raise NotImplementedError(
-        'PruningSchedule implementation override get_config')
+        'PruningSchedule implementation must override get_config')
 
   @classmethod
   def from_config(cls, config):
@@ -154,7 +154,6 @@ class ConstantSparsity(PruningSchedule):
         continuing to prune till the end of training.
       frequency: Only apply pruning every `frequency` steps.
     """
-
     self.target_sparsity = target_sparsity
     self.begin_step = begin_step
     self.end_step = end_step

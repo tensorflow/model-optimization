@@ -6,6 +6,7 @@ licenses(["notice"])  # Apache 2.0
 
 exports_files(["LICENSE"])
 
+
 py_library(
     name = "keras",
     srcs = [
@@ -60,10 +61,10 @@ py_library(
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        ":prunable_layer",
+        "//tensorflow_model_optimization/python/core/keras:prunable_layer",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune_registry",
-        ":pruning_impl",
-        ":pruning_schedule",
+        ":pruner",
+        "//tensorflow_model_optimization/python/core/keras:pruning_schedule",
         # numpy dep1,
         # tensorflow dep1,
         # python/keras/utils:generic_utils tensorflow dep2,
@@ -72,12 +73,25 @@ py_library(
 )
 
 py_library(
-    name = "pruning_impl",
-    srcs = ["pruning_impl.py"],
+    name = "pruner",
+    srcs = ["pruner.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        ":pruning_utils",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
+        # tensorflow dep1,
+        # python:summary tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:compat",
+    ],
+)
+
+py_library(
+    name = "lthpruner",
+    srcs = ["lthpruner.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
         # tensorflow dep1,
         # python:summary tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -196,14 +210,30 @@ py_test(
 )
 
 py_test(
-    name = "pruning_impl_test",
+    name = "pruner_test",
     size = "medium",
-    srcs = ["pruning_impl_test.py"],
+    srcs = ["pruner_test.py"],
     srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
-        ":pruning_impl",
-        ":pruning_schedule",
+        ":pruner",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
+        # numpy dep1,
+        # python/keras tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:compat",
+    ],
+)
+
+py_test(
+    name = "lthpruner_test",
+    size = "medium",
+    srcs = ["lthpruner_test.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":lthpruner",
+        ":pruner",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
         # numpy dep1,
         # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
