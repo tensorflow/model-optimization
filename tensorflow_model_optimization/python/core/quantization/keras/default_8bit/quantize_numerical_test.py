@@ -109,10 +109,20 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
     x = tf.keras.layers.ReLU()(x)
     return tf.keras.Model(i, x)
 
-  @parameterized.parameters(
+  def _get_separable_conv2d_model(self):
+    i = tf.keras.Input(shape=(12, 12, 3))
+    x = tf.keras.layers.SeparableConv2D(
+        filters=5, kernel_size=(3, 3), strides=(2, 2))(i)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.ReLU()(x)
+    return tf.keras.Model(i, x)
+
+  @parameterized.parameters([
       _get_single_conv_model, _get_single_dense_model,
       _get_single_conv_relu_model, _get_stacked_convs_model,
-      _get_conv_bn_relu_model, _get_depthconv_bn_relu_model)
+      _get_conv_bn_relu_model, _get_depthconv_bn_relu_model,
+      _get_separable_conv2d_model
+  ])
   def testModelEndToEnd(self, model_fn):
     # 1. Check whether quantized model graph can be constructed.
     model = model_fn(self)
@@ -121,7 +131,7 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
     # 2. Sanity check to ensure basic training on random data works.
     x_train, y_train = self._create_test_data(model)
     model.compile(loss='mse', optimizer='sgd', metrics=['accuracy'])
-    model.fit(x_train, y_train, epochs=10)
+    model.fit(x_train, y_train, epochs=100)
 
     x_test, y_test = self._create_test_data(model)
 
