@@ -212,9 +212,9 @@ class ModelTransformer(object):
     # Inbound layers can have different order from the list of input patterns.
     # TODO(pulkitb): Fix by checking all permutations.
     input_match_layer_nodes = []
-    for input_layer, pattern in zip(input_layers, pattern.inputs):
+    for input_layer, pattern_ in zip(input_layers, pattern.inputs):
       match_layer_node = self._match_layer_with_inputs(
-          input_layer, pattern, is_head_node=False)
+          input_layer, pattern_, is_head_node=False)
       if not match_layer_node:
         return None
       input_match_layer_nodes.append(match_layer_node)
@@ -354,12 +354,13 @@ class ModelTransformer(object):
     def _add_replacement_layer(layer_node):
       """Recursively add new layers."""
       self._config['layers'].append(layer_node.layer)
+      layer_name = layer_node.layer['config']['name']
       if layer_node.weights:
-        self._layer_weights_map[layer_node.layer['config']
-                                ['name']] = layer_node.weights
+        self._layer_weights_map[layer_name] = layer_node.weights
       if layer_node.metadata:
-        self._layer_metadata_map[layer_node.layer['config']
-                                 ['name']] = layer_node.metadata
+        self._layer_metadata_map[layer_name] = layer_node.metadata
+      if self.candidate_layers:
+        self.candidate_layers.add(layer_name)
 
       for input_layer in layer_node.input_layers:
         _add_replacement_layer(input_layer)
@@ -399,12 +400,13 @@ class ModelTransformer(object):
       i = first_layer_removed_index
       for replacement_node in replacement_nodes:
         self._config['layers'].insert(i, replacement_node.layer)
+        layer_name = replacement_node.layer['config']['name']
         if replacement_node.weights:
-          self._layer_weights_map[replacement_node.layer['config']
-                                  ['name']] = replacement_node.weights
+          self._layer_weights_map[layer_name] = replacement_node.weights
         if replacement_node.metadata:
-          self._layer_metadata_map[replacement_node.layer['config']
-                                   ['name']] = replacement_node.metadata
+          self._layer_metadata_map[layer_name] = replacement_node.metadata
+        if self.candidate_layers:
+          self.candidate_layers.add(layer_name)
         i += 1
 
     replacement_nodes = _get_replacement_nodes(replacement_layer_node)

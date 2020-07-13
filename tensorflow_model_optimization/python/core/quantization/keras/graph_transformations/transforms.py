@@ -62,6 +62,12 @@ class LayerPattern(object):
     self.config = config
     self.inputs = inputs
 
+  def __str__(self):
+    return '{} : {} <- [{}]'.format(
+        self.class_name,
+        self.config,
+        ', '.join([str(inp) for inp in self.inputs]))
+
 
 class LayerNode(object):
   """Represents a Node in a tree containing a layer.

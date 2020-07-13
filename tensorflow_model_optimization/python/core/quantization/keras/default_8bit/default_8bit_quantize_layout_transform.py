@@ -65,4 +65,4 @@ class QuantizeLayoutTransform(
     ]
     return model_transformer.ModelTransformer(
         model, transforms,
-        layer_quantize_map.keys(), layer_quantize_map).transform()
+        set(layer_quantize_map.keys()), layer_quantize_map).transform()

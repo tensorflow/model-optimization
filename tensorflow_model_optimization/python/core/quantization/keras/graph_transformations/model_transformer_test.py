@@ -451,6 +451,39 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
     pass
 
   @parameterized.parameters(['sequential', 'functional'])
+  def testReplace_AlreadyReplacedLayer_WithAnotherMatch(self, model_type):
+    """Verifies a layer replaced using a transform can be replaced again."""
+
+    class ReplaceReLUWithSoftmax(Transform):
+
+      def pattern(self):
+        return LayerPattern('ReLU')
+
+      def replacement(self, match_layer):
+        replace_layer = keras.layers.serialize(keras.layers.Softmax())
+        replace_layer['name'] = replace_layer['config']['name']
+        return LayerNode(replace_layer)
+
+    class ReplaceSoftmaxWithELU(Transform):
+
+      def pattern(self):
+        return LayerPattern('Softmax')
+
+      def replacement(self, match_layer):
+        replace_layer = keras.layers.serialize(keras.layers.ELU())
+        replace_layer['name'] = replace_layer['config']['name']
+        return LayerNode(replace_layer)
+
+    model = self._simple_dense_model(model_type)
+    transformed_model, _ = ModelTransformer(
+        model,
+        [ReplaceReLUWithSoftmax(), ReplaceSoftmaxWithELU()],
+        candidate_layers=set([layer.name for layer in model.layers])
+    ).transform()
+
+    self.assertEqual(transformed_model.layers[-1].__class__.__name__, 'ELU')
+
+  @parameterized.parameters(['sequential', 'functional'])
   def testDoesNotMatchForever_IfReplacementEqualsMatch(self, model_type):
 
     class ReplaceWithSelf(Transform):
