@@ -41,7 +41,7 @@ class LayerPattern(object):
     pattern = LayerPattern('Concat', {}, [
         LayerPattern('Conv2D', {}, []),
         LayerPattern('Conv2D', {}, [])
-    )
+    ])
   """
 
   def __init__(self, class_name, config=None, inputs=None):

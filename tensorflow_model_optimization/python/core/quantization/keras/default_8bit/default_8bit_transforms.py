@@ -228,6 +228,105 @@ class Conv2DBatchNormActivationQuantize(Conv2DBatchNormReLUQuantize):
         inputs=[Conv2DBatchNormQuantize.pattern(self)])
 
 
+class SeparableConvQuantize(transforms.Transform):
+  """Break SeparableConv into a DepthwiseConv and Conv layer.
+
+  SeparableConv is a composition of a DepthwiseConv and a Conv layer. For the
+  purpose of quantization, a FQ operation needs to be placed between the output
+  of DepthwiseConv and the following Conv.
+
+  This is needed since there is a dynamic tensor in between the two layers, and
+  it's range information needs to be captured by the FakeQuant op to ensure
+  full int8 quantization of the layers is possible.
+
+  Splitting the layer into 2 ensures that each individual layer is handled
+  correctly with respect to quantization.
+  """
+
+  def pattern(self):
+    return LayerPattern('SeparableConv2D')
+
+  @staticmethod
+  def _get_quantize_config(layer_node):
+    return layer_node.metadata.get('quantize_config')
+
+  def _has_custom_quantize_config(self, *layer_nodes):
+    for layer_node in layer_nodes:
+      if self._get_quantize_config(layer_node) is not None:
+        return True
+    return False
+
+  def replacement(self, match_layer):
+    if self._has_custom_quantize_config(match_layer):
+      return match_layer
+
+    sepconv_layer = match_layer.layer
+    sepconv_weights = list(match_layer.weights.values())
+
+    # TODO(pulkitb): SeparableConv has kwargs other than constructor args which
+    # need to be handled.
+    # Applicable to both layers: trainable, dtype, name
+    # Applicable to dconv: input_dim, input_shape, batch_input_shape, batch_size
+    # Needs special handling: weights
+    # Unknown: dynamic, autocast
+
+    dconv_layer = tf.keras.layers.DepthwiseConv2D(
+        kernel_size=sepconv_layer['config']['kernel_size'],
+        strides=sepconv_layer['config']['strides'],
+        padding=sepconv_layer['config']['padding'],
+        depth_multiplier=sepconv_layer['config']['depth_multiplier'],
+        data_format=sepconv_layer['config']['data_format'],
+        dilation_rate=sepconv_layer['config']['dilation_rate'],
+        activation=None,
+        use_bias=False,
+        depthwise_initializer=sepconv_layer['config']['depthwise_initializer'],
+        depthwise_regularizer=sepconv_layer['config']['depthwise_regularizer'],
+        depthwise_constraint=sepconv_layer['config']['depthwise_constraint'],
+        trainable=sepconv_layer['config']['trainable']
+    )
+    dconv_weights = collections.OrderedDict()
+    dconv_weights['depthwise_kernel:0'] = sepconv_weights[0]
+    dconv_layer_config = keras.layers.serialize(dconv_layer)
+    dconv_layer_config['name'] = dconv_layer.name
+    # Needed to ensure these new layers are considered for quantization.
+    dconv_metadata = {'quantize_config': None}
+
+    conv_layer = tf.keras.layers.Conv2D(
+        filters=sepconv_layer['config']['filters'],
+        kernel_size=(1, 1),  # (1,) * rank
+        strides=(1, 1),
+        padding='valid',
+        data_format=sepconv_layer['config']['data_format'],
+        dilation_rate=sepconv_layer['config']['dilation_rate'],
+        groups=1,
+        activation=sepconv_layer['config']['activation'],
+        use_bias=sepconv_layer['config']['use_bias'],
+        kernel_initializer=sepconv_layer['config']['pointwise_initializer'],
+        bias_initializer=sepconv_layer['config']['bias_initializer'],
+        kernel_regularizer=sepconv_layer['config']['pointwise_regularizer'],
+        bias_regularizer=sepconv_layer['config']['bias_regularizer'],
+        activity_regularizer=sepconv_layer['config']['activity_regularizer'],
+        kernel_constraint=sepconv_layer['config']['pointwise_constraint'],
+        bias_constraint=sepconv_layer['config']['bias_constraint'],
+        trainable=sepconv_layer['config']['trainable']
+    )
+    conv_weights = collections.OrderedDict()
+    conv_weights['kernel:0'] = sepconv_weights[1]
+    conv_weights['bias:0'] = sepconv_weights[2]
+    conv_layer_config = keras.layers.serialize(conv_layer)
+    conv_layer_config['name'] = conv_layer.name
+    # Needed to ensure these new layers are considered for quantization.
+    conv_metadata = {'quantize_config': None}
+
+    dconv_layer_node = LayerNode(
+        dconv_layer_config, weights=dconv_weights, metadata=dconv_metadata)
+    return LayerNode(
+        conv_layer_config,
+        weights=conv_weights,
+        input_layers=[dconv_layer_node],
+        metadata=conv_metadata)
+
+
 class AddReLUQuantize(transforms.Transform):
   """Ensure FQ does not get placed between Add and ReLU."""
 
