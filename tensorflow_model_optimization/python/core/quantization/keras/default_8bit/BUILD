@@ -136,3 +136,17 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:model_transformer",
     ],
 )
+
+py_test(
+    name = "quantize_numerical_test",
+    srcs = ["quantize_numerical_test.py"],
+    python_version = "PY3",
+    deps = [
+        # absl/testing:parameterized dep1,
+        # numpy dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
+        "//tensorflow_model_optimization/python/core/quantization/keras:utils",
+    ],
+)
