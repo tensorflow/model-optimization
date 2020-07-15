@@ -52,6 +52,7 @@ class QuantizeLayoutTransform(
 
     transforms = [
         default_8bit_transforms.InputLayerQuantize(),
+        default_8bit_transforms.SeparableConvQuantize(),
         default_8bit_transforms.Conv2DBatchNormReLUQuantize(),
         default_8bit_transforms.Conv2DBatchNormActivationQuantize(),
         default_8bit_transforms.Conv2DBatchNormQuantize(),
@@ -65,4 +66,4 @@ class QuantizeLayoutTransform(
     ]
     return model_transformer.ModelTransformer(
         model, transforms,
-        layer_quantize_map.keys(), layer_quantize_map).transform()
+        set(layer_quantize_map.keys()), layer_quantize_map).transform()

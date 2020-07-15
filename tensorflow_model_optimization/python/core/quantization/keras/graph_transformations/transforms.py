@@ -41,7 +41,7 @@ class LayerPattern(object):
     pattern = LayerPattern('Concat', {}, [
         LayerPattern('Conv2D', {}, []),
         LayerPattern('Conv2D', {}, [])
-    )
+    ])
   """
 
   def __init__(self, class_name, config=None, inputs=None):
@@ -61,6 +61,12 @@ class LayerPattern(object):
     self.class_name = class_name
     self.config = config
     self.inputs = inputs
+
+  def __str__(self):
+    return '{} : {} <- [{}]'.format(
+        self.class_name,
+        self.config,
+        ', '.join([str(inp) for inp in self.inputs]))
 
 
 class LayerNode(object):
