@@ -32,6 +32,9 @@ See these [guidelines](CONTRIBUTING_TECHNIQUE.md).
 
 Please wait until we finish this section.
 
+New features and bug fixes for documented features should come with a
+modification to the [release notes](RELEASE.md).
+
 ## Code reviews
 
 All submissions, including submissions by project members, require review. We
