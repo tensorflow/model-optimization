@@ -62,6 +62,9 @@ class ClusterWeights(Wrapper):
           'Please initialize `Cluster` layer with a '
           '`Layer` instance. You passed: {input}'.format(input=layer))
 
+    if 'name' not in kwargs:
+      kwargs['name'] = self._make_layer_name(layer)
+
     if isinstance(layer, clusterable_layer.ClusterableLayer):
       # A user-defined custom layer
       super(ClusterWeights, self).__init__(layer, **kwargs)
@@ -132,6 +135,10 @@ class ClusterWeights(Wrapper):
     if not hasattr(self, '_batch_input_shape')\
         and hasattr(layer, '_batch_input_shape'):
       self._batch_input_shape = self.layer._batch_input_shape
+
+  @staticmethod
+  def _make_layer_name(layer):
+    return '{}_{}'.format('cluster', layer.name)
 
   @staticmethod
   def _weight_name(name):
