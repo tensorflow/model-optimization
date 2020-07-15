@@ -26,11 +26,11 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-import inspect
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras.utils import tf_utils
+from tensorflow.python.util import tf_inspect
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 
 deserialize_keras_object = tf.keras.utils.deserialize_keras_object
@@ -160,7 +160,7 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     self.quantize_config.set_quantize_activations(self.layer,
                                                   self._quantize_activations)
 
-    args = inspect.getfullargspec(self.layer.call).args
+    args = tf_inspect.getfullargspec(self.layer.call).args
     if 'training' in args:
       outputs = self.layer.call(inputs, training=training)
     else:
