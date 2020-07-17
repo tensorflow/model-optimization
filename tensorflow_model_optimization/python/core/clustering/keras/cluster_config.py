@@ -18,6 +18,17 @@ import enum
 
 
 class CentroidInitialization(str, enum.Enum):
+  """Specifies how the cluster centroids should be initialized.
+  * `LINEAR`: Cluster centroids are evenly spaced between the minimum and
+      maximum values of a given weight tensor.
+  * `RANDOM`: Centroids are sampled using the uniform distribution between the
+      minimum and maximum weight values in a given layer.
+  * `DENSITY_BASED`: Density-based sampling obtained as follows: first a
+       cumulative distribution function is built for the weights, then the Y
+       axis is evenly spaced into as many regions as many clusters we want to
+       have. After this the corresponding X values are obtained and used to
+       initialize the clusters centroids.
+  """
   LINEAR = "LINEAR"
   RANDOM = "RANDOM"
   DENSITY_BASED = "DENSITY_BASED"
