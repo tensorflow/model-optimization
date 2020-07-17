@@ -125,6 +125,25 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
           cluster_centroids_init=CentroidInitialization.LINEAR
       )
 
+  @parameterized.parameters(
+      (0),
+      (2),
+      (-32)
+  )
+  def testCannotBeInitializedWithSparsityPreservationAndNumberOfClustersLessThanThree(
+      self, number_of_clusters):
+    """
+    Verifies that ClusterWeights cannot be initialized with less than three
+    clusters when sparsity preservation is enabled.
+    """
+    with self.assertRaises(ValueError):
+      cluster_wrapper.ClusterWeights(
+          layers.Dense(10),
+          number_of_clusters=number_of_clusters,
+          cluster_centroids_init=CentroidInitialization.LINEAR,
+          preserve_sparsity=True
+      )
+
   def testCanBeInitializedWithAlreadyClusterableLayer(self):
     """
     Verifies that ClusterWeights can be initialized with a custom clusterable
