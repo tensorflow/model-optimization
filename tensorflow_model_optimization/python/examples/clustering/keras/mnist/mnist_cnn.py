@@ -20,6 +20,8 @@ https://www.tensorflow.org/model_optimization/guide/quantization/training_exampl
 """
 
 from __future__ import print_function
+import datetime
+import os
 
 from absl import app as absl_app
 from absl import flags
@@ -27,6 +29,7 @@ from absl import flags
 import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
+from tensorflow_model_optimization.python.core.clustering.keras import clustering_callbacks
 
 keras = tf.keras
 
@@ -50,7 +53,6 @@ def load_mnist_dataset():
   test_images = test_images / 255.0
 
   return (train_images, train_labels), (test_images, test_labels)
-
 
 def build_sequential_model():
   "Define the model architecture."
@@ -111,6 +113,18 @@ def cluster_model(model, x_train, y_train, x_test, y_test):
   optimizer=opt,
   metrics=['accuracy'])
 
+  # Add callback for tensorboard summaries
+  log_dir = os.path.join(
+      FLAGS.output_dir,
+      datetime.datetime.now().strftime("%Y%m%d-%H%M%S-clustering"))
+  callbacks = [
+      clustering_callbacks.ClusteringSummaries(
+          log_dir,
+          cluster_update_freq='epoch',
+          update_freq='batch',
+          histogram_freq=1)
+  ]
+
   # Fine-tune clustered model
   clustered_model.fit(
       x_train,
@@ -118,6 +132,7 @@ def cluster_model(model, x_train, y_train, x_test, y_test):
       batch_size=batch_size,
       epochs=epochs_fine_tuning,
       verbose=1,
+      callbacks=callbacks,
       validation_split=0.1)
 
   score = clustered_model.evaluate(x_test, y_test, verbose=0)
