@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Quantization API functions for tf.keras models."""
+"""Test Quantization API functions for tf.keras models."""
 
 import tensorflow as tf
 
