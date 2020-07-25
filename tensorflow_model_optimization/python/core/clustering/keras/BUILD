@@ -143,3 +143,15 @@ py_test(
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
     ],
 )
+
+py_test(
+    name = "cluster_distributed_test",
+    srcs = ["cluster_distributed_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cluster",
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
+        # tensorflow dep1,
+    ],
+)

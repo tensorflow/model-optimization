@@ -26,6 +26,7 @@ Users can apply clustering with the following APIs:
     *   `tf.compat.v1` with a TF 2.X package and `tf.compat.v2` with a TF 1.X
         package are not supported.
 *   TensorFlow execution mode: both graph and eager
+*   Distributed training: `tf.distribute` with only eager execution
 
 ## Results
 
