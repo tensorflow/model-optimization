@@ -10,6 +10,15 @@ works sufficiently well enough.
 
 # Release following 0.3.0
 
+Keras clustering API:
+
+* New API for weight clustering
+* Major Features
+  * Support for clustering convolutional (except DepthwiseConv), Dense and other commonly used standard Keras layers
+  * Support for different initialization methods for the cluster centroids: density-based, linear, random
+  * Fine-tuning of cluster centroids during training
+* Tested against TensorFlow 1.14.0, 2.0.0, and nightly
+
 Keras quantization API:
 
  * Major Features and Improvements
@@ -22,5 +31,3 @@ Keras quantization API:
 Keras pruning API:
 
  * Tested against TensorFlow 1.14.0, 2.0.0, and nightly.
-
-
