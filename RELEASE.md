@@ -8,26 +8,22 @@ TF releases are tested against, under the assumption that everything in between
 works sufficiently well enough.
 -->
 
-# Release following 0.3.0
+# Release following 0.4.0
 
 Keras clustering API:
 
-* New API for weight clustering
 * Major Features
-  * Support for clustering convolutional (except DepthwiseConv), Dense and other commonly used standard Keras layers
-  * Support for different initialization methods for the cluster centroids: density-based, linear, random
-  * Fine-tuning of cluster centroids during training
-* Tested against TensorFlow 1.14.0, 2.0.0, and nightly
+* Bug Fixes and Other Changes
+* Tested against TensorFlow 1.14.0, 2.0.0, and nightly, and Python 3.
 
 Keras quantization API:
 
- * Major Features and Improvements
-   *
- * Bug Fixes and Other Changes
-   * Fixed Sequential model support for BatchNorm layers that follow Conv/DepthwiseConv ([issue](https://github.com/tensorflow/model-optimization/issues/378)).
-   * Improved error message for not using `quantize_scope` with custom Keras layers and objects.
- * Tested against TensorFlow nightly
+* Major Features and Improvements
+* Bug Fixes and Other Changes
+* Tested against TensorFlow nightly, and Python 3.
 
 Keras pruning API:
 
- * Tested against TensorFlow 1.14.0, 2.0.0, and nightly.
+* Major Features and Improvements
+* Bug Fixes and Other Changes
+* Tested against TensorFlow 1.14.0, 2.0.0, and nightly, and Python 3.
