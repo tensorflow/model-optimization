@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Quantizer classes which implement quantization using TF Ops on a tensor.
+"""TEST Quantizer classes which implement quantization using TF Ops on a tensor.
 
 Module: tfmot.quantization.keras
 """

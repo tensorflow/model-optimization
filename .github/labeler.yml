@@ -12,17 +12,17 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-technique:clustering
-- tensorflow_model_optimization/python/core/clustering/*
-- tensorflow_model_optimization/python/examples/clustering/*
-- tensorflow_model_optimization/g3doc/guide/clustering/*
+technique:clustering:
+- tensorflow_model_optimization/python/core/clustering/**/*
+- tensorflow_model_optimization/python/examples/clustering/**/*
+- tensorflow_model_optimization/g3doc/guide/clustering/**/*
 
-technique:pruning
-- tensorflow_model_optimization/python/core/pruning/*
-- tensorflow_model_optimization/python/examples/pruning/*
-- tensorflow_model_optimization/g3doc/guide/pruning/*
+technique:pruning:
+- tensorflow_model_optimization/python/core/pruning/**/*
+- tensorflow_model_optimization/python/examples/pruning/**/
+- tensorflow_model_optimization/g3doc/guide/pruning/**/
 
-technique:qat
-- tensorflow_model_optimization/python/core/pruning/*
-- tensorflow_model_optimization/python/examples/pruning/*
-- tensorflow_model_optimization/g3doc/guide/quantization/*
+technique:qat:
+- tensorflow_model_optimization/python/core/quantization/**/*
+- tensorflow_model_optimization/python/examples/quantization/**/*
+- tensorflow_model_optimization/g3doc/guide/quantization/**/*
