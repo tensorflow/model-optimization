@@ -56,6 +56,45 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
       return pruned_model, x_train, y_train
 
   @keras_parameterized.run_all_keras_modes
+  def testDeepLayerUpdatePruningSteps(self):
+    class TestLayer(tf.keras.layers.Layer):
+      def __init__(self):
+        super().__init__()
+        self.dense = prune.prune_low_magnitude(keras.layers.Dense(10))
+        self.head = keras.layers.Dense(5, activation='softmax')
+
+      def call(self, x):
+        x = self.dense(x)
+        return self.head(x)
+
+    class TestModel(tf.keras.Model):
+      def __init__(self):
+        super().__init__()
+        self.test_layer = TestLayer()
+
+      def call(self, x):
+        return self.test_layer(x)
+
+    x_train = np.random.rand(self._BATCH_SIZE, 10)
+    y_train = keras.utils.to_categorical(
+        np.random.randint(5, size=(self._BATCH_SIZE, 1)), 5)
+    pruned_model = TestModel()
+    pruned_model.build((self._BATCH_SIZE, 10))
+    loss = keras.losses.categorical_crossentropy
+    optimizer = keras.optimizers.SGD()
+    pruned_model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'])
+    pruned_model.fit(
+        x_train,
+        y_train,
+        batch_size=self._BATCH_SIZE,
+        epochs=3,
+        callbacks=[
+            pruning_callbacks.UpdatePruningStep()
+        ])
+
+    self.assertEqual(2, pruned_model.layers[0]._layers[0].pruning_step)
+
+  @keras_parameterized.run_all_keras_modes
   def testUpdatePruningStepsAndLogsSummaries(self):
     log_dir = tempfile.mkdtemp()
     pruned_model, x_train, y_train = self._pruned_model_setup()
