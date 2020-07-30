@@ -26,8 +26,8 @@ from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers import convolutional
 from tensorflow.python.keras.layers import deserialize as deserialize_layer
 from tensorflow.python.keras.layers import normalization
+from tensorflow.python.keras.utils import control_flow_util
 from tensorflow.python.keras.utils import conv_utils
-from tensorflow.python.keras.utils import tf_utils
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn
@@ -81,8 +81,8 @@ class _ConvBatchNormMixin(object):
 
       return quantizer_fn
 
-    return tf_utils.smart_cond(training, make_quantizer_fn(True),
-                               make_quantizer_fn(False))
+    return control_flow_util.smart_cond(training, make_quantizer_fn(True),
+                                        make_quantizer_fn(False))
 
   def _apply_activation_quantizer(self, training, activation_output):
     """All Keras call() logic for applying weight quantization."""
@@ -101,8 +101,8 @@ class _ConvBatchNormMixin(object):
 
       return quantizer_fn
 
-    return tf_utils.smart_cond(training, make_quantizer_fn(True),
-                               make_quantizer_fn(False))
+    return control_flow_util.smart_cond(training, make_quantizer_fn(True),
+                                        make_quantizer_fn(False))
 
   @staticmethod
   def _from_config(cls_initializer, config):
