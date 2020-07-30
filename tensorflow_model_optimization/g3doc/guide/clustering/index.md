@@ -1,5 +1,7 @@
 # Weight clustering
 
+<sub>Owned by Arm ML Tooling</sub>
+
 This document provides an overview on weight clustering to help you determine how it fits with your use case.
 
 - To dive right into an end-to-end example, see the [weight clustering example](clustering_example.ipynb).
@@ -122,4 +124,7 @@ In addition to the [Weight clustering in Keras example](clustering_example.ipynb
 * Cluster the weights of a CNN model trained on the MNIST handwritten digit classification dataset:
 [code](https://github.com/tensorflow/model-optimization/blob/master/tensorflow_model_optimization/python/examples/clustering/keras/mnist/mnist_cnn.py)
 
-The weight clustering implementation is based on the *Deep Compression: Compressing Deep Neural Networks With Pruning, Trained Quantization and Huffman Coding* [paper](https://arxiv.org/abs/1510.00149). See chapter 3, titled *Trained Quantization and Weight Sharing*.
+The weight clustering implementation is based on the *Deep Compression:
+Compressing Deep Neural Networks With Pruning, Trained Quantization and Huffman
+Coding* [paper](https://arxiv.org/abs/1510.00149). See chapter 3, titled
+*Trained Quantization and Weight Sharing*.
