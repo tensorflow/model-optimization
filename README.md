@@ -30,6 +30,27 @@ By participating, you are expected to uphold this code.**
 [GitHub issues](https://github.com/tensorflow/model-optimization/issues) for
 tracking requests and bugs.**
 
+## Ownership
+
+<table>
+  <tr>
+    <th>Subpackage</th>
+    <th>Owners</th>
+  </tr>
+  <tr>
+    <td>tfmot.clustering</td>
+    <td>Arm ML Tooling</td>
+  </tr>
+  <tr>
+    <td>tfmot.quantization</td>
+    <td>TensorFlow Model Optimization</td>
+  </tr>
+  <tr>
+    <td>tfmot.sparsity</td>
+    <td>TensorFlow Model Optimization</td>
+  </tr>
+</table>
+
 ## Community
 
 As part of TensorFlow, we're committed to fostering an open and welcoming

@@ -1,5 +1,7 @@
 # Trim insignificant weights
 
+<sub>Owned by TensorFlow Model Optimization</sub>
+
 This document provides an overview on model pruning to help you determine how it
 fits with your use case.
 

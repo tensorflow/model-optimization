@@ -1,5 +1,7 @@
 # Quantization aware training
 
+<sub>Owned by TensorFlow Model Optimization</sub>
+
 There are two forms of quantization: post-training quantization and
 quantization aware training. Start with [post-training quantization](post_training.md)
 since it's easier to use, though quantization aware training is often better for
