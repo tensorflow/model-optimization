@@ -84,6 +84,9 @@ setup(
     cmdclass={
         'pip_pkg': InstallCommandBase,
     },
+    # Only pip versions 9.0.0 and higher recognize `python_requires`
+    # and package must be built with setuptools >= 24.2.0.
+    python_requires='>=3',
     classifiers=[
         'Intended Audience :: Developers',
         'Intended Audience :: Education',
