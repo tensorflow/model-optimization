@@ -1,6 +1,6 @@
 # Weight clustering
 
-<sub>Owned by Arm ML Tooling</sub>
+<sub>Maintained by Arm ML Tooling</sub>
 
 This document provides an overview on weight clustering to help you determine how it fits with your use case.
 
