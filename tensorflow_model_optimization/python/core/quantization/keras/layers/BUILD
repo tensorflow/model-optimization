@@ -9,14 +9,14 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [],
 )
 
 py_library(
     name = "conv_batchnorm",
     srcs = ["conv_batchnorm.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         # python:array_ops tensorflow dep2,
@@ -35,6 +35,7 @@ py_library(
 py_test(
     name = "conv_batchnorm_test",
     srcs = ["conv_batchnorm_test.py"],
+    python_version = "PY3",
     deps = [
         ":conv_batchnorm",
         ":conv_batchnorm_test_utils",
@@ -49,7 +50,7 @@ py_test(
 py_library(
     name = "conv_batchnorm_test_utils",
     srcs = ["conv_batchnorm_test_utils.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         ":conv_batchnorm",
         # tensorflow dep1,

@@ -16,7 +16,7 @@ py_library(
         "sparsity/__init__.py",
         "sparsity/keras/__init__.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         "//tensorflow_model_optimization/python/core/clustering/keras",
         "//tensorflow_model_optimization/python/core/quantization/keras",

@@ -18,7 +18,7 @@ py_library(
 py_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # numpy dep1,
         # tensorflow dep1,
@@ -28,7 +28,7 @@ py_library(
 py_library(
     name = "compat",
     srcs = ["compat.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
     ],

@@ -31,6 +31,7 @@ py_test(
     name = "core_encoder_test",
     size = "small",
     srcs = ["core_encoder_test.py"],
+    python_version = "PY3",
     deps = [
         ":core_encoder",
         ":encoding_stage",
@@ -54,6 +55,7 @@ py_test(
     name = "encoding_stage_test",
     size = "small",
     srcs = ["encoding_stage_test.py"],
+    python_version = "PY3",
     deps = [
         ":encoding_stage",
         # absl/testing:parameterized dep1,
@@ -78,6 +80,7 @@ py_test(
     name = "gather_encoder_test",
     size = "small",
     srcs = ["gather_encoder_test.py"],
+    python_version = "PY3",
     deps = [
         ":core_encoder",
         ":encoding_stage",
@@ -104,6 +107,7 @@ py_test(
     name = "simple_encoder_test",
     size = "small",
     srcs = ["simple_encoder_test.py"],
+    python_version = "PY3",
     deps = [
         ":core_encoder",
         ":simple_encoder",

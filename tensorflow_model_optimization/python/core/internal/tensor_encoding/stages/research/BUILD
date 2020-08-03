@@ -29,6 +29,7 @@ py_test(
     name = "clipping_test",
     size = "small",
     srcs = ["clipping_test.py"],
+    python_version = "PY3",
     deps = [
         ":clipping",
         # absl/testing:parameterized dep1,
@@ -53,6 +54,7 @@ py_test(
     name = "kashin_test",
     size = "medium",
     srcs = ["kashin_test.py"],
+    python_version = "PY3",
     deps = [
         ":kashin",
         # absl/testing:parameterized dep1,
@@ -76,6 +78,7 @@ py_test(
     name = "quantization_test",
     size = "small",
     srcs = ["quantization_test.py"],
+    python_version = "PY3",
     deps = [
         ":quantization",
         # absl/testing:parameterized dep1,
@@ -98,6 +101,7 @@ py_test(
     name = "misc_test",
     size = "small",
     srcs = ["misc_test.py"],
+    python_version = "PY3",
     deps = [
         ":misc",
         # absl/testing:parameterized dep1,

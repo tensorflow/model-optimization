@@ -10,7 +10,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         ":quantize",
         # APIs are not exposed, but still needed for internal imports.
@@ -23,7 +23,7 @@ py_library(
 py_library(
     name = "quant_ops",
     srcs = ["quant_ops.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         # python:training tensorflow dep2,
@@ -35,7 +35,7 @@ py_test(
     name = "quant_ops_test",
     size = "small",
     srcs = ["quant_ops_test.py"],
-    srcs_version = "PY2AND3",
+    python_version = "PY3",
     deps = [
         ":quant_ops",
         # tensorflow dep1,
@@ -48,7 +48,7 @@ py_library(
     srcs = [
         "quantizers.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quant_ops",
@@ -63,7 +63,6 @@ py_test(
         "quantizers_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -79,7 +78,7 @@ py_library(
     srcs = [
         "quantize_config.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -92,7 +91,7 @@ py_library(
     srcs = [
         "quantize_registry.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -105,7 +104,7 @@ py_library(
     srcs = [
         "quantize_layout_transform.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -118,7 +117,7 @@ py_library(
     srcs = [
         "quantize_annotate.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_config",
@@ -132,7 +131,6 @@ py_test(
         "quantize_annotate_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
@@ -147,7 +145,7 @@ py_library(
     srcs = [
         "quantize_aware_activation.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quant_ops",
@@ -161,7 +159,6 @@ py_test(
         "quantize_aware_activation_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
@@ -176,7 +173,7 @@ py_library(
     srcs = [
         "quantize_layer.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -190,7 +187,6 @@ py_test(
         "quantize_layer_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_layer",
@@ -205,7 +201,7 @@ py_library(
     srcs = [
         "quantize_wrapper.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
@@ -221,7 +217,6 @@ py_test(
         "quantize_wrapper_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
@@ -238,7 +233,7 @@ py_library(
     srcs = [
         "quantize.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
@@ -255,7 +250,6 @@ py_test(
     name = "quantize_test",
     srcs = ["quantize_test.py"],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize",
@@ -326,7 +320,7 @@ py_library(
     srcs = [
         "utils.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,

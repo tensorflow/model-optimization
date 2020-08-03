@@ -11,7 +11,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         ":cluster",
     ],
@@ -20,7 +20,7 @@ py_library(
 py_library(
     name = "cluster",
     srcs = ["cluster.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_config",
@@ -33,14 +33,14 @@ py_library(
 py_library(
     name = "cluster_config",
     srcs = ["cluster_config.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
 )
 
 py_library(
     name = "clustering_registry",
     srcs = ["clustering_registry.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":clusterable_layer",
@@ -50,14 +50,14 @@ py_library(
 py_library(
     name = "clusterable_layer",
     srcs = ["clusterable_layer.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
 )
 
 py_library(
     name = "clustering_centroids",
     srcs = ["clustering_centroids.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_config",
@@ -67,7 +67,7 @@ py_library(
 py_library(
     name = "cluster_wrapper",
     srcs = ["cluster_wrapper.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_config",

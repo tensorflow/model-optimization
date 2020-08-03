@@ -9,7 +9,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [],
 )
 
@@ -18,7 +18,7 @@ py_library(
     srcs = [
         "transforms.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -31,7 +31,6 @@ py_test(
         "transforms_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         ":transforms",
@@ -44,7 +43,7 @@ py_library(
     srcs = [
         "model_transformer.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":transforms",
@@ -59,7 +58,6 @@ py_test(
         "model_transformer_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     visibility = ["//visibility:public"],
     deps = [
         ":model_transformer",
