@@ -36,6 +36,7 @@ py_test(
     name = "conv_batchnorm_test",
     srcs = ["conv_batchnorm_test.py"],
     python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":conv_batchnorm",
         ":conv_batchnorm_test_utils",
