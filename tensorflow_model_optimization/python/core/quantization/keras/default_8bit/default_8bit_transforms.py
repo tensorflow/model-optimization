@@ -177,24 +177,48 @@ class Conv2DBatchNormQuantize(transforms.Transform):
         inputs=[LayerPattern(
             'Conv2D|DepthwiseConv2D', config={'activation': 'linear'})])
 
-  def replacement(self, match_layer):
-    bn_layer_node, conv_layer_node = match_layer, match_layer.input_layers[0]
-
+  def _replace(self, bn_layer_node, conv_layer_node):
     if _has_custom_quantize_config(bn_layer_node, conv_layer_node):
-      return match_layer
+      return bn_layer_node
 
     conv_layer_node.layer['config']['activation'] = \
       keras.activations.serialize(quantize_aware_activation.NoOpActivation())
     bn_layer_node.metadata['quantize_config'] = \
       default_8bit_quantize_configs.Default8BitOutputQuantizeConfig()
 
-    return match_layer
+    return bn_layer_node
+
+  def replacement(self, match_layer):
+    bn_layer_node = match_layer
+    conv_layer_node = match_layer.input_layers[0]
+
+    return self._replace(bn_layer_node, conv_layer_node)
 
   def custom_objects(self):
     return {
         'NoOpQuantizeConfig': default_8bit_quantize_configs.NoOpQuantizeConfig,
         'NoOpActivation': quantize_aware_activation.NoOpActivation
     }
+
+
+class Conv2DReshapeBatchNormQuantize(Conv2DBatchNormQuantize):
+  """Ensure FQ does not get placed between Conv, Reshape and BatchNorm."""
+
+  def pattern(self):
+    return LayerPattern(
+        'BatchNormalization',
+        inputs=[LayerPattern(
+            'Lambda', config={'name': 'sepconv1d_squeeze.*'},
+            inputs=[LayerPattern(
+                'Conv2D|DepthwiseConv2D',
+                config={'activation': 'linear'})])])
+
+  def replacement(self, match_layer):
+    bn_layer_node = match_layer
+    reshape_layer_node = bn_layer_node.input_layers[0]
+    conv_layer_node = reshape_layer_node.input_layers[0]
+
+    return self._replace(bn_layer_node, conv_layer_node)
 
 
 class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
@@ -206,27 +230,24 @@ class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
         'ReLU',
         inputs=[super(Conv2DBatchNormReLUQuantize, self).pattern()])
 
-  def replacement(self, match_layer):
-    relu_layer_node = match_layer
-    bn_layer_node = relu_layer_node.input_layers[0]
-    conv_layer_node = bn_layer_node.input_layers[0]
-
+  def _replace(self, relu_layer_node, bn_layer_node, conv_layer_node):
     if _has_custom_quantize_config(
         relu_layer_node, bn_layer_node, conv_layer_node):
-      return match_layer
+      return relu_layer_node
 
     conv_layer_node.layer['config']['activation'] = \
       keras.activations.serialize(quantize_aware_activation.NoOpActivation())
     bn_layer_node.metadata['quantize_config'] = \
       default_8bit_quantize_configs.NoOpQuantizeConfig()
 
-    return match_layer
+    return relu_layer_node
 
-  def custom_objects(self):
-    return {
-        'NoOpQuantizeConfig': default_8bit_quantize_configs.NoOpQuantizeConfig,
-        'NoOpActivation': quantize_aware_activation.NoOpActivation
-    }
+  def replacement(self, match_layer):
+    relu_layer_node = match_layer
+    bn_layer_node = relu_layer_node.input_layers[0]
+    conv_layer_node = bn_layer_node.input_layers[0]
+
+    return self._replace(relu_layer_node, bn_layer_node, conv_layer_node)
 
 
 class Conv2DBatchNormActivationQuantize(Conv2DBatchNormReLUQuantize):
@@ -237,6 +258,34 @@ class Conv2DBatchNormActivationQuantize(Conv2DBatchNormReLUQuantize):
         'Activation',
         config={'activation': 'relu'},
         inputs=[Conv2DBatchNormQuantize.pattern(self)])
+
+
+class Conv2DReshapeBatchNormReLUQuantize(Conv2DBatchNormReLUQuantize):
+  """Ensure FQ does not get placed between Conv, BatchNorm and ReLU."""
+
+  def pattern(self):
+    return LayerPattern(
+        'ReLU',
+        inputs=[Conv2DReshapeBatchNormQuantize.pattern(self)])
+
+  def replacement(self, match_layer):
+    relu_layer_node = match_layer
+    bn_layer_node = relu_layer_node.input_layers[0]
+    squeeze_layer_node = bn_layer_node.input_layers[0]
+    conv_layer_node = squeeze_layer_node.input_layers[0]
+
+    return self._replace(relu_layer_node, bn_layer_node, conv_layer_node)
+
+
+class Conv2DReshapeBatchNormActivationQuantize(
+    Conv2DReshapeBatchNormReLUQuantize):
+  """Ensure FQ does not get placed between Conv, BatchNorm and ReLU."""
+
+  def pattern(self):
+    return LayerPattern(
+        'Activation',
+        config={'activation': 'relu'},
+        inputs=[Conv2DReshapeBatchNormQuantize.pattern(self)])
 
 
 class SeparableConv1DQuantize(transforms.Transform):

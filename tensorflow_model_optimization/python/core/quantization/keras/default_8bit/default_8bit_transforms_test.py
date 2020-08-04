@@ -337,6 +337,10 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(sepconv_model.predict(x), transformed_model.predict(x),
                         atol=1e-5, rtol=1e-5)
 
+  # TODO(pulkitb): Add individual tests for the following transforms.
+  # Conv2DReshapeBatchNormQuantize, Conv2DReshapeBatchNormReLUQuantize
+  # Conv2DReshapeBatchNormActivationQuantize
+
   @parameterized.parameters(
       ('relu', default_8bit_transforms.AddReLUQuantize),
       ('act_relu', default_8bit_transforms.AddActivationQuantize),
