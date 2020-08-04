@@ -20,6 +20,8 @@ import inspect
 import numpy as np
 import tensorflow as tf
 
+from tensorflow.python.keras import backend
+
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
@@ -258,6 +260,11 @@ class SeparableConv1DQuantize(transforms.Transform):
   def pattern(self):
     return LayerPattern('SeparableConv1D')
 
+  def _get_name(self, prefix):
+    # TODO(pulkitb): Move away from `backend.unique_object_name` since it isn't
+    # exposed as externally usable.
+    return backend.unique_object_name(prefix)
+
   def replacement(self, match_layer):
     if _has_custom_quantize_config(match_layer):
       return match_layer
@@ -321,16 +328,20 @@ class SeparableConv1DQuantize(transforms.Transform):
     # Needed to ensure these new layers are considered for quantization.
     sepconv2d_metadata = {'quantize_config': None}
 
+    # TODO(pulkitb): Consider moving from Lambda to custom ExpandDims/Squeeze.
+
     # Layer before SeparableConv2D which expands input tensors to match 2D.
     expand_layer = tf.keras.layers.Lambda(
-        lambda x: tf.expand_dims(x, spatial_dim), name='sepconv1d_expand')
+        lambda x: tf.expand_dims(x, spatial_dim),
+        name=self._get_name('sepconv1d_expand'))
     expand_layer_config = keras.layers.serialize(expand_layer)
     expand_layer_config['name'] = expand_layer.name
     expand_layer_metadata = {
         'quantize_config': default_8bit_quantize_configs.NoOpQuantizeConfig()}
 
     squeeze_layer = tf.keras.layers.Lambda(
-        lambda x: tf.squeeze(x, [spatial_dim]), name='sepconv1d_squeeze')
+        lambda x: tf.squeeze(x, [spatial_dim]),
+        name=self._get_name('sepconv1d_squeeze'))
     squeeze_layer_config = keras.layers.serialize(squeeze_layer)
     squeeze_layer_config['name'] = squeeze_layer.name
     squeeze_layer_metadata = {

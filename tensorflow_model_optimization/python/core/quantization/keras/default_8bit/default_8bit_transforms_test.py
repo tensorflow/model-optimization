@@ -258,8 +258,8 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     ).transform()
 
     self.assertContainsSubset(
-        {'sepconv1d_expand', 'separable_conv1d_QAT_SepConv2D',
-         'sepconv1d_squeeze'},
+        {'sepconv1d_expand_1', 'separable_conv1d_QAT_SepConv2D',
+         'sepconv1d_squeeze_1'},
         updated_metadata.keys())
     self.assertEqual(sepconv_model.output_shape, transformed_model.output_shape)
 
