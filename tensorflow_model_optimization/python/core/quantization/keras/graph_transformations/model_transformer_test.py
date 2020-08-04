@@ -528,6 +528,16 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
       self._matched = False
 
   @parameterized.parameters(['sequential', 'functional'])
+  def testPatternMatches_ConfigParamsRegex(self, model_type):
+    pattern = LayerPattern('Dense', config={'name': 'dense.*'})
+    transform = self.VerifyMatch(pattern)
+
+    model = self._simple_dense_model(model_type)
+
+    ModelTransformer(model, [transform]).transform()
+    self.assertTrue(transform.matched())
+
+  @parameterized.parameters(['sequential', 'functional'])
   def testPatternShouldOnlyMatch_CandidateLayers(self, model_type):
     pattern = LayerPattern('ReLU', inputs=[LayerPattern('Dense')])
     transform = self.VerifyMatch(pattern)
@@ -679,6 +689,7 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
 
     with self.assertRaises(ValueError):
       ModelTransformer(MyModel(), [self.ReplaceDenseLayer()]).transform()
+
 
 if __name__ == '__main__':
   tf.test.main()
