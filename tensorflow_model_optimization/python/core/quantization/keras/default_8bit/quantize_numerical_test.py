@@ -117,11 +117,39 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
     x = tf.keras.layers.ReLU()(x)
     return tf.keras.Model(i, x)
 
+  def _get_sepconv1d_bn_relu_model(self):
+    i = tf.keras.Input(shape=(8, 3))
+    x = tf.keras.layers.SeparableConv1D(
+        filters=5, kernel_size=3, strides=2)(i)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.ReLU()(x)
+    return tf.keras.Model(i, x)
+
+  def _get_sepconv1d_bn_model(self):
+    i = tf.keras.Input(shape=(8, 3))
+    x = tf.keras.layers.SeparableConv1D(
+        filters=5, kernel_size=3, strides=2)(i)
+    x = tf.keras.layers.BatchNormalization()(x)
+    return tf.keras.Model(i, x)
+
+  def _get_sepconv1d_stacked_model(self):
+    i = tf.keras.Input(shape=(8, 3))
+    x = tf.keras.layers.SeparableConv1D(
+        filters=5, kernel_size=3, strides=2)(i)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.SeparableConv1D(
+        filters=5, kernel_size=3, strides=2)(x)
+    x = tf.keras.layers.BatchNormalization()(x)
+    x = tf.keras.layers.ReLU()(x)
+    return tf.keras.Model(i, x)
+
   @parameterized.parameters([
       _get_single_conv_model, _get_single_dense_model,
       _get_single_conv_relu_model, _get_stacked_convs_model,
       _get_conv_bn_relu_model, _get_depthconv_bn_relu_model,
-      _get_separable_conv2d_model
+      _get_separable_conv2d_model,
+      _get_sepconv1d_bn_model, _get_sepconv1d_bn_relu_model,
+      _get_sepconv1d_stacked_model
   ])
   def testModelEndToEnd(self, model_fn):
     # 1. Check whether quantized model graph can be constructed.

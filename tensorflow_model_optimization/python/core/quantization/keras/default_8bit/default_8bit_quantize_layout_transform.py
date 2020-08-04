@@ -52,9 +52,13 @@ class QuantizeLayoutTransform(
 
     transforms = [
         default_8bit_transforms.InputLayerQuantize(),
+        default_8bit_transforms.SeparableConv1DQuantize(),
         default_8bit_transforms.SeparableConvQuantize(),
+        default_8bit_transforms.Conv2DReshapeBatchNormReLUQuantize(),
+        default_8bit_transforms.Conv2DReshapeBatchNormActivationQuantize(),
         default_8bit_transforms.Conv2DBatchNormReLUQuantize(),
         default_8bit_transforms.Conv2DBatchNormActivationQuantize(),
+        default_8bit_transforms.Conv2DReshapeBatchNormQuantize(),
         default_8bit_transforms.Conv2DBatchNormQuantize(),
         default_8bit_transforms.ConcatTransform6Inputs(),
         default_8bit_transforms.ConcatTransform5Inputs(),
