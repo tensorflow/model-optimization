@@ -308,6 +308,10 @@ class PruneLowMagnitude(Wrapper):
   def trainable(self):
     return self.layer.trainable
 
+  @property
+  def wrapped_layer(self):
+    return self.layer
+
   @trainable.setter
   def trainable(self, value):
     self.layer.trainable = value
