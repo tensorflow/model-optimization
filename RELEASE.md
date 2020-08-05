@@ -8,7 +8,7 @@ TF releases are tested against, under the assumption that everything in between
 works sufficiently well enough.
 -->
 
-# Release following 0.4.0
+# Release following 0.4.1
 
 Keras clustering API:
 
