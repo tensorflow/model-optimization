@@ -25,8 +25,9 @@ import numpy as np
 import tensorflow as tf
 
 # b/(139939526): update to use public API.
-from tensorflow.python.keras.utils import control_flow_util
 from tensorflow.python.keras.utils import generic_utils
+
+from tensorflow_model_optimization.python.core.keras import utils
 
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
@@ -247,7 +248,7 @@ class PruneLowMagnitude(Wrapper):
     def no_op():
       return tf.no_op('no_update')
 
-    update_op = control_flow_util.smart_cond(training, add_update, no_op)
+    update_op = utils.smart_cond(training, add_update, no_op)
     self.add_update(update_op)
     # Always execute the op that performs weights = weights * mask
     # Relies on UpdatePruningStep callback to ensure the weights

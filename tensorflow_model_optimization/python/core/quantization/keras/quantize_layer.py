@@ -23,7 +23,8 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow.python.keras.utils import control_flow_util
+from tensorflow_model_optimization.python.core.keras import utils
+
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
 serialize_keras_object = tf.keras.utils.serialize_keras_object
@@ -70,8 +71,8 @@ class QuantizeLayer(tf.keras.layers.Layer):
 
       return quantizer_fn
 
-    return control_flow_util.smart_cond(training, _make_quantizer_fn(True),
-                                        _make_quantizer_fn(False))
+    return utils.smart_cond(
+        training, _make_quantizer_fn(True), _make_quantizer_fn(False))
 
   def get_config(self):
     base_config = super(QuantizeLayer, self).get_config()

@@ -92,8 +92,8 @@ py_library(
         ":pruning_schedule",
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras/utils:control_flow_util tensorflow dep2,
         # python/keras/utils:generic_utils tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:utils",
     ],
 )
 

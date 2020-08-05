@@ -150,6 +150,7 @@ py_library(
     deps = [
         ":quant_ops",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:utils",
     ],
 )
 
@@ -178,6 +179,7 @@ py_library(
     deps = [
         ":quantizers",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:utils",
     ],
 )
 
@@ -208,6 +210,7 @@ py_library(
         ":quantize_config",
         ":quantizers",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:utils",
     ],
 )
 
