@@ -1,3 +1,19 @@
+# Copyright 2019 The TensorFlow Authors. All Rights Reserved.
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+#     http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+# ==============================================================================
+"""Convenience functions for sparse training."""
+
 class Bernouilli(tf.keras.initializers.Initializer):
   """
   Initialization distributio following a Bernouilli process..
@@ -27,16 +43,19 @@ class Bernouilli(tf.keras.initializers.Initializer):
 class PermuteOnes(tf.keras.initializers.Initializer):
   """
   Initialization of a deterministically sparse matrix.
+  This initializer takes in an input ratio and sets exactly
+  that ratio of the mask entries as ones  leaving the rest as zeros.
+  The ones are detministically, randomly permmuted across the tensor.
   """
-  def __init__(self, p=None):
+  def __init__(self, ratio=None):
     """
-    p: probability parameter of success (i.e. 1).
-    If p is None, will sample randomly from uniform distribution for sparsity.
+    ratio: the exact number of 1s sampled.
+    If ratio is None, will sample randomly from uniform distribution for sparsity.
     """
-    self.p = p if p else tf.random.uniform(())
+    self.ratio = ratio if ratio else tf.random.uniform(())
 
   def get_n_ones(self, shape, dtype=tf.dtypes.float32):
-    sparsity = self.p if self.p else 0.0
+    sparsity = self.ratio if self.ratio else 0.0
     return tf.math.ceil(sparsity * tf.cast(tf.math.reduce_sum(shape)), dtype=dtype)
 
   def __call__(self, shape, dtype=tf.dtypes.float32, seed=None):
@@ -47,7 +66,7 @@ class PermuteOnes(tf.keras.initializers.Initializer):
     updates = tf.ones_like(_indices)
     flat_shape = flat_mask.shape
     unshuffled_mask = tf.scatter_nd(indices, udpates, flat_shape)
-    shuffled_mask = tf.random.shuffle(unshuffled_mas, seed=seed)
+    shuffled_mask = tf.random.shuffle(unshuffled_mask, seed=seed)
 
     return tf.reshape(shuffled_mask, shape)
 
