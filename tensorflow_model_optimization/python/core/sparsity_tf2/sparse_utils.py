@@ -65,19 +65,30 @@ class PermuteOnes(tf.keras.initializers.Initializer):
     indices = tf.reshape(_indices, (-1, 1))
     updates = tf.ones_like(_indices)
     flat_shape = flat_mask.shape
-    unshuffled_mask = tf.scatter_nd(indices, udpates, flat_shape)
+    unshuffled_mask = tf.scatter_nd(indices, updates, flat_shape)
     shuffled_mask = tf.random.shuffle(unshuffled_mask, seed=seed)
 
     return tf.reshape(shuffled_mask, shape)
 
 
 class ErdosRenyi(tf.keras.Initializers.Initializer):
-  """Initialization based on the Erdos-Renyi distribution."""
-  def __init__(self, sparsity):
+  """Sparsity initialization based on the Erdos-Renyi distribution.
+  Ensures that the none of the non-custom layers have a total parameter
+  count as the one with uniform sparsities, i.e. the non sparse
+  layers satisfy the following equation:
+    eps * (p_1 * N_1 + p_2 * N_2) = (1 - sparsity) ** (N_1 + N_2)
+  """
+  def __init__(self, sparsity, erk_power=1.0):
+    """
+    sparsity: the network target overall sparsity.
+    erk_power: the power of the erk ratio
+    """
     self.sparsity = sparsity
+    self.erk_power = erk_power
 
   def __call__(self, shape, dtype=tf.dtypes.float32, seed=None):
     return
+    # TODO
   
 
 class ErdosRenyiKernel(tf.keras.Initializers.Initializer):

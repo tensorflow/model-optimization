@@ -30,34 +30,68 @@ from tensorflow_model_optimization.python.core.sparsity_tf2 import sparse_utils
 dtypes = tf.dtypes
 test = tf.test
 
-def make_pruning_schedule(target_sparsity, begin, end, freq):
-  return pruning_schedule.ConstantSparsity(target_sparsity, begin, end, freq)
 
 def sample_noise(x, mu=0, sigma=1.):
   sample = tf.random.normal((), mean=mu,  stddev=sigma, dtype=tf.float64)
   return sample
 
-def _dummy_gradient(x, dtype=tf.float32):
-  try:
-    base_type = x.dtype
-  except:
-    base_type = dtype
-  grad = tf.ones_like(x, dtype=base_type)
-  return grad
-
 class SparseUtilsTest(test.TestCase, parameterized.TestCase):
 
   def setUp(self):
     super(SparseUtilsTest, self).setUp()
-    self.block_size = (1, 1)
-    self.block_pooling_type = "AVG"
-    self.target_sparsity = 0.5
-    self.constant_sparsity = pruning_schedule.ConstantSparsity(self.target_sparsity, 0, 100, 1)
-    self.grad = _dummy_gradient
+    self.mask_init = lambda x: tf.ones(x)
+    self.mask_init_w_type = lambda x, y: tf.ones(x, dtype=y)
+    self.bernouilli = lambda p: sparse_utils.Bernouilli(p)
+    self.permuteones = lambda ratio: sparse_utils.PermuteOnes(ratio)
 
-  # setUp() lies outside of the "eager scope" that wraps the test cases
-  # themselves, resulting in initializing graph tensors instead of eager
-  # tensors when testing eager execution.
+  def testBernouilliMaskFraction(self):
+    shape = (4, 4)
+    mask = self.mask_init(shape)
+    self.assertAllEqual(shape, mask.shape)
 
-  def testBernouilliMaskInitializer(self):
-    
+    seed = 0
+    ratio = 0.5
+    counts = []
+    for _ in range(100):
+      tmp = self.bernouilli(ratio)(mask.shape, seed=0)
+      counts.append(np.count_nonzero(tmp))
+    mean_count = np.mean(counts)
+    self.assertAllEqual(mean_count, 4)
+
+  def testDeterministicMaskFraction(self):
+    # PermuteOnes
+    shape = (4, 4)
+    mask = self.mask_init(shape)
+    self.assertAllEqual(shape, mask.shape)
+
+    ratio = 0.5
+    mask_sparse = self.permuteones(ratio)(mask.shape)
+    self.assertAllEqual(np.count_nonzero(mask_sparse), 4)
+
+  def testMaskDeterminism(self):
+    shape = (4, 4)
+    mask1 = self.mask_init(shape)
+    mask2 = self.mask_init(shape)
+    self.assertAllEqual(shape, mask1.shape)
+    self.assertAllEqual(shape, mask2.shape)
+
+    ratio = 0.5
+    seed = 0
+    permuteones = self.permuteones(ratio)
+    mask1_sparse = permuteones(shape=mask1.shape, seed=seed) 
+    mask2_sparse = permuteones(shape=mask2.shape, seed=seed)
+    self.assertAllEqual(mask1_sparse, mask2_sparse)
+
+  def testMaskDtype(self):
+    dtypes = [tf.int32, tf.float32, tf.int64, tf.float64]
+    shape = (3, 4)
+    seed = 0
+    type_checks = []
+    for dtype in dtypes:
+      mask = self.mask_init_w_type(shape, dtype)
+      sparse_mask = self.permuteones(shape=mask.shape, dtype=dtype, seed=seed)
+      type_checks.append(sparse_mask.dtype)
+    self.assertAllEqual(dtypes, type_checks)
+
+if __name__ == '__main__':
+  test.main()
