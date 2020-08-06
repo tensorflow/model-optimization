@@ -42,6 +42,14 @@ upper_tabs:
       - title: Post-training quantization
         path: /model_optimization/guide/quantization/post_training
 
+      - heading: Weight clustering
+      - title: Overview
+        path: /model_optimization/guide/clustering
+      - title: Weight clustering example
+        path: /model_optimization/guide/clustering/clustering_example
+      - title: Weight clustering comprehensive guide
+        path: /model_optimization/guide/clustering/clustering_comprehensive_guide
+
     - name: API
       skip_translation: true
       contents:
