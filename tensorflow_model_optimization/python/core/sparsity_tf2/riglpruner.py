@@ -1,4 +1,3 @@
-
 # Copyright 2019 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -40,63 +39,50 @@ class RiGLPruner(pruner.Pruner):
       sparsity=0.5,
       block_size=(1,1),
       block_pooling_type='AVG',
-      initializer=sparse_utils.PermuteOnes,
-      stateless=False,
+      stateless=True,
       seed=0,
-      seed_offset=0,
       noise_std=0,
       reinit=False
     ):
-    """The logic for magnitude-based pruning weight tensors.
+    """The logic for magnitude-based RiGL trained weight tensors as presented
+    in https://proceedings.icml.cc/static/paper_files/icml/2020/287-Paper.pdf.
+    At each iteration, according to the update_schedule, connections are grown
+    based on gradient information and dropped based on weight magnitude.
 
     Args:
       update_schedule: A `PruningSchedule` object that controls pruning rate
         throughout training.
-      sparsity: the sparsity at which the dynamic sparse training method uses
+      sparsity: layer specific sparsity at which the dynamic sparse training method uses
       block_size: The dimensions (height, weight) for the block sparse pattern
         in rank-2 weight tensors.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
-      initializer: the initial sparsity distribution Callable for each layer of the network.
       stateless: whether or not being run on TPU/multi-GPU workers.
-      seed: assigned by PruningConfig for multiworker consistency in random processes.
-      seed_offset: added to seed to run different experiments.
-      reinit: boolean for whether to reinitialize a connection that was drop and regorwn to 
+      seed: assigned by PruningConfig (base added) for multiworker consistency in random processes.
+      reinit: boolean for whether to reinitialize a connection that was drop and regrown to 
         its original value, or to set it to 0
     """
     super(RiGLPruner, self).__init__(
         update_schedule, block_size, block_pooling_type)
-    self.initializer = initializer
     self.target_sparsity = sparsity
     self.update_schedule = update_schedule
     self._block_size = block_size
     self.block_pooling_type = block_pooling_type
     self._stateless = stateless
     self._seed = seed
-    self._seed_offset = seed_offset
     self._noise_std = noise_std
     self._reinit_when_same = reinit
   
   def create_slots(self, optimizer, var):
     base_dtype = var.dtype
-    optimizer.add_slot(var, 'mask', initializer=self.initializer(self.target_sparsity))
-
+    deterministic_initializer = sparse_utils.PermuteOnes(self.target_sparsity)
+    optimizer.add_slot(var, 'mask', initializer=deterministic_initializer)
 
   def _validate_block(self, var):
     if self._block_size != [1, 1]:
       if var.get_shape().ndims != 2:
         raise ValueError('Block Sparsity can only be used for layers which '
                           'have 2-dimensional weights.')
-
-  def _random_uniform(self, step, *args, **kwargs):
-    """Uniform noise distribution"""
-    if self._stateless:
-      offset_seed = self._seed_offset + kwargs.get('seed', 0)
-      kwargs['seed'] = tf.cast(
-        tf.stack([offset_seed, step], tf.int32)
-      )
-      return tf.random.stateless_uniform(*args, **kwargs)
-    return tf.random.uniform(*args, **kwargs)
 
   def _random_normal(self, step, *args, **kwargs):
     """Gaussian noise distribution"""
@@ -122,13 +108,16 @@ class RiGLPruner(pruner.Pruner):
     weight_scores = tf.math.abs(masked_weight)
     # add noise to break ties, although the possibility is very low
     if noise_std != 0:
-      weight_scores.assign_add(self._random_normal(
+      noise = self._random_normal(
         weight_scores.shape, stddev=noise_std, dtype=weight_scores.dtype,
-        seed=(hash(weight.name + 'drop'))))
+        seed=self._seed)
+      weight_scores = weight_scores + noise
     return weight_scores
 
   def _reset_momentum(self, optimizer, weight, new_connections):
-    """Zeros out optimizer slots whose connections have been recovered."""
+    """Zeros out optimizer slots whose connections have been recovered.
+    This is done so that the aggregated values are zeroed out.
+    """
     for slot_name in optimizer._optimizer.get_slot_names():
       # reset aggregated momentum variables to 0
       opt_var = optimizer._optimizer.get_slot(weight, slot_name)
@@ -152,6 +141,11 @@ class RiGLPruner(pruner.Pruner):
     return updated_mask
 
   def _get_new_connections(self, reinit_when_same, grown_mask_reshaped, mask):
+    """When dropped and regrown connections are the same there are two options:
+      1. keep original value
+      2. set it to 0
+      3. (not implemented, but an option) use gradient direction
+    """
     if reinit_when_same:
       new_connections = tf.math.equal(grown_mask_reshaped, 1)
     else:
@@ -162,8 +156,14 @@ class RiGLPruner(pruner.Pruner):
 
   def _update_mask(self, step, update_fraction, mask, weight, grad):
     """Called by _maybe_update_block_mask.
-
     Updates mask based on weight and grad information.
+
+    Args:
+      step: current iteration from optimizer
+      update_fraction: the fraction of existing connections to update
+      mask: the mask to update
+      weight: trainable variable representing weights
+      grad: gradients obtained from the optimizer
     """
     # compute the top k magnitudes then update the current mask
     drop_scores = self._get_drop_weights(optimizer, step, mask, weight, noise_std=self._noise_std)

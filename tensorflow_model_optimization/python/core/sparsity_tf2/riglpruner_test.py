@@ -62,7 +62,15 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
   # themselves, resulting in initializing graph tensors instead of eager
   # tensors when testing eager execution.
 
-  def testSparsityBeforeandAfter(self):
+  def testSparsityNoChangeBeforeandAfter(self):
+    weight = tf.Variable(np.linspace(1.0, 100.0, 100))
+    weight_dtype = weight.dtype.base_dtype
+    mask = tf.Variable(
+        tf.ones(weight.get_shape(), dtype=weight_dtype),
+        dtype=weight_dtype)
+
+    # TODO: rebase this branch off the schedule, loop prior to
+    # updates and check that it has not updated
     return
 
   def testDropandGrowConnections(self):
