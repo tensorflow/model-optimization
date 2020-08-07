@@ -26,24 +26,15 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
-<<<<<<< HEAD
-from tensorflow_model_optimization.python.core.sparsity.keras import schedule
-=======
-from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
->>>>>>> 62ca12e0b3e337479745cb039752cde96272392a
+from tensorflow_model_optimization.python.core.sparsity_tf2 import schedule
 from tensorflow_model_optimization.python.core.sparsity_tf2 import riglpruner as pruner
 
 dtypes = tf.dtypes
 test = tf.test
 
 
-<<<<<<< HEAD
 def make_update_schedule(fraction, begin, end, freq):
   return schedule.ConstantSparsity(fraction, begin, end, freq)
-=======
-def make_pruning_schedule(target_sparsity, begin, end, freq):
-  return pruning_schedule.ConstantSparsity(target_sparsity, begin, end, freq)
->>>>>>> 62ca12e0b3e337479745cb039752cde96272392a
 
 def sample_noise(x, mu=0, sigma=1.):
   sample = tf.random.normal((), mean=mu,  stddev=sigma, dtype=tf.float64)
@@ -64,8 +55,9 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
     self.block_size = (1, 1)
     self.block_pooling_type = "AVG"
     self.target_sparsity = 0.5
-    self.initial_drop_fraction = 0.3
-    self.constant_update = pruning_schedule.ConstantSparsity(self.initial_drop_fraction, 0, 100, 1)
+    self.initial_drop_fraction = 0.3 # i.e. 0.3 * target sparsity per layer
+    self.constant_update = schedule.ConstantSparsity(self.initial_drop_fraction, 0, 100, 1)
+    self.skip_update = sccche
     self.grad = _dummy_gradient
     self.seed = 0
     self.noise_std = 1
@@ -99,13 +91,15 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
     optimizer.iterations.assign(0)
     p.create_slots(optimizer, weights)
 
+    mask_before_pruning = optimizer.get_slot(weight, 'mask').read_value()
+    self.assertAllEqual(np.count_nonzero(mask_before_pruning), self.target_sparisty)
 
 
     # TODO: rebase this branch off the schedule, loop prior to
     # updates and check that it has not updated
     return
 
-  def testSameNumberofParamsEachLayer(self):
+  def testMaskChangesAccordingtoSchedule(self):
 
   def testDropLowestMagnitudeWeights(self):
 
