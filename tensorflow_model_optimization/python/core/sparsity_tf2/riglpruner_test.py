@@ -26,15 +26,24 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
+<<<<<<< HEAD
 from tensorflow_model_optimization.python.core.sparsity.keras import schedule
+=======
+from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
+>>>>>>> 62ca12e0b3e337479745cb039752cde96272392a
 from tensorflow_model_optimization.python.core.sparsity_tf2 import riglpruner as pruner
 
 dtypes = tf.dtypes
 test = tf.test
 
 
+<<<<<<< HEAD
 def make_update_schedule(fraction, begin, end, freq):
   return schedule.ConstantSparsity(fraction, begin, end, freq)
+=======
+def make_pruning_schedule(target_sparsity, begin, end, freq):
+  return pruning_schedule.ConstantSparsity(target_sparsity, begin, end, freq)
+>>>>>>> 62ca12e0b3e337479745cb039752cde96272392a
 
 def sample_noise(x, mu=0, sigma=1.):
   sample = tf.random.normal((), mean=mu,  stddev=sigma, dtype=tf.float64)
