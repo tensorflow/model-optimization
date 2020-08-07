@@ -80,6 +80,19 @@ py_library(
     ],
 )
 
+py_library(
+    name = "riglpruner",
+    srcs = ["riglpruner.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:sparse_utils",
+        # tensorflow dep1,
+        # python:summary tensorflow dep2,
+    ],
+)
+
 py_test(
     name = "pruner_test",
     size = "medium",
@@ -104,6 +117,21 @@ py_test(
         ":lthpruner",
         ":pruner",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
+        # numpy dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "riglpruner_test",
+    size = "medium",
+    srcs = ["riglpruner_test.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":riglpruner",
+        ":pruner",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:schedule",
         # numpy dep1,
         # python/keras tensorflow dep2,
     ],

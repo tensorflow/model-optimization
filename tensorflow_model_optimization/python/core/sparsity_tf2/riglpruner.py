@@ -59,8 +59,8 @@ class RiGLPruner(pruner.Pruner):
         block. Must be 'AVG' or 'MAX'.
       stateless: whether or not being run on TPU/multi-GPU workers.
       seed: assigned by PruningConfig (base added) for multiworker consistency in random processes.
-      reinit: boolean for whether to reinitialize a connection that was drop and regrown to 
-        its original value, or to set it to 0
+      reinit: boolean for whether to reinitialize a connection that was dropped and regrown to 
+        its original value, or to set it to 0.
     """
     super(RiGLPruner, self).__init__(
         update_schedule, block_size, block_pooling_type)
@@ -71,7 +71,7 @@ class RiGLPruner(pruner.Pruner):
     self._stateless = stateless
     self._seed = seed
     self._noise_std = noise_std
-    self._reinit_when_same = reinit
+    self._drop_regrow_reinit = reinit
   
   def create_slots(self, optimizer, var):
     base_dtype = var.dtype
@@ -140,13 +140,13 @@ class RiGLPruner(pruner.Pruner):
 
     return updated_mask
 
-  def _get_new_connections(self, reinit_when_same, grown_mask_reshaped, mask):
+  def _get_new_connections(self, drop_regrow_reinit, grown_mask_reshaped, mask):
     """When dropped and regrown connections are the same there are two options:
       1. keep original value
       2. set it to 0
       3. (not implemented, but an option) use gradient direction
     """
-    if reinit_when_same:
+    if drop_regrow_reinit:
       new_connections = tf.math.equal(grown_mask_reshaped, 1)
     else:
       new_connections = tf.math.logical_and(
@@ -195,7 +195,7 @@ class RiGLPruner(pruner.Pruner):
       grown_mask_reshaped = tf.reshape(grown_mask, mask.shape)
       # set the values of the new connections
       grow_tensor = tf.zeros_like(weight, dtype=weight.dtype)
-      new_connections = self._get_new_connections(self._reinit_when_same, grown_mask_reshaped, mask)
+      new_connections = self._get_new_connections(self._drop_regrow_reinit, grown_mask_reshaped, mask)
 
       new_weights = tf.where(new_connections, grow_tensor, weight)
       # update weights
@@ -265,7 +265,7 @@ class RiGLPruner(pruner.Pruner):
     """Updates masks as per the update schedule.
 
     Args: 
-      update_vars: A list of (update_fraction, mask, weight, gradient) tuples
+      update_vars: A list of (mask, weight, gradient) tuples
       step: the current iteration of the optimizer
 
     Returns:

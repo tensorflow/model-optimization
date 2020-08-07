@@ -26,15 +26,15 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow.python.keras import keras_parameterized
-from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
+from tensorflow_model_optimization.python.core.sparsity.keras import schedule
 from tensorflow_model_optimization.python.core.sparsity_tf2 import riglpruner as pruner
 
 dtypes = tf.dtypes
 test = tf.test
 
 
-def make_pruning_schedule(target_sparsity, begin, end, freq):
-  return pruning_schedule.ConstantSparsity(target_sparsity, begin, end, freq)
+def make_update_schedule(fraction, begin, end, freq):
+  return schedule.ConstantSparsity(fraction, begin, end, freq)
 
 def sample_noise(x, mu=0, sigma=1.):
   sample = tf.random.normal((), mean=mu,  stddev=sigma, dtype=tf.float64)
@@ -55,23 +55,54 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
     self.block_size = (1, 1)
     self.block_pooling_type = "AVG"
     self.target_sparsity = 0.5
-    self.constant_sparsity = pruning_schedule.ConstantSparsity(self.target_sparsity, 0, 100, 1)
+    self.initial_drop_fraction = 0.3
+    self.constant_update = pruning_schedule.ConstantSparsity(self.initial_drop_fraction, 0, 100, 1)
     self.grad = _dummy_gradient
+    self.seed = 0
+    self.noise_std = 1
+    self.reinit = False
+    self.stateless = True
 
   # setUp() lies outside of the "eager scope" that wraps the test cases
   # themselves, resulting in initializing graph tensors instead of eager
   # tensors when testing eager execution.
 
-  def testSparsityNoChangeBeforeandAfter(self):
+  def testMaskNoChangeBeforeandAfter(self):
     weight = tf.Variable(np.linspace(1.0, 100.0, 100))
     weight_dtype = weight.dtype.base_dtype
     mask = tf.Variable(
         tf.ones(weight.get_shape(), dtype=weight_dtype),
         dtype=weight_dtype)
+    sparse_vars = [(mask, weight, self.grad(weight))]
+
+    p = pruner.RiGLPruner(
+      update_schedule=self.constant_update,
+      sparsity=self.target_sparsity,
+      block_size=self.block_size,
+      block_pooling_type=self.block_pooling_type,
+      stateless=self.stateless,
+      seed=self.seed,
+      noise_std=self.noise_std,
+      reinit=self.reinit
+    )
+
+    optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+    optimizer.iterations.assign(0)
+    p.create_slots(optimizer, weights)
+
+
 
     # TODO: rebase this branch off the schedule, loop prior to
     # updates and check that it has not updated
     return
+
+  def testSameNumberofParamsEachLayer(self):
+
+  def testDropLowestMagnitudeWeights(self):
+
+  def testGrowHighestMagnitudeGradients(self):
+
+  def testRegrownConnections(self):
 
   def testDropandGrowConnections(self):
     return
