@@ -80,6 +80,15 @@ py_library(
     ],
 )
 
+
+py_library(
+    name = "schedule",
+    srcs = ["schedule.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [],
+)
+
 py_test(
     name = "pruner_test",
     size = "medium",
@@ -104,6 +113,19 @@ py_test(
         ":lthpruner",
         ":pruner",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
+        # numpy dep1,
+        # python/keras tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "schedule_test",
+    size = "medium",
+    srcs = ["schedule_test.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":schedule",
         # numpy dep1,
         # python/keras tensorflow dep2,
     ],
