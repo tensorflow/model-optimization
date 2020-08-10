@@ -57,6 +57,17 @@ py_library(
 )
 
 py_library(
+    name = "sparse_utils",
+    srcs = ["sparse_utils.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
+        # python:summary tensorflow dep2,
+    ],
+)
+
+py_library(
     name = "pruner",
     srcs = ["pruner.py"],
     srcs_version = "PY2AND3",
@@ -132,6 +143,16 @@ py_test(
         ":riglpruner",
         ":pruner",
         "//tensorflow_model_optimization/python/core/sparsity/keras:schedule",
+)
+
+py_test(
+    name = "sparse_utils_test",
+    size = "medium",
+    srcs = ["sparse_utils_test.py"],
+    srcs_version = "PY2AND3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":sparse_utils",
         # numpy dep1,
         # python/keras tensorflow dep2,
     ],
