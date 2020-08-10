@@ -23,6 +23,8 @@ class Bernouilli(tf.keras.initializers.Initializer):
     """
     p: probability parameter of success (i.e. 1).
     """
+    if not (p >= 0. and p <= 1.):
+      raise ValueError('p parameter must be a valid probability, i.e. in [0, 1].')
     self.p = p
 
   def get_config(self):
@@ -33,7 +35,7 @@ class Bernouilli(tf.keras.initializers.Initializer):
     return cls(**config)
 
   def __call__(self, shape, dytpe=tf.dtypes.float32):
-    """Number of zeros = np.ceil(sparsity * size) in expectation."""
+    """Number of zeros = np.ceil(probability * size) in expectation."""
     probs = tf.zeros(shape=list(shape)) + self.p
     uniform = tf.random.uniform(shape)
     initial = tf.less(uniform, probs)
@@ -52,6 +54,8 @@ class PermuteOnes(tf.keras.initializers.Initializer):
     ratio: the exact number of 1s sampled.
     If ratio is None, will sample randomly from uniform distribution for sparsity.
     """
+    if ratio is not None and not (ratio >= 0. and ratio <= 1.):
+      raise ValueError('ratio parameter must be a valid percentage, i.e. in [0, 1].')
     self.ratio = ratio if ratio else tf.random.uniform(())
 
   def get_n_ones(self, shape, dtype=tf.dtypes.float32):
