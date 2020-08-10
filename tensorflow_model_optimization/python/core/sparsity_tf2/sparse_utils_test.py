@@ -72,14 +72,25 @@ class SparseUtilsTest(test.TestCase, parameterized.TestCase):
     matrix = self.matrix_init(shape)
     self.assertAllEqual(shape, matrix.shape)
 
+    def _check_scatter(sparse_matrix):
+      ones_indices = np.where(sparse_matrix == 1.)
+      mean_nonzeros = np.mean(ones_indices)
+      ones_count = np.count_nonzero(sparse_matrix)
+      return ones_count, mean_nonzeros
+
     seed = 0
     ones_indices = []
+    ones_counts = []
     for _ in range(100):
       matrix_sparse_permute = self.get_permuteones(ratio)(shape, seed=seed)
-      ones_indices.append(np.where(matrix_sparse_permute == 1.))
+      ones_count, mean_nonzeros = _check_scatter(matrix_sparse_permute)
+      ones_indices.append(mean_nonzeros)
+      ones_counts.append(ones_count)
       seed += 1
     # check that 1/0s are scattered
-    # TODO:
+    # mean of entire matrix and mean of entire nonzeros
+    self.assertAllClose(ones_indices[:len(ones_indices)//2], ones_indices[len(ones_indices)//2:])
+    self.assertAllClose(ones_counts[:len(ones_counts)//2], ones_counts[len(ones_counts)//2:])
 
   @parameterized.parameters(
     (shape,) for shape in self.shapes
