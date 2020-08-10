@@ -9,14 +9,14 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [],
 )
 
 py_library(
     name = "conv_batchnorm",
     srcs = ["conv_batchnorm.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         # python:array_ops tensorflow dep2,
@@ -26,6 +26,7 @@ py_library(
         # python/keras:backend tensorflow dep2,
         # python/keras/layers tensorflow dep2,
         # python/keras/utils:engine_utils tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:utils",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
@@ -35,6 +36,8 @@ py_library(
 py_test(
     name = "conv_batchnorm_test",
     srcs = ["conv_batchnorm_test.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
     deps = [
         ":conv_batchnorm",
         ":conv_batchnorm_test_utils",
@@ -49,7 +52,7 @@ py_test(
 py_library(
     name = "conv_batchnorm_test_utils",
     srcs = ["conv_batchnorm_test_utils.py"],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         ":conv_batchnorm",
         # tensorflow dep1,

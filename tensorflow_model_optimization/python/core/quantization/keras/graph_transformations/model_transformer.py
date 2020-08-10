@@ -104,8 +104,8 @@ class ModelTransformer(object):
   def _match_layer(self, layer, pattern):
     """Check if specific layer matches the pattern."""
 
-    if self.candidate_layers and layer['config'][
-        'name'] not in self.candidate_layers:
+    if self.candidate_layers and \
+        layer['config']['name'] not in self.candidate_layers:
       return False
 
     if not self._match_pattern(layer['class_name'], pattern.class_name):
@@ -113,10 +113,10 @@ class ModelTransformer(object):
 
     layer_config = layer['config']
     for key, value in pattern.config.items():
-      # This comparison should probably use the serialized value.
-      # Consider adding regex support to key/values as well. This will allow
-      # negative matches as well.
-      if layer_config.get(key) != value:
+      # Either the provided value should equal the config value, or
+      # be a regex match to str(value).
+      if not (self._match_pattern(str(layer_config.get(key)), str(value)) or \
+              layer_config.get(key) == value):
         return False
 
     return True

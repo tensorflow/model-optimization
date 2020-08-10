@@ -16,7 +16,6 @@ py_binary(
         "mnist_estimator.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     deps = [
         # absl/flags dep1,
         # numpy dep1,
@@ -35,7 +34,6 @@ py_binary(
         "mnist_cnn.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     deps = [
         # absl:app dep1,
         # absl/flags dep1,
@@ -53,7 +51,6 @@ py_binary(
         "mnist_e2e.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     deps = [
         # absl:app dep1,
         # absl/flags dep1,

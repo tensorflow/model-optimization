@@ -30,6 +30,7 @@ py_test(
     name = "py_utils_test",
     size = "small",
     srcs = ["py_utils_test.py"],
+    python_version = "PY3",
     deps = [
         ":py_utils",
         # absl/testing:parameterized dep1,
@@ -51,6 +52,7 @@ py_test(
     name = "tf_utils_test",
     size = "medium",
     srcs = ["tf_utils_test.py"],
+    python_version = "PY3",
     deps = [
         ":tf_utils",
         # absl/testing:parameterized dep1,

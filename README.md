@@ -30,12 +30,12 @@ By participating, you are expected to uphold this code.**
 [GitHub issues](https://github.com/tensorflow/model-optimization/issues) for
 tracking requests and bugs.**
 
-## Ownership
+## Maintainers
 
 <table>
   <tr>
     <th>Subpackage</th>
-    <th>Owners</th>
+    <th>Maintainers</th>
   </tr>
   <tr>
     <td>tfmot.clustering</td>

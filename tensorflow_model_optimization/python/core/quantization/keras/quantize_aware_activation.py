@@ -20,8 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-# TODO(b/139939526): move to public API.
-from tensorflow.python.keras.utils import tf_utils
+from tensorflow_model_optimization.python.core.keras import utils
 
 activations = tf.keras.activations
 
@@ -161,17 +160,16 @@ class QuantizeAwareActivation(object):
 
     x = inputs
     if self._should_pre_quantize():
-      x = tf_utils.smart_cond(
-          self._training,
-          make_quantizer_fn(True, x, self._pre_activation_vars),
+      x = utils.smart_cond(
+          self._training, make_quantizer_fn(True, x, self._pre_activation_vars),
           make_quantizer_fn(False, x, self._pre_activation_vars))
 
     x = self.activation(x, *args, **kwargs)
 
     if self._should_post_quantize():
-      x = tf_utils.smart_cond(
-          self._training,
-          make_quantizer_fn(True, x, self._post_activation_vars),
+      x = utils.smart_cond(
+          self._training, make_quantizer_fn(True, x,
+                                            self._post_activation_vars),
           make_quantizer_fn(False, x, self._post_activation_vars))
 
     return x

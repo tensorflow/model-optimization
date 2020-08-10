@@ -1,6 +1,6 @@
 # Weight clustering
 
-<sub>Owned by Arm ML Tooling</sub>
+<sub>Maintained by Arm ML Tooling</sub>
 
 This document provides an overview on weight clustering to help you determine how it fits with your use case.
 
@@ -119,7 +119,9 @@ NOTE: *Size of compressed .tflite* refers to the size of the zipped .tflite file
 
 ## Examples
 
-In addition to the [Weight clustering in Keras example](clustering_example.ipynb.ipynb), see the following examples:
+In addition to the
+[Weight clustering in Keras example](clustering_example.ipynb), see the
+following examples:
 
 * Cluster the weights of a CNN model trained on the MNIST handwritten digit classification dataset:
 [code](https://github.com/tensorflow/model-optimization/blob/master/tensorflow_model_optimization/python/examples/clustering/keras/mnist/mnist_cnn.py)

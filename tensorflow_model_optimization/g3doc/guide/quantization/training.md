@@ -1,6 +1,6 @@
 # Quantization aware training
 
-<sub>Owned by TensorFlow Model Optimization</sub>
+<sub>Maintained by TensorFlow Model Optimization</sub>
 
 There are two forms of quantization: post-training quantization and
 quantization aware training. Start with [post-training quantization](post_training.md)

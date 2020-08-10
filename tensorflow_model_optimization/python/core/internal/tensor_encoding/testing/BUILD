@@ -30,6 +30,7 @@ py_test(
     name = "test_utils_test",
     size = "medium",
     srcs = ["test_utils_test.py"],
+    python_version = "PY3",
     deps = [
         ":test_utils",
         # absl/testing:parameterized dep1,

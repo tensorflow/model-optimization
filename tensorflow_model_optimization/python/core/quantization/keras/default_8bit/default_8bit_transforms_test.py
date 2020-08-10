@@ -236,6 +236,65 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       ('constraint', {
           'depthwise_constraint': tf.keras.constraints.max_norm(2.),
           'pointwise_constraint': tf.keras.constraints.min_max_norm(0., 2.),
+          'bias_constraint': tf.keras.constraints.unit_norm()}),
+      ('activation_relu', {'activation': 'relu'}),
+      ('activation_softmax', {'activation': 'softmax'}),
+  )
+  def testSeparableConv1DQuantize_(self, kwargs):
+    kwargs['filters'] = 2
+    kwargs['kernel_size'] = 3
+    num_samples = 2
+    stack_size = 3
+    num_row = 7
+
+    sepconv_model = tf.keras.Sequential([
+        tf.keras.Input(
+            shape=(num_row, stack_size), batch_size=num_samples),
+        tf.keras.layers.SeparableConv1D(**kwargs)])
+
+    transformed_model, updated_metadata = ModelTransformer(
+        sepconv_model,
+        [default_8bit_transforms.SeparableConv1DQuantize()],
+    ).transform()
+
+    self.assertContainsSubset(
+        {'sepconv1d_expand_1', 'separable_conv1d_QAT_SepConv2D',
+         'sepconv1d_squeeze_1'},
+        updated_metadata.keys())
+    self.assertEqual(sepconv_model.output_shape, transformed_model.output_shape)
+
+    x = np.random.rand(*sepconv_model.input_shape)
+    y = np.random.rand(*sepconv_model.output_shape)
+
+    # Ensure model is equivalent, and forward pass results are the same.
+    self.assertAllClose(sepconv_model.predict(x), transformed_model.predict(x))
+
+    # Ensure model is equivalent, and training results are the same.
+    sepconv_model.compile(loss='categorical_crossentropy', optimizer='sgd')
+    sepconv_model.fit(x, y, epochs=100)
+    transformed_model.compile(loss='categorical_crossentropy', optimizer='sgd')
+    transformed_model.fit(x, y, epochs=100)
+
+    # Over a long training cycle with constraints and regularizers, the model
+    # can build very minute differences. Hence reducing tol to 1e-5.
+    self.assertAllClose(sepconv_model.predict(x), transformed_model.predict(x),
+                        atol=1e-5, rtol=1e-5)
+
+  @parameterized.named_parameters(
+      ('padding_valid', {'padding': 'valid'}),
+      ('padding_same', {'padding': 'same'}),
+      ('padding_same_dilation_2', {'padding': 'same', 'dilation_rate': 2}),
+      ('strides', {'strides': 2}),
+      ('dilation_rate', {'dilation_rate': 2}),
+      ('depth_multiplier', {'depth_multiplier': 2}),
+      ('regularizer', {
+          'depthwise_regularizer': 'l2',
+          'pointwise_regularizer': 'l2',
+          'bias_regularizer': 'l2',
+          'activity_regularizer': 'l2'}),
+      ('constraint', {
+          'depthwise_constraint': tf.keras.constraints.max_norm(2.),
+          'pointwise_constraint': tf.keras.constraints.min_max_norm(0., 2.),
           'bias_constraint': tf.keras.constraints.unit_norm()})
   )
   def testSeparableConvQuantize_(self, kwargs):
@@ -277,6 +336,10 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     # can build very minute differences. Hence reducing tol to 1e-5.
     self.assertAllClose(sepconv_model.predict(x), transformed_model.predict(x),
                         atol=1e-5, rtol=1e-5)
+
+  # TODO(pulkitb): Add individual tests for the following transforms.
+  # Conv2DReshapeBatchNormQuantize, Conv2DReshapeBatchNormReLUQuantize
+  # Conv2DReshapeBatchNormActivationQuantize
 
   @parameterized.parameters(
       ('relu', default_8bit_transforms.AddReLUQuantize),

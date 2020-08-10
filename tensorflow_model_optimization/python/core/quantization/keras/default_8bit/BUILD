@@ -9,7 +9,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [],
 )
 
@@ -18,7 +18,7 @@ py_library(
     srcs = [
         "default_8bit_quantizers.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
@@ -31,7 +31,6 @@ py_test(
         "default_8bit_quantizers_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     deps = [
         ":default_8bit_quantizers",
         # absl/testing:parameterized dep1,
@@ -44,7 +43,7 @@ py_library(
     srcs = [
         "default_8bit_quantize_configs.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # six dep1,
         # tensorflow dep1,
@@ -58,7 +57,7 @@ py_library(
     srcs = [
         "default_8bit_quantize_registry.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # six dep1,
         # tensorflow dep1,
@@ -77,7 +76,6 @@ py_test(
         "default_8bit_quantize_registry_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     deps = [
         ":default_8bit_quantize_registry",
         # numpy dep1,
@@ -91,7 +89,7 @@ py_library(
     srcs = [
         "default_8bit_transforms.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         # numpy dep1,
         # tensorflow dep1,
@@ -111,7 +109,6 @@ py_test(
         "default_8bit_transforms_test.py",
     ],
     python_version = "PY3",
-    srcs_version = "PY2AND3",
     deps = [
         ":default_8bit_transforms",
         # numpy dep1,
@@ -127,7 +124,7 @@ py_library(
     srcs = [
         "default_8bit_quantize_layout_transform.py",
     ],
-    srcs_version = "PY2AND3",
+    srcs_version = "PY3",
     deps = [
         ":default_8bit_transforms",
         # six dep1,

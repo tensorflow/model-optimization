@@ -29,6 +29,7 @@ py_test(
     name = "stages_impl_test",
     size = "medium",
     srcs = ["stages_impl_test.py"],
+    python_version = "PY3",
     deps = [
         ":stages_impl",
         # absl/testing:parameterized dep1,
