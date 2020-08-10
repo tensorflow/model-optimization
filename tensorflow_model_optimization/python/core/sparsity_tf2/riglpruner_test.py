@@ -55,8 +55,9 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
     self.block_size = (1, 1)
     self.block_pooling_type = "AVG"
     self.target_sparsity = 0.5
-    self.initial_drop_fraction = 0.3 # i.e. 0.3 * target sparsity per layer
-    self.constant_update = schedule.ConstantSparsity(self.initial_drop_fraction, 0, 100, 1)
+    self.initial_drop_fraction = 0.3 # i.e. 0.3 * target sparsity per layer, annealed by schedule below
+    self.constant_updater = schedule.ConstantSparsity(self.initial_drop_fraction, 0, 100, 1)
+    self.skip_updater = schedule.ConstantSparsity(self.initial_drop_fraction, 0, 100, 2)
     self.skip_update = sccche
     self.grad = _dummy_gradient
     self.seed = 0
@@ -77,7 +78,7 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
     sparse_vars = [(mask, weight, self.grad(weight))]
 
     p = pruner.RiGLPruner(
-      update_schedule=self.constant_update,
+      update_schedule=self.skip_updater,
       sparsity=self.target_sparsity,
       block_size=self.block_size,
       block_pooling_type=self.block_pooling_type,
@@ -91,24 +92,70 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
     optimizer.iterations.assign(0)
     p.create_slots(optimizer, weights)
 
-    mask_before_pruning = optimizer.get_slot(weight, 'mask').read_value()
-    self.assertAllEqual(np.count_nonzero(mask_before_pruning), self.target_sparisty)
+    mask_before_update = optimizer.get_slot(weight, 'mask').read_value()
+    self.assertAllEqual(np.count_nonzero(mask_before_update), self.target_sparisty)
 
+    next_step = optimizer.iterations.assign_add(1)
+    reset_momentum, new_connections = p.update_masks(sparse_vars, next_step)
+    self.assertAllEqual(reset_momentum, False)
+    self.assertAllEqual(new_connections, None)
 
-    # TODO: rebase this branch off the schedule, loop prior to
-    # updates and check that it has not updated
-    return
+    mask_after_update = mask.read_value()
+    self.assertAllEqual(np.count_nonzero(mask_after_update), self.target_sparsity)
+    self.assertAllEqual(mask_after_update, mask_before_update) # no update
+
+  def testGetGrowGrads(self):
+    mask = tf.ones((100))
+    grads = tf.
+
+    p = pruner.RiGLPruner(
+      update_schedule=self.skip_updater,
+      sparsity=self.target_sparsity,
+      block_size=self.block_size,
+      block_pooling_type=self.block_pooling_type,
+      stateless=self.stateless,
+      seed=self.seed,
+      noise_std=self.noise_std,
+      reinit=self.reinit
+    )
+
+    grow_grads = p._get_grow_grads()
+    
+
 
   def testMaskChangesAccordingtoSchedule(self):
+    weight = tf.Variable(np.linspace(1.0, 100.0, 100))
+    weight_dtype = weight.dtype.base_dtype
+    mask = tf.Variable(
+        tf.ones(weight.get_shape(), dtype=weight_dtype),
+        dtype=weight_dtype)
+    sparse_vars = [(mask, weight, self.grad(weight))]
 
-  def testDropLowestMagnitudeWeights(self):
+    p = pruner.RiGLPruner(
+      update_schedule=self.skip_updater,
+      sparsity=self.target_sparsity,
+      block_size=self.block_size,
+      block_pooling_type=self.block_pooling_type,
+      stateless=self.stateless,
+      seed=self.seed,
+      noise_std=self.noise_std,
+      reinit=self.reinit
+    )
 
-  def testGrowHighestMagnitudeGradients(self):
+    optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+    optimizer.iterations.assign(0)
+    p.create_slots(optimizer, weights)
 
-  def testRegrownConnections(self):
+    mask_before_update = optimizer.get_slot(weight, 'mask').read_value()
 
-  def testDropandGrowConnections(self):
-    return
+  # def testDropLowestMagnitudeWeights(self):
+
+  # def testGrowHighestMagnitudeGradients(self):
+
+  # def testRegrownConnections(self):
+
+  # def testDropandGrowConnections(self):
+  #   return
 
 
 if __name__ == "__main__":

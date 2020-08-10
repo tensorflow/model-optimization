@@ -87,20 +87,17 @@ class RiGLPruner(pruner.Pruner):
   def _random_normal(self, step, *args, **kwargs):
     """Gaussian noise distribution"""
     if self._stateless:
-      offset_seed = self._seed_offset + kwargs.get('seed', 0)
-      kwargs['seed'] = tf.cast(
-        tf.stack([offset_seed, step], tf.int32)
-      )
+      kwargs['seed'] = self._seed
       return tf.random.stateless_normal(*args, **kwargs)
     return tf.random.normal(*args, **kwargs)
 
-  def _get_grow_grads(self, optimizer, step, mask, grad):
+  def _get_grow_grads(self, mask, grad):
     """Grow connections baased on gradient information.
     """
     grad_scores = tf.math.abs(grad)
     return grad_scores
 
-  def _get_drop_weights(self, optimizer, step, mask, weight, noise_std=0):
+  def _get_drop_weights(self, mask, weight, noise_std=0):
     """
     Drop connections based on weight magnitude.
     """
@@ -166,9 +163,9 @@ class RiGLPruner(pruner.Pruner):
       grad: gradients obtained from the optimizer
     """
     # compute the top k magnitudes then update the current mask
-    drop_scores = self._get_drop_weights(optimizer, step, mask, weight, noise_std=self._noise_std)
+    drop_scores = self._get_drop_weights(mask, weight, noise_std=self._noise_std)
     # need access to exactly which entries are growing to zero out optimizer slot
-    grow_scores = self._get_grow_grads(optimizer, step, mask, grad)
+    grow_scores = self._get_grow_grads(mask, grad)
     n_total = tf.size(drop_scores)
     n_ones = tf.cast(tf.reduce_sum(mask), dtype=tf.int32)
     n_prune = tf.cast(
@@ -279,7 +276,7 @@ class RiGLPruner(pruner.Pruner):
     new_connections = None
     reset_momentum = False
     if should_update:
-      for mask, weight, grad in update_vars:
+      for mask, weight, grad in update_vars: # Note: techncially update_vars would only ever contain one pod of variables
         reset_momentum, new_mask, new_connections = self._maybe_update_block_mask(step, update_fraction, mask, weight, grad)
         mask.assign(new_mask)
 
