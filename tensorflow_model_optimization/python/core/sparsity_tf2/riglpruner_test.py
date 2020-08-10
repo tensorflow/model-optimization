@@ -64,49 +64,51 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
     self.noise_std = 1
     self.reinit = False
     self.stateless = True
+    self.grow_init = ('zeros', 'random normal', 'random uniform')
 
   # setUp() lies outside of the "eager scope" that wraps the test cases
   # themselves, resulting in initializing graph tensors instead of eager
   # tensors when testing eager execution.
 
-  def testMaskNoChangeBeforeandAfter(self):
-    weight = tf.Variable(np.linspace(1.0, 100.0, 100))
-    weight_dtype = weight.dtype.base_dtype
-    mask = tf.Variable(
-        tf.ones(weight.get_shape(), dtype=weight_dtype),
-        dtype=weight_dtype)
-    sparse_vars = [(mask, weight, self.grad(weight))]
+  # def testMaskNoChangeBeforeandAfter(self):
+  #   weight = tf.Variable(np.linspace(1.0, 100.0, 100))
+  #   weight_dtype = weight.dtype.base_dtype
+  #   mask = tf.Variable(
+  #       tf.ones(weight.get_shape(), dtype=weight_dtype),
+  #       dtype=weight_dtype)
+  #   sparse_vars = [(mask, weight, self.grad(weight))]
 
-    p = pruner.RiGLPruner(
-      update_schedule=self.skip_updater,
-      sparsity=self.target_sparsity,
-      block_size=self.block_size,
-      block_pooling_type=self.block_pooling_type,
-      stateless=self.stateless,
-      seed=self.seed,
-      noise_std=self.noise_std,
-      reinit=self.reinit
-    )
+  #   p = pruner.RiGLPruner(
+  #     update_schedule=self.skip_updater,
+  #     sparsity=self.target_sparsity,
+  #     block_size=self.block_size,
+  #     block_pooling_type=self.block_pooling_type,
+  #     stateless=self.stateless,
+  #     seed=self.seed,
+  #     noise_std=self.noise_std,
+  #     reinit=self.reinit
+  #   )
 
-    optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
-    optimizer.iterations.assign(0)
-    p.create_slots(optimizer, weights)
+  #   optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+  #   optimizer.iterations.assign(0)
+  #   p.create_slots(optimizer, weights)
 
-    mask_before_update = optimizer.get_slot(weight, 'mask').read_value()
-    self.assertAllEqual(np.count_nonzero(mask_before_update), self.target_sparisty)
+  #   mask_before_update = optimizer.get_slot(weight, 'mask').read_value()
+  #   self.assertAllEqual(np.count_nonzero(mask_before_update), self.target_sparisty)
 
-    next_step = optimizer.iterations.assign_add(1)
-    reset_momentum, new_connections = p.update_masks(sparse_vars, next_step)
-    self.assertAllEqual(reset_momentum, False)
-    self.assertAllEqual(new_connections, None)
+  #   next_step = optimizer.iterations.assign_add(1)
+  #   reset_momentum, new_connections = p.update_masks(sparse_vars, next_step)
+  #   self.assertAllEqual(reset_momentum, False)
+  #   self.assertAllEqual(new_connections, None)
 
-    mask_after_update = mask.read_value()
-    self.assertAllEqual(np.count_nonzero(mask_after_update), self.target_sparsity)
-    self.assertAllEqual(mask_after_update, mask_before_update) # no update
+  #   mask_after_update = mask.read_value()
+  #   self.assertAllEqual(np.count_nonzero(mask_after_update), self.target_sparsity)
+  #   self.assertAllEqual(mask_after_update, mask_before_update) # no update
 
   def testGetGrowGrads(self):
     mask = tf.ones((100))
-    grads = tf.
+    grads = -1 * tf.linspace(1., 6., 6)
+    expected_grads = tf.linspace(1., 6., 6)
 
     p = pruner.RiGLPruner(
       update_schedule=self.skip_updater,
@@ -119,34 +121,33 @@ class RiglPruningTest(test.TestCase, parameterized.TestCase):
       reinit=self.reinit
     )
 
-    grow_grads = p._get_grow_grads()
-    
+    grow_grads = p._get_grow_grads(mask, grads)
+    self.assertAllEqual(grow_grads, expected_grads)
 
+  # def testMaskChangesAccordingtoSchedule(self):
+  #   weight = tf.Variable(np.linspace(1.0, 100.0, 100))
+  #   weight_dtype = weight.dtype.base_dtype
+  #   mask = tf.Variable(
+  #       tf.ones(weight.get_shape(), dtype=weight_dtype),
+  #       dtype=weight_dtype)
+  #   sparse_vars = [(mask, weight, self.grad(weight))]
 
-  def testMaskChangesAccordingtoSchedule(self):
-    weight = tf.Variable(np.linspace(1.0, 100.0, 100))
-    weight_dtype = weight.dtype.base_dtype
-    mask = tf.Variable(
-        tf.ones(weight.get_shape(), dtype=weight_dtype),
-        dtype=weight_dtype)
-    sparse_vars = [(mask, weight, self.grad(weight))]
+  #   p = pruner.RiGLPruner(
+  #     update_schedule=self.skip_updater,
+  #     sparsity=self.target_sparsity,
+  #     block_size=self.block_size,
+  #     block_pooling_type=self.block_pooling_type,
+  #     stateless=self.stateless,
+  #     seed=self.seed,
+  #     noise_std=self.noise_std,
+  #     reinit=self.reinit
+  #   )
 
-    p = pruner.RiGLPruner(
-      update_schedule=self.skip_updater,
-      sparsity=self.target_sparsity,
-      block_size=self.block_size,
-      block_pooling_type=self.block_pooling_type,
-      stateless=self.stateless,
-      seed=self.seed,
-      noise_std=self.noise_std,
-      reinit=self.reinit
-    )
+  #   optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
+  #   optimizer.iterations.assign(0)
+  #   p.create_slots(optimizer, weights)
 
-    optimizer = tf.keras.optimizers.SGD(learning_rate=0.01)
-    optimizer.iterations.assign(0)
-    p.create_slots(optimizer, weights)
-
-    mask_before_update = optimizer.get_slot(weight, 'mask').read_value()
+  #   mask_before_update = optimizer.get_slot(weight, 'mask').read_value()
 
   # def testDropLowestMagnitudeWeights(self):
 

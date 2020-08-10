@@ -42,7 +42,8 @@ class RiGLPruner(pruner.Pruner):
       stateless=True,
       seed=0,
       noise_std=0,
-      reinit=False
+      reinit=False,
+      grow_init='zeros'
     ):
     """The logic for magnitude-based RiGL trained weight tensors as presented
     in https://proceedings.icml.cc/static/paper_files/icml/2020/287-Paper.pdf.
@@ -61,6 +62,8 @@ class RiGLPruner(pruner.Pruner):
       seed: assigned by PruningConfig (base added) for multiworker consistency in random processes.
       reinit: boolean for whether to reinitialize a connection that was dropped and regrown to 
         its original value, or to set it to 0.
+      grow_init: string ('zeros, 'random_normal', 'random_uniform', 'initial_value') way
+        to initialize new connections.
     """
     super(RiGLPruner, self).__init__(
         update_schedule, block_size, block_pooling_type)
@@ -72,6 +75,7 @@ class RiGLPruner(pruner.Pruner):
     self._seed = seed
     self._noise_std = noise_std
     self._drop_regrow_reinit = reinit
+    self._grow_init_method = grow_init
   
   def create_slots(self, optimizer, var):
     base_dtype = var.dtype
@@ -84,11 +88,18 @@ class RiGLPruner(pruner.Pruner):
         raise ValueError('Block Sparsity can only be used for layers which '
                           'have 2-dimensional weights.')
 
-  def _random_normal(self, step, *args, **kwargs):
+  def _random_normal(self, *args, **kwargs):
     """Gaussian noise distribution"""
     if self._stateless:
       kwargs['seed'] = self._seed
       return tf.random.stateless_normal(*args, **kwargs)
+    return tf.random.normal(*args, **kwargs)
+
+  def _random_uniform(self, *args, **kwargs):
+    """Uniform noise distribution"""
+    if self._stateless:
+      kwargs['seed'] = self._seed
+      return tf.random.stateless_uniform(*args, **kwargs)
     return tf.random.normal(*args, **kwargs)
 
   def _get_grow_grads(self, mask, grad):
@@ -151,6 +162,22 @@ class RiGLPruner(pruner.Pruner):
       )
     return new_connections
 
+  def _get_grow_tensor(weight, method):
+    if method == 'zeros':
+      grow_tensor = tf.zeros_like(weight, dtype=weight.dtype)
+    elif method == 'random_normal':
+      divisor = 1.
+      stdev = tf.math.reduce_std(weight)
+      grow_tensor = self._random_normal(weight_shape, stddev=stdev, dtype=weight.dtype, seed=self._seed) / divisor
+    elif method == 'random_uniform':
+      mean = tf.math.reduce_mean(tf.math.abs(weight))
+      divisor = 1.
+      grow_tensor = self._random_uniform(weight.shape, minval=-mean, maxval=mean, 
+                                        dtype=weight.dtype, seed=self._seed) / divisor
+    else:
+      raise ValueError('The initialization for growing %s is not a valid option.' % method)
+    return grow_tensor
+
   def _update_mask(self, step, update_fraction, mask, weight, grad):
     """Called by _maybe_update_block_mask.
     Updates mask based on weight and grad information.
@@ -191,7 +218,7 @@ class RiGLPruner(pruner.Pruner):
 
       grown_mask_reshaped = tf.reshape(grown_mask, mask.shape)
       # set the values of the new connections
-      grow_tensor = tf.zeros_like(weight, dtype=weight.dtype)
+      grow_tensor = self._get_grow_tensor(weight, self._grow_init_method)
       new_connections = self._get_new_connections(self._drop_regrow_reinit, grown_mask_reshaped, mask)
 
       new_weights = tf.where(new_connections, grow_tensor, weight)
@@ -285,6 +312,7 @@ class RiGLPruner(pruner.Pruner):
   def _apply_mask(self, weight, mask):
     """Directly masks the weights (updating the weight variables)."""
 
+    def update_fn(distribution, values_and_vars):
     # TODO(Kaftan/xwinxu): figure out if this is totally unneeded now
       reduced_values = distribution.extended.batch_reduce_to(
           tf.distribute.ReduceOp.MEAN, values_and_vars)
