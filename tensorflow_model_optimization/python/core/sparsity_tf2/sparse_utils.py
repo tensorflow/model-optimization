@@ -14,6 +14,8 @@
 # ==============================================================================
 """Convenience functions for sparse training."""
 
+import tensorflow as tf
+
 class Bernouilli(tf.keras.initializers.Initializer):
   """
   Initialization distributio following a Bernouilli process..
