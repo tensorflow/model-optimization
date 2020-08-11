@@ -49,16 +49,17 @@ class PermuteOnes(tf.keras.initializers.Initializer):
   Initialization of a deterministically sparse matrix.
   This initializer takes in an input ratio and sets exactly
   that ratio of the mask entries as ones  leaving the rest as zeros.
-  The ones are detministically, randomly permmuted across the tensor.
+  The ones are randomly permmuted across the tensor, determinisitc
+  to the random seed provided.
   """
-  def __init__(self, ratio=None):
+  def __init__(self, ratio):
     """
     ratio: the exact number of 1s sampled.
     If ratio is None, will sample randomly from uniform distribution for sparsity.
     """
     if ratio is not None and not (ratio >= 0. and ratio <= 1.):
       raise ValueError('ratio parameter must be a valid percentage, i.e. in [0, 1].')
-    self.ratio = ratio if ratio else tf.random.uniform(())
+    self.ratio = ratio
 
   def get_n_ones(self, shape, dtype=tf.dtypes.float32):
     sparsity = self.ratio if self.ratio else 0.0
@@ -77,7 +78,7 @@ class PermuteOnes(tf.keras.initializers.Initializer):
     return tf.reshape(shuffled_mask, shape)
 
 
-class ErdosRenyi(tf.keras.Initializers.Initializer):
+class ErdosRenyi:
   """Sparsity initialization based on the Erdos-Renyi distribution.
   Ensures that the none of the non-custom layers have a total parameter
   count as the one with uniform sparsities, i.e. the non sparse
@@ -97,7 +98,7 @@ class ErdosRenyi(tf.keras.Initializers.Initializer):
     # TODO
   
 
-class ErdosRenyiKernel(tf.keras.Initializers.Initializer):
+class ErdosRenyiKernel:
   """Initialization based on the Erdos-Renyi distribution for CNNs."""
   def __init__(self, sparsity, kernel_dim):
       self.sparsity = sparsity

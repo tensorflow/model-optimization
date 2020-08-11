@@ -37,39 +37,27 @@ def calculate_stdev(p):
   return np.sqrt(p * (1 - p))
 
 class SparseUtilsTest(test.TestCase, parameterized.TestCase):
+  RATIOS = [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]
+  SHAPES = [(), [1], [5], [2, 2], [4, 4], [8, 4], [3, 17], [3, 6, 9]]
 
   def setUp(self):
     super(SparseUtilsTest, self).setUp()
-    self.ratios = [0.0, 0.1, 0.25, 0.5, 0.75, 0.9, 1.0]
-    self.shapes = [(), [1], [5], [2, 2], [4, 4], [8, 4], [3, 17], [3, 6, 9]]
     self.seeds = range(20)
 
-  def matrix_init(self, _shape):
-    return tf.ones(_shape)
-  
-  def matrix_init_with_type(self, _shape, _type):
-    tf.ones(_shape, dtype=_type)
-
-  def get_bernouilli(self, p):
-    return sparse_utils.Bernouilli(p)
-
-  def get_permuteones(self, ratio):
-    return sparse_utils.PermuteOnes(ratio)
-
-  @parameters.parameters(
+  @parameterized.parameters(
     (-1.,), (1.5,)
   )
   def testInvalidRatioRaisesError(self, p):
     with self.assertRaises(ValueError):
-      bernouilli = self.get_bernouilli(p)
-      permuteones = self.get_permuteones(p)
+      bernouilli = sparse_utils.Bernouilli(p)
+      permuteones = sparse_utils.PermuteOnes(p)
 
   @parameterized.parameters(
-    (i,) for i in self.ratios
+    (i,) for i in RATIOS
   )
   def testScatteredInitialOnes(self, ratio):
     shape = (4, 4)
-    matrix = self.matrix_init(shape)
+    matrix = tf.ones(shape)
     self.assertAllEqual(shape, matrix.shape)
 
     def _check_scatter(sparse_matrix):
@@ -82,7 +70,7 @@ class SparseUtilsTest(test.TestCase, parameterized.TestCase):
     ones_indices = []
     ones_counts = []
     for _ in range(100):
-      matrix_sparse_permute = self.get_permuteones(ratio)(shape, seed=seed)
+      matrix_sparse_permute = sparse_utils.PermuteOnes(ratio)(shape, seed=seed)
       ones_count, mean_nonzeros = _check_scatter(matrix_sparse_permute)
       ones_indices.append(mean_nonzeros)
       ones_counts.append(ones_count)
@@ -93,20 +81,20 @@ class SparseUtilsTest(test.TestCase, parameterized.TestCase):
     self.assertAllClose(ones_counts[:len(ones_counts)//2], ones_counts[len(ones_counts)//2:])
 
   @parameterized.parameters(
-    (shape,) for shape in self.shapes
+    (shape,) for shape in SHAPES
   )
   def testBernouilliMatrixFraction(self, shape):
-    matrix = self.matrix_init(shape)
+    matrix = tf.ones(shape)
     self.assertAllEqual(shape, matrix.shape)
 
     seed = 0
     expected_counts = [16, 1.6, 4, 8, 2, 1.7, 0]
     expected_stdev = list(map(calculate_stdev, ratios))
     counts = []
-    for ratio in self.ratios:
+    for ratio in RATIOS:
       ratio_list = []
       for _ in range(100):
-        output = self.get_bernouilli(ratio)(shape, seed=seed)
+        output = sparse_utils.Bernouilli(ratio)(shape, seed=seed)
         ratio_list.append(np.count_nonzero(output))
         self.assertAllEqual(output.shape, shape)
         seed += 1
@@ -117,28 +105,28 @@ class SparseUtilsTest(test.TestCase, parameterized.TestCase):
     self.assertAllClose(stdev_counts, expected_stdev)
 
   @parameterized.parameters(
-    (shape,) for shape in self.shapes
+    (shape,) for shape in SHAPES
   )
   def testDeterministicmatrixFraction(self, shape):
     # PermuteOnes
-    matrix = self.matrix_init(shape)
+    matrix = tf.ones(shape)
     self.assertAllEqual(shape, matrix.shape)
 
-    for ratio in self.ratios:
-      matrix_sparse = self.get_permuteones(ratio)(shape)
+    for ratio in RATIOS:
+      matrix_sparse = sparse_utils.PermuteOnes(ratio)(shape)
       self.assertAllEqual(np.count_nonzero(matrix_sparse), 8)
 
   @parameterized.parameters(
-    (shape,) for shape in self.shapes
+    (shape,) for shape in SHAPES
   )
   def testMatrixDeterminism(self):
-    matrix1 = self.matrix_init(shape)
-    matrix2 = self.matrix_init(shape)
+    matrix1 = tf.ones(shape)
+    matrix2 = tf.ones(shape)
     self.assertAllEqual(shape, matrix1.shape)
     self.assertAllEqual(shape, matrix2.shape)
 
-    for ratio in self.ratios:
-      permuteones = self.get_permuteones(ratio)
+    for ratio in RATIOS:
+      permuteones = sparse_utils.PermuteOnes(ratio)
       for seed in self.seeds:
         matrix1_sparse = permuteones(shape=shape, seed=seed)
         matrix2_sparse = permuteones(shape=shape, seed=seed)
@@ -152,11 +140,11 @@ class SparseUtilsTest(test.TestCase, parameterized.TestCase):
     seed = 0
     type_bern_checks = []
     typ_perm_checks = []
-    matrix = self.matrix_init_w_type(shape, dtype)
-    sparse_bernouilli = self.get_bernouilli(shape=matrix.shape, dtype=dtype, seed=seed)
+    matrix = tf.ones(shape, dtype=dtype)
+    sparse_bernouilli = sparse_utils.Bernouilli(shape=matrix.shape, dtype=dtype, seed=seed)
     type_bern_checks.append(sparse_bernouilli.dtype)
     self.assertAllEqual(dtypes, type_bern_checks)
-    sparse_permuteones = self.get_permuteones(shape=matrix.shape, dtype=dtype, seed=seed)
+    sparse_permuteones = sparse_utils.PermuteOnes(shape=matrix.shape, dtype=dtype, seed=seed)
     type_perm_checks.append(sparse_permuteones.dtype)
     self.assertAllEqual(dtypes, type_perm_checks)
 
