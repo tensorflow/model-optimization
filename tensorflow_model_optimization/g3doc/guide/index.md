@@ -38,8 +38,8 @@ The area of model optimization can involve various techniques:
 
 Our toolkit supports
 [post-training quantization](./quantization/post_training.md),
-[quantization aware training](./quantization/training.md), and
-[pruning](./pruning/index.md).
+[quantization aware training](./quantization/training.md),
+[pruning](./pruning/index.md), and [clustering](./clustering/index.md).
 
 ### Quantization
 
@@ -51,3 +51,8 @@ requirement to leverage certain hardware.
 
 Sparse models are those where connections in between operators (i.e. neural
 network layers) have been pruned, introducing zeros to the parameter tensors.
+
+### Clustering
+
+Clustered models are those where the original model's parameters are replaced
+with a smaller number of unique values.
