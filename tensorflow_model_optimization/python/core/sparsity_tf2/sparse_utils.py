@@ -36,10 +36,10 @@ class Bernouilli(tf.keras.initializers.Initializer):
   def from_config(cls, config):
     return cls(**config)
 
-  def __call__(self, shape, dytpe=tf.dtypes.float32):
+  def __call__(self, shape, dtype=tf.float32, seed=None):
     """Number of zeros = np.ceil(probability * size) in expectation."""
     probs = tf.zeros(shape=list(shape)) + self.p
-    uniform = tf.random.uniform(shape)
+    uniform = tf.random.uniform(shape, seed=seed)
     initial = tf.less(uniform, probs)
 
     return tf.cast(initial, dtype=dtype)
@@ -61,21 +61,21 @@ class PermuteOnes(tf.keras.initializers.Initializer):
       raise ValueError('ratio parameter must be a valid percentage, i.e. in [0, 1].')
     self.ratio = ratio
 
-  def get_n_ones(self, shape, dtype=tf.dtypes.float32):
-    sparsity = self.ratio if self.ratio else 0.0
-    return tf.math.ceil(sparsity * tf.cast(tf.math.reduce_sum(shape)), dtype=dtype)
-
   def __call__(self, shape, dtype=tf.dtypes.float32, seed=None):
     flat_mask = tf.reshape(tf.ones(shape), (-1,))
-    num_ones = self.get_n_ones(shape, dtype)
-    _indices = tf.cast(tf.reshape(tf.linspace(0, num_ones - 1, int(num_ones)), (-1,)), tf.int32)
-    indices = tf.reshape(_indices, (-1, 1))
+    num_elements = tf.size(flat_mask, out_type=tf.float32)
+    num_ones = tf.cast(tf.math.ceil(self.ratio * num_elements), tf.int32)
+    _indices = tf.linspace(0, num_ones - 1, num_ones)
+    reshaped_indices = tf.reshape(_indices, (-1,))
+    cast_indices = tf.cast(reshaped_indices, tf.int32)
+    indices = tf.reshape(cast_indices, (-1, 1))
     updates = tf.ones_like(_indices)
     flat_shape = flat_mask.shape
     unshuffled_mask = tf.scatter_nd(indices, updates, flat_shape)
     shuffled_mask = tf.random.shuffle(unshuffled_mask, seed=seed)
+    shuffled_mask = tf.reshape(shuffled_mask, shape)
 
-    return tf.reshape(shuffled_mask, shape)
+    return tf.cast(shuffled_mask, dtype=dtype)
 
 
 class ErdosRenyi:
