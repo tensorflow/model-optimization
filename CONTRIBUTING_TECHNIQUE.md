@@ -57,7 +57,7 @@ having reproducible results.
 6. Packaging and release:
    * Releases are managed by the TensorFlow Model Optimization team. Work with
      them to produce and test pip package as well as generate API docs. To
-     generate API docs locally, see instructions [here](https://github.com/tensorflow/model-optimization/blob/master/build_docs.py).
+     generate API docs locally, see instructions [here](https://github.com/tensorflow/model-optimization/blob/master/tensorflow_model_optimization/g3doc/tools/build_docs.py).
    * Days before the release date:
      * The API docs will not be checked in, but should be tested and
        ready to submit.

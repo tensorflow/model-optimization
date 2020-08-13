@@ -23,7 +23,8 @@
 
 ## Weight clustering
 
-*   During-training weight clustering
+*   During-training weight clustering --
+    [Launched](https://blog.tensorflow.org/2020/08/tensorflow-model-optimization-toolkit-weight-clustering-api.html)
 
 ## Cascading compression techniques
 

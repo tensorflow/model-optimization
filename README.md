@@ -56,5 +56,5 @@ tracking requests and bugs.**
 As part of TensorFlow, we're committed to fostering an open and welcoming
 environment.
 
-*   [TensorFlow Blog](https://medium.com/tensorflow): Stay up to date on content
+*   [TensorFlow Blog](https://blog.tensorflow.org): Stay up to date on content
     from the TensorFlow team and best articles from the community.

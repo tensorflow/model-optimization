@@ -14,5 +14,6 @@ tune.
 
 Training time tools available for you to try:
 
-* [Weight pruning](./pruning/)
-* [Quantization] (./quantization/training)
+*   [Weight pruning](./pruning/)
+*   [Quantization](./quantization/training)
+*   [Weight clustering](./clustering/)
