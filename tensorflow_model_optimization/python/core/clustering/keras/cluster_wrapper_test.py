@@ -191,6 +191,10 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     original_model = tf.keras.Sequential([
         layers.Dense(32, input_shape=(10,)),
     ])
+
+    weights_name = original_model.layers[0].weights[0].name
+    bias_name = original_model.layers[0].weights[1].name
+
     clustered_model = cluster.cluster_weights(
         original_model,
         number_of_clusters=number_of_clusters,
@@ -205,6 +209,9 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     # Make sure that the stripped layer is the Dense one
     self.assertIsInstance(stripped_model.layers[0], layers.Dense)
 
+    # Check that we keep names for weights/bias
+    self.assertEqual(stripped_model.layers[0].weights[0].name, weights_name)
+    self.assertEqual(stripped_model.layers[0].weights[1].name, bias_name)
 
 if __name__ == '__main__':
   test.main()
