@@ -18,12 +18,15 @@ import tensorflow as tf
 
 class Bernouilli(tf.keras.initializers.Initializer):
   """
-  Initialization distributio following a Bernouilli process..
+  Variable Initializer that samples tensor entries from a Bernouilli distribution.
   """
 
   def __init__(self, p):
     """
-    p: probability parameter of success (i.e. 1).
+    Variable initializer sampling from a Bernouilli distribution.
+
+    Args:
+      p: probability parameter of success (i.e. 1).
     """
     if not (p >= 0. and p <= 1.):
       raise ValueError('p parameter must be a valid probability, i.e. in [0, 1].')
@@ -38,7 +41,7 @@ class Bernouilli(tf.keras.initializers.Initializer):
 
   def __call__(self, shape, dtype=tf.float32, seed=None):
     """Number of zeros = np.ceil(probability * size) in expectation."""
-    probs = tf.zeros(shape=list(shape)) + self.p
+    probs = tf.zeros(shape=shape) + self.p
     uniform = tf.random.uniform(shape, seed=seed)
     initial = tf.less(uniform, probs)
 
@@ -46,7 +49,6 @@ class Bernouilli(tf.keras.initializers.Initializer):
 
 class PermuteOnes(tf.keras.initializers.Initializer):
   """
-  Initialization of a deterministically sparse matrix.
   This initializer takes in an input ratio and sets exactly
   that ratio of the mask entries as ones  leaving the rest as zeros.
   The ones are randomly permmuted across the tensor, determinisitc
@@ -54,8 +56,10 @@ class PermuteOnes(tf.keras.initializers.Initializer):
   """
   def __init__(self, ratio):
     """
-    ratio: the exact number of 1s sampled.
-    If ratio is None, will sample randomly from uniform distribution for sparsity.
+    Initialization of a deterministically sparse matrix.
+
+    Args:
+      ratio: the exact number of 1s sampled.
     """
     if ratio is not None and not (ratio >= 0. and ratio <= 1.):
       raise ValueError('ratio parameter must be a valid percentage, i.e. in [0, 1].')
@@ -64,6 +68,7 @@ class PermuteOnes(tf.keras.initializers.Initializer):
   def __call__(self, shape, dtype=tf.dtypes.float32, seed=None):
     flat_mask = tf.reshape(tf.ones(shape), (-1,))
     num_elements = tf.size(flat_mask, out_type=tf.float32)
+    # the ceiling is taken so that we ensure there is at least one connection present
     num_ones = tf.cast(tf.math.ceil(self.ratio * num_elements), tf.int32)
     _indices = tf.linspace(0, num_ones - 1, num_ones)
     reshaped_indices = tf.reshape(_indices, (-1,))
@@ -95,7 +100,7 @@ class ErdosRenyi:
 
   def __call__(self, shape, dtype=tf.dtypes.float32, seed=None):
     return
-    # TODO
+    # TODO(xwinxu): make this a utility and combine with below.
   
 
 class ErdosRenyiKernel:
