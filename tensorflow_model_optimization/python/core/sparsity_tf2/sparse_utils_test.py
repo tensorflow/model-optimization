@@ -136,6 +136,7 @@ class SparseUtilsTest(test.TestCase, parameterized.TestCase):
       sparse_matrices_perm.append(tf.math.reduce_mean(matrix_midpoint_idx))
       seed += 1
     average_midpoints = tf.math.reduce_mean(sparse_matrices_perm, axis=0)
+    # here we are checking the midpoint index of a flattened weight matrix
     expected_midpoints = tf.constant(midpoint) # broadcasts
     # expect that each entry in the matrix is "on"/1 in expectation, ratio number of times
     self.assertAllClose(expected_midpoints, average_midpoints, atol=1.)
