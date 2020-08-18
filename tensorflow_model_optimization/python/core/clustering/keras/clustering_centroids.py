@@ -17,13 +17,11 @@
 import abc
 import six
 import tensorflow as tf
-
 from tensorflow.python.ops import clustering_ops
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 
 k = tf.keras.backend
 CentroidInitialization = cluster_config.CentroidInitialization
-
 @six.add_metaclass(abc.ABCMeta)
 class AbstractCentroidsInitialisation:
   """
