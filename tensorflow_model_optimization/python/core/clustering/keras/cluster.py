@@ -200,8 +200,7 @@ def strip_clustering(model):
       layer.layer._non_trainable_weights = []
       for i in range(len(layer.restore)):
         # This is why we used integers as keys
-        name, weight = layer.restore[i]
-        weight_name = layer.layer.name + "/" + name
+        name, full_name, weight = layer.restore[i]
         # In both cases we use k.batch_get_value since we need physical copies
         # of the arrays to initialize a new tensor
         if i in layer.gone_variables:
@@ -214,7 +213,7 @@ def strip_clustering(model):
           new_weight_value = k.batch_get_value([weight])[0]
         setattr(layer.layer,
                 name,
-                k.variable(new_weight_value, name=weight_name))
+                k.variable(new_weight_value, name=full_name))
       # When all weights are filled with the values, just return the underlying
       # layer since it is now fully autonomous from its wrapper
       return layer.layer

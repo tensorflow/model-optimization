@@ -189,7 +189,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     or equal to number_of_clusters.
     """
     original_model = tf.keras.Sequential([
-        layers.Dense(32, input_shape=(10,)),
+        layers.Dense(32, input_shape=(10,), name="abc"),
     ])
 
     weights_name = original_model.layers[0].weights[0].name
