@@ -115,7 +115,7 @@ class ClusterWeights(Wrapper):
     self.sparsity_masks = {}
 
     # Stores the pairs of weight names and references to their tensors
-    self.clustered_vars = []
+    self.ori_weights_vars_tf = {}
 
     # Stores references to class instances that implement different clustering
     # behaviour for different shapes of objects
@@ -204,7 +204,7 @@ class ClusterWeights(Wrapper):
       # initial value taken from a Tensor object. For each weight there is a
       # different set of cluster centroids
       self.cluster_centroids_tf[weight_name] = self.add_weight(
-          'cluster_centroids_tf',
+          '{}{}'.format('cluster_centroids_tf_', weight_name),
           shape=(self.number_of_clusters,),
           dtype=weight.dtype,
           trainable=True,
@@ -227,7 +227,7 @@ class ClusterWeights(Wrapper):
       pulling_indices = self.clustering_impl[weight_name].\
           get_pulling_indices(weight)
       self.pulling_indices_tf[weight_name] = self.add_weight(
-          'pulling_indices_tf',
+          '{}{}'.format('pulling_indices_tf_', weight_name),
           shape=pulling_indices.shape,
           dtype=tf.int32,
           trainable=False,
@@ -247,7 +247,15 @@ class ClusterWeights(Wrapper):
         self.sparsity_masks[weight_name] = sparsity_mask
 
       # We store these pairs to easily update this variables later on
-      self.clustered_vars.append((weight_name, weight))
+      self.ori_weights_vars_tf[weight_name] = self.add_weight(
+          '{}{}'.format('ori_weights_vars_tf_', weight_name),
+          shape=weight.shape,
+          dtype=weight.dtype,
+          trainable=True,
+          initializer=initializers.Constant(
+              value=k.batch_get_value([weight])[0]
+          )
+      )
 
     # We use currying here to get an updater which can be triggered at any time
     # in the future and it would return the latest version of clustered weights
@@ -255,7 +263,8 @@ class ClusterWeights(Wrapper):
       def fn():
         # Get the clustered weights
         pulling_indices = self.pulling_indices_tf[for_weight_name]
-        clustered_weights = self.clustering_impl[for_weight_name].get_clustered_weight(pulling_indices)
+        clustered_weights = self.clustering_impl[for_weight_name].\
+            get_clustered_weight(pulling_indices)
 
         if self.preserve_sparsity:
           # Get the sparsity mask
@@ -265,7 +274,6 @@ class ClusterWeights(Wrapper):
           clustered_weights = tf.math.multiply(clustered_weights, sparsity_mask)
 
         return clustered_weights
-
       return fn
 
     # This will allow us to restore the order of weights later
@@ -281,11 +289,24 @@ class ClusterWeights(Wrapper):
         self.restore.append((name, full_name, weight))
 
   def call(self, inputs):
+    # In the forward pass, we need to update the cluster associations manually
+    # since they are integers and not differentiable. Gradients won't flow back
+    # through tf.argmin
     # Go through all tensors and replace them with their clustered copies.
-    for weight_name, _ in self.clustered_vars:
+    for weight_name in self.ori_weights_vars_tf:
       # Get the clustered weights
       pulling_indices = self.pulling_indices_tf[weight_name]
-      clustered_weights = self.clustering_impl[weight_name].get_clustered_weight(pulling_indices)
+
+      # Update cluster associations
+      pulling_indices.assign(tf.dtypes.cast(
+          self.clustering_impl[weight_name].\
+              get_pulling_indices(self.ori_weights_vars_tf[weight_name]),
+          dtype=pulling_indices.dtype
+      ))
+
+      clustered_weights = self.clustering_impl[weight_name].\
+          get_clustered_weight_forward(pulling_indices,\
+              self.ori_weights_vars_tf[weight_name])
 
       if self.preserve_sparsity:
         # Get the sparsity mask

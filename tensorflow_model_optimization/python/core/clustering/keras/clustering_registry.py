@@ -64,6 +64,22 @@ class AbstractClusteringAlgorithm(object):
     """
     pass
 
+  @tf.custom_gradient
+  def add_custom_gradients(self, clst_weights, weights):
+    """
+    This function overrides gradients in the backprop stage: original mul
+    becomes add, tf.sign becomes tf.identity. It is to update the original
+    weights with the gradients updates directly from the layer wrapped. We
+    assume the gradients updates on individual elements inside a cluster
+    will be different so that there is no point of mapping the gradient
+    updates back to original weight matrix using the LUT.
+    """
+    override_weights = tf.sign(tf.reshape(weights, shape=(-1,)) + 1e+6)
+    z = clst_weights*override_weights
+    def grad(dz):
+      return dz, dz
+    return z, grad
+
   def get_clustered_weight(self, pulling_indices):
     """
     Takes an array with integer number that represent lookup indices and forms a
@@ -75,9 +91,23 @@ class AbstractClusteringAlgorithm(object):
     return tf.reshape(
         tf.gather(self.cluster_centroids,
                   tf.reshape(pulling_indices, shape=(-1,))),
-        pulling_indices.shape
+        shape=pulling_indices.shape
     )
 
+  def get_clustered_weight_forward(self, pulling_indices, weight):
+    """
+    Takes indices (pulling_indices) and original weights (weight) as inputs
+    and then forms a new array according to the given indices. The original
+    weights (weight) here are added to the graph since we want the backprop
+    to update their values via the new implementation using tf.custom_gradient
+    :param pulling_indices: an array of indices used for lookup.
+    :param weight: the original weights of the wrapped layer.
+    :return: array with the same shape as `pulling_indices`. Each array element
+      is a member of self.cluster_centroids
+    """
+    x = tf.reshape(self.get_clustered_weight(pulling_indices), shape=(-1,))
+    return tf.reshape(self.add_custom_gradients(
+        x, tf.reshape(weight, shape=(-1,))), pulling_indices.shape)
 
 class ConvolutionalWeightsCA(AbstractClusteringAlgorithm):
   """

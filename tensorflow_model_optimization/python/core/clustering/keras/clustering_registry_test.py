@@ -45,6 +45,48 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
 
     self.assertSequenceEqual(res_np_list, expected_output)
 
+  def _check_gradients(self, ca, weight, pulling_indices, expected_output):
+    pulling_indices_tf = tf.convert_to_tensor(pulling_indices)
+    weight_tf = tf.convert_to_tensor(weight)
+    with tf.GradientTape(persistent=True) as t:
+      t.watch(pulling_indices_tf)
+      t.watch(weight_tf)
+      cls_weights_tf = tf.reshape(
+          ca.get_clustered_weight(pulling_indices_tf), shape=(-1,))
+      t.watch(cls_weights_tf)
+      out_forward = ca.add_custom_gradients(cls_weights_tf, weight_tf)
+      grad_cls_weight = t.gradient(out_forward, cls_weights_tf)
+      grad_weight = t.gradient(out_forward, weight_tf)
+
+      chk_output = tf.math.equal(grad_cls_weight, grad_weight)
+      chk_output_np = k.batch_get_value(chk_output)
+
+      self.assertSequenceEqual(chk_output_np, expected_output)
+
+  @parameterized.parameters(
+      ([-0.800450444, 0.864694357],
+       [[0.220442653, 0.854694366, 0.0328432359, 0.506857157],
+        [0.0527950861, -0.659555554, -0.849919915, -0.54047],
+        [-0.305815876, 0.0865516588, 0.659202456, -0.355699599],
+        [-0.348868281, -0.662001, 0.6171574, -0.296582848]],
+       [[1, 1, 1, 1],
+        [1, 0, 0, 0],
+        [0, 1, 1, 0],
+        [0, 0, 1, 0]],
+       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
+      )
+  )
+  def testDenseWeightsCAGrad(self,
+                             clustering_centroids,
+                             weight,
+                             pulling_indices,
+                             expected_output):
+    """
+    Verifies that the gradients of DenseWeightsCA work as expected.
+    """
+    ca = clustering_registry.DenseWeightsCA(clustering_centroids)
+    self._check_gradients(ca, weight, pulling_indices, expected_output)
+
   @parameterized.parameters(
       ([-1, 1], [[0, 0, 1], [1, 1, 1]], [[-1, -1, 1], [1, 1, 1]]),
       ([-1, 0, 1], [[1, 1, 1], [1, 1, 1]], [[0, 0, 0], [0, 0, 0]]),
@@ -72,6 +114,29 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
     """
     ca = clustering_registry.BiasWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
+
+  @parameterized.parameters(
+      ([0.0, 3.0],
+       [[0.1, 0.1, 0.1],
+        [3.0, 3.0, 3.0],
+        [0.2, 0.2, 0.2]],
+       [[0, 0, 0],
+        [1, 1, 1],
+        [0, 0, 0]],
+       [1, 1, 1, 1, 1, 1, 1, 1, 1]
+      )
+  )
+  def testConvolutionalWeightsCAGrad(self,
+                                     clustering_centroids,
+                                     weight,
+                                     pulling_indices,
+                                     expected_output):
+    """
+    Verifies that the gradients of ConvolutionalWeightsCA work as expected.
+    """
+    ca = clustering_registry.DenseWeightsCA(clustering_centroids)
+    self._check_gradients(ca, weight, pulling_indices, expected_output)
+
 
   @parameterized.parameters(
       ([0, 3], [[[[0, 0, 0], [1, 1, 1], [0, 0, 0]]]],
