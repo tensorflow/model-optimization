@@ -244,12 +244,13 @@ class ClusterWeights(Wrapper):
 
     for ct, weight in enumerate(self.layer.weights):
       name = self._weight_name(weight.name)
+      full_name = self.layer.name + "/" + name
       if ct in self.gone_variables:
         # Again, not sure if this is needed
         weight_name = clusterable_weights_to_variables[name]
-        self.restore.append((name, get_updater(weight_name)))
+        self.restore.append((name, full_name, get_updater(weight_name)))
       else:
-        self.restore.append((name, weight))
+        self.restore.append((name, full_name, weight))
 
   def call(self, inputs):
     # Go through all tensors and replace them with their clustered copies.
