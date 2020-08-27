@@ -21,9 +21,6 @@ again.
 
 ## TensorFlow Model Optimization Specific
 
-### Style
-Please refer to [TensorFlow's style guide](https://www.tensorflow.org/community/contribute/code_style). Don't forget to run pylint.
-
 ### Contributing Whole Techniques
 
 See these [guidelines](CONTRIBUTING_TECHNIQUE.md).
@@ -47,9 +44,17 @@ are good for new contributors.
 These guidelines seek to prioritize efforts that would benefit the community the most.
 Feedback is welcome.
 
+### Style and Practices
+* Please refer to [TensorFlow's style guide](https://www.tensorflow.org/community/contribute/code_style). Don't forget to run pylint.
 
-New features and bug fixes for documented features should come with a
-modification to the [release notes](RELEASE.md).
+Unless agreed upon with the project maintainer in the issue or PR, the following are necessary to
+merge a PR.
+* Unit tests for behavioral changes. Keep in mind that unit tests that take a long time to run also make it harder to contribute.
+* New features and major bug fixes, when ready to share with users, should come with a modification to the [release notes for the next release](RELEASE.md).
+* Documentation changes for https://www.tensorflow.org/model_optimization, possibly making a note that something will only be available in the next release after X.Y.Z.
+* Cleanup of commit history by [squashing noisy commit messages](https://git-scm.com/book/en/v2/Git-Tools-Rewriting-History).
+
+It is okay to not include all of the above in the initial PR, especially if early feedback is desired first.
 
 ## Code reviews
 
