@@ -12,13 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Module containing clustering code built on Keras abstractions."""
-# pylint: disable=g-bad-import-order
-from tensorflow_model_optimization.python.core.clustering.keras import experimental
-
-from tensorflow_model_optimization.python.core.clustering.keras.cluster import cluster_scope
-from tensorflow_model_optimization.python.core.clustering.keras.cluster import cluster_weights
-from tensorflow_model_optimization.python.core.clustering.keras.cluster import strip_clustering
-
-from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import CentroidInitialization
-# pylint: enable=g-bad-import-order
+"""Module containing experimental clustering code built on Keras abstractions."""
+from tensorflow_model_optimization.python.core.clustering.keras.experimental.cluster import cluster_weights
