@@ -229,7 +229,7 @@ class ClusterWeights(Wrapper):
       self.pulling_indices_tf[weight_name] = self.add_weight(
           '{}{}'.format('pulling_indices_tf_', weight_name),
           shape=pulling_indices.shape,
-          dtype=tf.int32,
+          dtype=tf.int64,
           trainable=False,
           initializer=initializers.Constant(
               value=k.batch_get_value([pulling_indices])[0]
@@ -289,34 +289,66 @@ class ClusterWeights(Wrapper):
         self.restore.append((name, full_name, weight))
 
   def call(self, inputs):
+    def update_pulling_indices(weight_name, pulling_indices):
+      weights = self.ori_weights_vars_tf[weight_name]
+
+      pulling_indices.assign(tf.cast(
+          self.clustering_impl[weight_name].get_pulling_indices(weights),
+          dtype=pulling_indices.dtype
+      ))
+
+    def update_pulling_indices_distributed(distribution, weight_name, pulling_indices):
+      def update_fn(variable, value):
+        variable.assign(value)
+
+      weights = self.ori_weights_vars_tf[weight_name]
+
+      new_pulling_indices = tf.cast(
+          self.clustering_impl[weight_name].get_pulling_indices(weights),
+          dtype=pulling_indices.dtype
+      )
+
+      distribution.extended.update(
+          pulling_indices, update_fn, (new_pulling_indices,))
+
+    def apply_sparsity_mask(weight_name, clustered_weights):
+      if self.preserve_sparsity:
+          sparsity_mask = self.sparsity_masks[weight_name]
+          clustered_weights = tf.math.multiply(clustered_weights, sparsity_mask)
+
+    def update_weights(weight_name, pulling_indices):
+      weights = self.ori_weights_vars_tf[weight_name]
+      clustered_weights = self.clustering_impl[weight_name].\
+          get_clustered_weight_forward(pulling_indices, weights)
+
+      apply_sparsity_mask(weight_name, clustered_weights)
+      setattr(self.layer, weight_name, clustered_weights)
+
     # In the forward pass, we need to update the cluster associations manually
     # since they are integers and not differentiable. Gradients won't flow back
     # through tf.argmin
     # Go through all tensors and replace them with their clustered copies.
-    for weight_name in self.ori_weights_vars_tf:
-      # Get the clustered weights
-      pulling_indices = self.pulling_indices_tf[weight_name]
 
-      # Update cluster associations
-      pulling_indices.assign(tf.dtypes.cast(
-          self.clustering_impl[weight_name].\
-              get_pulling_indices(self.ori_weights_vars_tf[weight_name]),
-          dtype=pulling_indices.dtype
-      ))
+    if tf.distribute.get_replica_context():
+      # Distributed context
+      for weight_name in self.ori_weights_vars_tf:
+          pulling_indices = self.pulling_indices_tf[weight_name]
 
-      clustered_weights = self.clustering_impl[weight_name].\
-          get_clustered_weight_forward(pulling_indices,\
-              self.ori_weights_vars_tf[weight_name])
+          tf.distribute.get_replica_context().merge_call(
+              update_pulling_indices_distributed,
+              args=(weight_name, pulling_indices,)
+          )
 
-      if self.preserve_sparsity:
-        # Get the sparsity mask
-        sparsity_mask = self.sparsity_masks[weight_name]
+          update_weights(weight_name, pulling_indices)
 
-        # Apply the sparsity mask to the clustered weights
-        clustered_weights = tf.math.multiply(clustered_weights, sparsity_mask)
+    else:
+      # Non-distributed context
+      for weight_name in self.ori_weights_vars_tf:
+        pulling_indices = self.pulling_indices_tf[weight_name]
 
-      # Replace the weights with their clustered counterparts
-      setattr(self.layer, weight_name, clustered_weights)
+        update_pulling_indices(weight_name, pulling_indices)
+
+        update_weights(weight_name, pulling_indices)
 
     return self.layer.call(inputs)
 
