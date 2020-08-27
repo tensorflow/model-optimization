@@ -26,6 +26,8 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.keras import compat
 
+from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
+
 keras = tf.keras
 layers = keras.layers
 test = tf.test
@@ -159,7 +161,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         "preserve_sparsity": True
     }
 
-    clustered_model = cluster.cluster_weights(original_model, **clustering_params)
+    clustered_model = experimental_cluster.cluster_weights(original_model, **clustering_params)
 
     stripped_model_before_tuning = cluster.strip_clustering(clustered_model)
     weights_before_tuning = stripped_model_before_tuning.get_weights()[0]

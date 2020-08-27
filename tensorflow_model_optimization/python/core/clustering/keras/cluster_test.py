@@ -26,6 +26,8 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster_w
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 
+from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
+
 keras = tf.keras
 errors_impl = tf.errors
 layers = keras.layers
@@ -120,7 +122,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """
     preserve_sparsity_params = { 'preserve_sparsity': True }
     params = { **self.params, **preserve_sparsity_params }
-    wrapped_layer = cluster.cluster_weights(self.keras_clusterable_layer, **params)
+    wrapped_layer = experimental_cluster.cluster_weights(self.keras_clusterable_layer, **params)
 
     self._validate_clustered_layer(self.keras_clusterable_layer, wrapped_layer)
 
@@ -184,7 +186,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """
     preserve_sparsity_params = { 'preserve_sparsity': True }
     params = { **self.params, **preserve_sparsity_params }
-    wrapped_layer = cluster.cluster_weights(self.custom_clusterable_layer, **params)
+    wrapped_layer = experimental_cluster.cluster_weights(self.custom_clusterable_layer, **params)
     self.model.add(wrapped_layer)
     self.model.build(input_shape=(10, 1))
 
@@ -230,7 +232,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     preserve_sparsity_params = { 'preserve_sparsity': True }
     params = { **self.params, **preserve_sparsity_params }
     clustered_model = keras.Sequential()
-    clustered_model.add(cluster.cluster_weights(self.keras_clusterable_layer, **params))
+    clustered_model.add(experimental_cluster.cluster_weights(self.keras_clusterable_layer, **params))
     clustered_model.add(self.keras_clusterable_layer)
     clustered_model.build(input_shape=(1, 10))
 
@@ -263,7 +265,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     params = { **self.params, **preserve_sparsity_params }
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
-    x1 = cluster.cluster_weights(layers.Dense(10), **params)(i1)
+    x1 = experimental_cluster.cluster_weights(layers.Dense(10), **params)(i1)
     x2 = layers.Dense(10)(i2)
     outputs = layers.Add()([x1, x2])
     clustered_model = keras.Model(inputs=[i1, i2], outputs=outputs)
@@ -302,7 +304,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
         self.keras_non_clusterable_layer,
         self.custom_clusterable_layer
     ])
-    clustered_model = cluster.cluster_weights(model, **params)
+    clustered_model = experimental_cluster.cluster_weights(model, **params)
     clustered_model.build(input_shape=(1, 28, 28, 1))
 
     self.assertEqual(len(model.layers), len(clustered_model.layers))

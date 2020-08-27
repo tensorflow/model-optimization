@@ -12,6 +12,7 @@ py_library(
     srcs_version = "PY3",
     deps = [
         ":cluster",
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental",
     ],
 )
 
@@ -90,6 +91,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
         # tensorflow dep1,
     ],
 )
@@ -146,6 +148,7 @@ py_test(
         ":cluster",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
     ],
 )
 
