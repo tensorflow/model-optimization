@@ -56,6 +56,7 @@ def cluster_scope():
 def cluster_weights(to_cluster,
                     number_of_clusters,
                     cluster_centroids_init,
+                    preserve_sparsity=False,
                     **kwargs):
   """Modify a keras layer or model to be clustered during training.
 
@@ -108,8 +109,19 @@ def cluster_weights(to_cluster,
       number_of_clusters: the number of cluster centroids to form when
         clustering a layer/model. For example, if number_of_clusters=8 then only
         8 unique values will be used in each weight array.
-      cluster_centroids_init: `tfmot.clustering.keras.CentroidInitialization`
-        instance that determines how the cluster centroids will be initialized.
+      cluster_centroids_init: enum value that determines how the cluster
+        centroids will be initialized.
+        Can have following values:
+          1. RANDOM : centroids are sampled using the uniform distribution
+          between the minimum and maximum weight values in a given layer
+          2. DENSITY_BASED : density-based sampling. First, cumulative
+          distribution function is built for weights, then y-axis is evenly
+          spaced into number_of_clusters regions. After this the corresponding x
+          values are obtained and used to initialize clusters centroids.
+          3. LINEAR : cluster centroids are evenly spaced between the minimum
+          and maximum values of a given weight
+      preserve_sparsity: optional boolean value that determines whether or not
+        sparsity preservation will be enforced during training
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 
@@ -146,6 +158,7 @@ def cluster_weights(to_cluster,
     return cluster_wrapper.ClusterWeights(layer,
                                           number_of_clusters,
                                           cluster_centroids_init,
+                                          preserve_sparsity,
                                           **kwargs)
 
   def _wrap_list(layers):
