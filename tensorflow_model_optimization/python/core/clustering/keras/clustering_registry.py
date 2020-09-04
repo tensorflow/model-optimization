@@ -17,7 +17,7 @@
 import abc
 import six
 import tensorflow as tf
-
+from tensorflow.python.keras.engine.base_layer import TensorFlowOpLayer
 from tensorflow.keras import layers
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
@@ -323,6 +323,7 @@ class ClusteringRegistry(object):
       layers.MaxPooling1D: [],
       layers.MaxPooling2D: [],
       layers.MaxPooling3D: [],
+      TensorFlowOpLayer: [],
   }
 
   _RNN_CELLS_WEIGHTS_MAP = {
