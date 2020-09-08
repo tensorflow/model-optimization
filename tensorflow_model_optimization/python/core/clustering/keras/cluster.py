@@ -56,7 +56,6 @@ def cluster_scope():
 def cluster_weights(to_cluster,
                     number_of_clusters,
                     cluster_centroids_init,
-                    preserve_sparsity=False,
                     **kwargs):
   """Modify a keras layer or model to be clustered during training.
 
