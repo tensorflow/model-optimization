@@ -22,5 +22,7 @@ py_binary(
         # python/keras tensorflow dep2,
         # python/keras/optimizer_v2 tensorflow dep2,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
+        "//tensorflow_model_optimization/python/core/clustering/keras:clustering_callbacks",
     ],
 )
