@@ -265,7 +265,8 @@ class ClusterWeights(Wrapper):
       def fn():
         # Get the clustered weights
         pulling_indices = self.pulling_indices_tf[for_weight_name]
-        clustered_weights = self.clustering_impl[for_weight_name].get_clustered_weight(pulling_indices)
+        clustered_weights = self.clustering_impl[for_weight_name].\
+            get_clustered_weight(pulling_indices)
 
         if self.preserve_sparsity:
           # Get the sparsity mask
@@ -295,10 +296,20 @@ class ClusterWeights(Wrapper):
     # since they are integers and not differentiable. Gradients won't flow back
     # through tf.argmin
     # Go through all tensors and replace them with their clustered copies.
-    for weight_name, _ in self.clustered_vars:
-      # Get the clustered weights
+    for weight_name in self.ori_weights_vars_tf:
       pulling_indices = self.pulling_indices_tf[weight_name]
-      clustered_weights = self.clustering_impl[weight_name].get_clustered_weight(pulling_indices)
+
+      # Update cluster associations
+      pulling_indices.assign(tf.dtypes.cast(
+          self.clustering_impl[weight_name].\
+              get_pulling_indices(self.ori_weights_vars_tf[weight_name]),
+          pulling_indices.dtype
+      ))
+
+      # Get the clustered weights
+      clustered_weights = self.clustering_impl[weight_name].\
+          get_clustered_weight_forward(pulling_indices,\
+              self.ori_weights_vars_tf[weight_name])
 
       if self.preserve_sparsity:
         # Get the sparsity mask
