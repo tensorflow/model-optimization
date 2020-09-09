@@ -110,6 +110,9 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testSparsityIsPreservedDuringTraining(self):
+    """ Set a specific random seed to ensure that we get some null weights to test sparsity preservation with. """
+    tf.random.set_seed(1)
+
     """Verifies that training a clustered model does not destroy the sparsity of the weights."""
     original_model = keras.Sequential([
         layers.Dense(5, input_shape=(5,)),
