@@ -17,7 +17,6 @@
 import abc
 import six
 import tensorflow as tf
-from tensorflow.python.keras.engine.base_layer import TensorFlowOpLayer
 from tensorflow.keras import layers
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
@@ -260,70 +259,21 @@ class ClusteringRegistry(object):
   # the variables within the layers which hold the kernel weights. This
   # allows the wrapper to access and modify the weights.
   _LAYERS_WEIGHTS_MAP = {
-      layers.ELU: [],
-      layers.LeakyReLU: [],
-      layers.ReLU: [],
-      layers.Softmax: [],
-      layers.ThresholdedReLU: [],
       layers.Conv1D: ['kernel'],
       layers.Conv2D: ['kernel'],
       layers.Conv2DTranspose: ['kernel'],
       layers.Conv3D: ['kernel'],
       layers.Conv3DTranspose: ['kernel'],
-      layers.Cropping1D: [],
-      layers.Cropping2D: [],
-      layers.Cropping3D: [],
+      # non-clusterable due to big unrecoverable accuracy loss
       layers.DepthwiseConv2D: [],
       layers.SeparableConv1D: ['pointwise_kernel'],
       layers.SeparableConv2D: ['pointwise_kernel'],
-      layers.UpSampling1D: [],
-      layers.UpSampling2D: [],
-      layers.UpSampling3D: [],
-      layers.ZeroPadding1D: [],
-      layers.ZeroPadding2D: [],
-      layers.ZeroPadding3D: [],
-      layers.Activation: [],
-      layers.ActivityRegularization: [],
       layers.Dense: ['kernel'],
-      layers.Dropout: [],
-      layers.Flatten: [],
-      layers.Lambda: [],
-      layers.Masking: [],
-      layers.Permute: [],
-      layers.RepeatVector: [],
-      layers.Reshape: [],
-      layers.SpatialDropout1D: [],
-      layers.SpatialDropout2D: [],
-      layers.SpatialDropout3D: [],
       layers.Embedding: ['embeddings'],
       layers.LocallyConnected1D: ['kernel'],
       layers.LocallyConnected2D: ['kernel'],
-      layers.Add: [],
-      layers.Average: [],
-      layers.Concatenate: [],
-      layers.Dot: [],
-      layers.Maximum: [],
-      layers.Minimum: [],
-      layers.Multiply: [],
-      layers.Subtract: [],
-      layers.AlphaDropout: [],
-      layers.GaussianDropout: [],
-      layers.GaussianNoise: [],
       layers.BatchNormalization: [],
       layers.LayerNormalization: [],
-      layers.AveragePooling1D: [],
-      layers.AveragePooling2D: [],
-      layers.AveragePooling3D: [],
-      layers.GlobalAveragePooling1D: [],
-      layers.GlobalAveragePooling2D: [],
-      layers.GlobalAveragePooling3D: [],
-      layers.GlobalMaxPooling1D: [],
-      layers.GlobalMaxPooling2D: [],
-      layers.GlobalMaxPooling3D: [],
-      layers.MaxPooling1D: [],
-      layers.MaxPooling2D: [],
-      layers.MaxPooling3D: [],
-      TensorFlowOpLayer: [],
   }
 
   _RNN_CELLS_WEIGHTS_MAP = {
@@ -370,6 +320,11 @@ class ClusteringRegistry(object):
       True/False whether the layer type is supported.
 
     """
+    # Automatically enable layers with zero trainable weights.
+    # Example: Reshape, AveragePooling2D, Maximum/Minimum, etc.
+    if len(layer.trainable_weights) == 0:
+      return True
+
     if layer.__class__ in cls._LAYERS_WEIGHTS_MAP:
       return True
 
@@ -394,6 +349,10 @@ class ClusteringRegistry(object):
 
   @classmethod
   def _weight_names(cls, layer):
+    # For layers with zero trainable weights, like Reshape, Pooling.
+    if len(layer.trainable_weights) == 0:
+      return []
+
     return cls._LAYERS_WEIGHTS_MAP[layer.__class__]
 
   @classmethod
