@@ -170,7 +170,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     an exception.
     """
     custom_non_clusterable_layer = self.custom_non_clusterable_layer
-    # We need to build weights before check.
+    # Once layer is empty with no weights allocated, clustering is supported.
+    cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
+                                  **self.params)
+    # We need to build weights before check that clustering is not supported.
     custom_non_clusterable_layer.build(input_shape=(10, 10))
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
