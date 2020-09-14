@@ -45,24 +45,20 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     }
 
     self.x_train = np.array(
-        [[0.0, 1.0], [2.0, 0.0], [0.0, 3.0], [4.0, 1.0], [5.0, 1.0]],
-        dtype="float32",
-    )
-
-    self.y_train = np.array(
-        [[0.0, 1.0], [1.0, 0.0], [1.0, 0.0], [0.0, 1.0], [0.0, 1.0]],
-        dtype="float32",
-    )
-
-    self.x_train2 = np.array(
         [[0.0, 1.0, 2.0, 3.0, 4.0], [2.0, 0.0, 2.0, 3.0, 4.0], [0.0, 3.0, 2.0, 3.0, 4.0],
          [4.0, 1.0, 2.0, 3.0, 4.0], [5.0, 1.0, 2.0, 3.0, 4.0]],
         dtype="float32",
     )
 
-    self.y_train2 = np.array(
+    self.y_train = np.array(
         [[0.0, 1.0, 2.0, 3.0, 4.0], [1.0, 0.0, 2.0, 3.0, 4.0], [1.0, 0.0, 2.0, 3.0, 4.0],
          [0.0, 1.0, 2.0, 3.0, 4.0], [0.0, 1.0, 2.0, 3.0, 4.0]],
+        dtype="float32",
+    )
+
+    self.x_test = np.array(
+        [[1.0, 2.0, 3.0, 4.0, 5.0], [6.0, 7.0, 8.0, 9.0, 10.0], [1.0, 2.0, 3.0, 4.0, 5.0],
+         [6.0, 1.0, 2.0, 3.0, 4.0], [9.0, 1.0, 0.0, 3.0, 0.0]],
         dtype="float32",
     )
 
@@ -70,9 +66,35 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     for x, y in zip(self.x_train, self.y_train):
       yield np.array([x]), np.array([y])
 
-  def dataset_generator2(self):
-    for x, y in zip(self.x_train2, self.y_train2):
-      yield np.array([x]), np.array([y])
+  def end_to_end_testing(self, original_model, clusters_check=None):
+    """Test End to End clustering."""
+
+    clustered_model = cluster.cluster_weights(original_model, **self.params)
+
+    clustered_model.compile(
+        loss=keras.losses.categorical_crossentropy,
+        optimizer="adam",
+        metrics=["accuracy"],
+    )
+
+    clustered_model.fit(x=self.dataset_generator(), steps_per_epoch=1)
+    stripped_model = cluster.strip_clustering(clustered_model)
+    if clusters_check is not None:
+      clusters_check(stripped_model)
+
+    _, tflite_file = tempfile.mkstemp(".tflite")
+    _, keras_file = tempfile.mkstemp(".h5")
+
+    converter = tf.lite.TFLiteConverter.from_keras_model(stripped_model)
+    tflite_model = converter.convert()
+
+    with open(tflite_file, "wb") as f:
+      f.write(tflite_model)
+
+    self._verify_tflite(tflite_file, self.x_test)
+
+    os.remove(keras_file)
+    os.remove(tflite_file)
 
   @staticmethod
   def _verify_tflite(tflite_file, x_test):
@@ -90,8 +112,8 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
   def testValuesRemainClusteredAfterTraining(self):
     """Verifies that training a clustered model does not destroy the clusters."""
     original_model = keras.Sequential([
-        layers.Dense(2, input_shape=(2,)),
-        layers.Dense(2),
+        layers.Dense(5, input_shape=(5,)),
+        layers.Dense(5),
     ])
 
     clustered_model = cluster.cluster_weights(original_model, **self.params)
@@ -137,7 +159,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         optimizer="adam",
         metrics=["accuracy"],
     )
-    clustered_model.fit(x=self.dataset_generator2(), steps_per_epoch=1)
+    clustered_model.fit(x=self.dataset_generator(), steps_per_epoch=1)
 
     stripped_model_after_tuning = cluster.strip_clustering(clustered_model)
     weights_after_tuning = stripped_model_after_tuning.get_weights()[0]
@@ -153,42 +175,95 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     self.assertLessEqual(len(unique_weights_after_tuning), self.params["number_of_clusters"])
 
   @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
-  def testEndToEnd(self):
-    """Test End to End clustering."""
+  def testEndToEndSequential(self):
+    """Test End to End clustering - sequential model."""
     original_model = keras.Sequential([
-        layers.Dense(2, input_shape=(2,)),
-        layers.Dense(2),
+        layers.Dense(5, input_shape=(5,)),
+        layers.Dense(5),
     ])
 
-    clustered_model = cluster.cluster_weights(original_model, **self.params)
+    def clusters_check(stripped_model):
+      # dense layer
+      weights_as_list = stripped_model.get_weights()[0].reshape(-1,).tolist()
+      unique_weights = set(weights_as_list)
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
-    clustered_model.compile(
-        loss=keras.losses.categorical_crossentropy,
-        optimizer="adam",
-        metrics=["accuracy"],
-    )
+    self.end_to_end_testing(original_model, clusters_check)
 
-    clustered_model.fit(x=self.dataset_generator(), steps_per_epoch=1)
-    stripped_model = cluster.strip_clustering(clustered_model)
+  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
+  def testEndToEndFunctional(self):
+    """Test End to End clustering - functional model."""
+    inputs = keras.layers.Input(shape=(5,))
+    layer1 = keras.layers.Dense(5)(inputs)
+    layer2 = keras.layers.Dense(5)(layer1)
+    original_model = keras.Model(inputs=inputs, outputs=layer2)
 
-    _, tflite_file = tempfile.mkstemp(".tflite")
-    _, keras_file = tempfile.mkstemp(".h5")
+    def clusters_check(stripped_model):
+      # First dense layer
+      weights_as_list = stripped_model.get_weights()[0].reshape(-1,).tolist()
+      unique_weights = set(weights_as_list)
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
-    if not compat.is_v1_apis():
-      converter = tf.lite.TFLiteConverter.from_keras_model(stripped_model)
-    else:
-      tf.keras.models.save_model(stripped_model, keras_file)
-      converter = tf.lite.TFLiteConverter.from_keras_model_file(keras_file)
+    self.end_to_end_testing(original_model, clusters_check)
 
-    tflite_model = converter.convert()
-    with open(tflite_file, "wb") as f:
-      f.write(tflite_model)
+  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
+  def testEndToEndDeepLayer(self):
+    """Test End to End clustering for the model with deep layer."""
+    internal_model = tf.keras.Sequential([tf.keras.layers.Dense(5, input_shape=(5,))])
+    original_model = keras.Sequential([
+        internal_model,
+        layers.Dense(5),
+    ])
 
-    self._verify_tflite(tflite_file, self.x_train)
+    def clusters_check(stripped_model):
+      # inner dense layer
+      weights_as_list = stripped_model._layers[1]._layers[1].trainable_weights[0].\
+        numpy().flatten()
+      unique_weights = set(weights_as_list)
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
-    os.remove(keras_file)
-    os.remove(tflite_file)
+      # outer dense layer
+      weights_as_list = stripped_model._layers[2].trainable_weights[0].\
+        numpy().flatten()
+      unique_weights = set(weights_as_list)
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
+    self.end_to_end_testing(original_model, clusters_check)
+
+  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
+  def testEndToEndDeepLayer2(self):
+    """Test End to End clustering for the model with 2 deep layers."""
+    internal_model = tf.keras.Sequential([tf.keras.layers.Dense(5, input_shape=(5,))])
+    intermediate_model = keras.Sequential([
+        internal_model,
+        layers.Dense(5),
+    ])
+    original_model = keras.Sequential([
+        intermediate_model,
+        layers.Dense(5),
+    ])
+
+    def clusters_check(stripped_model):
+      # first inner dense layer
+      weights_as_list = stripped_model._layers[1]._layers[1].trainable_weights[0].\
+        numpy().flatten()
+      unique_weights = set(weights_as_list)
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
+
+      # second inner dense layer
+      weights_as_list = stripped_model._layers[1]._layers[1]._layers[1].\
+        trainable_weights[0].\
+        numpy().flatten()
+      unique_weights = set(weights_as_list)
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
+
+      # outer dense layer
+      weights_as_list = stripped_model._layers[2].trainable_weights[0].\
+        numpy().flatten()
+      unique_weights = set(weights_as_list)
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
+
+    self.end_to_end_testing(original_model, clusters_check)
 
 if __name__ == "__main__":
   test.main()
