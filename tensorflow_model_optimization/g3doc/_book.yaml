@@ -53,6 +53,6 @@ upper_tabs:
     - name: API
       skip_translation: true
       contents:
-      - include: /model_optimization/api_docs/python/_toc.yaml
+      - include: /model_optimization/api_docs/python/tfmot/_toc.yaml
 
 - include: /_upper_tabs_right.yaml
