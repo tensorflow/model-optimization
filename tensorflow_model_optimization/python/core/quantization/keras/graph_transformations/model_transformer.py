@@ -424,7 +424,7 @@ class ModelTransformer(object):
     Returns:
       Extracted weight name.
     """
-    return name.split('/')[-1]
+    return name.partition('/')[2]
 
   def _get_keras_layer_weights(self, keras_layer):
     """Returns a map of weight name, weight matrix. Keeps keras ordering."""
