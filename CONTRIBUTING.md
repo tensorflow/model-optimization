@@ -46,6 +46,8 @@ Feedback is welcome.
 
 ### Style and Practices
 * Please refer to [TensorFlow's style guide](https://www.tensorflow.org/community/contribute/code_style). Don't forget to run pylint.
+* For Colab changes, please refer to the [Notebook Formatting section](https://www.tensorflow.org/community/contribute/docs#notebook_formatting) in the TF docs and run nbfmt after
+any changes.
 
 Unless agreed upon with the project maintainer in the issue or PR, the following are necessary to
 merge a PR.

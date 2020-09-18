@@ -75,6 +75,16 @@ py_library(
     ],
 )
 
+py_library(
+    name = "clustering_callbacks",
+    srcs = ["clustering_callbacks.py"],
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
+    ],
+)
+
 py_test(
     name = "cluster_test",
     size = "medium",
