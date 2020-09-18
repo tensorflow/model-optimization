@@ -83,6 +83,12 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
         'cluster_centroids_init':
             cluster_config.CentroidInitialization.DENSITY_BASED
     }
+    # we set 'cluster_centroids_init' as string
+    self.params_str = {
+        'number_of_clusters': 8,
+        'cluster_centroids_init':
+            "CentroidInitialization.DENSITY_BASED"
+    }
 
   def _build_clustered_layer_model(self, layer, input_shape=(10, 1)):
     wrapped_layer = cluster.cluster_weights(layer, **self.params)
@@ -494,6 +500,18 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     model = keras.Model(inputs=[inp], outputs=[x])
     clustered_model = cluster.cluster_weights(model, **self.params)
     self.assertEqual(self._count_clustered_layers(clustered_model), 1)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterConfigAcceptsStrParameters(self):
+    """
+    Verifies that cluster_config enum accepts enum set as a string.
+    We need this, for example, when we use keras-tuner with
+    clustering.
+    """
+    wrapped_layer = cluster.cluster_weights(self.keras_clusterable_layer,
+      **self.params_str)
+
+    self._validate_clustered_layer(self.keras_clusterable_layer, wrapped_layer)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSubclassModel(self):

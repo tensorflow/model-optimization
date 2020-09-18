@@ -31,7 +31,7 @@ class CentroidInitialization(str, enum.Enum):
        initialize the clusters centroids.
   * `KMEANS_PLUS_PLUS`: cluster centroids using the kmeans++ algorithm
   """
-  LINEAR = "LINEAR"
-  RANDOM = "RANDOM"
-  DENSITY_BASED = "DENSITY_BASED"
-  KMEANS_PLUS_PLUS = "KMEANS_PLUS_PLUS"
+  LINEAR = "CentroidInitialization.LINEAR"
+  RANDOM = "CentroidInitialization.RANDOM"
+  DENSITY_BASED = "CentroidInitialization.DENSITY_BASED"
+  KMEANS_PLUS_PLUS = "CentroidInitialization.KMEANS_PLUS_PLUS"
