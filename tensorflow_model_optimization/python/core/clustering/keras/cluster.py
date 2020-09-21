@@ -16,6 +16,7 @@
 
 from tensorflow import keras
 from tensorflow.keras import initializers
+import numpy as np
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
@@ -128,8 +129,22 @@ def cluster_weights(to_cluster,
   def _add_clustering_wrapper(layer):
     if isinstance(layer, cluster_wrapper.ClusterWeights):
       return layer
+
     if isinstance(layer, InputLayer):
       return layer.__class__.from_config(layer.get_config())
+
+    # If a layer has the number of trainable weights less than
+    # the number of clusters, we skip this layer.
+
+    # Layer should be built to have trainable_weights.
+    if layer.built:
+      skip_clustering = True
+      for weights in layer.trainable_weights:
+        skip_clustering = skip_clustering and \
+          len(np.unique(weights.numpy().flatten())) <= number_of_clusters
+
+      if skip_clustering:
+         return layer.__class__.from_config(layer.get_config())
 
     return cluster_wrapper.ClusterWeights(layer,
                                           number_of_clusters,
