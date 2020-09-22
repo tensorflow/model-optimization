@@ -27,6 +27,7 @@ keras = tf.keras
 k = keras.backend
 Layer = keras.layers.Layer
 Wrapper = keras.layers.Wrapper
+CentroidInitialization = cluster_config.CentroidInitialization
 
 
 class ClusterWeights(Wrapper):
@@ -105,7 +106,7 @@ class ClusterWeights(Wrapper):
     self.number_of_clusters = number_of_clusters
 
     # Stores the pairs of weight names and references to their tensors
-    self.clustered_vars = []
+    self.ori_weights_vars_tf = {}
 
     # Stores references to class instances that implement different clustering
     # behaviour for different shapes of objects
@@ -194,7 +195,7 @@ class ClusterWeights(Wrapper):
       # initial value taken from a Tensor object. For each weight there is a
       # different set of cluster centroids
       self.cluster_centroids_tf[weight_name] = self.add_weight(
-          'cluster_centroids_tf',
+          '{}{}'.format('cluster_centroids_tf_', weight_name),
           shape=(self.number_of_clusters,),
           dtype=weight.dtype,
           trainable=True,
@@ -217,7 +218,7 @@ class ClusterWeights(Wrapper):
       pulling_indices = self.clustering_impl[weight_name].\
           get_pulling_indices(weight)
       self.pulling_indices_tf[weight_name] = self.add_weight(
-          'pulling_indices_tf',
+          '{}{}'.format('pulling_indices_tf_', weight_name),
           shape=pulling_indices.shape,
           dtype=tf.int32,
           trainable=False,
@@ -227,21 +228,30 @@ class ClusterWeights(Wrapper):
       )
 
       # We store these pairs to easily update this variables later on
-      self.clustered_vars.append((weight_name, weight))
+      self.ori_weights_vars_tf[weight_name] = self.add_weight(
+          '{}{}'.format('ori_weights_vars_tf_', weight_name),
+          shape=weight.shape,
+          dtype=weight.dtype,
+          trainable=True,
+          initializer=initializers.Constant(
+              value=k.batch_get_value([weight])[0]
+          )
+      )
 
     # We use currying here to get an updater which can be triggered at any time
     # in future and it would return the latest version of clustered weights
     def get_updater(for_weight_name):
       def fn():
-        return self.clustering_impl[for_weight_name].get_clustered_weight(
-            self.pulling_indices_tf[for_weight_name]
-        )
+        # Get the clustered weights
+        pulling_indices = self.pulling_indices_tf[for_weight_name]
+        clustered_weights = self.clustering_impl[for_weight_name].\
+            get_clustered_weight(pulling_indices)
+        return clustered_weights
 
       return fn
 
     # This will allow us to restore the order of weights later
     # This loop stores pairs of weight names and how to restore them
-
     for ct, weight in enumerate(self.layer.weights):
       name = self._weight_name(weight.name)
       full_name = self.layer.name + "/" + name
@@ -253,14 +263,26 @@ class ClusterWeights(Wrapper):
         self.restore.append((name, full_name, weight))
 
   def call(self, inputs):
+    # In the forward pass, we need to update the cluster associations manually
+    # since they are integers and not differentiable. Gradients won't flow back
+    # through tf.argmin
     # Go through all tensors and replace them with their clustered copies.
-    for weight_name, _ in self.clustered_vars:
-      setattr(
-          self.layer, weight_name,
-          self.clustering_impl[weight_name].get_clustered_weight(
-              self.pulling_indices_tf[weight_name]
-          )
-      )
+    for weight_name in self.ori_weights_vars_tf:
+      pulling_indices = self.pulling_indices_tf[weight_name]
+
+      # Update cluster associations
+      pulling_indices.assign(tf.dtypes.cast(
+          self.clustering_impl[weight_name].\
+              get_pulling_indices(self.ori_weights_vars_tf[weight_name]),
+          pulling_indices.dtype
+      ))
+
+      clustered_weights = self.clustering_impl[weight_name].\
+          get_clustered_weight_forward(pulling_indices,\
+              self.ori_weights_vars_tf[weight_name])
+
+      # Replace the weights with their clustered counterparts
+      setattr(self.layer, weight_name, clustered_weights)
 
     return self.layer.call(inputs)
 
@@ -271,7 +293,7 @@ class ClusterWeights(Wrapper):
     base_config = super(ClusterWeights, self).get_config()
     config = {
         'number_of_clusters': self.number_of_clusters,
-        'cluster_centroids_init': self.cluster_centroids_init,
+        'cluster_centroids_init': self.cluster_centroids_init
     }
     return dict(list(base_config.items()) + list(config.items()))
 
