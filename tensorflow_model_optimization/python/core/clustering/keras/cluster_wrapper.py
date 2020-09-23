@@ -345,3 +345,33 @@ class ClusterWeights(Wrapper):
 
   def set_weights(self, weights):
     self.layer.set_weights(weights)
+
+class WrapperSubclassedModel(keras.Model):
+  """This wrapper wraps a keras subclassed model so that the weight tensor(s)
+  in keras layers that are defined in this model can be clustered.
+  """
+  def __init__(self, model):
+    super(WrapperSubclassedModel, self).__init__()
+
+    # This wrapper is needed only for subclassed models.
+    is_subclassed_model = isinstance(model, keras.Model) and \
+      not model._is_graph_network
+    if not is_subclassed_model:
+      raise ValueError(
+          "The provided model should be subclassed. The provided: {}".format(
+              model.__class__
+          )
+      )
+    self.model = model
+
+  def build(self, input_shape):
+    for layer in self.model.layers:
+      if isinstance(layer, ClusterWeights):
+        layer.build(input_shape = input_shape)
+    return self.model.build(input_shape = input_shape)
+
+  def call(self, inputs):
+    for layer in self.model.layers:
+      if isinstance(layer, ClusterWeights):
+        layer.call(inputs)
+    return self.model.call(inputs)

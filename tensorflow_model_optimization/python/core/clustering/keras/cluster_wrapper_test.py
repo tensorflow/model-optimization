@@ -49,6 +49,16 @@ class AlreadyClusterableLayer(layers.Dense, clusterable_layer.ClusterableLayer):
   def get_clusterable_weights(self):
     pass
 
+class SubclassedModel(keras.Model):
+  """A subclassed model."""
+
+  def __init__(self):
+    """A test subclass model with one dense layer."""
+    super(SubclassedModel, self).__init__(name='test_model')
+    self.dense_layer = keras.layers.Dense(32, activation='relu')
+
+  def call(self, inputs):
+    return self.dense_layer(inputs)
 
 class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   """Unit tests for the cluster_wrapper module."""
@@ -191,6 +201,27 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
 
     # Make sure that the stripped layer is the Dense one
     self.assertIsInstance(stripped_model.layers[0], layers.Dense)
+
+  def testClusterWrappersAreStrippedInSubclassedModel(self):
+    """
+    Verifies that for a subclassed model all ClusterWeights
+    wrappers are stripped from the model.
+    """
+    original_model = SubclassedModel()
+
+    clustered_model = cluster.cluster_weights(
+        original_model,
+        number_of_clusters=8,
+        cluster_centroids_init=CentroidInitialization.DENSITY_BASED
+    )
+
+    self.assertIsInstance(clustered_model, cluster_wrapper.WrapperSubclassedModel)
+
+    stripped_model = cluster.strip_clustering(clustered_model)
+
+    # Make sure that the stripped layer is the Dense one
+    self.assertIsInstance(stripped_model.layers[0], layers.Dense)
+    self.assertIsInstance(stripped_model.dense_layer, layers.Dense)
 
   def testClusterReassociation(self):
     """
