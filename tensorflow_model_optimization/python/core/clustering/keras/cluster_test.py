@@ -65,6 +65,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.keras_unsupported_layer = layers.ConvLSTM2D(2, (5, 5))  # Unsupported
     self.custom_clusterable_layer = CustomClusterableLayer(10)
     self.custom_non_clusterable_layer = CustomNonClusterableLayer(10)
+    self.keras_depthwiseconv2d_layer = layers.DepthwiseConv2D((3, 3), (1, 1))
 
     clustering_registry.ClusteringLookupRegistry.register_new_implementation(
         {
@@ -81,10 +82,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
             cluster_config.CentroidInitialization.DENSITY_BASED
     }
 
-  def _build_clustered_layer_model(self, layer):
+  def _build_clustered_layer_model(self, layer, input_shape=(10, 1)):
     wrapped_layer = cluster.cluster_weights(layer, **self.params)
     self.model.add(wrapped_layer)
-    self.model.build(input_shape=(10, 1))
+    self.model.build(input_shape=input_shape)
 
     return wrapped_layer
 
@@ -124,13 +125,32 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
                                    wrapped_layer)
     self.assertEqual([], wrapped_layer.layer.get_clusterable_weights())
 
+  @keras_parameterized.run_all_keras_modes
+  def testDepthwiseConv2DLayerNonClusterable(self):
+     """
+     Verifies that we don't cluster a DepthwiseConv2D layer,
+     because clustering of this type of layer gives
+     big unrecoverable accuracy loss.
+     """
+     wrapped_layer = self._build_clustered_layer_model(
+         self.keras_depthwiseconv2d_layer,
+         input_shape=(1, 10, 10, 10)
+     )
+
+     self._validate_clustered_layer(self.keras_depthwiseconv2d_layer,
+                                    wrapped_layer)
+     self.assertEqual([], wrapped_layer.layer.get_clusterable_weights())
+
   def testClusterKerasUnsupportedLayer(self):
     """
     Verifies that attempting to cluster an unsupported layer raises an
     exception.
     """
+    keras_unsupported_layer = self.keras_unsupported_layer
+    # We need to build weights before check.
+    keras_unsupported_layer.build(input_shape = (10, 10))
     with self.assertRaises(ValueError):
-      cluster.cluster_weights(self.keras_unsupported_layer, **self.params)
+      cluster.cluster_weights(keras_unsupported_layer, **self.params)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterCustomClusterableLayer(self):
@@ -149,8 +169,14 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     Verifies that attempting to cluster a custom non-clusterable layer raises
     an exception.
     """
+    custom_non_clusterable_layer = self.custom_non_clusterable_layer
+    # Once layer is empty with no weights allocated, clustering is supported.
+    cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
+                                  **self.params)
+    # We need to build weights before check that clustering is not supported.
+    custom_non_clusterable_layer.build(input_shape=(10, 10))
     with self.assertRaises(ValueError):
-      cluster_wrapper.ClusterWeights(self.custom_non_clusterable_layer,
+      cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
                                      **self.params)
 
   @keras_parameterized.run_all_keras_modes
@@ -206,11 +232,14 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     Verifies that attempting to cluster a model that contains an unsupported
     layer raises an exception.
     """
+    keras_unsupported_layer = self.keras_unsupported_layer
+    # We need to build weights before check.
+    keras_unsupported_layer.build(input_shape = (10, 10))
     with self.assertRaises(ValueError):
       cluster.cluster_weights(
           keras.Sequential([
               self.keras_clusterable_layer, self.keras_non_clusterable_layer,
-              self.custom_clusterable_layer, self.keras_unsupported_layer
+              self.custom_clusterable_layer, keras_unsupported_layer
           ]), **self.params)
 
   def testClusterModelCustomNonClusterableLayerRaisesError(self):
@@ -219,10 +248,13 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     non-clusterable layer raises an exception.
     """
     with self.assertRaises(ValueError):
+      custom_non_clusterable_layer = self.custom_non_clusterable_layer
+      # We need to build weights before check.
+      custom_non_clusterable_layer.build(input_shape = (1, 2))
       cluster.cluster_weights(
           keras.Sequential([
               self.keras_clusterable_layer, self.keras_non_clusterable_layer,
-              self.custom_clusterable_layer, self.custom_non_clusterable_layer
+              self.custom_clusterable_layer, custom_non_clusterable_layer
           ]), **self.params)
 
   @keras_parameterized.run_all_keras_modes

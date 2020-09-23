@@ -32,9 +32,16 @@ test = tf.test
 CentroidInitialization = cluster_config.CentroidInitialization
 
 
-class NonClusterableLayer(layers.Dense):
-  """A custom layer that is not clusterable."""
+class NonClusterableLayer(layers.Layer):
+  """"A custom layer with weights that is not clusterable."""
+  def __init__(self, units=10):
+      super(NonClusterableLayer, self).__init__()
+      self.add_weight(shape=(1, units),
+                      initializer='uniform',
+                      name='kernel')
 
+  def call(self, inputs):
+    return tf.matmul(inputs, self.weights)
 
 class AlreadyClusterableLayer(layers.Dense, clusterable_layer.ClusterableLayer):
   """A custom layer that is clusterable."""
