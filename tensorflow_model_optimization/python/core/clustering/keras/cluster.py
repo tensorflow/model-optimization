@@ -48,7 +48,7 @@ def cluster_scope():
   """
   return CustomObjectScope(
       {
-          'ClusterWeights' : cluster_wrapper.ClusterWeights
+          'ClusterWeights': cluster_wrapper.ClusterWeights
       }
   )
 

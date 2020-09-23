@@ -150,3 +150,15 @@ py_test(
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
+
+py_test(
+    name = "cluster_distributed_test",
+    srcs = ["cluster_distributed_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cluster",
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
+    ],
+)

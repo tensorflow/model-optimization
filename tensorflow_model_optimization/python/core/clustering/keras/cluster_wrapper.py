@@ -222,6 +222,8 @@ class ClusterWeights(Wrapper):
           shape=pulling_indices.shape,
           dtype=tf.int32,
           trainable=False,
+          synchronization=tf.VariableSynchronization.ON_READ,
+          aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA,
           initializer=initializers.Constant(
               value=k.batch_get_value([pulling_indices])[0]
           )
@@ -254,7 +256,7 @@ class ClusterWeights(Wrapper):
     # This loop stores pairs of weight names and how to restore them
     for ct, weight in enumerate(self.layer.weights):
       name = self._weight_name(weight.name)
-      full_name = self.layer.name + "/" + name
+      full_name = '{}/{}'.format(self.layer.name, name)
       if ct in self.gone_variables:
         # Again, not sure if this is needed
         weight_name = clusterable_weights_to_variables[name]
