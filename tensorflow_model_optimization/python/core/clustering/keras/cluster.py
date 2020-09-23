@@ -15,7 +15,6 @@
 """Clustering API functions for Keras models."""
 
 from tensorflow import keras
-from tensorflow.keras import initializers
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
@@ -52,6 +51,27 @@ def cluster_scope():
       }
   )
 
+def _type_model(model):
+  """ Auxiliary function to check type of the model:
+    Sequential/Functional, Layer or Subclassed.
+
+  Args:
+      model : provided model to check
+
+  Returns:
+      [tuple]: (is_sequential_or_functional, is_keras_layer, is_subclassed_model)
+  """
+  is_sequential_or_functional = isinstance(
+      model, keras.Model) and (isinstance(model, keras.Sequential) or
+                                  model._is_graph_network)
+
+  is_keras_layer = isinstance(
+      model, keras.layers.Layer) and not isinstance(model, keras.Model)
+
+  is_subclassed_model = isinstance(model, keras.Model) and \
+    not model._is_graph_network
+
+  return (is_sequential_or_functional, is_keras_layer, is_subclassed_model)
 
 def cluster_weights(to_cluster,
                     number_of_clusters,
@@ -218,7 +238,7 @@ def _cluster_weights(to_cluster,
   def _add_clustering_wrapper(layer):
 
     if (isinstance(layer, keras.Model)):
-      # Check whether the model is a subclass.
+      # Check whether the model is subclassed.
       # NB: This check is copied from keras.py file in tensorflow.
       # There is no available public API to do this check.
       if (not layer._is_graph_network and
@@ -246,29 +266,45 @@ def _cluster_weights(to_cluster,
 
     return output
 
-  if isinstance(to_cluster, keras.Model):
+  (is_sequential_or_functional, is_keras_layer, is_subclassed_model) =\
+    _type_model(to_cluster)
+
+  if isinstance(to_cluster, list):
+    return _wrap_list(to_cluster)
+  elif is_sequential_or_functional:
     return keras.models.clone_model(to_cluster,
                                     input_tensors=None,
                                     clone_function=_add_clustering_wrapper)
-  if isinstance(to_cluster, Layer):
+  elif is_keras_layer:
     return _add_clustering_wrapper(layer=to_cluster)
-  if isinstance(to_cluster, list):
-    return _wrap_list(to_cluster)
+  elif is_subclassed_model:
+    # If the subclassed model is provided, then
+    # we add wrappers for all available layers and
+    # we wrap the whole model, so that augmented
+    # 'build' and 'call' functions are called.
+    for i, layer in enumerate(to_cluster._layers):
+      to_cluster._layers[i] = _add_clustering_wrapper(layer=layer)
+    return cluster_wrapper.WrapperSubclassedModel(to_cluster)
+  else:
+    raise ValueError(
+        'Clustering cannot be applied. You passed '
+        'an object of type: {input}. It should be a keras model or a layer '
+        'or a list of layers'.format(input=to_cluster.__class__.__name__))
 
-
-def strip_clustering(model):
+def strip_clustering(to_strip):
   """Strip clustering wrappers from the model.
 
   Once a model has been clustered, this method can be used
-  to restore the original model with the clustered weights.
+  to restore the original model or layer with the clustered weights.
 
-  Only sequential and functional models are supported for now.
+  Sequential, functional and subclassed models are supported.
 
   Arguments:
-      model: A `tf.keras.Model` instance with clustered layers.
+      to_strip: A `tf.keras.Model` instance with clustered layers or a
+        `tf.keras.layers.Layer` instance
 
   Returns:
-    A keras model with clustering wrappers removed.
+    A keras model or layer with clustering wrappers removed.
 
   Raises:
     ValueError: if the model is not a `tf.keras.Model` instance.
@@ -283,9 +319,11 @@ def strip_clustering(model):
   ```
   The exported_model and the orig_model have the same structure.
   """
-  if not isinstance(model, keras.Model):
+  if not isinstance(to_strip, keras.Model) and not isinstance(
+      to_strip, keras.layers.Layer):
     raise ValueError(
-        'Expected model to be a `tf.keras.Model` instance but got: ', model)
+        'Expected to_strip to be a `tf.keras.Model` or \
+           `tf.keras.layers.Layer` instance but got: ', to_strip)
 
   def _strip_clustering_wrapper(layer):
     if isinstance(layer, keras.Model):
@@ -322,7 +360,24 @@ def strip_clustering(model):
       return layer.layer
     return layer
 
+  (is_sequential_or_functional, is_keras_layer, is_subclassed_model) =\
+    _type_model(to_strip)
+
   # Just copy the model with the right callback
-  return keras.models.clone_model(model,
+  if is_sequential_or_functional:
+    return keras.models.clone_model(to_strip,
                                   input_tensors=None,
                                   clone_function=_strip_clustering_wrapper)
+  elif is_keras_layer:
+    if isinstance(to_strip, keras.layers.Layer):
+      return _strip_clustering_wrapper(to_strip)
+  elif is_subclassed_model:
+    to_strip_model = to_strip.model
+    for i, layer in enumerate(to_strip_model._layers):
+      to_strip_model._layers[i] = _strip_clustering_wrapper(layer=layer)
+    return to_strip_model
+  else:
+    raise ValueError(
+        ' Strip clustering cannot be applied. You passed '
+        'an object of type: {input}.'.format(input=to_strip.__class__.__name__))
+
