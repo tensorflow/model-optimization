@@ -282,7 +282,7 @@ class ClusterWeights(Wrapper):
     # This loop stores pairs of weight names and how to restore them
     for ct, weight in enumerate(self.layer.weights):
       name = self._weight_name(weight.name)
-      full_name = self.layer.name + "/" + name
+      full_name = '{}/{}'.format(self.layer.name, name)
       if ct in self.gone_variables:
         # Again, not sure if this is needed
         weight_name = clusterable_weights_to_variables[name]
