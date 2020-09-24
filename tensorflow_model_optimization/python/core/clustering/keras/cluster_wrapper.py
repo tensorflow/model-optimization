@@ -355,11 +355,11 @@ class ClusterWeights(Wrapper):
 
   @property
   def trainable_weights(self):
-    return self.layer.trainable_weights + self._trainable_weights
+    return self.layer.trainable_weights
 
   @property
   def non_trainable_weights(self):
-    return self.layer.non_trainable_weights + self._non_trainable_weights
+    return self.layer.non_trainable_weights
 
   @property
   def updates(self):
