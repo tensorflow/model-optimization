@@ -17,6 +17,7 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit",
+        "//tensorflow_model_optimization/python/core/quantization/keras/prune_preserve",
     ],
 )
 
