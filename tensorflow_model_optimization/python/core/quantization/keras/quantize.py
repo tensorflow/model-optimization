@@ -24,6 +24,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_layout_transform
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
+from tensorflow_model_optimization.python.core.quantization.keras.prune_preserve import prune_preserve_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 
 keras = tf.keras
@@ -263,7 +264,7 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
       layer=to_annotate, quantize_config=quantize_config)
 
 
-def quantize_apply(model):
+def quantize_apply(model, prune_preserve=False):
   """Quantize a `tf.keras` model that has been annotated for quantization.
 
   Quantization constructs a model which emulates quantization during training.
@@ -289,6 +290,18 @@ def quantize_apply(model):
   quantized_model = quantize_apply(model)
   ```
 
+  (experimental) sparsity preserved quantize model.
+  ```python
+  model = keras.Sequential([
+        layers.Dense(10, activation='relu', input_shape=(100, )),
+        quantize_annotate_layer(layers.Dense(2, activation='sigmoid'),
+                                prune_preserve=True)
+  ])
+
+  # weights sparsity in Dense layer reserved while quantized.
+  quantized_model = quantize_apply(model)
+  ```
+
   Note that this function removes the optimizer from the original model.
 
   The returned model copies over weights from the original model. So while
@@ -298,6 +311,8 @@ def quantize_apply(model):
   Args:
     model: A `tf.keras` Sequential or Functional model which has been annotated
       with `quantize_annotate`. It can have pre-trained weights.
+    prune_preserve(experimental): optional boolean value that determines whether
+      enable sparsity preserved quantization.
 
   Returns:
     Returns a new `tf.keras` model in which the annotated layers have been
@@ -361,6 +376,11 @@ def quantize_apply(model):
     if not quantize_config and quantize_registry.supports(layer):
       quantize_config = quantize_registry.get_quantize_config(layer)
 
+    # (experimental) enable sparsity preserved quantization
+    if prune_preserve and prune_quantize_registry.supports(layer):
+      quantize_config = prune_quantize_registry.apply_sparsity_preserve_quantize_config(
+          layer, quantize_config)
+
     if not quantize_config:
       error_msg = (
           'Layer {}:{} is not supported. You can quantize this '
@@ -412,7 +432,8 @@ def quantize_apply(model):
   # TODO(pulkitb): Think more about how to introduce Default specific code.
   quantize_registry = default_8bit_quantize_registry.QuantizeRegistry(
   )
-
+  prune_quantize_registry = prune_preserve_quantize_registry.PrunePreserveQuantizeRegistry(
+  )
   # 4. Actually quantize all the relevant layers in the model. This is done by
   # wrapping the layers with QuantizeWrapper, and passing the associated
   # `QuantizeConfig`.
