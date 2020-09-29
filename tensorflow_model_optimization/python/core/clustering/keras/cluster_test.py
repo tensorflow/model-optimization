@@ -487,8 +487,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     outputs = layers.Add()([x1, x2])
     model = keras.Model(inputs=[i1, i2], outputs=outputs)
     clustered_model = cluster.cluster_weights(model, **self.params)
-    # layer Add does not have trainable weights
-    self.assertEqual(self._count_clustered_layers(clustered_model), 2)
+    self.assertEqual(self._count_clustered_layers(clustered_model), 3)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelWithLayerReused(self):
@@ -601,8 +600,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     Verifies that stripping the clustering wrappers from a functional model
     restores the layers kernel and the layers weight array to the new clustered weight value .
     """
-    i1 = keras.Input(shape=(6, 6, 6))
-    x1 = layers.Conv2D(3, 3)(i1)
+    i1 = keras.Input(shape=(1, 1, 1))
+    x1 = layers.Conv2D(1, 1)(i1)
     outputs = x1
     model = keras.Model(inputs=[i1], outputs=outputs)
 
@@ -614,8 +613,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertIsNot(stripped_conv2d_layer.kernel, clustered_kernel)
-    comparison = stripped_conv2d_layer.kernel == stripped_conv2d_layer.weights[0]
-    self.assertTrue(comparison.numpy().all())
+    self.assertEqual(stripped_conv2d_layer.kernel,
+                     stripped_conv2d_layer.weights[0])
 
   @keras_parameterized.run_all_keras_modes
   def testStripSelectivelyClusteredFunctionalModel(self):
@@ -651,31 +650,6 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertIsInstance(stripped_model.layers[0], layers.Dense)
-
-  @keras_parameterized.run_all_keras_modes
-  def testClusteringModelWithTrainableParamsLessNumberOfClusters(self):
-    """
-    Verifies that we skip a layer with the number of trainable parameters
-    less than the requested number of clusters.
-    """
-    model = keras.Sequential([
-        layers.Dense(2),
-        layers.Dense(1),
-        layers.Dense(4),
-        layers.Dense(3)   # 12 weights in kernel:0
-    ])
-    model.build(input_shape=(2, 1))
-
-    clustered_model = cluster.cluster_weights(model, **self.params)
-    self.assertTrue(not isinstance(clustered_model.layers[0], cluster_wrapper.ClusterWeights))
-    self.assertTrue(not isinstance(clustered_model.layers[1], cluster_wrapper.ClusterWeights))
-    self.assertTrue(not isinstance(clustered_model.layers[2], cluster_wrapper.ClusterWeights))
-    self.assertTrue(isinstance(clustered_model.layers[3], cluster_wrapper.ClusterWeights))
-
-    stripped_model = cluster.strip_clustering(clustered_model)
-
-    self.assertEqual(self._count_clustered_layers(stripped_model), 0)
-    self.assertEqual(model.get_config(), stripped_model.get_config())
 
 if __name__ == '__main__':
   test.main()
