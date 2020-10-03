@@ -33,7 +33,7 @@ def _distribution_strategies():
       tf.distribute.experimental.MultiWorkerMirroredStrategy(),
       tf.distribute.MirroredStrategy(),
       # TODO(pulkitb): Add parameter_server
-      # tf.distribute.experimental.ParameterServerStrategy,
+      # tf.distribute.experimental.ParameterServerStrategy once ready in TF2.
       tf.distribute.OneDeviceStrategy('/cpu:0'),
   ]
 
