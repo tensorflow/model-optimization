@@ -317,8 +317,7 @@ class QuantizeFullIntegerModelTest(tf.test.TestCase, parameterized.TestCase):
           model=quantized_model,
           output_path=quantized_tflite_file,
           is_quantized=True,
-          input_quant_params=(0., 1.),
-          experimental_new_converter=True)
+          input_quant_params=(0., 1.))
 
     interpreter = tf.lite.Interpreter(model_path=quantized_tflite_file)
     interpreter.allocate_tensors()
@@ -407,11 +406,7 @@ class QuantizeFullIntegerModelTest(tf.test.TestCase, parameterized.TestCase):
           is_quantized=True,
           inference_type=tf.uint8,
           inference_input_type=tf.uint8,
-          input_quant_params=(0., 1.),
-          # Set to False to throw errors when FakeQuants are
-          # not placed everywhere to create full-integer model. Errors
-          # are not thrown when set to True.
-          experimental_new_converter=False)
+          input_quant_params=(0., 1.))
 
   # pylint: enable=g-complex-comprehension,undefined-variable
 
