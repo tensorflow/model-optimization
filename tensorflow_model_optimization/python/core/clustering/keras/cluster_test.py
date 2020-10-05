@@ -425,6 +425,20 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       _ = cluster.cluster_weights(model, **self.params)
 
   @keras_parameterized.run_all_keras_modes
+  def testClusterSubclassModelAsSubmodel(self):
+    """
+    Verifies that attempting to cluster a model with submodel
+    that is a subclass throws an exception.
+    """
+    model_subclass = TestModel()
+    model = keras.Sequential([
+        layers.Dense(10),
+        model_subclass
+    ])
+    with self.assertRaisesRegexp(ValueError, "Subclassed models.*"):
+      _ = cluster.cluster_weights(model, **self.params)
+
+  @keras_parameterized.run_all_keras_modes
   def testStripClusteringSequentialModel(self):
     """
     Verifies that stripping the clustering wrappers from a sequential model
