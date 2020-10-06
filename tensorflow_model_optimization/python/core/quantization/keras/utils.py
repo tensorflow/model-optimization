@@ -28,8 +28,7 @@ def convert_keras_to_tflite(model,
                             is_quantized=True,
                             inference_type=None,
                             inference_input_type=None,
-                            input_quant_params=(-128., 255.),
-                            experimental_new_converter=True):
+                            input_quant_params=(-128., 255.)):
   """Convert Keras model to TFLite."""
   if custom_objects is None:
     custom_objects = {}
@@ -41,8 +40,6 @@ def convert_keras_to_tflite(model,
     tf.keras.models.save_model(model, keras_file)
     converter = tf.lite.TFLiteConverter.from_keras_model_file(
         keras_file, custom_objects=custom_objects)
-
-  converter.experimental_new_converter = experimental_new_converter
 
   if is_quantized:
     if not compat.is_v1_apis():

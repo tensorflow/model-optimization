@@ -537,7 +537,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
         layers.Dense(10),
         model_subclass
     ])
-    with self.assertRaisesRegexp(ValueError, "SubClass models.*"):
+    with self.assertRaisesRegexp(ValueError, "Subclassed models.*"):
       _ = cluster.cluster_weights(model, **self.params)
 
   @keras_parameterized.run_all_keras_modes

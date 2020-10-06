@@ -223,7 +223,7 @@ def _cluster_weights(to_cluster,
       # There is no available public API to do this check.
       if (not layer._is_graph_network and
           not isinstance(layer, keras.models.Sequential)):
-        raise ValueError("SubClass models are not supported currently.")
+        raise ValueError("Subclassed models are not supported currently.")
 
       return keras.models.clone_model(layer,
                                     input_tensors=None,

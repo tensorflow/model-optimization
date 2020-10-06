@@ -190,7 +190,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndFunctional(self):
     """Test End to End clustering - functional model."""
     inputs = keras.layers.Input(shape=(5,))
@@ -230,7 +229,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndDeepLayer2(self):
     """Test End to End clustering for the model with 2 deep layers."""
     internal_model = tf.keras.Sequential([tf.keras.layers.Dense(5, input_shape=(5,))])
