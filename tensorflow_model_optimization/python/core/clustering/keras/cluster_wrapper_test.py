@@ -179,11 +179,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   @parameterized.parameters(
       *itertools.product(
           range(2, 16, 4),
-          (
-              CentroidInitialization.LINEAR,
-              CentroidInitialization.RANDOM,
-              CentroidInitialization.DENSITY_BASED
-          )
+          [type_centroid for type_centroid in CentroidInitialization]
       )
   )
   def testValuesAreClusteredAfterStripping(self,
@@ -197,6 +193,9 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     original_model = tf.keras.Sequential([
         layers.Dense(32, input_shape=(10,)),
     ])
+    self.assertGreater(
+      len(set(original_model.get_weights()[0].reshape(-1,).tolist())),
+      number_of_clusters)
     clustered_model = cluster.cluster_weights(
         original_model,
         number_of_clusters=number_of_clusters,
