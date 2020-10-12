@@ -231,6 +231,7 @@ class PruneLowMagnitude(Wrapper):
         block_pooling_type=self.block_pooling_type)
 
   def call(self, inputs, training=None):
+    print("pruning wrapper call")
     if training is None:
       training = K.learning_phase()
 
