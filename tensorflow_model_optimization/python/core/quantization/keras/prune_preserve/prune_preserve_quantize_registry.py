@@ -16,8 +16,6 @@
 
 import tensorflow as tf
 
-from tensorflow.python.keras.engine.base_layer import TensorFlowOpLayer
-
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
@@ -37,10 +35,6 @@ class _PrunePreserveInfo(object):
     """
     self.weight_attrs = weight_attrs
     self.quantize_config_attrs = quantize_config_attrs
-
-
-def _noPrunePreserve():
-  return _PrunePreserveInfo([], [])
 
 
 class PrunePreserveQuantizeRegistry(object):
@@ -83,68 +77,7 @@ class PrunePreserveQuantizeRegistry(object):
 
       # Embedding need verify from 8bit qat
       # layers.Embedding: _PrunePreserveInfo(['embeddings'], []),
-
-      layers.ELU: _noPrunePreserve(),
-      layers.LeakyReLU: _noPrunePreserve(),
-      layers.ReLU: _noPrunePreserve(),
-      layers.ThresholdedReLU: _noPrunePreserve(),
-      layers.Softmax: _noPrunePreserve(),
-      layers.Cropping1D: _noPrunePreserve(),
-      layers.Cropping2D: _noPrunePreserve(),
-      layers.Cropping3D: _noPrunePreserve(),
-      layers.UpSampling1D: _noPrunePreserve(),
-      layers.UpSampling2D: _noPrunePreserve(),
-      layers.UpSampling3D: _noPrunePreserve(),
-      layers.ZeroPadding1D: _noPrunePreserve(),
-      layers.ZeroPadding2D: _noPrunePreserve(),
-      layers.ZeroPadding3D: _noPrunePreserve(),
-      layers.Activation: _noPrunePreserve(),
-      layers.ActivityRegularization: _noPrunePreserve(),
-      layers.Dropout: _noPrunePreserve(),
-      layers.Flatten: _noPrunePreserve(),
-      layers.Lambda: _noPrunePreserve(),
-      layers.Masking: _noPrunePreserve(),
-      layers.Permute: _noPrunePreserve(),
-      layers.RepeatVector: _noPrunePreserve(),
-      layers.Reshape: _noPrunePreserve(),
-      layers.SpatialDropout1D: _noPrunePreserve(),
-      layers.SpatialDropout2D: _noPrunePreserve(),
-      layers.SpatialDropout3D: _noPrunePreserve(),
-      layers.Add: _noPrunePreserve(),
-      layers.Average: _noPrunePreserve(),
-      layers.Concatenate: _noPrunePreserve(),
-      layers.Dot: _noPrunePreserve(),
-      layers.Maximum: _noPrunePreserve(),
-      layers.Minimum: _noPrunePreserve(),
-      layers.Multiply: _noPrunePreserve(),
-      layers.Subtract: _noPrunePreserve(),
-      layers.AlphaDropout: _noPrunePreserve(),
-      layers.GaussianDropout: _noPrunePreserve(),
-      layers.GaussianNoise: _noPrunePreserve(),
-      layers.BatchNormalization: _noPrunePreserve(),
-      layers.LayerNormalization: _noPrunePreserve(),
-      layers.AveragePooling1D: _noPrunePreserve(),
-      layers.AveragePooling2D: _noPrunePreserve(),
-      layers.AveragePooling3D: _noPrunePreserve(),
-      layers.GlobalAveragePooling1D: _noPrunePreserve(),
-      layers.GlobalAveragePooling2D: _noPrunePreserve(),
-      layers.GlobalAveragePooling3D: _noPrunePreserve(),
-      layers.GlobalMaxPooling1D: _noPrunePreserve(),
-      layers.GlobalMaxPooling2D: _noPrunePreserve(),
-      layers.GlobalMaxPooling3D: _noPrunePreserve(),
-      layers.MaxPooling1D: _noPrunePreserve(),
-      layers.MaxPooling2D: _noPrunePreserve(),
-      layers.MaxPooling3D: _noPrunePreserve(),
-      TensorFlowOpLayer: _noPrunePreserve(),
   }
-
-  # TODO(mltools): enable RNN layers, also depend on qat and prune registry
-  # _RNN_CELLS_CONFIG_MAP = {
-  #     layers.GRUCell:
-  #     _PrunePreserveInfo(['kernel', 'recurrent_kernel'], ['Default8BitQuantizeConfig']),
-  #     layers.LSTMCell:
-  #     _PrunePreserveInfo(['kernel', 'recurrent_kernel'], ['Default8BitQuantizeConfig']),
-  # }
 
   def __init__(self):
 
@@ -154,6 +87,19 @@ class PrunePreserveQuantizeRegistry(object):
         'Default8BitConvQuantizeConfig':
         PrunePerserveDefault8BitConvWeightsQuantizer(),
     }
+
+  @classmethod
+  def _no_trainable_weights(cls, layer):
+    """Returns whether this layer has trainable weights.
+
+    Args:
+      layer: The layer to check for trainable weights.
+
+    Returns:
+      True/False whether the layer has trainable weights.
+    """
+
+    return len(layer.trainable_weights) == 0
 
   @classmethod
   def supports(cls, layer):
@@ -167,6 +113,11 @@ class PrunePreserveQuantizeRegistry(object):
 
     """
 
+    # layers without trainable weights are consider supported,
+    # e.g., ReLU, Softmax, and AveragePooling2D.
+    if cls._no_trainable_weights(layer):
+      return True
+
     if layer.__class__ in cls._LAYERS_CONFIG_MAP:
       return True
 
@@ -174,6 +125,10 @@ class PrunePreserveQuantizeRegistry(object):
 
   @classmethod
   def _weight_names(cls, layer):
+
+    if cls._no_trainable_weights(layer):
+      return []
+
     return cls._LAYERS_CONFIG_MAP[layer.__class__].weight_attrs
 
   @classmethod
@@ -189,7 +144,7 @@ class PrunePreserveQuantizeRegistry(object):
     return [getattr(layer, weight) for weight in cls._weight_names(layer)]
 
   @classmethod
-  def get_quantize_config_names(cls, layer):
+  def get_suppport_quantize_config_names(cls, layer):
     """Get class name of supported quantize config for layer
 
     Args:
@@ -198,6 +153,11 @@ class PrunePreserveQuantizeRegistry(object):
     Returns:
       List of supported quantize config class name.
     """
+
+    # layers without trainable weights don't need quantize_config for pqat
+    if cls._no_trainable_weights(layer):
+      return []
+
     return cls._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs
 
   def apply_sparsity_preserve_quantize_config(self, layer, quantize_config):
@@ -212,15 +172,15 @@ class PrunePreserveQuantizeRegistry(object):
       Returns quantize_config with addon sparsity preserve weight_quantizer.
     """
     if self.supports(layer):
-      if not self._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs:
+      if self._no_trainable_weights(layer):
         return quantize_config
-      if (quantize_config.__class__.__name__ in self._LAYERS_CONFIG_MAP[
-          layer.__class__].quantize_config_attrs):
+      if (quantize_config.__class__.__name__
+          in self._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs):
         quantize_config.weight_quantizer = self._config_quantizer_map[
             quantize_config.__class__.__name__]
       else:
         raise ValueError('Configuration ' +
-                         str(quantize_config.__class__.__name__) +
+                         str(quantize_config.__class__.__name__) +  
                          ' is not supported for Layer ' +
                          str(layer.__class__) + '.')
     else:

@@ -16,7 +16,6 @@
 
 from absl.testing import parameterized
 
-import numpy as np
 import tensorflow as tf
 
 from tensorflow.python.keras import keras_parameterized
@@ -37,27 +36,60 @@ class PrunePreserveQuantizeRegistryTest(tf.test.TestCase,
     super(PrunePreserveQuantizeRegistryTest, self).setUp()
     self.prune_preserve_quantize_registry = prune_preserve_quantize_registry.PrunePreserveQuantizeRegistry(
     )
+    # initial and build a CONV2D layer
+    self.layer_conv2d = layers.Conv2D(10, (2, 2))
+    self.layer_conv2d.build(2)
+    # initial and build a CUSTOM layer
+    self.layer_custom = self.CustomLayer()
+    self.layer_custom.build()
 
   class CustomLayer(layers.Layer):
-    pass
+    # simple custom layer with training weights
+    def __init__(self):
+      super(PrunePreserveQuantizeRegistryTest.CustomLayer, self).__init__()
+
+    def build(self, input_shape=(2, 2)):
+      self.add_weight(shape=input_shape,
+                      initializer="random_normal",
+                      trainable=True)
 
   class CustomQuantizeConfig(QuantizeConfig):
-    pass
+    # simple custom QuantizeConfig
+    def get_weights_and_quantizers(self, layer):
+      return []
+
+    def get_activations_and_quantizers(self, layer):
+      return []
+
+    def set_quantize_weights(self, layer, quantize_weights):
+      pass
+
+    def set_quantize_activations(self, layer, quantize_activations):
+      pass
+
+    def get_output_quantizers(self, layer):
+      return []
+
+    def get_config(self):
+      return {}
 
   def testSupports_KerasLayer(self):
+    # test registered layer
     self.assertTrue(
         self.prune_preserve_quantize_registry.supports(layers.Dense(10)))
     self.assertTrue(
-        self.prune_preserve_quantize_registry.supports(
-            layers.Conv2D(10, (2, 2))))
+        self.prune_preserve_quantize_registry.supports(self.layer_conv2d))
+    # test layer without training weights
+    self.assertTrue(
+        self.prune_preserve_quantize_registry.supports(layers.ReLU()))
 
   def testDoesNotSupport_CustomLayer(self):
     self.assertFalse(
-        self.prune_preserve_quantize_registry.supports(self.CustomLayer()))
+        self.prune_preserve_quantize_registry.supports(self.layer_custom))
 
   def testApplyPrunePreserve_WithQuantizeConfig(self):
     self.prune_preserve_quantize_registry.apply_sparsity_preserve_quantize_config(
-        layers.Conv2D(10, (2, 2)),
+        self.layer_conv2d,
         default_8bit_quantize_registry.Default8BitConvQuantizeConfig(
             ['kernel'], ['activation'], False))
 
@@ -65,12 +97,12 @@ class PrunePreserveQuantizeRegistryTest(tf.test.TestCase,
     with self.assertRaises(
         ValueError, msg="Unregistered QuantizeConfigs should raise error."):
       self.prune_preserve_quantize_registry.apply_sparsity_preserve_quantize_config(
-          layers.Conv2D(10, (2, 2)), self.CustomQuantizeConfig)
+          self.layer_conv2d, self.CustomQuantizeConfig)
 
     with self.assertRaises(ValueError,
                            msg="Unregistered layers should raise error."):
       self.prune_preserve_quantize_registry.apply_sparsity_preserve_quantize_config(
-          self.CustomLayer, self.CustomQuantizeConfig)
+          self.layer_custom, self.CustomQuantizeConfig)
 
 
 class PrunePreserveDefault8bitQuantizeRegistryTest(tf.test.TestCase):
