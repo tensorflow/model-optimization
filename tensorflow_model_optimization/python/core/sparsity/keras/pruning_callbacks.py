@@ -33,7 +33,7 @@ callbacks = tf.keras.callbacks
 def _collect_prunable_layers(model):
   """Recursively collect the prunable layers in the model."""
   prunable_layers = []
-  for layer in model._layers:
+  for layer in model._flatten_layers(recursive=False, include_self=False):
     # A keras model may have other models as layers.
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       prunable_layers.append(layer)
