@@ -62,6 +62,24 @@ class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
       `tf.keras.layers.Layer.add_weight`for each tf.Variable to create.
     """
 
+  def compress(self, training_weights: List[tf.Tensor]) -> List[tf.Tensor]:
+    """Define the operations to compress a single weight after training.
+
+    'Compress' can refer to making the weight more amenable to compression
+    or actually compress the weight.
+
+    The default is an identity.
+
+    Args:
+      training_weights: tf.Tensors representing all variables used during
+        training, for a single compressible weight, in the order returned in
+        `init_training_weights_repr`.
+
+    Returns:
+      List of tf.Tensors to set to compressed or more compressible form.
+    """
+    return training_weights
+
   def decompress(self, compressed_weights: List[tf.Tensor]) -> tf.Tensor:
     """Define the operations to decompress a single weight’s compressed form during inference.
 
@@ -80,6 +98,7 @@ class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
   def training(self, training_weights: List[tf.Tensor]) -> tf.Tensor:
     """Define a piece of the forward pass during training, which operates on a single compressible weight.
 
+    TODO(tfmot): throw this error.
     The default throws an error when training occurs.
 
     Args:
@@ -96,3 +115,9 @@ def create_layer_for_training(
     layer: tf.keras.layers.Layer,
     algorithm: WeightCompressionAlgorithm) -> tf.keras.layers.Layer:
   return optimize.create_layer_for_training(layer, algorithm)
+
+
+def create_layer_for_inference(
+    layer_for_training: tf.keras.layers.Layer,
+    algorithm: WeightCompressionAlgorithm) -> tf.keras.layers.Layer:
+  return optimize.create_layer_for_inference(layer_for_training, algorithm)

@@ -22,3 +22,24 @@ py_test(
         # tensorflow dep1,
     ],
 )
+
+py_library(
+    name = "different_training_and_inference",
+    srcs = ["different_training_and_inference.py"],
+    srcs_version = "PY3",
+    deps = [
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+    ],
+)
+
+py_test(
+    name = "different_training_and_inference_test",
+    srcs = ["different_training_and_inference_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":different_training_and_inference",
+        # numpy dep1,
+        # tensorflow dep1,
+    ],
+)

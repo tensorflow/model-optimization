@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Internal APIs and core implementation of weight compression API."""
-from typing import List, Any
+from typing import List, Any, Mapping
 import dataclasses
 
 import tensorflow as tf
@@ -116,7 +116,8 @@ class _TrainingWrapper(tf.keras.layers.Wrapper):
           v.read_value() for v in self.training_weights[attr_name]
       ]
       weight_tensor = self.algorithm.training(training_weight_tensors)
-      # TODO(tfmot): move this to the inference graph only, where it is needed.
+      # TODO(tfmot): move this to the inference graph only, since
+      # constant folding won't happen during training.
       non_const_foldable_weight_tensor = _prevent_constant_folding(
           weight_tensor, inputs)
       setattr(self.layer, attr_name, non_const_foldable_weight_tensor)
@@ -124,6 +125,88 @@ class _TrainingWrapper(tf.keras.layers.Wrapper):
     # This assumes that all changes to the forward pass happen "prior" to
     # the nested layer's portion of the forward pass. This suffices since
     # the scope of this API is to only optimize the weights.
+    return self.layer.call(inputs)
+
+
+# TODO(tfmot): deduplicate code with _TrainingWrapper.
+class _InferenceWrapper(tf.keras.layers.Wrapper):
+  """Represent modifications to inference graph for weight compression."""
+
+  def __init__(self, layer, algorithm,
+               training_tensors: Mapping[str, List[tf.Tensor]]):
+    self.algorithm = algorithm
+    # training_tensors is a map from compressible attributes (e.g. 'kernel')
+    # to tensors (not variables to prevent model size increasing) with the
+    # same shape as the corresponding variables used during training.
+    self.training_tensors = training_tensors
+
+    self.original_add_weight = layer.add_weight
+    setattr(layer, 'add_weight', self._skip_compressible_weights)
+
+    super(_InferenceWrapper, self).__init__(layer)
+
+  def _skip_compressible_weights(self, *args, **kwargs):
+    # Match for compressible weights based on `name` parameter.
+    #
+    # This depends on common practice where every layer's call
+    # to `self.add_weight` follows this form:
+    #
+    #   self.`name` = self.add_weight(name=`name`)
+    #
+    # where the attribute name matches the variable name.
+    #
+    # TODO(tfmot): check if depending on this practice
+    # is safe for both builtin and custom Keras layers.
+    # Regardless, raise an exception if name is None, which
+    # means that the practice has not been followed.
+    name = None
+    if args:
+      name = args[0]
+    if 'name' in kwargs:
+      name = kwargs['name']
+
+    if name not in self.training_tensors:
+      return self.original_add_weight(*args, **kwargs)
+
+    # If weight is compressible, substitute in a dummy tensor
+    # with the same shape as what would have been added.
+    # Returning an empty tensor would cause ** to fail.
+    shape = None
+    if args and len(args) > 1:
+      shape = args[1]
+    if 'shape' in kwargs:
+      shape = kwargs['shape']
+
+    return tf.zeros(shape)
+
+  def build(self, input_shape):
+    super(_InferenceWrapper, self).build(input_shape)
+
+    # Add weights needed by algorithm during inference.
+    self.compressed_weights = {}
+    for attr_name in self.training_tensors:
+      training_tensors = self.training_tensors[attr_name]
+      compressed_tensors = self.algorithm.compress(training_tensors)
+      weights = []
+      for t in compressed_tensors:
+        weight = self.add_weight(name='TODO', shape=t.shape)
+        weights.append(weight)
+
+      self.compressed_weights[attr_name] = weights
+
+  def call(self, inputs, training=None):
+    for attr_name in self.training_tensors:
+      # TODO(tfmot): understand how read_value() is converted to
+      # inference in TensorFlow Lite.
+      compressed_weight_tensors = [
+          v.read_value() for v in self.compressed_weights[attr_name]
+      ]
+      weight_tensor = self.algorithm.decompress(*compressed_weight_tensors)
+      non_const_foldable_weight_tensor = _prevent_constant_folding(
+          weight_tensor, inputs)
+      setattr(self.layer, attr_name, non_const_foldable_weight_tensor)
+
+    # TODO(tfmot): handle training arg if needed given this is inference only.
     return self.layer.call(inputs)
 
 
@@ -185,6 +268,44 @@ def _map_to_training_weights(
       else:
         training_weights.append(pretrained_weight)
   return training_weights
+
+
+# TODO(tfmot): same TODOs as _map_to_training_weights.
+def _map_to_inference_weights(training_weights, algorithm, training_tensors):
+  """Construct the inference weight values from the weights after training.
+
+    The weight values have the same structure as the output of
+    `tf.keras.layers.Layer.get_weights`.
+
+  Args:
+    training_weights: layer's weights from training, retrieved via
+      layer.get_weights()
+    algorithm: weight compression algorithm
+    training_tensors: map from compressible weight attribute (e.g. 'kernel') to
+      relevant tensors.
+
+  Returns:
+    Initial weight values for training.
+
+  Example:
+    training_weights =    [kernel_var1, kernel_var2, bias]
+    training_tensors = {'kernel': [kernel_var1, kernel_var2]}
+    expected output:   [compress([kernel_var1, kernel_var2]), bias]
+  """
+
+  compressed_weights = []
+  weights = ['kernel', 'bias']
+  layer_weights_i = 0
+  for weight in weights:
+    if weight in training_tensors:
+      compressed = algorithm.compress(training_tensors[weight])
+      for c in compressed:
+        compressed_weights.append(c.numpy())
+      layer_weights_i += len(training_tensors[weight])
+    else:
+      compressed_weights.append(training_weights[layer_weights_i])
+      layer_weights_i += 1
+  return compressed_weights
 
 
 def create_layer_for_training(layer, algorithm):
@@ -250,3 +371,44 @@ def create_layer_for_training(layer, algorithm):
     wrapped_layer.set_weights(training_weights)
 
   return wrapped_layer
+
+
+def create_layer_for_inference(layer: _TrainingWrapper, algorithm):
+  """Internal API to create layer for inference with weight compression."""
+  # TODO(tfmot): move these checks to public API for
+  # visibility.
+  if not isinstance(algorithm, object):
+    raise ValueError('`_create_layer_for_inference` requires `algorithm` '
+                     'to be an instantiated object, as opposed '
+                     'to the class itself.')
+
+  if not layer.built:
+    raise ValueError(
+        '`_create_layer_for_inference` requires `layer` to be built.')
+
+  # Process layer.
+  nested_layer = layer.layer
+  input_shape = layer.input_shape
+
+  # Construct map from attribute (e.g. 'kernel') to tensor versions of
+  # variables used during training.
+  compressible_training_tensors = {}
+  for attr, weights in layer.training_weights.items():
+    compressible_training_tensors[attr] = [w.read_value() for w in weights]
+
+  # Process nested layer.
+  #
+  # TODO(tfmot): same TODOs as in _create_layer_for_training.
+  cloned_layer = nested_layer.__class__.from_config(nested_layer.get_config())
+
+  layer_for_inference = _InferenceWrapper(cloned_layer, algorithm,
+                                          compressible_training_tensors)
+  layer_for_inference.build(input_shape)
+
+  if layer.get_weights():
+    # Set weights of layer for inference according to what was trained.
+    inference_weights = _map_to_inference_weights(
+        layer.get_weights(), algorithm, compressible_training_tensors)
+    layer_for_inference.set_weights(inference_weights)
+
+  return layer_for_inference
