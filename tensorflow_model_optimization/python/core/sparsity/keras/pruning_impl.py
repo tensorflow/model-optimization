@@ -85,9 +85,12 @@ class Pruning(object):
     with tf.name_scope('pruning_ops'):
       abs_weights = tf.math.abs(weights)
       k = tf.dtypes.cast(
-          tf.math.round(
-              tf.dtypes.cast(tf.size(abs_weights), tf.float32) *
-              (1 - sparsity)), tf.int32)
+          tf.math.maximum(
+              tf.math.round(
+                  tf.dtypes.cast(tf.size(abs_weights), tf.float32) *
+                  (1 - sparsity)),
+              1),
+          tf.int32)
       # Sort the entire array
       values, _ = tf.math.top_k(
           tf.reshape(abs_weights, [-1]), k=tf.size(abs_weights))

@@ -71,6 +71,37 @@ class PruningTest(test.TestCase, parameterized.TestCase):
 
     compat.initialize_variables(self)
 
+  def testExtremelySparseMask(self):
+    weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")
+    weight_dtype = weight.dtype.base_dtype
+    mask = tf.Variable(
+        tf.ones(weight.get_shape(), dtype=weight_dtype),
+        name="mask",
+        dtype=weight_dtype)
+    threshold = tf.Variable(
+        tf.zeros([], dtype=weight_dtype), name="threshold", dtype=weight_dtype)
+    self.initialize()
+
+    extreme_sparsity = pruning_schedule.ConstantSparsity(0.9999, 0, 100, 1)
+    p = pruning_impl.Pruning(
+        pruning_vars=[(weight, mask, threshold)],
+        training_step_fn=self.training_step_fn,
+        pruning_schedule=extreme_sparsity,
+        block_size=self.block_size,
+        block_pooling_type=self.block_pooling_type)
+
+    mask_before_pruning = K.get_value(mask)
+    self.assertAllEqual(np.count_nonzero(mask_before_pruning), 100)
+
+    if tf.executing_eagerly():
+      p.conditional_mask_update()
+    else:
+      K.get_session().run(p.conditional_mask_update())
+
+    # We should always have a single connection remaining.
+    mask_after_pruning = K.get_value(mask)
+    self.assertAllEqual(np.count_nonzero(mask_after_pruning), 1)
+
   def testUpdateSingleMask(self):
     weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")
     weight_dtype = weight.dtype.base_dtype
@@ -154,8 +185,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     block_size = (2, 2)
     block_pooling_type = "MAX"
     weight = tf.constant([[0.1, 0.0, 0.2, 0.0], [0.0, -0.1, 0.0, -0.2],
-                                   [0.3, 0.0, 0.4, 0.0], [0.0, -0.3, 0.0,
-                                                          -0.4]])
+                          [0.3, 0.0, 0.4, 0.0], [0.0, -0.3, 0.0, -0.4]])
     expected_mask = [[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0],
                      [1., 1., 1., 1.], [1., 1., 1., 1.]]
 
@@ -167,8 +197,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     block_pooling_type = "AVG"
     # Weights as in testBlockMasking, but with one extra dimension.
     weight = tf.constant([[[0.1, 0.1, 0.2, 0.2], [0.1, 0.1, 0.2, 0.2],
-                                    [0.3, 0.3, 0.4, 0.4], [0.3, 0.3, 0.4,
-                                                           0.4]]])
+                           [0.3, 0.3, 0.4, 0.4], [0.3, 0.3, 0.4, 0.4]]])
     expected_mask = [[[0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0],
                       [1., 1., 1., 1.], [1., 1., 1., 1.]]]
 

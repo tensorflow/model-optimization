@@ -62,6 +62,7 @@ Tested against TensorFlow nightly, and Python 3.
 Keras pruning API:
 
 Tested against TensorFlow 1.14.0, 2.0.0, and nightly, and Python 3.
+Pruning now doesn't remove the last remaining connection. So extreme sparsities like 0.999.. would remove all connections but one.
 
 
 # TensorFlow Model Optimization 0.4.0
