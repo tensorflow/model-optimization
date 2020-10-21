@@ -37,7 +37,7 @@ def _collect_prunable_layers(model):
     # A keras model may have other models as layers.
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       prunable_layers.append(layer)
-    elif isinstance(layer, (list, tf.keras.Model, tf.keras.layers.Layer)):
+    elif isinstance(layer, (tf.keras.Model, tf.keras.layers.Layer)):
       prunable_layers += _collect_prunable_layers(layer)
 
   return prunable_layers
@@ -57,14 +57,19 @@ class UpdatePruningStep(callbacks.Callback):
   ```
   """
 
+  def __init__(self):
+    super(UpdatePruningStep, self).__init__()
+    self.prunable_layers = []
+
   def on_train_begin(self, logs=None):
+    # Collect all the prunable layers in the model.
+    self.prunable_layers = _collect_prunable_layers(self.model)
     self.step = K.get_value(self.model.optimizer.iterations)
 
   def on_train_batch_begin(self, batch, logs=None):
     tuples = []
 
-    prunable_layers = _collect_prunable_layers(self.model)
-    for layer in prunable_layers:
+    for layer in self.prunable_layers:
       if layer.built:
         tuples.append((layer.pruning_step, self.step))
 
@@ -76,9 +81,8 @@ class UpdatePruningStep(callbacks.Callback):
     # the model is saved after completion, the weights represent mask*weights.
     weight_mask_ops = []
 
-    prunable_layers = _collect_prunable_layers(self.model)
-    for layer in prunable_layers:
-      if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+    for layer in self.prunable_layers:
+      if layer.built and isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         if tf.executing_eagerly():
           layer.pruning_obj.weight_mask_op()
         else:
