@@ -14,6 +14,7 @@ py_library(
 
 py_test(
     name = "same_training_and_inference_test",
+    timeout = "long",
     srcs = ["same_training_and_inference_test.py"],
     python_version = "PY3",
     deps = [
@@ -35,6 +36,7 @@ py_library(
 
 py_test(
     name = "different_training_and_inference_test",
+    timeout = "long",
     srcs = ["different_training_and_inference_test.py"],
     python_version = "PY3",
     deps = [

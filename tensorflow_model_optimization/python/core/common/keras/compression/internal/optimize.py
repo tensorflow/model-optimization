@@ -112,15 +112,15 @@ class _TrainingWrapper(tf.keras.layers.Wrapper):
 
   def call(self, inputs):
     for attr_name in self.compressible_weights:
-      training_weight_tensors = [
-          v.read_value() for v in self.training_weights[attr_name]
-      ]
+      # TODO(tfmot): move constant folding prevention to the inference graph
+      # only, since constant folding won't happen during training.
+      training_weight_tensors = []
+      for v in self.training_weights[attr_name]:
+        training_weight_tensors.append(
+            _prevent_constant_folding(v.read_value(), inputs))
+
       weight_tensor = self.algorithm.training(training_weight_tensors)
-      # TODO(tfmot): move this to the inference graph only, since
-      # constant folding won't happen during training.
-      non_const_foldable_weight_tensor = _prevent_constant_folding(
-          weight_tensor, inputs)
-      setattr(self.layer, attr_name, non_const_foldable_weight_tensor)
+      setattr(self.layer, attr_name, weight_tensor)
 
     # This assumes that all changes to the forward pass happen "prior" to
     # the nested layer's portion of the forward pass. This suffices since
@@ -198,13 +198,12 @@ class _InferenceWrapper(tf.keras.layers.Wrapper):
     for attr_name in self.training_tensors:
       # TODO(tfmot): understand how read_value() is converted to
       # inference in TensorFlow Lite.
-      compressed_weight_tensors = [
-          v.read_value() for v in self.compressed_weights[attr_name]
-      ]
+      compressed_weight_tensors = []
+      for v in self.compressed_weights[attr_name]:
+        compressed_weight_tensors.append(
+            _prevent_constant_folding(v.read_value(), inputs))
       weight_tensor = self.algorithm.decompress(*compressed_weight_tensors)
-      non_const_foldable_weight_tensor = _prevent_constant_folding(
-          weight_tensor, inputs)
-      setattr(self.layer, attr_name, non_const_foldable_weight_tensor)
+      setattr(self.layer, attr_name, weight_tensor)
 
     # TODO(tfmot): handle training arg if needed given this is inference only.
     return self.layer.call(inputs)

@@ -170,12 +170,7 @@ class FunctionalTest(tf.test.TestCase):
 
     self.assertGreater(results[1], 0.60)
 
-  # TODO(tfmot): currently fails - didn't hook up constant
-  # folding prevention correctly.
-  def testSVD_ReducesTFLiteModelSize_Fails(self):
-    return
-
-    # pylint: disable=unreachable
+  def testSVD_ReducesTFLiteModelSize(self):
     model = _build_model()
 
     original_saved_model_dir = _save_as_saved_model(model)
@@ -192,7 +187,6 @@ class FunctionalTest(tf.test.TestCase):
     compressed_size = os.path.getsize(compressed_tflite_file)
 
     self.assertLess(compressed_size, original_size / 6)
-    # pylint: enable=unreachable
 
   def testSVD_HasReasonableAccuracy_TFLite(self):
     model = _build_model()
