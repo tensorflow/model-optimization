@@ -119,7 +119,7 @@ class _TrainingWrapper(tf.keras.layers.Wrapper):
         training_weight_tensors.append(
             _prevent_constant_folding(v.read_value(), inputs))
 
-      weight_tensor = self.algorithm.training(training_weight_tensors)
+      weight_tensor = self.algorithm.training(*training_weight_tensors)
       setattr(self.layer, attr_name, weight_tensor)
 
     # This assumes that all changes to the forward pass happen "prior" to
@@ -186,7 +186,7 @@ class _InferenceWrapper(tf.keras.layers.Wrapper):
     self.compressed_weights = {}
     for attr_name in self.training_tensors:
       training_tensors = self.training_tensors[attr_name]
-      compressed_tensors = self.algorithm.compress(training_tensors)
+      compressed_tensors = self.algorithm.compress(*training_tensors)
       weights = []
       for t in compressed_tensors:
         weight = self.add_weight(name='TODO', shape=t.shape)
@@ -297,7 +297,7 @@ def _map_to_inference_weights(training_weights, algorithm, training_tensors):
   layer_weights_i = 0
   for weight in weights:
     if weight in training_tensors:
-      compressed = algorithm.compress(training_tensors[weight])
+      compressed = algorithm.compress(*training_tensors[weight])
       for c in compressed:
         compressed_weights.append(c.numpy())
       layer_weights_i += len(training_tensors[weight])

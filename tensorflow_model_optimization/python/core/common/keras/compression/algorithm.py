@@ -62,7 +62,7 @@ class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
       `tf.keras.layers.Layer.add_weight`for each tf.Variable to create.
     """
 
-  def compress(self, training_weights: List[tf.Tensor]) -> List[tf.Tensor]:
+  def compress(self, *training_weights: tf.Tensor) -> List[tf.Tensor]:
     """Define the operations to compress a single weight after training.
 
     'Compress' can refer to making the weight more amenable to compression
@@ -71,22 +71,22 @@ class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
     The default is an identity.
 
     Args:
-      training_weights: tf.Tensors representing all variables used during
+      *training_weights: tf.Tensors representing all variables used during
         training, for a single compressible weight, in the order returned in
         `init_training_weights_repr`.
 
     Returns:
       List of tf.Tensors to set to compressed or more compressible form.
     """
-    return training_weights
+    return list(training_weights)
 
-  def decompress(self, compressed_weights: List[tf.Tensor]) -> tf.Tensor:
+  def decompress(self, *compressed_weights: tf.Tensor) -> tf.Tensor:
     """Define the operations to decompress a single weight’s compressed form during inference.
 
     The default is an identity. TODO(): actually isn't.
 
     Args:
-       compressed_weights: tf.Tensors representing a single weight’s compressed
+       *compressed_weights: tf.Tensors representing a single weight’s compressed
          form, coming from what’s returned in `compress`.
 
     Returns:
@@ -95,14 +95,14 @@ class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
     return compressed_weights[0]
 
   @abc.abstractmethod
-  def training(self, training_weights: List[tf.Tensor]) -> tf.Tensor:
+  def training(self, *training_weights: tf.Tensor) -> tf.Tensor:
     """Define a piece of the forward pass during training, which operates on a single compressible weight.
 
     TODO(tfmot): throw this error.
     The default throws an error when training occurs.
 
     Args:
-       training_weights: tf.Tensors representing any variables used during
+       *training_weights: tf.Tensors representing any variables used during
          training, for a single compressible weight, in the order returned in
          `init_training_weights_repr`.
 

@@ -234,7 +234,7 @@ class FunctionalTest(tf.test.TestCase):
 
     # kernel
     algorithm = svd.SVD(params)
-    w1, w2 = algorithm.compress([tf.constant(dense_layer_weights[0])])
+    w1, w2 = algorithm.compress(tf.constant(dense_layer_weights[0]))
     assert (w1 == dense_layer_compressed_weights[0]).numpy().all()
     assert (w2 == dense_layer_compressed_weights[1]).numpy().all()
 

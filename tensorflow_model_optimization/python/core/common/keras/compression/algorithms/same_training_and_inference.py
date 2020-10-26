@@ -73,9 +73,7 @@ class SVD(algorithm.WeightCompressionAlgorithm):
   def decompress(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
     return tf.matmul(u, sv)
 
-  def training(self, training_weights: List[tf.Tensor]) -> tf.Tensor:
-    u = training_weights[0]
-    sv = training_weights[1]
+  def training(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
     return self.decompress(u, sv)
 
 

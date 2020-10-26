@@ -48,10 +48,7 @@ class SVD(algorithm.WeightCompressionAlgorithm):
   def decompress(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
     return tf.matmul(u, sv)
 
-  def compress(self, training_weights: List[tf.Tensor]) -> List[tf.Tensor]:
-    assert len(training_weights) == 1
-    weight = training_weights[0]
-
+  def compress(self, weight: tf.Tensor) -> List[tf.Tensor]:
     rank = self.params.rank
     s, u, v = tf.linalg.svd(weight)
 
@@ -73,8 +70,8 @@ class SVD(algorithm.WeightCompressionAlgorithm):
     return [u, sv]
 
   # TODO(tfmot): remove in this example, which is just post-training.
-  def training(self, training_weights: List[tf.Tensor]) -> tf.Tensor:
-    return training_weights[0]
+  def training(self, weight: tf.Tensor) -> tf.Tensor:
+    return weight
 
 
 # TODO(tfmot): consider if we can simplify `create_model_for_training` and
