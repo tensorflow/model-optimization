@@ -19,9 +19,9 @@ technique:clustering:
 - tensorflow_model_optimization/g3doc/guide/clustering/**/*
 
 technique:pruning:
-- tensorflow_model_optimization/python/core/pruning/**/*
-- tensorflow_model_optimization/python/core/api/pruning/**/*
-- tensorflow_model_optimization/python/examples/pruning/**/*
+- tensorflow_model_optimization/python/core/sparsity/**/*
+- tensorflow_model_optimization/python/core/api/sparsity/**/*
+- tensorflow_model_optimization/python/examples/sparsity/**/*
 - tensorflow_model_optimization/g3doc/guide/pruning/**/*
 
 technique:qat:
@@ -29,6 +29,9 @@ technique:qat:
 - tensorflow_model_optimization/python/core/api/quantization/**/*
 - tensorflow_model_optimization/python/examples/quantization/**/*
 - tensorflow_model_optimization/g3doc/guide/quantization/**/*
+
+comp:weight compression:
+- tensorflow_model_optimization/python/core/common/keras/compression/**/*
 
 # Note: this does not capture all PRs that need a API review.
 api-review:
