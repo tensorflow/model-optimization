@@ -175,7 +175,9 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
     y_tfl = self._execute_tflite(tflite_file, x_test, y_test)
 
     # 5. Verify results are the same in TF and TFL.
-    self.assertAllClose(y_tf, y_tfl)
+    # TODO(pulkitb): Temporarily raise tolerances since some rounding
+    # changes in x86 kernels are causing values to differ by 'scale'.
+    self.assertAllClose(y_tf, y_tfl, atol=1e-1, rtol=1e-1)
 
 
 if __name__ == '__main__':
