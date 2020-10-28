@@ -73,6 +73,13 @@ class SVD(algorithm.WeightCompressionAlgorithm):
   def training(self, weight: tf.Tensor) -> tf.Tensor:
     return weight
 
+  def get_compressible_weights(
+      self, original_layer: tf.keras.layers.Layer) -> List[str]:
+    if isinstance(original_layer, tf.keras.layers.Conv2D) or \
+       isinstance(original_layer, tf.keras.layers.Dense):
+      return ['kernel']
+    return []
+
 
 # TODO(tfmot): consider if we can simplify `create_model_for_training` and
 # `create_model_for_inference` into a single API for algorithm developers.

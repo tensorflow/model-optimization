@@ -110,6 +110,23 @@ class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
        tf.Tensor to set the compressible weight to.
     """
 
+  # TODO(tfmot): Consider separate from algorithm API for custom layer supports.
+  def get_compressible_weights(
+      self, original_layer: tf.keras.layers.Layer) -> List[str]:
+    """Define compressible weights for each layer.
+
+    Args:
+       original_layer: tf.keras.layers.Layer representing a layer from the
+       original model.
+
+    Returns:
+       List of atrribute names as string representing list of compressible
+       weights for the given layer. (e.g. return value ['kernel'] means
+       layer.kernel is compressible.)
+    """
+    del original_layer
+    return []
+
 
 def create_layer_for_training(
     layer: tf.keras.layers.Layer,

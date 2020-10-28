@@ -232,24 +232,10 @@ def _map_to_training_weights(
   # user has to pass in the information that 'kernel' is the first
   # variable, 'bias' is the second variable, and so on.
   # TODO(tfmot): see if Keras can introduce changes to simplify this.
+  original_weights = []
   training_weights = []
   if isinstance(layer, tf.keras.layers.Conv2D) or \
      isinstance(layer, tf.keras.layers.Dense):
-    # This assumes that weight order remains constant.
-    # TODO(tfmot): check this assumption is okay, which should be the case since
-    # otherwise, when Keras deserializes a model (which stores its weights
-    # separately from the architecture), there isn't a way to map those weights
-    # back to the variables unless Keras has its own tracking system.
-    #
-    # TODO(tfmot):
-    # This also depends on that _TrainingWrapper get_weights/set_weights has
-    # the weights in this same order, which is not obvious since the
-    # _TrainingWrapper `build` method first builds the nested layer
-    # (e.g. with 'bias') and then creates its own variables. It could
-    # be that the actual weight order isn't this, but rather everything
-    # in _TrainingWrapper first and then the nested layer. This would
-    # mean we need to iterate through compressible_weights first, instead
-    # of going on this fixed order.
     weights = ['kernel', 'bias']
     for i, weight in enumerate(weights):
       pretrained_weight = pretrained_weights[i]
@@ -263,10 +249,11 @@ def _map_to_training_weights(
           # suggests that the `value` cannot be any arbitrary shape and
           # only a single scalar value. It works in this implementation
           # to make `value` any tensor - check this.
-          training_weights.append(weight_repr.initializer(shape=None))
+          training_weights.append(weight_repr.initializer(
+              shape=None, dtype=weight_repr.dtype))
       else:
-        training_weights.append(pretrained_weight)
-  return training_weights
+        original_weights.append(pretrained_weight)
+  return training_weights + original_weights
 
 
 # TODO(tfmot): same TODOs as _map_to_training_weights.
@@ -328,6 +315,8 @@ def create_layer_for_training(layer, algorithm):
   pretrained_weights = layer.get_weights()
   input_shape = layer.input_shape
 
+  compressible_weights = algorithm.get_compressible_weights(layer)
+
   # Clone layer for two reasons:
   #
   #   1) Avoid unnecessary variable creation which undoes the benefits of
@@ -347,13 +336,6 @@ def create_layer_for_training(layer, algorithm):
   # and only add it during inference, which is when model size really matters.
   # TODO(tfmot): handle custom Keras layer case.
   cloned_layer = layer.__class__.from_config(layer.get_config())
-
-  # TODO(tfmot): move this to algorithm to specify.
-  if isinstance(cloned_layer, tf.keras.layers.Conv2D) or \
-     isinstance(cloned_layer, tf.keras.layers.Dense):
-    compressible_weights = ['kernel']
-  else:
-    compressible_weights = []
 
   # TODO(tfmot): consider if this manner of handling build hinders
   # support for subclassed models in trying to set the attributes
