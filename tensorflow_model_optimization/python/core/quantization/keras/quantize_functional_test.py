@@ -141,6 +141,11 @@ class QuantizeFullIntegerModelTest(tf.test.TestCase, parameterized.TestCase):
       }),
       (layers.UpSampling2D, {
           'input_shape': (4, 6, 1),
+          'interpolation': 'nearest',
+      }),
+      (layers.UpSampling2D, {
+          'input_shape': (4, 6, 1),
+          'interpolation': 'bilinear',
       }),
       (layers.UpSampling3D, {
           'input_shape': (4, 6, 1),
@@ -266,7 +271,6 @@ class QuantizeFullIntegerModelTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.parameters([
       l for l in _LAYER_PARAMS if l[0] not in [
           # Not done since TFLite converter doesn't support in TF2 yet.
-          layers.UpSampling2D,
           layers.Conv3D,
           layers.Conv3DTranspose,
           layers.AveragePooling3D,

@@ -45,3 +45,25 @@ py_test(
         # tensorflow dep1,
     ],
 )
+
+py_library(
+    name = "bias_only",
+    srcs = ["bias_only.py"],
+    srcs_version = "PY3",
+    deps = [
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+    ],
+)
+
+py_test(
+    name = "bias_only_test",
+    timeout = "long",
+    srcs = ["bias_only_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":bias_only",
+        # numpy dep1,
+        # tensorflow dep1,
+    ],
+)
