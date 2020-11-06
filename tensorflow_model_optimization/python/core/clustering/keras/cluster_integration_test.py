@@ -171,13 +171,13 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     def clusters_check(stripped_model):
       # inner dense layer
-      weights_as_list = stripped_model._layers[1]._layers[1].trainable_weights[0].\
+      weights_as_list = stripped_model.submodules[1].trainable_weights[0].\
         numpy().flatten()
       unique_weights = set(weights_as_list)
       self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
       # outer dense layer
-      weights_as_list = stripped_model._layers[2].trainable_weights[0].\
+      weights_as_list = stripped_model.submodules[4].trainable_weights[0].\
         numpy().flatten()
       unique_weights = set(weights_as_list)
       self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
@@ -199,20 +199,20 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     def clusters_check(stripped_model):
       # first inner dense layer
-      weights_as_list = stripped_model._layers[1]._layers[1].trainable_weights[0].\
+      weights_as_list = stripped_model.submodules[1].trainable_weights[0].\
         numpy().flatten()
       unique_weights = set(weights_as_list)
       self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
       # second inner dense layer
-      weights_as_list = stripped_model._layers[1]._layers[1]._layers[1].\
+      weights_as_list = stripped_model.submodules[4].\
         trainable_weights[0].\
         numpy().flatten()
       unique_weights = set(weights_as_list)
       self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
       # outer dense layer
-      weights_as_list = stripped_model._layers[2].trainable_weights[0].\
+      weights_as_list = stripped_model.submodules[7].trainable_weights[0].\
         numpy().flatten()
       unique_weights = set(weights_as_list)
       self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
