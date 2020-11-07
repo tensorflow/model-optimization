@@ -202,7 +202,7 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     self._assert_outputs_equal(quantized_model, same_architecture_model)
 
-  def testSerialization_TF2SavedModel(self):
+  def testSerialization_SavedModel(self):
     if compat.is_v1_apis():
       return
 
@@ -213,24 +213,6 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     model_dir = tempfile.mkdtemp()
     tf.keras.models.save_model(quantized_model, model_dir)
     loaded_model = tf.keras.models.load_model(model_dir)
-
-    self._assert_outputs_equal(quantized_model, loaded_model)
-
-  def testSerialization_TF1SavedModel(self):
-    if not compat.is_v1_apis():
-      return
-
-    model = test_utils.build_simple_dense_model()
-    quantized_model = quantize.quantize_model(model)
-    self._train_model(quantized_model)
-
-    saved_model_dir = tempfile.mkdtemp()
-    with quantize.quantize_scope():
-      tf.keras.experimental.export_saved_model(quantized_model, saved_model_dir)
-
-    with quantize.quantize_scope():
-      loaded_model = tf.keras.experimental.load_from_saved_model(
-          saved_model_dir)
 
     self._assert_outputs_equal(quantized_model, loaded_model)
 
