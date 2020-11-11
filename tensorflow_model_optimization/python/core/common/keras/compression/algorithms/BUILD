@@ -67,3 +67,26 @@ py_test(
         # tensorflow dep1,
     ],
 )
+
+py_library(
+    name = "weight_clustering",
+    srcs = ["weight_clustering.py"],
+    srcs_version = "PY3",
+    deps = [
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras:clustering_centroids",
+        "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
+        "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+    ],
+)
+
+py_test(
+    name = "weight_clustering_test",
+    srcs = ["weight_clustering_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":weight_clustering",
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
+    ],
+)
