@@ -243,8 +243,8 @@ py_library(
         ":quantize_layer",
         ":quantize_wrapper",
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_layout_transform",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
     ],
 )
@@ -328,4 +328,13 @@ py_library(
     deps = [
         # tensorflow dep1,
     ],
+)
+
+py_library(
+    name = "quantize_scheme",
+    srcs = [
+        "quantize_scheme.py",
+    ],
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
 )

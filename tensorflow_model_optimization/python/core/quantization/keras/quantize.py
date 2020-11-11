@@ -22,8 +22,8 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
-from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_layout_transform
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_scheme
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 
 keras = tf.keras
@@ -263,7 +263,9 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
       layer=to_annotate, quantize_config=quantize_config)
 
 
-def quantize_apply(model):
+def quantize_apply(
+    model,
+    scheme=default_8bit_quantize_scheme.Default8BitQuantizeScheme()):
   """Quantize a `tf.keras` model that has been annotated for quantization.
 
   Quantization constructs a model which emulates quantization during training.
@@ -298,6 +300,8 @@ def quantize_apply(model):
   Args:
     model: A `tf.keras` Sequential or Functional model which has been annotated
       with `quantize_annotate`. It can have pre-trained weights.
+    scheme: A `QuantizeScheme` which specifies transformer and quantization
+      registry. The default is `Default8BitQuantizeScheme()`.
 
   Returns:
     Returns a new `tf.keras` model in which the annotated layers have been
@@ -403,15 +407,13 @@ def quantize_apply(model):
 
   # 3. Apply the graph transformations required to match model passes on
   # target device/dialect.
-  quantize_transform = \
-    default_8bit_quantize_layout_transform.QuantizeLayoutTransform()
+  quantize_transform = scheme.get_layout_transformer()
   # layer_quantize_map gets modified by the transformations.
   transformed_model, layer_quantize_map = quantize_transform.apply(
       unwrapped_model, layer_quantize_map)
 
   # TODO(pulkitb): Think more about how to introduce Default specific code.
-  quantize_registry = default_8bit_quantize_registry.QuantizeRegistry(
-  )
+  quantize_registry = scheme.get_quantize_registry()
 
   # 4. Actually quantize all the relevant layers in the model. This is done by
   # wrapping the layers with QuantizeWrapper, and passing the associated
