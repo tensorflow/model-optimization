@@ -20,11 +20,20 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
 
 
-class SVDParams(object):
+class SVDParams(algorithm.Parameters):
   """Define container for parameters for SVD algorithm."""
 
   def __init__(self, rank):
+    super(SVDParams, self).__init__()
     self.rank = rank
+
+
+# Helper function
+def slice_with_resized_rank(tensor, rank, axis=-1):
+  max_rank = tensor.get_shape().as_list()[axis]
+  return tf.split(tensor,
+                  [tf.reduce_min([rank, max_rank]),
+                   tf.nn.relu(max_rank - rank)], axis)[0]
 
 
 class SVD(algorithm.WeightCompressionAlgorithm):
@@ -72,6 +81,12 @@ class SVD(algorithm.WeightCompressionAlgorithm):
 
   def decompress(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
     return tf.matmul(u, sv)
+
+  def compress(self, u: tf.Tensor, sv: tf.Tensor) -> List[tf.Tensor]:
+    rank = self.params.rank
+    u = slice_with_resized_rank(u, rank)
+    sv = slice_with_resized_rank(sv, rank, axis=-2)
+    return [u, sv]
 
   def training(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
     return self.decompress(u, sv)
