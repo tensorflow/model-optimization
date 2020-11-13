@@ -147,3 +147,16 @@ py_test(
         "//tensorflow_model_optimization/python/core/quantization/keras:utils",
     ],
 )
+
+py_library(
+    name = "default_8bit_quantize_scheme",
+    srcs = [
+        "default_8bit_quantize_scheme.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        ":default_8bit_quantize_layout_transform",
+        ":default_8bit_quantize_registry",
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_scheme",
+    ],
+)
