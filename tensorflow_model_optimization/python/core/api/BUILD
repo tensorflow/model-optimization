@@ -11,6 +11,7 @@ py_library(
         "quantization/__init__.py",
         "quantization/keras/__init__.py",
         "quantization/keras/quantizers/__init__.py",
+        "quantization/keras/experimental_scheme/__init__.py",
         "sparsity/__init__.py",
         "sparsity/keras/__init__.py",
     ],

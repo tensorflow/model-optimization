@@ -10,7 +10,9 @@ py_library(
         "__init__.py",
     ],
     srcs_version = "PY3",
-    deps = [],
+    deps = [
+        ":default_8bit_prune_preserve_quantize_scheme",
+    ],
 )
 
 py_library(
@@ -22,6 +24,7 @@ py_library(
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
     ],
 )
 
@@ -37,4 +40,17 @@ py_test(
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
     ]
+)
+
+py_library(
+    name = "default_8bit_prune_preserve_quantize_scheme",
+    srcs = [
+        "default_8bit_prune_preserve_quantize_scheme.py",
+    ],
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":prune_preserve_quantize_registry",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
+    ],
 )

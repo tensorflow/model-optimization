@@ -26,6 +26,8 @@ from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
+from tensorflow_model_optimization.python.core.quantization.keras.prune_preserve import (
+    default_8bit_prune_preserve_quantize_scheme, )
 
 layers = tf.keras.layers
 
@@ -118,8 +120,9 @@ def prune_preserve_quantize_model(pruned_model, train_images, train_labels):
   pruned_model = prune.strip_pruning(pruned_model)
   # Prune preserve QAT model
   quant_aware_annotate_model = quantize.quantize_annotate_model(pruned_model)
-  quant_aware_model = quantize.quantize_apply(quant_aware_annotate_model,
-                                              prune_preserve=True)
+  quant_aware_model = quantize.quantize_apply(
+    quant_aware_annotate_model,
+    scheme=default_8bit_prune_preserve_quantize_scheme.Default8BitPrunePreserveQuantizeScheme())
   quant_aware_model.summary()
 
   fit_kwargs = {

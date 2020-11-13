@@ -12,5 +12,6 @@ py_binary(
         # tensorflow dep1,
         # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
+        "//tensorflow_model_optimization/python/core/quantization/keras/prune_preserve:default_8bit_prune_preserve_quantize_scheme",
     ],
 )

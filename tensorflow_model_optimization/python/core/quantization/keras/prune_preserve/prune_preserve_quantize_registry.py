@@ -20,6 +20,8 @@ from tensorflow_model_optimization.python.core.quantization.keras import quant_o
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
     default_8bit_quantizers, )
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
+    default_8bit_quantize_registry, )
 
 layers = tf.keras.layers
 
@@ -179,21 +181,45 @@ class PrunePreserveQuantizeRegistry(object):
         quantize_config.weight_quantizer = self._config_quantizer_map[
             quantize_config.__class__.__name__]
       else:
-        raise ValueError('Configuration ' +
-                         str(quantize_config.__class__.__name__) +  
-                         ' is not supported for Layer ' +
-                         str(layer.__class__) + '.')
+        raise ValueError("Configuration " +
+                         str(quantize_config.__class__.__name__) +
+                         " is not supported for Layer " +
+                         str(layer.__class__) + ".")
     else:
-      raise ValueError('Layer ' + str(layer.__class__) + ' is not supported.')
+      raise ValueError("Layer " + str(layer.__class__) + " is not supported.")
 
     return quantize_config
+
+
+class Default8bitPrunePreserveQuantizeRegistry(PrunePreserveQuantizeRegistry):
+  """Default 8 bit PrunePreserveQuantizeRegistry."""
+  def __init__(self):
+    super(Default8bitPrunePreserveQuantizeRegistry, self).__init__()
+
+  def get_quantize_config(self, layer):
+    """Returns the quantization config with addon sparsity
+    preserve weight_quantizer for the given layer.
+
+    Args:
+      layer: input layer to return quantize config for.
+
+    Returns:
+      Returns the quantization config with sparsity preserve weight_quantizer.
+    """
+    quantize_config = default_8bit_quantize_registry.QuantizeRegistry(
+    ).get_quantize_config(layer)
+    prune_aware_quantize_config = super(
+        Default8bitPrunePreserveQuantizeRegistry,
+        self).apply_sparsity_preserve_quantize_config(layer, quantize_config)
+
+    return prune_aware_quantize_config
 
 
 class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
   """Quantize weights while preserve sparsity."""
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
     """PrunePerserveDefaultWeightsQuantizer
-    
+
     Args:
       num_bits: Number of bits for quantization
       per_axis: Whether to apply per_axis quantization. The last dimension is
