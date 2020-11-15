@@ -53,6 +53,11 @@ class PrunePreserveQuantizeRegistry(object):
       layers.Dense:
       _PrunePreserveInfo(['kernel'], ['Default8BitQuantizeConfig']),
 
+      # DepthwiseConv2D is supported with 8bit qat, but not with prune,
+      # thus for DepthwiseConv2D PQAT, weights sparsity preserve is disabled.
+      layers.DepthwiseConv2D:
+      _PrunePreserveInfo(['depthwise_kernel'], ['Default8BitQuantizeConfig']),
+
       # layers that supported with prune, but not yet with qat
       # layers.Conv1D:
       # _PrunePreserveInfo(['kernel'], []),
@@ -67,10 +72,6 @@ class PrunePreserveQuantizeRegistry(object):
       # layers.LocallyConnected2D:
       # _PrunePreserveInfo(['kernel'], ['Default8BitQuantizeConfig']),
 
-      # DepthwiseCon2D is supported with 8bit qat, but not with prune
-      # layers.DepthwiseConv2D:
-      # _PrunePreserveInfo(['depthwise_kernel'], ['Default8BitConvQuantizeConfig']),
-
       # SeparableConv need verify from 8bit qat
       # layers.SeparableConv1D:
       # _PrunePreserveInfo(['pointwise_kernel'], ['Default8BitConvQuantizeConfig']),
@@ -81,13 +82,17 @@ class PrunePreserveQuantizeRegistry(object):
       # layers.Embedding: _PrunePreserveInfo(['embeddings'], []),
   }
 
+  _DISABLE_PRUNE_PRESERVE = {
+      layers.DepthwiseConv2D,
+  }
+
   def __init__(self):
 
     self._config_quantizer_map = {
         'Default8BitQuantizeConfig':
-        PrunePerserveDefault8BitWeightsQuantizer(),
+        PrunePreserveDefault8BitWeightsQuantizer(),
         'Default8BitConvQuantizeConfig':
-        PrunePerserveDefault8BitConvWeightsQuantizer(),
+        PrunePreserveDefault8BitConvWeightsQuantizer(),
     }
 
   @classmethod
@@ -102,6 +107,19 @@ class PrunePreserveQuantizeRegistry(object):
     """
 
     return len(layer.trainable_weights) == 0
+
+  @classmethod
+  def _disable_prune_preserve(cls, layer):
+    """Returns whether disable this layer for prune preserve.
+
+    Args:
+      layer: The layer to check for disable.
+
+    Returns:
+      True/False whether disable this layer for prune preserve.
+    """
+
+    return layer.__class__ in cls._DISABLE_PRUNE_PRESERVE
 
   @classmethod
   def supports(cls, layer):
@@ -174,7 +192,7 @@ class PrunePreserveQuantizeRegistry(object):
       Returns quantize_config with addon sparsity preserve weight_quantizer.
     """
     if self.supports(layer):
-      if self._no_trainable_weights(layer):
+      if self._no_trainable_weights(layer) or self._disable_prune_preserve(layer):
         return quantize_config
       if (quantize_config.__class__.__name__
           in self._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs):
@@ -215,10 +233,10 @@ class Default8bitPrunePreserveQuantizeRegistry(PrunePreserveQuantizeRegistry):
     return prune_aware_quantize_config
 
 
-class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
+class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
   """Quantize weights while preserve sparsity."""
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
-    """PrunePerserveDefaultWeightsQuantizer
+    """PrunePreserveDefaultWeightsQuantizer
 
     Args:
       num_bits: Number of bits for quantization
@@ -231,7 +249,7 @@ class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         range has 0 as the centre.
     """
 
-    super(PrunePerserveDefaultWeightsQuantizer, self).__init__(
+    super(PrunePreserveDefaultWeightsQuantizer, self).__init__(
         num_bits=num_bits,
         per_axis=per_axis,
         symmetric=symmetric,
@@ -258,7 +276,7 @@ class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     """
     result = self._build_sparsity_mask(name, layer)
     result.update(
-        super(PrunePerserveDefaultWeightsQuantizer,
+        super(PrunePreserveDefaultWeightsQuantizer,
               self).build(tensor_shape, name, layer))
     return result
 
@@ -290,27 +308,27 @@ class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     )
 
 
-class PrunePerserveDefault8BitWeightsQuantizer(
-    PrunePerserveDefaultWeightsQuantizer):
-  """PrunePerserveWeightsQuantizer for default 8bit weights"""
+class PrunePreserveDefault8BitWeightsQuantizer(
+    PrunePreserveDefaultWeightsQuantizer):
+  """PrunePreserveWeightsQuantizer for default 8bit weights"""
   def __init__(self):
-    super(PrunePerserveDefault8BitWeightsQuantizer,
+    super(PrunePreserveDefault8BitWeightsQuantizer,
           self).__init__(num_bits=8,
                          per_axis=False,
                          symmetric=True,
                          narrow_range=True)
 
 
-class PrunePerserveDefault8BitConvWeightsQuantizer(
-    PrunePerserveDefaultWeightsQuantizer,
+class PrunePreserveDefault8BitConvWeightsQuantizer(
+    PrunePreserveDefaultWeightsQuantizer,
     default_8bit_quantizers.Default8BitConvWeightsQuantizer,
 ):
-  """PrunePerserveWeightsQuantizer for default 8bit Conv2D/DepthwiseConv2D weights"""
+  """PrunePreserveWeightsQuantizer for default 8bit Conv2D/DepthwiseConv2D weights"""
   def __init__(self):
     default_8bit_quantizers.Default8BitConvWeightsQuantizer.__init__(self)
 
   def build(self, tensor_shape, name, layer):
-    result = PrunePerserveDefaultWeightsQuantizer._build_sparsity_mask(
+    result = PrunePreserveDefaultWeightsQuantizer._build_sparsity_mask(
         self, name, layer)
     result.update(
         default_8bit_quantizers.Default8BitConvWeightsQuantizer.build(
