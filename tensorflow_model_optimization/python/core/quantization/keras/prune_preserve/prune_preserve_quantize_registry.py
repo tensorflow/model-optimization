@@ -53,6 +53,11 @@ class PrunePreserveQuantizeRegistry(object):
       layers.Dense:
       _PrunePreserveInfo(['kernel'], ['Default8BitQuantizeConfig']),
 
+      # DepthwiseConv2D is supported with 8bit qat, but not with prune,
+      # thus for DepthwiseConv2D PQAT, weights sparsity preserve is disabled.
+      layers.DepthwiseConv2D:
+      _PrunePreserveInfo(['depthwise_kernel'], ['Default8BitQuantizeConfig']),
+
       # layers that supported with prune, but not yet with qat
       # layers.Conv1D:
       # _PrunePreserveInfo(['kernel'], []),
@@ -67,10 +72,6 @@ class PrunePreserveQuantizeRegistry(object):
       # layers.LocallyConnected2D:
       # _PrunePreserveInfo(['kernel'], ['Default8BitQuantizeConfig']),
 
-      # DepthwiseCon2D is supported with 8bit qat, but not with prune
-      # layers.DepthwiseConv2D:
-      # _PrunePreserveInfo(['depthwise_kernel'], ['Default8BitConvQuantizeConfig']),
-
       # SeparableConv need verify from 8bit qat
       # layers.SeparableConv1D:
       # _PrunePreserveInfo(['pointwise_kernel'], ['Default8BitConvQuantizeConfig']),
@@ -79,6 +80,10 @@ class PrunePreserveQuantizeRegistry(object):
 
       # Embedding need verify from 8bit qat
       # layers.Embedding: _PrunePreserveInfo(['embeddings'], []),
+  }
+
+  _DISABLE_PRUNE_PRESERVE = {
+      layers.DepthwiseConv2D,
   }
 
   def __init__(self):
@@ -102,6 +107,19 @@ class PrunePreserveQuantizeRegistry(object):
     """
 
     return len(layer.trainable_weights) == 0
+
+  @classmethod
+  def _disable_prune_preserve(cls, layer):
+    """Returns whether disable this layer for prune preserve.
+
+    Args:
+      layer: The layer to check for disable.
+
+    Returns:
+      True/False whether disable this layer for prune preserve.
+    """
+
+    return layer.__class__ in cls._DISABLE_PRUNE_PRESERVE
 
   @classmethod
   def supports(cls, layer):
@@ -174,7 +192,7 @@ class PrunePreserveQuantizeRegistry(object):
       Returns quantize_config with addon sparsity preserve weight_quantizer.
     """
     if self.supports(layer):
-      if self._no_trainable_weights(layer):
+      if self._no_trainable_weights(layer) or self._disable_prune_preserve(layer):
         return quantize_config
       if (quantize_config.__class__.__name__
           in self._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs):
