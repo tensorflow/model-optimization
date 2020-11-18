@@ -15,6 +15,8 @@
 """Tests for keras ClusterWeights wrapper API."""
 
 import itertools
+import tempfile
+import os
 import tensorflow as tf
 
 from absl.testing import parameterized
@@ -302,68 +304,39 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     # Weights should now be all clustered with the centroid 1
     assert_all_weights_associated(l.layer.kernel, centroid_index=1)
 
-
-  def testClusterReassociation(self):
-    """
-    Verifies that the association of weights to cluster centroids are updated
-    every iteration.
-    """
-
+  def testSameWeightsAreReturnedBeforeAndAfterSerialisation(self):
+    """Verify that the weights of a cluster_wrapper are the same
+    before and after serialisation."""
     # Create a dummy layer for this test
     input_shape = (1, 2,)
-    l = cluster_wrapper.ClusterWeights(
-        keras.layers.Dense(8, input_shape=input_shape),
-        number_of_clusters=2,
-        cluster_centroids_init=CentroidInitialization.LINEAR
+    original_layer = cluster_wrapper.ClusterWeights(
+      keras.layers.Dense(8, input_shape=input_shape),
+      number_of_clusters=2,
+      cluster_centroids_init=CentroidInitialization.LINEAR
     )
     # Build a layer with the given shape
-    l.build(input_shape)
+    original_layer.build(input_shape)
 
-    # Get name of the clusterable weights
-    clusterable_weights = l.layer.get_clusterable_weights()
-    self.assertEqual(len(clusterable_weights), 1)
-    weights_name = clusterable_weights[0][0]
-    self.assertEqual(weights_name, 'kernel')
-    # Get cluster centroids
-    centroids = l.cluster_centroids_tf[weights_name]
+    # Save and load the layer in a temp directory
+    with tempfile.TemporaryDirectory() as tmpdirname:
+      keras_file = os.path.join(tmpdirname, 'keras_model')
+      keras.models.save_model(original_layer, keras_file)
+      with cluster.cluster_scope():
+        loaded_layer = keras.models.load_model(keras_file)
 
-    # Calculate some statistics of the weights to set the centroids later on
-    mean_weight = tf.reduce_mean(l.layer.kernel)
-    min_weight = tf.reduce_min(l.layer.kernel)
-    max_weight = tf.reduce_max(l.layer.kernel)
-    max_dist = max_weight - min_weight
+    def assertListOfVariablesAllEqual(l1, l2):
+      assert len(l1) == len(l2), "both lists are not equals."
 
-    def assert_all_weights_associated(weights, centroid_index):
-      """Helper function to make sure that all weights are associated with one
-      centroid."""
-      all_associated = tf.reduce_all(
-          tf.equal(
-              weights,
-              tf.constant(centroids[centroid_index], shape=weights.shape)
-          )
-      )
-      self.assertTrue(all_associated)
+      name_to_var_d1 = {var.name: var for var in l1}
+      for var_l2 in l2:
+        self.assertAllEqual(var_l2, name_to_var_d1[var_l2.name])
 
-    # Set centroids so that all weights should be re-associated with centroid 0
-    centroids[0].assign(mean_weight)
-    centroids[1].assign(mean_weight + 2.0 * max_dist)
-
-    # Update associations of weights to centroids
-    l.call(tf.ones(shape=input_shape))
-
-    # Weights should now be all clustered with the centroid 0
-    assert_all_weights_associated(l.layer.kernel, centroid_index=0)
-
-    # Set centroids so that all weights should be re-associated with centroid 1
-    centroids[0].assign(mean_weight - 2.0 * max_dist)
-    centroids[1].assign(mean_weight)
-
-    # Update associations of weights to centroids
-    l.call(tf.ones(shape=input_shape))
-
-    # Weights should now be all clustered with the centroid 1
-    assert_all_weights_associated(l.layer.kernel, centroid_index=1)
-
+    # Check that trainable_weights and non_trainable_weights are the same
+    # in the original layer and loaded layer
+    assertListOfVariablesAllEqual(original_layer.trainable_weights,
+                                  loaded_layer.trainable_weights)
+    assertListOfVariablesAllEqual(original_layer.non_trainable_weights,
+                                  loaded_layer.non_trainable_weights)
 
 if __name__ == '__main__':
   test.main()
