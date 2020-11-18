@@ -10,6 +10,7 @@ py_library(
         "clustering/keras/__init__.py",
         "quantization/__init__.py",
         "quantization/keras/__init__.py",
+        "quantization/keras/default_8bit/__init__.py",
         "quantization/keras/quantizers/__init__.py",
         "sparsity/__init__.py",
         "sparsity/keras/__init__.py",
