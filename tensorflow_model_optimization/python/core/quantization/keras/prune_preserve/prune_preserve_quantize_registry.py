@@ -90,9 +90,9 @@ class PrunePreserveQuantizeRegistry(object):
 
     self._config_quantizer_map = {
         'Default8BitQuantizeConfig':
-        PrunePerserveDefault8BitWeightsQuantizer(),
+        PrunePreserveDefault8BitWeightsQuantizer(),
         'Default8BitConvQuantizeConfig':
-        PrunePerserveDefault8BitConvWeightsQuantizer(),
+        PrunePreserveDefault8BitConvWeightsQuantizer(),
     }
 
   @classmethod
@@ -224,7 +224,7 @@ class Default8bitPrunePreserveQuantizeRegistry(PrunePreserveQuantizeRegistry):
     Returns:
       Returns the quantization config with sparsity preserve weight_quantizer.
     """
-    quantize_config = default_8bit_quantize_registry.QuantizeRegistry(
+    quantize_config = default_8bit_quantize_registry.Default8BitQuantizeRegistry(
     ).get_quantize_config(layer)
     prune_aware_quantize_config = super(
         Default8bitPrunePreserveQuantizeRegistry,
@@ -233,10 +233,10 @@ class Default8bitPrunePreserveQuantizeRegistry(PrunePreserveQuantizeRegistry):
     return prune_aware_quantize_config
 
 
-class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
+class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
   """Quantize weights while preserve sparsity."""
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
-    """PrunePerserveDefaultWeightsQuantizer
+    """PrunePreserveDefaultWeightsQuantizer
 
     Args:
       num_bits: Number of bits for quantization
@@ -249,7 +249,7 @@ class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         range has 0 as the centre.
     """
 
-    super(PrunePerserveDefaultWeightsQuantizer, self).__init__(
+    super(PrunePreserveDefaultWeightsQuantizer, self).__init__(
         num_bits=num_bits,
         per_axis=per_axis,
         symmetric=symmetric,
@@ -276,7 +276,7 @@ class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     """
     result = self._build_sparsity_mask(name, layer)
     result.update(
-        super(PrunePerserveDefaultWeightsQuantizer,
+        super(PrunePreserveDefaultWeightsQuantizer,
               self).build(tensor_shape, name, layer))
     return result
 
@@ -308,27 +308,27 @@ class PrunePerserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     )
 
 
-class PrunePerserveDefault8BitWeightsQuantizer(
-    PrunePerserveDefaultWeightsQuantizer):
-  """PrunePerserveWeightsQuantizer for default 8bit weights"""
+class PrunePreserveDefault8BitWeightsQuantizer(
+    PrunePreserveDefaultWeightsQuantizer):
+  """PrunePreserveWeightsQuantizer for default 8bit weights"""
   def __init__(self):
-    super(PrunePerserveDefault8BitWeightsQuantizer,
+    super(PrunePreserveDefault8BitWeightsQuantizer,
           self).__init__(num_bits=8,
                          per_axis=False,
                          symmetric=True,
                          narrow_range=True)
 
 
-class PrunePerserveDefault8BitConvWeightsQuantizer(
-    PrunePerserveDefaultWeightsQuantizer,
+class PrunePreserveDefault8BitConvWeightsQuantizer(
+    PrunePreserveDefaultWeightsQuantizer,
     default_8bit_quantizers.Default8BitConvWeightsQuantizer,
 ):
-  """PrunePerserveWeightsQuantizer for default 8bit Conv2D/DepthwiseConv2D weights"""
+  """PrunePreserveWeightsQuantizer for default 8bit Conv2D/DepthwiseConv2D weights"""
   def __init__(self):
     default_8bit_quantizers.Default8BitConvWeightsQuantizer.__init__(self)
 
   def build(self, tensor_shape, name, layer):
-    result = PrunePerserveDefaultWeightsQuantizer._build_sparsity_mask(
+    result = PrunePreserveDefaultWeightsQuantizer._build_sparsity_mask(
         self, name, layer)
     result.update(
         default_8bit_quantizers.Default8BitConvWeightsQuantizer.build(

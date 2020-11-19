@@ -108,7 +108,7 @@ class PrunePreserveQuantizeRegistryTest(tf.test.TestCase,
 class PrunePreserveDefault8bitQuantizeRegistryTest(tf.test.TestCase):
   def setUp(self):
     super(PrunePreserveDefault8bitQuantizeRegistryTest, self).setUp()
-    self.default_8bit_quantize_registry = default_8bit_quantize_registry.QuantizeRegistry(
+    self.default_8bit_quantize_registry = default_8bit_quantize_registry.Default8BitQuantizeRegistry(
     )
     self.prune_registry = prune_registry.PruneRegistry()
     self.prune_preserve_quantize_registry = prune_preserve_quantize_registry.PrunePreserveQuantizeRegistry(
