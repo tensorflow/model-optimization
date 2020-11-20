@@ -282,8 +282,8 @@ def _cluster_weights(to_cluster,
     # we add wrappers for all available layers and
     # we wrap the whole model, so that augmented
     # 'build' and 'call' functions are called.
-    for i, layer in enumerate(to_cluster._layers):
-      to_cluster._layers[i] = _add_clustering_wrapper(layer=layer)
+    for i, layer in enumerate(to_cluster._self_tracked_trackables):
+      to_cluster._self_tracked_trackables[i] = _add_clustering_wrapper(layer=layer)
     return cluster_wrapper.WrapperSubclassedModel(to_cluster)
   else:
     raise ValueError(
@@ -373,8 +373,8 @@ def strip_clustering(to_strip):
       return _strip_clustering_wrapper(to_strip)
   elif is_subclassed_model:
     to_strip_model = to_strip.model
-    for i, layer in enumerate(to_strip_model._layers):
-      to_strip_model._layers[i] = _strip_clustering_wrapper(layer=layer)
+    for i, layer in enumerate(to_strip_model._self_tracked_trackables):
+      to_strip_model._self_tracked_trackables[i] = _strip_clustering_wrapper(layer=layer)
     return to_strip_model
   else:
     raise ValueError(
