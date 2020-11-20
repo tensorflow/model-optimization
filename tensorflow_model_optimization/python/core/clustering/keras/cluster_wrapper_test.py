@@ -327,9 +327,11 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     def assertListOfVariablesAllEqual(l1, l2):
       assert len(l1) == len(l2), "both lists are not equals."
 
-      name_to_var_d1 = {var.name: var for var in l1}
-      for var_l2 in l2:
-        self.assertAllEqual(var_l2, name_to_var_d1[var_l2.name])
+      name_to_var_from_l1 = {var.name: var for var in l1}
+      for var2 in l2:
+        arr1 = name_to_var_from_l1[var2.name].numpy()
+        arr2 = var2.numpy()
+        self.assertAllEqual(arr1, arr2)
 
     # Check that trainable_weights and non_trainable_weights are the same
     # in the original layer and loaded layer
