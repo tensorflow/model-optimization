@@ -318,14 +318,17 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     original_layer.build(input_shape)
 
     # Save and load the layer in a temp directory
-    with tempfile.TemporaryDirectory() as tmpdirname:
-      keras_file = os.path.join(tmpdirname, 'keras_model')
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+      keras_file = os.path.join(tmp_dir_name, 'keras_model')
       keras.models.save_model(original_layer, keras_file)
       with cluster.cluster_scope():
         loaded_layer = keras.models.load_model(keras_file)
 
     def assertListOfVariablesAllEqual(l1, l2):
-      assert len(l1) == len(l2), "both lists are not equals."
+      assert len(l1) == len(l2), \
+        "lists l1 and l2 are not equal: \n l1={l1} \n l2={l2}".format(
+          l1=[v.name for v in l1],
+          l2=[v.name for v in l2])
 
       name_to_var_from_l1 = {var.name: var for var in l1}
       for var2 in l2:
