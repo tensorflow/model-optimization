@@ -64,7 +64,7 @@ It is on our roadmap to add support in the following areas:
 Support is available in the following areas:
 
 *   Model coverage: models using
-    [whitelisted layers](https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_registry.py),
+    [allowlisted layers](https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_registry.py),
     BatchNormalization when it follows Conv2D and DepthwiseConv2D layers, and in
     limited cases, `Concat`.
     <!-- TODO(tfmot): add more details and ensure they are all correct. -->
