@@ -16,7 +16,7 @@
 
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
     default_8bit_quantize_scheme, )
-from tensorflow_model_optimization.python.core.quantization.keras.prune_preserve import (
+from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
     prune_preserve_quantize_registry, )
 
 
