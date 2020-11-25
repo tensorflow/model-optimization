@@ -69,7 +69,8 @@ class _RNNHelper(object):
       return [rnn_layer.cell]
 
 
-class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
+class Default8BitQuantizeRegistry(
+    quantize_registry.QuantizeRegistry, _RNNHelper):
   """QuantizationRegistry for built-in Keras classes for default 8-bit scheme."""
 
   # TODO(tfmot): expand layers test in quantize_functional_test.py

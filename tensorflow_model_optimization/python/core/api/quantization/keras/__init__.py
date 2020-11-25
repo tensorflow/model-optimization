@@ -18,6 +18,7 @@
 # submodules
 from tensorflow_model_optimization.python.core.api.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.api.quantization.keras import experimental_scheme
+from tensorflow_model_optimization.python.core.api.quantization.keras import default_8bit
 
 # quantize all layers with default quantization implementation.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_model
@@ -33,5 +34,10 @@ from tensorflow_model_optimization.python.core.quantization.keras.quantize_confi
 
 # Deserialize quantized model for Keras h5 format.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_scope
+
+# Quantization Scheme classes.
+from tensorflow_model_optimization.python.core.quantization.keras.quantize_scheme import QuantizeScheme
+from tensorflow_model_optimization.python.core.quantization.keras.quantize_layout_transform import QuantizeLayoutTransform
+from tensorflow_model_optimization.python.core.quantization.keras.quantize_registry import QuantizeRegistry
 
 # pylint: enable=g-bad-import-order

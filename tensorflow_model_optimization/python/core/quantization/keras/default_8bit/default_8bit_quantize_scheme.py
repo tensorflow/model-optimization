@@ -22,8 +22,9 @@ from tensorflow_model_optimization.python.core.quantization.keras.default_8bit i
 class Default8BitQuantizeScheme(quantize_scheme.QuantizeScheme):
 
   def get_layout_transformer(self):
-    return default_8bit_quantize_layout_transform.QuantizeLayoutTransform()
+    return default_8bit_quantize_layout_transform.\
+        Default8BitQuantizeLayoutTransform()
 
   def get_quantize_registry(self):
-    return default_8bit_quantize_registry.QuantizeRegistry()
+    return default_8bit_quantize_registry.Default8BitQuantizeRegistry()
 

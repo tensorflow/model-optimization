@@ -27,7 +27,7 @@ from tensorflow_model_optimization.python.core.quantization.keras.graph_transfor
 keras = tf.keras
 
 
-class QuantizeLayoutTransform(
+class Default8BitQuantizeLayoutTransform(
     quantize_layout_transform.QuantizeLayoutTransform):
   """Default model transformations."""
 

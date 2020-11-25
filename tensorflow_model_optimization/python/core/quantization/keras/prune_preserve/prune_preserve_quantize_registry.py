@@ -206,7 +206,7 @@ class Default8bitPrunePreserveQuantizeRegistry(PrunePreserveQuantizeRegistry):
     Returns:
       Returns the quantization config with sparsity preserve weight_quantizer.
     """
-    quantize_config = default_8bit_quantize_registry.QuantizeRegistry(
+    quantize_config = default_8bit_quantize_registry.Default8BitQuantizeRegistry(
     ).get_quantize_config(layer)
     prune_aware_quantize_config = super(
         Default8bitPrunePreserveQuantizeRegistry,
