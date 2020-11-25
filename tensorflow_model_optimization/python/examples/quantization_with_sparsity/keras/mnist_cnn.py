@@ -26,7 +26,7 @@ from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
-from tensorflow_model_optimization.python.core.quantization.keras.prune_preserve import (
+from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
     default_8bit_prune_preserve_quantize_scheme, )
 
 layers = tf.keras.layers
