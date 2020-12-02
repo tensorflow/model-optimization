@@ -12,8 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Import API modules for Tensorflow Model Optimization."""
-from tensorflow_model_optimization.python.core.api import clustering
-from tensorflow_model_optimization.python.core.api import quantization
-from tensorflow_model_optimization.python.core.api import sparsity
-from tensorflow_model_optimization.python.core.api import experimental
+"""Module containing collaborative optimization code."""
+from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve.default_8bit_prune_preserve_quantize_scheme import (
+    Default8BitPrunePreserveQuantizeScheme, )

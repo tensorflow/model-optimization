@@ -12,9 +12,10 @@ py_library(
         "quantization/keras/__init__.py",
         "quantization/keras/default_8bit/__init__.py",
         "quantization/keras/quantizers/__init__.py",
-        "quantization/keras/collaborative_optimization_scheme/__init__.py",
         "sparsity/__init__.py",
         "sparsity/keras/__init__.py",
+        "experimental/__init__.py",
+        "experimental/combine/__init__.py",
     ],
     srcs_version = "PY3",
     deps = [
