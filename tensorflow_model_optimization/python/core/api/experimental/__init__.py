@@ -12,7 +12,5 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Module containing experimental Quantization schemes."""
-
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve.default_8bit_prune_preserve_quantize_scheme import (
-    Default8BitPrunePreserveQuantizeScheme, )
+"""Module containing code for experimental features."""
+from tensorflow_model_optimization.python.core.api.experimental import combine
