@@ -13,7 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Clustering API functions for Keras models."""
+import distutils.version
 
+import tensorflow as tf
 from tensorflow import keras
 import tensorflow as tf
 
@@ -25,6 +27,11 @@ CustomObjectScope = keras.utils.CustomObjectScope
 Layer = keras.layers.Layer
 InputLayer = keras.layers.InputLayer
 
+# After tf version 2.4.0 the internal variable
+# _layers has been renamed to _self_tracked_trackables.
+# This variable is the only way to add cluster wrapper
+# to layers of a subclassed model.
+TF_VERSION_LAYERS = "2.4.0"
 
 def cluster_scope():
   """Provides a scope in which Clustered layers and models can be deserialized.
@@ -286,8 +293,14 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
     # we add wrappers for all available layers and
     # we wrap the whole model, so that augmented
     # 'build' and 'call' functions are called.
-    for i, layer in enumerate(to_cluster._self_tracked_trackables):
-      to_cluster._self_tracked_trackables[i] = _add_clustering_wrapper(layer=layer)
+
+    tf_version = distutils.version.LooseVersion(tf.__version__)
+    layers_tf_version = distutils.version.LooseVersion(TF_VERSION_LAYERS)
+    for i, layer in enumerate(to_cluster.submodules):
+      if tf_version > layers_tf_version:
+        to_cluster._self_tracked_trackables[i] = _add_clustering_wrapper(layer=layer)
+      else:
+        to_cluster._layers[i] = _add_clustering_wrapper(layer=layer)
     return cluster_wrapper.WrapperSubclassedModel(to_cluster)
   else:
     raise ValueError(
@@ -369,8 +382,14 @@ def strip_clustering(to_strip):
       return _strip_clustering_wrapper(to_strip)
   elif is_subclassed_model:
     to_strip_model = to_strip.model
-    for i, layer in enumerate(to_strip_model._self_tracked_trackables):
-      to_strip_model._self_tracked_trackables[i] = _strip_clustering_wrapper(layer=layer)
+    tf_version = distutils.version.LooseVersion(tf.__version__)
+    layers_tf_version = distutils.version.LooseVersion(TF_VERSION_LAYERS)
+    if tf_version > layers_tf_version:
+      for i, layer in enumerate(to_strip_model._self_tracked_trackables):
+        to_strip_model._self_tracked_trackables[i] = _strip_clustering_wrapper(layer=layer)
+    else:
+      for i, layer in enumerate(to_strip_model._layers):
+        to_strip_model._layers[i] = _strip_clustering_wrapper(layer=layer)
     return to_strip_model
   else:
     raise ValueError(
