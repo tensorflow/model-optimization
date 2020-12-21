@@ -482,7 +482,8 @@ class SeparableConvQuantize(transforms.Transform):
     )
     conv_weights = collections.OrderedDict()
     conv_weights['kernel:0'] = sepconv_weights[1]
-    conv_weights['bias:0'] = sepconv_weights[2]
+    if sepconv_layer['config']['use_bias']:
+      conv_weights['bias:0'] = sepconv_weights[2]
     conv_layer_config = keras.layers.serialize(conv_layer)
     conv_layer_config['name'] = conv_layer.name
     # Needed to ensure these new layers are considered for quantization.
