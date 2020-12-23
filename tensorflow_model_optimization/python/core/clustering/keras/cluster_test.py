@@ -15,6 +15,8 @@
 """Tests for keras clustering API."""
 
 import json
+import tempfile
+import os
 
 from absl.testing import parameterized
 import tensorflow as tf
@@ -182,6 +184,23 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
                                      **self.params)
+
+  def testStripClusteringSequentialModelWithRegularizer(self):
+    """
+    Verifies that stripping the clustering wrappers from a sequential model
+    produces the expected config.
+    """
+    model = keras.Sequential([
+        layers.Dense(10, input_shape=(10,)),
+        layers.Dense(10, kernel_regularizer=tf.keras.regularizers.L1(0.01)),
+    ])
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    stripped_model = cluster.strip_clustering(clustered_model)
+    # check that kernel regularizer is present in the second dense layer
+    self.assertIsNotNone(stripped_model.layers[1].kernel_regularizer)
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+      keras_file = os.path.join(tmp_dir_name, 'cluster_test')
+      stripped_model.save(keras_file, save_traces = True)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelSelectively(self):

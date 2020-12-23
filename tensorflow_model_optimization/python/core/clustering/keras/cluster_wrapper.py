@@ -126,6 +126,7 @@ class ClusterWeights(Wrapper):
     # A list for restoring the original order of weights later on, see the
     # comments in the code for usage explanations
     self.restore = []
+    self.regularizers = None
 
     # setattr will remove the original weights from layer.weights array. We need
     # to memorise the original state of the array since saving the model relies
@@ -286,6 +287,9 @@ class ClusterWeights(Wrapper):
         self.restore.append((name, full_name, get_updater(weight_name)))
       else:
         self.restore.append((name, full_name, weight))
+
+    if hasattr(self.layer, 'kernel_regularizer') and self.layer.kernel_regularizer != None:
+      self.regularizers = self.layer.kernel_regularizer
 
   def call(self, inputs):
     # In the forward pass, we need to update the cluster associations manually
