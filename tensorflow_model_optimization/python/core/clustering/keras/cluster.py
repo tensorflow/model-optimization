@@ -15,6 +15,7 @@
 """Clustering API functions for Keras models."""
 
 from tensorflow import keras
+from tensorflow.keras import initializers
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
@@ -352,13 +353,25 @@ def strip_clustering(to_strip):
           # If the variable was removed because it was clustered, we restore it
           # by using updater we created earlier
           new_weight_value = k.batch_get_value([weight()])[0]
+          setattr(layer.layer, name, k.constant(new_weight_value,
+                    dtype=new_weight_value.dtype,
+                    shape=new_weight_value.shape,
+                    name=weight_name))
         else:
           # If the value was not clustered(e.g. bias), we still store a valid
           # reference to the tensor. We use this reference to get the value
           new_weight_value = k.batch_get_value([weight])[0]
-        setattr(layer.layer,
-                name,
-                k.variable(new_weight_value, name=weight_name))
+        layer.layer.add_weight(
+            weight_name,
+            shape=new_weight_value.shape,
+            dtype=new_weight_value.dtype,
+            trainable=True,
+            initializer=initializers.Constant(
+                value=new_weight_value
+            )
+        )
+      if layer.regularizers:
+        setattr(layer.layer, 'kernel_regularizer', layer.regularizers)
       # When all weights are filled with the values, just return the underlying
       # layer since it is now fully autonomous from its wrapper
       return layer.layer

@@ -239,6 +239,24 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
+  def testStripClusteringSequentialModelWithRegulariser(self):
+    """
+    Verifies that stripping the clustering wrappers from a sequential model
+    produces the expected config.
+    """
+    original_model = keras.Sequential([
+        layers.Dense(5, input_shape=(5,)),
+        layers.Dense(5, kernel_regularizer=tf.keras.regularizers.L1(0.01)),
+    ])
+
+    def clusters_check(stripped_model):
+      # dense layer
+      weights_as_list = stripped_model.get_weights()[0].reshape(-1,).tolist()
+      unique_weights = set(weights_as_list)
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
+
+    self.end_to_end_testing(original_model, clusters_check)
+
   def testEndToEndFunctional(self):
     """Test End to End clustering - functional model."""
     inputs = keras.layers.Input(shape=(5,))
