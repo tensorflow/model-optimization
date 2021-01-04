@@ -204,6 +204,7 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
   @parameterized.parameters(
       (layers.Conv2D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
       (layers.Conv1D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
+      (layers.Conv3D, 'kernel', clustering_registry.ConvolutionalWeights3DCA),
   )
   def testReturnsResultsForKnownTypeKnownWeights(self,
                                                  layer_type,

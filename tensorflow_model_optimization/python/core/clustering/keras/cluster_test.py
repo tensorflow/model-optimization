@@ -66,6 +66,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.custom_clusterable_layer = CustomClusterableLayer(10)
     self.custom_non_clusterable_layer = CustomNonClusterableLayer(10)
     self.keras_depthwiseconv2d_layer = layers.DepthwiseConv2D((3, 3), (1, 1))
+    self.keras_conv2d_layer =tf.keras.layers.Conv2D(filters=3, kernel_size=(4, 5))
+    self.keras_conv3d_layer =tf.keras.layers.Conv3D(filters=2, kernel_size=(3, 4, 5))
 
     clustering_registry.ClusteringLookupRegistry.register_new_implementation(
         {
@@ -140,6 +142,38 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
      self._validate_clustered_layer(self.keras_depthwiseconv2d_layer,
                                     wrapped_layer)
      self.assertEqual([], wrapped_layer.layer.get_clusterable_weights())
+
+  @keras_parameterized.run_all_keras_modes
+  def testConv2DLayer(self):
+     """
+     Verifies that we can cluster a Conv2D layer.
+     """
+     input_shape =(4, 28, 28, 1)
+     wrapped_layer = self._build_clustered_layer_model(
+         self.keras_conv2d_layer,
+         input_shape=input_shape
+     )
+
+     self._validate_clustered_layer(self.keras_conv2d_layer,
+                                    wrapped_layer)
+     self.assertEqual([4, 5, 1, 3],
+      wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
+
+  @keras_parameterized.run_all_keras_modes
+  def testConv3DLayer(self):
+     """
+     Verifies that we can cluster a Conv3D layer.
+     """
+     input_shape =(4, 28, 28, 28, 1)
+     wrapped_layer = self._build_clustered_layer_model(
+         self.keras_conv3d_layer,
+         input_shape=input_shape
+     )
+
+     self._validate_clustered_layer(self.keras_conv3d_layer,
+                                    wrapped_layer)
+     self.assertEqual([3, 4, 5, 1, 2],
+      wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
 
   def testClusterKerasUnsupportedLayer(self):
     """
