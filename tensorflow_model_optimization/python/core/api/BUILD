@@ -8,6 +8,8 @@ py_library(
         "__init__.py",
         "clustering/__init__.py",
         "clustering/keras/__init__.py",
+        "experimental/__init__.py",
+        "experimental/combine/__init__.py",
         "quantization/__init__.py",
         "quantization/keras/__init__.py",
         "quantization/keras/default_8bit/__init__.py",
