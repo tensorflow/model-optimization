@@ -164,3 +164,14 @@ py_test(
         "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
 )
+
+py_test(
+    name = "mnist_customerable_test",
+    srcs = ["mnist_customerable_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cluster"
+        # tensorflow dep1,
+    ],
+)

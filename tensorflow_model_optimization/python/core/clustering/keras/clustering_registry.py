@@ -170,7 +170,6 @@ class BiasWeightsCA(AbstractClusteringAlgorithm):
 
     return pulling_indices
 
-
 class ClusteringLookupRegistry(object):
   """
   The keys represent built-in keras layers and the values represent the
@@ -179,17 +178,17 @@ class ClusteringLookupRegistry(object):
   work on, or the strategy is not currently supported
   """
   _LAYERS_RESHAPE_MAP = {
-      layers.Conv1D: {'kernel': ConvolutionalWeightsCA},
-      layers.Conv2D: {'kernel': ConvolutionalWeightsCA},
-      layers.Conv2DTranspose: {'kernel': ConvolutionalWeightsCA},
-      layers.Conv3D: {'kernel': ConvolutionalWeightsCA},
-      layers.Conv3DTranspose: {'kernel': ConvolutionalWeightsCA},
-      layers.SeparableConv1D: {'pointwise_kernel': ConvolutionalWeightsCA},
-      layers.SeparableConv2D: {'pointwise_kernel': ConvolutionalWeightsCA},
-      layers.Dense: {'kernel': DenseWeightsCA},
-      layers.Embedding: {'embeddings': DenseWeightsCA},
-      layers.LocallyConnected1D: {'kernel': ConvolutionalWeightsCA},
-      layers.LocallyConnected2D: {'kernel': ConvolutionalWeightsCA},
+      layers.Conv1D: {'kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
+      layers.Conv2D: {'kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
+      layers.Conv2DTranspose: {'kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
+      layers.Conv3D: {'kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
+      layers.Conv3DTranspose: {'kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
+      layers.SeparableConv1D: {'pointwise_kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
+      layers.SeparableConv2D: {'pointwise_kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
+      layers.Dense: {'kernel': DenseWeightsCA, 'bias': BiasWeightsCA},
+      layers.Embedding: {'embeddings': DenseWeightsCA, 'bias': BiasWeightsCA},
+      layers.LocallyConnected1D: {'kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
+      layers.LocallyConnected2D: {'kernel': ConvolutionalWeightsCA, 'bias': BiasWeightsCA},
   }
 
   @classmethod
@@ -229,15 +228,37 @@ class ClusteringLookupRegistry(object):
     :param weight_name: concrete weight name to be clustered.
     :return: a concrete implementation of a lookup algorithm
     """
+    custom_layer_of_built_layer = None
     if not layer.__class__ in cls._LAYERS_RESHAPE_MAP:
-      raise ValueError(
-          "Class {given_class} has not been registerd in the"
-          "ClusteringLookupRegistry. Use ClusteringLookupRegistry."
-          "register_new_implemenetation to fix this.".format(
-              given_class=layer.__class__
-          )
-      )
-    if weight_name not in cls._LAYERS_RESHAPE_MAP[layer.__class__]:
+      # Checks whether we have a customerable layer derived from built-in keras class.
+      for key in cls._LAYERS_RESHAPE_MAP:
+        if issubclass(layer.__class__, key):
+          custom_layer_of_built_layer = key
+      if not custom_layer_of_built_layer:
+        # Checks whether we have a customerable layer that provides
+        # clusterable algorithm for the given weights.
+        if issubclass(layer.__class__, clusterable_layer.ClusterableLayer) and \
+          layer.get_clusterable_algorithm is not None:
+            ans = layer.get_clusterable_algorithm(weight_name)
+            if not ans:
+              raise ValueError(
+                "Class {given_class} does not provided clustering algorithm"
+                "for the weights with the name {weight_name}.".format(
+                    given_class=layer.__class__, weight_name=weight_name
+                )
+              )
+            else:
+              return ans
+        else:
+          raise ValueError(
+            "Class {given_class} has not derived from ClusterableLayer"
+            "or the funtion get_pulling_indices is not provided.".format(
+                given_class=layer.__class__
+            )
+        )
+    else:
+      custom_layer_of_built_layer = layer.__class__
+    if weight_name not in cls._LAYERS_RESHAPE_MAP[custom_layer_of_built_layer]:
       raise ValueError(
           "Weight with the name '{given_weight_name}' for class {given_class} "
           "has not been registerd in the ClusteringLookupRegistry. Use "
@@ -249,7 +270,7 @@ class ClusteringLookupRegistry(object):
       )
     # Different weights will have different shapes hence there is double hash
     # map lookup.
-    return cls._LAYERS_RESHAPE_MAP[layer.__class__][weight_name]
+    return cls._LAYERS_RESHAPE_MAP[custom_layer_of_built_layer][weight_name]
 
 
 class ClusteringRegistry(object):
