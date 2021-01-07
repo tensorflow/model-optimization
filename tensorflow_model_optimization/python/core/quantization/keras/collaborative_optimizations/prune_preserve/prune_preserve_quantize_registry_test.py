@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,18 +13,16 @@
 # limitations under the License.
 # ==============================================================================
 """Tests for PrunePreserveQuantizeRegistry."""
-
 from absl.testing import parameterized
 
 import tensorflow as tf
 
 from tensorflow.python.keras import keras_parameterized
-
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
-from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
-from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
-    prune_preserve_quantize_registry, )
+    prune_preserve_quantize_registry,)
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
+from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 
 QuantizeConfig = quantize_config.QuantizeConfig
 layers = tf.keras.layers
@@ -46,8 +44,6 @@ class PrunePreserveQuantizeRegistryTest(tf.test.TestCase,
 
   class CustomLayer(layers.Layer):
     # simple custom layer with training weights
-    def __init__(self):
-      super(PrunePreserveQuantizeRegistryTest.CustomLayer, self).__init__()
 
     def build(self, input_shape=(2, 2)):
       self.add_weight(shape=input_shape,
@@ -92,7 +88,7 @@ class PrunePreserveQuantizeRegistryTest(tf.test.TestCase,
     self.prune_preserve_quantize_registry.apply_sparsity_preserve_quantize_config(
         self.layer_conv2d,
         default_8bit_quantize_registry.Default8BitConvQuantizeConfig(
-            ['kernel'], ['activation'], False))
+            ["kernel"], ["activation"], False))
 
   def testRaisesError_Unsupported_QuantizeConfigWithLayer(self):
     with self.assertRaises(
@@ -116,20 +112,20 @@ class PrunePreserveDefault8bitQuantizeRegistryTest(tf.test.TestCase):
     )
 
   def testSupports_Prune_Default8bitQuantize_KerasLayers(self):
-    # PrunePreserveQuantize supported layer, must be suppoted by both Prune and Quantize
+    """PrunePreserveQuantize supported layer, must be supported by both Prune and Quantize."""
     pqat_layers_config_map = self.prune_preserve_quantize_registry._LAYERS_CONFIG_MAP
     for pqat_support_layer in pqat_layers_config_map:
       if (pqat_layers_config_map[pqat_support_layer].weight_attrs and
           pqat_layers_config_map[pqat_support_layer].quantize_config_attrs):
-        self.assertTrue(
-            pqat_support_layer in self.prune_registry._LAYERS_WEIGHTS_MAP,
+        self.assertIn(
+            pqat_support_layer, self.prune_registry._LAYERS_WEIGHTS_MAP,
             msg="Prune doesn't support {}".format(pqat_support_layer))
-        self.assertTrue(
-            pqat_support_layer
-            in self.default_8bit_quantize_registry._layer_quantize_map,
+        self.assertIn(
+            pqat_support_layer,
+            self.default_8bit_quantize_registry._layer_quantize_map,
             msg="Default 8bit QAT doesn't support {}".format(
                 pqat_support_layer))
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
   tf.test.main()

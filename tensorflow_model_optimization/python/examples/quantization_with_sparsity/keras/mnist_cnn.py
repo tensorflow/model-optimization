@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,20 +14,23 @@
 # ==============================================================================
 # pylint: disable=missing-docstring
 """Prune preserve Quant-Aware Training(pqat) with simple convnet on the MNIST dataset.
-As a experimental feature, only `quantize_apply` been enabled with boolean flag `prune_preserve`
+
+As a experimental feature, only `quantize_apply` been enabled with boolean flag
+`prune_preserve`
 """
 from __future__ import print_function
 
+from absl import app as absl_app
 import numpy as np
 import tensorflow as tf
-from absl import app as absl_app
 
+from tensorflow_model_optimization.python.core.quantization.keras import quantize
+from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
+    default_8bit_prune_preserve_quantize_scheme,)
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
-from tensorflow_model_optimization.python.core.quantization.keras import quantize
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
-    default_8bit_prune_preserve_quantize_scheme, )
+
 
 layers = tf.keras.layers
 
@@ -55,19 +58,19 @@ def build_sequential_model(input_shape=(28, 28)):
 def compile_and_fit(model,
                     image_train,
                     label_train,
-                    compile_kwargs={},
-                    fit_kwargs={}):
+                    compile_kwargs,
+                    fit_kwargs):
   # Compile the model.
   compile_args = {
-      "optimizer": "adam",
-      "loss": "sparse_categorical_crossentropy",
-      "metrics": ["accuracy"],
+      'optimizer': 'adam',
+      'loss': 'sparse_categorical_crossentropy',
+      'metrics': ['accuracy'],
   }
   compile_args.update(compile_kwargs)
   model.compile(**compile_args)
 
   # train the model.
-  fit_args = {"epochs": 4, "validation_split": 0.1}
+  fit_args = {'epochs': 4, 'validation_split': 0.1}
   fit_args.update(fit_kwargs)
   model.fit(image_train, label_train, **fit_args)
 
@@ -84,8 +87,8 @@ def evaluate_and_show_sparsity(model, image_test, label_test):
       for weights in layer.trainable_weights:
         np_weights = tf.keras.backend.get_value(weights)
         sparsity = 1.0 - np.count_nonzero(np_weights) / float(np_weights.size)
-        print(layer.layer.__class__.__name__, " (", weights.name,
-              ") sparsity: ", sparsity)
+        print(layer.layer.__class__.__name__, ' (', weights.name,
+              ') sparsity: ', sparsity)
 
 
 def prune_model(original_model, train_images, train_labels):
@@ -101,13 +104,14 @@ def prune_model(original_model, train_images, train_labels):
 
   callbacks = [pruning_callbacks.UpdatePruningStep()]
   fit_kwargs = {
-      "batch_size": batch_size,
-      "epochs": epochs,
-      "callbacks": callbacks,
+      'batch_size': batch_size,
+      'epochs': epochs,
+      'callbacks': callbacks,
   }
   compile_and_fit(pruning_model,
                   train_images,
                   train_labels,
+                  compile_kwargs={},
                   fit_kwargs=fit_kwargs)
 
   return pruning_model
@@ -121,17 +125,19 @@ def prune_preserve_quantize_model(pruned_model, train_images, train_labels):
   # Prune preserve QAT model
   quant_aware_annotate_model = quantize.quantize_annotate_model(pruned_model)
   quant_aware_model = quantize.quantize_apply(
-    quant_aware_annotate_model,
-    scheme=default_8bit_prune_preserve_quantize_scheme.Default8BitPrunePreserveQuantizeScheme())
+      quant_aware_annotate_model,
+      scheme=default_8bit_prune_preserve_quantize_scheme
+      .Default8BitPrunePreserveQuantizeScheme())
   quant_aware_model.summary()
 
   fit_kwargs = {
-      "batch_size": batch_size,
-      "epochs": epochs,
+      'batch_size': batch_size,
+      'epochs': epochs,
   }
   compile_and_fit(quant_aware_model,
                   train_images,
                   train_labels,
+                  compile_kwargs={},
                   fit_kwargs=fit_kwargs)
 
   return quant_aware_model

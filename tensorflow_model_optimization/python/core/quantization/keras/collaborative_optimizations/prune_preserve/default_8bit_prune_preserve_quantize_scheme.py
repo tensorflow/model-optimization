@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -14,17 +14,17 @@
 # ==============================================================================
 """Default 8 bit Prune Preserve Quantization scheme which specifies how quantization should be applied."""
 
-from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
-    default_8bit_quantize_scheme, )
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
-    prune_preserve_quantize_registry, )
+    prune_preserve_quantize_registry)
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
+    default_8bit_quantize_scheme,)
 
 
 class Default8BitPrunePreserveQuantizeScheme(
     default_8bit_quantize_scheme.Default8BitQuantizeScheme):
   """Default 8 bit Prune Preserve Quantization Scheme."""
-  def get_layout_transformer(self):
-    return super(Default8BitPrunePreserveQuantizeScheme, self).get_layout_transformer()
 
   def get_quantize_registry(self):
-    return prune_preserve_quantize_registry.Default8bitPrunePreserveQuantizeRegistry()
+    return (prune_preserve_quantize_registry
+            .Default8bitPrunePreserveQuantizeRegistry())
+

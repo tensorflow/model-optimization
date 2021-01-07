@@ -2,7 +2,7 @@ package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
 ])
 
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_library(
     name = "prune_preserve",
@@ -24,8 +24,8 @@ py_library(
     visibility = ["//visibility:private"],
     deps = [
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
     ],
 )
 
@@ -39,9 +39,9 @@ py_test(
     deps = [
         ":prune_preserve_quantize_registry",
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/sparsity/keras:prune_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
-    ]
+        "//tensorflow_model_optimization/python/core/sparsity/keras:prune_registry",
+    ],
 )
 
 py_library(

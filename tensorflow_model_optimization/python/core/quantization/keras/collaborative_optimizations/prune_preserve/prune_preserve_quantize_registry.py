@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -19,17 +19,18 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
-    default_8bit_quantizers, )
+    default_8bit_quantize_registry,)
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
-    default_8bit_quantize_registry, )
+    default_8bit_quantizers,)
 
 layers = tf.keras.layers
 
 
 class _PrunePreserveInfo(object):
   """PrunePreserveInfo."""
+
   def __init__(self, weight_attrs, quantize_config_attrs):
-    """PrunePreserveInfo.
+    """Initializes PrunePreserveInfo.
 
     Args:
       weight_attrs: list of sparsity preservable weight attributes of layer.
@@ -39,7 +40,7 @@ class _PrunePreserveInfo(object):
     self.quantize_config_attrs = quantize_config_attrs
 
 
-class PrunePreserveQuantizeRegistry(object):
+class PrunePreserveQuantizeRegistry():
   """PrunePreserveQuantizeRegistry responsible for built-in keras layers."""
 
   # The keys represent built-in keras layers; the first values represent the
@@ -58,7 +59,7 @@ class PrunePreserveQuantizeRegistry(object):
       layers.DepthwiseConv2D:
       _PrunePreserveInfo(['depthwise_kernel'], ['Default8BitQuantizeConfig']),
 
-      # layers that supported with prune, but not yet with qat
+      # layers that supported with prune, but not yet with QAT
       # layers.Conv1D:
       # _PrunePreserveInfo(['kernel'], []),
       # layers.Conv2DTranspose:
@@ -74,17 +75,19 @@ class PrunePreserveQuantizeRegistry(object):
 
       # SeparableConv need verify from 8bit qat
       # layers.SeparableConv1D:
-      # _PrunePreserveInfo(['pointwise_kernel'], ['Default8BitConvQuantizeConfig']),
+      # _PrunePreserveInfo(['pointwise_kernel'], \
+      #   ['Default8BitConvQuantizeConfig']),
       # layers.SeparableConv2D:
-      # _PrunePreserveInfo(['pointwise_kernel'], ['Default8BitConvQuantizeConfig']),
+      # _PrunePreserveInfo(['pointwise_kernel'], \
+      #   ['Default8BitConvQuantizeConfig']),
 
       # Embedding need verify from 8bit qat
       # layers.Embedding: _PrunePreserveInfo(['embeddings'], []),
   }
 
-  _DISABLE_PRUNE_PRESERVE = {
+  _DISABLE_PRUNE_PRESERVE = frozenset({
       layers.DepthwiseConv2D,
-  }
+  })
 
   def __init__(self):
 
@@ -105,8 +108,7 @@ class PrunePreserveQuantizeRegistry(object):
     Returns:
       True/False whether the layer has trainable weights.
     """
-
-    return len(layer.trainable_weights) == 0
+    return not layer.trainable_weights
 
   @classmethod
   def _disable_prune_preserve(cls, layer):
@@ -130,10 +132,9 @@ class PrunePreserveQuantizeRegistry(object):
 
     Returns:
       True/False whether the layer type is supported.
-
     """
 
-    # layers without trainable weights are consider supported,
+    # layers without trainable weights are considered supported,
     # e.g., ReLU, Softmax, and AveragePooling2D.
     if cls._no_trainable_weights(layer):
       return True
@@ -145,7 +146,7 @@ class PrunePreserveQuantizeRegistry(object):
 
   @classmethod
   def _weight_names(cls, layer):
-
+    """Gets the weight names."""
     if cls._no_trainable_weights(layer):
       return []
 
@@ -153,7 +154,7 @@ class PrunePreserveQuantizeRegistry(object):
 
   @classmethod
   def get_sparsity_preservable_weights(cls, layer):
-    """Get sparsity preservable weights from keras layer
+    """Gets sparsity preservable weights from keras layer.
 
     Args:
       layer: instance of keras layer
@@ -165,7 +166,7 @@ class PrunePreserveQuantizeRegistry(object):
 
   @classmethod
   def get_suppport_quantize_config_names(cls, layer):
-    """Get class name of supported quantize config for layer
+    """Gets class name of supported quantize config for layer.
 
     Args:
       layer: instance of keras layer
@@ -181,42 +182,41 @@ class PrunePreserveQuantizeRegistry(object):
     return cls._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs
 
   def apply_sparsity_preserve_quantize_config(self, layer, quantize_config):
-    """ apply weights sparsity preservation
+    """Applies weights sparsity preservation.
 
     Args:
       layer: The layer to check for support.
       quantize_config: quantization config to check for support,
         apply sparsity preservation to pruned weights
-
+    Raises:
+      ValueError when layer is supported does not have quantization config.
     Returns:
       Returns quantize_config with addon sparsity preserve weight_quantizer.
     """
     if self.supports(layer):
-      if self._no_trainable_weights(layer) or self._disable_prune_preserve(layer):
+      if (self._no_trainable_weights(layer) or
+          self._disable_prune_preserve(layer)):
         return quantize_config
       if (quantize_config.__class__.__name__
           in self._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs):
         quantize_config.weight_quantizer = self._config_quantizer_map[
             quantize_config.__class__.__name__]
       else:
-        raise ValueError("Configuration " +
-                         str(quantize_config.__class__.__name__) +
-                         " is not supported for Layer " +
-                         str(layer.__class__) + ".")
+        raise ValueError('Configuration {} is not supported for Layer {}.'
+                         .format(str(quantize_config.__class__.__name__),
+                                 str(layer.__class__.__name__)))
     else:
-      raise ValueError("Layer " + str(layer.__class__) + " is not supported.")
+      raise ValueError('Layer {} is not supported.'.format(
+          str(layer.__class__.__name__)))
 
     return quantize_config
 
 
 class Default8bitPrunePreserveQuantizeRegistry(PrunePreserveQuantizeRegistry):
   """Default 8 bit PrunePreserveQuantizeRegistry."""
-  def __init__(self):
-    super(Default8bitPrunePreserveQuantizeRegistry, self).__init__()
 
   def get_quantize_config(self, layer):
-    """Returns the quantization config with addon sparsity
-    preserve weight_quantizer for the given layer.
+    """Returns the quantization config with addon sparsity.
 
     Args:
       layer: input layer to return quantize config for.
@@ -224,19 +224,20 @@ class Default8bitPrunePreserveQuantizeRegistry(PrunePreserveQuantizeRegistry):
     Returns:
       Returns the quantization config with sparsity preserve weight_quantizer.
     """
-    quantize_config = default_8bit_quantize_registry.Default8BitQuantizeRegistry(
-    ).get_quantize_config(layer)
-    prune_aware_quantize_config = super(
-        Default8bitPrunePreserveQuantizeRegistry,
-        self).apply_sparsity_preserve_quantize_config(layer, quantize_config)
+    quantize_config = (default_8bit_quantize_registry
+                       .Default8BitQuantizeRegistry()
+                       .get_quantize_config(layer))
+    prune_aware_quantize_config = self.apply_sparsity_preserve_quantize_config(
+        layer, quantize_config)
 
     return prune_aware_quantize_config
 
 
 class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
   """Quantize weights while preserve sparsity."""
+
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
-    """PrunePreserveDefaultWeightsQuantizer
+    """Initializes PrunePreserveDefaultWeightsQuantizer.
 
     Args:
       num_bits: Number of bits for quantization
@@ -245,16 +246,11 @@ class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       symmetric: If true, use symmetric quantization limits instead of training
         the minimum and maximum of each quantization range separately.
       narrow_range: In case of 8 bits, narrow_range nudges the quantized range
-        to be [-127, 127] instead of [-128, 127]. This ensures symmetric
-        range has 0 as the centre.
+        to be [-127, 127] instead of [-128, 127]. This ensures symmetric range
+        has 0 as the centre.
     """
-
-    super(PrunePreserveDefaultWeightsQuantizer, self).__init__(
-        num_bits=num_bits,
-        per_axis=per_axis,
-        symmetric=symmetric,
-        narrow_range=narrow_range,
-    )
+    quantizers.LastValueQuantizer.__init__(self, num_bits, per_axis, symmetric,
+                                           narrow_range)
 
   def _build_sparsity_mask(self, name, layer):
     weights = getattr(layer.layer, name)
@@ -263,14 +259,15 @@ class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     return {'sparsity_mask': sparsity_mask}
 
   def build(self, tensor_shape, name, layer):
-    """Construct mask to preserve weights sparsity.
+    """Constructs mask to preserve weights sparsity.
 
     Args:
       tensor_shape: Shape of weights which needs to be quantized.
       name: Name of weights in layer.
       layer: quantization wrapped keras layer.
 
-    Returns: Dictionary of constructed sparsity mask and
+    Returns:
+      Dictionary of constructed sparsity mask and
       quantization params, the dictionary will be passed
       to __call__ function.
     """
@@ -281,7 +278,7 @@ class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     return result
 
   def __call__(self, inputs, training, weights, **kwargs):
-    """Apply sparsity preserved quantization to the input tensor.
+    """Applies sparsity preserved quantization to the input tensor.
 
     Args:
       inputs: Input tensor (layer's weights) to be quantized.
@@ -291,7 +288,8 @@ class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         created in the `build` function.
       **kwargs: Additional variables which may be passed to the quantizer.
 
-    Returns: quantized tensor.
+    Returns:
+      quantized tensor.
     """
 
     prune_preserve_inputs = tf.multiply(inputs, weights['sparsity_mask'])
@@ -310,7 +308,8 @@ class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
 
 class PrunePreserveDefault8BitWeightsQuantizer(
     PrunePreserveDefaultWeightsQuantizer):
-  """PrunePreserveWeightsQuantizer for default 8bit weights"""
+  """PrunePreserveWeightsQuantizer for default 8bit weights."""
+
   def __init__(self):
     super(PrunePreserveDefault8BitWeightsQuantizer,
           self).__init__(num_bits=8,
@@ -321,10 +320,12 @@ class PrunePreserveDefault8BitWeightsQuantizer(
 
 class PrunePreserveDefault8BitConvWeightsQuantizer(
     PrunePreserveDefaultWeightsQuantizer,
-    default_8bit_quantizers.Default8BitConvWeightsQuantizer,
-):
-  """PrunePreserveWeightsQuantizer for default 8bit Conv2D/DepthwiseConv2D weights"""
+    default_8bit_quantizers.Default8BitConvWeightsQuantizer,):
+  """PrunePreserveWeightsQuantizer for default 8bit Conv2D/DepthwiseConv2D weights."""
+
+  # pylint: disable=super-init-not-called
   def __init__(self):
+    # Skip PrunePreserveDefaultWeightsQuantizer since they have the same super.
     default_8bit_quantizers.Default8BitConvWeightsQuantizer.__init__(self)
 
   def build(self, tensor_shape, name, layer):
