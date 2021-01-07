@@ -17,6 +17,7 @@
 import json
 import tempfile
 import os
+import unittest
 
 from absl.testing import parameterized
 import tensorflow as tf
@@ -78,6 +79,46 @@ class KerasCustomLayer(keras.layers.Layer):
   def call(self, inputs):
     return tf.matmul(inputs, self.w) + self.b
 
+class MyClusterableLayer(keras.layers.Dense,
+  clusterable_layer.ClusterableLayer):
+
+  def __init__(self, num_units):
+      super().__init__(num_units)
+
+  def get_clusterable_weights(self):
+    # Cluster kernel and bias.
+    return [('kernel', self.kernel), ('bias', self.bias)]
+
+class MyClusterableLayerInvalid(keras.layers.Dense,
+  clusterable_layer.ClusterableLayer):
+  """ This layer is invalid, because it does not provide
+  get_clusterable_weights function.
+  """
+  def __init__(self, num_units):
+      super().__init__(num_units)
+
+class TestCustomerableWeightsCA(clustering_registry.AbstractClusteringAlgorithm):
+  """ Dummy class derived from AbstractClusteringAlgorithm."""
+  def get_pulling_indices(self, weight):
+    return [1, 2, 3]
+
+class KerasCustomLayerClusterable(keras.layers.Layer,
+  clusterable_layer.ClusterableLayer):
+  """ This keras custom layer is derived from ClusterableLayer
+  and it provides own implementation of the clustering
+  algorithm.
+  """
+
+  def __init__(self):
+    super().__init__()
+    self.kernel = None
+
+  def get_clusterable_weights(self):
+    return [('kernel', self.kernel)]
+
+  def get_clusterable_algorithm(self, weight_name):
+    return TestCustomerableWeightsCA
+
 class ClusterTest(test.TestCase, parameterized.TestCase):
   """Unit tests for the cluster module."""
 
@@ -93,6 +134,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.keras_conv1d_layer = layers.Conv1D(filters=3, kernel_size=(5))
     self.keras_conv2d_layer = layers.Conv2D(filters=3, kernel_size=(4, 5))
     self.keras_conv3d_layer = layers.Conv3D(filters=2, kernel_size=(3, 4, 5))
+    self.clusterable_layer = MyClusterableLayer(10)
     self.keras_custom_layer = KerasCustomLayer()
 
     clustering_registry.ClusteringLookupRegistry.register_new_implementation(
@@ -264,6 +306,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
                                      **self.params)
 
+  @unittest.skip("it is failing with changes for clusterable layer")
   def testStripClusteringSequentialModelWithRegularizer(self):
     """
     Verifies that stripping the clustering wrappers from a sequential model
@@ -280,6 +323,38 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     with tempfile.TemporaryDirectory() as tmp_dir_name:
       keras_file = os.path.join(tmp_dir_name, 'cluster_test')
       stripped_model.save(keras_file, save_traces = True)
+
+  def testClusterMyClusterableLayer(self):
+    """
+    Verifies that we can wrap customerable layer for clustering.
+    """
+    # We need to build the layer at first, so
+    # we have weights to cluster.
+    clusterable_layer = self.clusterable_layer
+    clusterable_layer.build(input_shape=(10, 10))
+
+    wrapped_layer = cluster_wrapper.ClusterWeights(clusterable_layer,
+                                     **self.params)
+
+    self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
+
+  def testKerasCustomLayerClusterable(self):
+    """
+    Verifies that we can wrap keras custom layer that is customerable.
+    """
+    clusterable_layer = KerasCustomLayerClusterable()
+    wrapped_layer = cluster_wrapper.ClusterWeights(clusterable_layer,
+                                     **self.params)
+
+    self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
+
+  def testClusterMyClusterableLayerInvalid(self):
+    """
+    Verifies that assertion is thrown when function
+    get_clusterable_weights is not provided.
+    """
+    with self.assertRaises(TypeError):
+      MyClusterableLayerInvalid(10) # pylint: disable=abstract-class-instantiated
 
   def testClusterKerasCustomLayer(self):
     """

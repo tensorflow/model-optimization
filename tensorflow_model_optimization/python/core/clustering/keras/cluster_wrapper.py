@@ -179,7 +179,10 @@ class ClusterWeights(Wrapper):
       # variable is either in the self._trainable_weights or in
       # self._non_trainable_weights and self.weights is the result of
       # concatenation of those arrays
-      original_index = self.layer.weights.index(weight)
+      original_index = 0
+      for i in range(len(self.layer.weights)):
+        if self.layer.weights[i].name == weight.name:
+          original_index = i
       self.gone_variables.append(original_index)
 
       # Again, not sure if this is needed. Leaving for now.
