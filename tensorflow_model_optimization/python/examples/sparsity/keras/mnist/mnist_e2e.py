@@ -119,9 +119,8 @@ def main(unused_argv):
   with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model_dense)
 
-  # The _experimental_sparsify_model is to enable sparse tensor encoding,
-  # otherwise the model is converted as dense.
-  converter._experimental_sparsify_model = True
+  # Enable sparse tensor encoding, otherwise the model is converted as dense.
+  converter.optimizations = {tf.lite.Optimize.EXPERIMENTAL_SPARSITY}
 
   tflite_model = converter.convert()
 
@@ -152,7 +151,7 @@ def main(unused_argv):
   model = train(model, x_train, y_train, x_test, y_test)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
-  converter._experimental_sparsify_model = True
+  converter.optimizations = {tf.lite.Optimize.EXPERIMENTAL_SPARSITY}
 
   tflite_model = converter.convert()
   # Check the model is compressed
