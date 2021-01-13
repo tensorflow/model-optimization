@@ -15,9 +15,9 @@
 """Tests for keras ClusterWeights wrapper API."""
 
 import itertools
-import tensorflow as tf
 
 from absl.testing import parameterized
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
@@ -34,14 +34,14 @@ CentroidInitialization = cluster_config.CentroidInitialization
 
 class NonClusterableLayer(layers.Layer):
   """"A custom layer with weights that is not clusterable."""
+
   def __init__(self, units=10):
-      super(NonClusterableLayer, self).__init__()
-      self.add_weight(shape=(1, units),
-                      initializer='uniform',
-                      name='kernel')
+    super(NonClusterableLayer, self).__init__()
+    self.add_weight(shape=(1, units), initializer='uniform', name='kernel')
 
   def call(self, inputs):
     return tf.matmul(inputs, self.weights)
+
 
 class AlreadyClusterableLayer(layers.Dense, clusterable_layer.ClusterableLayer):
   """A custom layer that is clusterable."""
@@ -54,10 +54,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   """Unit tests for the cluster_wrapper module."""
 
   def testCannotBeInitializedWithNonLayerObject(self):
-    """
-    Verifies that ClusterWeights cannot be initialized with an object that is
-    not an instance of keras.layers.Layer.
-    """
+    """Verifies that ClusterWeights cannot be initialized with an object that is not an instance of keras.layers.Layer."""
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(
           {'this': 'is not a Layer instance'},
@@ -66,10 +63,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       )
 
   def testCannotBeInitializedWithNonClusterableLayer(self):
-    """
-    Verifies that ClusterWeights cannot be initialized with a non-clusterable
-    custom layer.
-    """
+    """Verifies that ClusterWeights cannot be initialized with a non-clusterable custom layer."""
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(
           NonClusterableLayer(10),
@@ -78,10 +72,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       )
 
   def testCanBeInitializedWithClusterableLayer(self):
-    """
-    Verifies that ClusterWeights can be initialized with a built-in clusterable
-    layer.
-    """
+    """Verifies that ClusterWeights can be initialized with a built-in clusterable layer."""
     l = cluster_wrapper.ClusterWeights(
         layers.Dense(10),
         number_of_clusters=13,
@@ -90,22 +81,15 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
   def testCannotBeInitializedWithNonIntegerNumberOfClusters(self):
-    """
-    Verifies that ClusterWeights cannot be initialized with a string value
-    provided for the number of clusters.
-    """
+    """Verifies that ClusterWeights cannot be initialized with a string value provided for the number of clusters."""
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(
           layers.Dense(10),
-          number_of_clusters="13",
-          cluster_centroids_init=CentroidInitialization.LINEAR
-      )
+          number_of_clusters='13',
+          cluster_centroids_init=CentroidInitialization.LINEAR)
 
   def testCannotBeInitializedWithFloatNumberOfClusters(self):
-    """
-    Verifies that ClusterWeights cannot be initialized with a decimal value
-    provided for the number of clusters.
-    """
+    """Verifies that ClusterWeights cannot be initialized with a decimal value provided for the number of clusters."""
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(
           layers.Dense(10),
@@ -120,10 +104,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   )
   def testCannotBeInitializedWithNumberOfClustersLessThanTwo(
       self, number_of_clusters):
-    """
-    Verifies that ClusterWeights cannot be initialized with less than two
-    clusters.
-    """
+    """Verifies that ClusterWeights cannot be initialized with less than two clusters."""
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(
           layers.Dense(10),
@@ -131,11 +112,19 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
           cluster_centroids_init=CentroidInitialization.LINEAR
       )
 
+  @parameterized.parameters((0), (2), (-32))
+  def testCannotBeInitializedWithSparsityPreservationAndNumberOfClustersLessThanThree(
+      self, number_of_clusters):
+    """Verifies that ClusterWeights cannot be initialized with less than three clusters when sparsity preservation is enabled."""
+    with self.assertRaises(ValueError):
+      cluster_wrapper.ClusterWeights(
+          layers.Dense(10),
+          number_of_clusters=number_of_clusters,
+          cluster_centroids_init=CentroidInitialization.LINEAR,
+          preserve_sparsity=True)
+
   def testCanBeInitializedWithAlreadyClusterableLayer(self):
-    """
-    Verifies that ClusterWeights can be initialized with a custom clusterable
-    layer.
-    """
+    """Verifies that ClusterWeights can be initialized with a custom clusterable layer."""
     layer = AlreadyClusterableLayer(10)
     l = cluster_wrapper.ClusterWeights(
         layer,
@@ -145,10 +134,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
   def testIfLayerHasBatchShapeClusterWeightsMustHaveIt(self):
-    """
-    Verifies that the ClusterWeights instance created from a layer that has
-    a batch shape attribute, will also have this attribute.
-    """
+    """Verifies that the ClusterWeights instance created from a layer that has a batch shape attribute, will also have this attribute."""
     l = cluster_wrapper.ClusterWeights(
         layers.Dense(10, input_shape=(10,)),
         number_of_clusters=13,
@@ -166,17 +152,13 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
   def testValuesAreClusteredAfterStripping(self,
                                            number_of_clusters,
                                            cluster_centroids_init):
-    """
-    Verifies that, for any number of clusters and any centroid initialization
-    method, the number of unique weight values after stripping is always less
-    or equal to number_of_clusters.
-    """
+    """Verifies that, for any number of clusters and any centroid initialization  method, the number of unique weight values after stripping is always less or equal to number_of_clusters."""
     original_model = tf.keras.Sequential([
         layers.Dense(32, input_shape=(10,)),
     ])
     self.assertGreater(
-      len(set(original_model.get_weights()[0].reshape(-1,).tolist())),
-      number_of_clusters)
+        len(set(original_model.get_weights()[0].reshape(-1,).tolist())),
+        number_of_clusters)
     clustered_model = cluster.cluster_weights(
         original_model,
         number_of_clusters=number_of_clusters,
@@ -192,10 +174,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(stripped_model.layers[0], layers.Dense)
 
   def testClusterReassociation(self):
-    """
-    Verifies that the association of weights to cluster centroids are updated
-    every iteration.
-    """
+    """Verifies that the association of weights to cluster centroids are updated every iteration."""
 
     # Create a dummy layer for this test
     input_shape = (1, 2,)
@@ -209,7 +188,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
 
     # Get name of the clusterable weights
     clusterable_weights = l.layer.get_clusterable_weights()
-    self.assertEqual(len(clusterable_weights), 1)
+    self.assertLen(clusterable_weights, 1)
     weights_name = clusterable_weights[0][0]
     self.assertEqual(weights_name, 'kernel')
     # Get cluster centroids
@@ -222,8 +201,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     max_dist = max_weight - min_weight
 
     def assert_all_weights_associated(weights, centroid_index):
-      """Helper function to make sure that all weights are associated with one
-      centroid."""
+      """Helper function to make sure that all weights are associated with one centroid."""
       all_associated = tf.reduce_all(
           tf.equal(
               weights,
@@ -252,12 +230,8 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     # Weights should now be all clustered with the centroid 1
     assert_all_weights_associated(l.layer.kernel, centroid_index=1)
 
-
-  def testClusterReassociation(self):
-    """
-    Verifies that the association of weights to cluster centroids are updated
-    every iteration.
-    """
+  def testClusterReassociation2(self):
+    """Verifies that the association of weights to cluster centroids are updated every iteration."""
 
     # Create a dummy layer for this test
     input_shape = (1, 2,)
@@ -271,7 +245,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
 
     # Get name of the clusterable weights
     clusterable_weights = l.layer.get_clusterable_weights()
-    self.assertEqual(len(clusterable_weights), 1)
+    self.assertLen(clusterable_weights, 1)
     weights_name = clusterable_weights[0][0]
     self.assertEqual(weights_name, 'kernel')
     # Get cluster centroids
@@ -284,8 +258,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     max_dist = max_weight - min_weight
 
     def assert_all_weights_associated(weights, centroid_index):
-      """Helper function to make sure that all weights are associated with one
-      centroid."""
+      """Helper function to make sure that all weights are associated with one centroid."""
       all_associated = tf.reduce_all(
           tf.equal(
               weights,
