@@ -33,12 +33,12 @@ callbacks = tf.keras.callbacks
 def _collect_prunable_layers(model):
   """Recursively collect the prunable layers in the model."""
   prunable_layers = []
-  for layer in model.layers:
+  for layer in model._flatten_layers(recursive=False, include_self=False):
     # A keras model may have other models as layers.
-    if isinstance(layer, tf.keras.Model):
-      prunable_layers += _collect_prunable_layers(layer)
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       prunable_layers.append(layer)
+    elif isinstance(layer, (tf.keras.Model, tf.keras.layers.Layer)):
+      prunable_layers += _collect_prunable_layers(layer)
 
   return prunable_layers
 
@@ -68,8 +68,10 @@ class UpdatePruningStep(callbacks.Callback):
 
   def on_train_batch_begin(self, batch, logs=None):
     tuples = []
+
     for layer in self.prunable_layers:
-      tuples.append((layer.pruning_step, self.step))
+      if layer.built:
+        tuples.append((layer.pruning_step, self.step))
 
     K.batch_set_value(tuples)
     self.step = self.step + 1
@@ -80,7 +82,7 @@ class UpdatePruningStep(callbacks.Callback):
     weight_mask_ops = []
 
     for layer in self.prunable_layers:
-      if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+      if layer.built and isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         if tf.executing_eagerly():
           layer.pruning_obj.weight_mask_op()
         else:
