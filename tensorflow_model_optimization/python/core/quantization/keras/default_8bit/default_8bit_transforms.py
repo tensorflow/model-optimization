@@ -584,8 +584,8 @@ class ConcatTransform(transforms.Transform):
     concat_layer_node = match_layer
     feeding_layer_nodes = match_layer.input_layers
 
-    default_registry = default_8bit_quantize_registry.QuantizeRegistry(
-    )
+    default_registry = default_8bit_quantize_registry.\
+        Default8BitQuantizeRegistry()
 
     feed_quantize_configs = []
     for feed_layer_node in feeding_layer_nodes:

@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import logging
 import math
 
 import numpy as np
@@ -295,9 +296,9 @@ def pack_into_int(value, input_bitrange, target_bitrange):
 
   NOTE: This only uses basic math operations to implement the bit manipulation,
   not any bitwise operations, which is relevant in environments where only a
-  subset of TensorFlow ops/kernels are available. If values outside of the
-  expected range are provided at runtime, an error will *not* be raised,
-  possibly returning an incorrect value.
+  subset of TensorFlow ops/kernels are available. Moreover, if values outside of
+  the expected range are provided at runtime, an error will *not* be raised.
+  The behavior of this method in such case is undefined.
 
   Args:
     value: An integer Tensor to be packed.
@@ -308,6 +309,17 @@ def pack_into_int(value, input_bitrange, target_bitrange):
   Returns:
     An integer Tensor representing `value` of the same dtype as `value`.
   """
+  # TODO(b/161433177): Provide a general solution without memory overhead.
+  # Special cases implemented without extra memory overhead.
+  if input_bitrange == 8 and target_bitrange == 28:
+    return _pack_into_int_8_28(value)
+  if input_bitrange == 12 and target_bitrange == 28:
+    return _pack_into_int_12_28(value)
+
+  # General solution with possible extra memory overhead.
+  logging.warning('This code path can temporarily allocate extra memory. If '
+                  'memory footprint is a problem, consider different bitpacking'
+                  ' method or turning this functionality off. See b/161433177')
   if input_bitrange > 1:
     value = tf.reshape(value, [-1, 1])
     value = _expand_to_binary_form(value, input_bitrange)
@@ -335,6 +347,17 @@ def unpack_from_int(value, original_bitrange, target_bitrange, shape):
     An integer Tensor representing the unpacked `value` of the same dtype as
     `value`.
   """
+  # TODO(b/161433177): Provide a general solution without memory overhead.
+  # Special cases implemented without extra memory overhead.
+  if original_bitrange == 8 and target_bitrange == 28:
+    return _unpack_from_int_8_28(value, shape)
+  if original_bitrange == 12 and target_bitrange == 28:
+    return _unpack_from_int_12_28(value, shape)
+
+  # General solution with extra memory overhead.
+  logging.warning('This code path can temporarily allocate extra memory. If '
+                  'memory footprint is a problem, consider different bitpacking'
+                  ' method or turning this functionality off. See b/161433177')
   value = _expand_to_binary_form(value, target_bitrange)
   value = tf.slice(value, [0], [tf.reduce_prod(shape) * original_bitrange])
   if original_bitrange > 1:
@@ -361,3 +384,121 @@ def _expand_to_binary_form(value, input_bits):
   expand_vector = tf.constant([2**i for i in range(input_bits)], value.dtype)
   bits = tf.math.mod(tf.math.floordiv(value, expand_vector), 2)
   return tf.reshape(bits, [-1])
+
+
+def _pack_into_int_8_28(value):
+  """Implementation of `pack_into_int` for specific bitranges.
+
+  This method corresponts to `(input_bitrange, target_bitrange)` form the
+  `pack_into_int` method equal to `(8, 28)`. This method relies on the fact that
+  7 values in 8-bit bitrange can be packed into 2 values in 28-bitrange
+  (7 = least_common_multiple(8, 28) / 8).
+
+  It reshapes the input into matrix of 7 columns and performs operations on the
+  columns of the matrix, thus vectorizing the operations and avoiding memory
+  overhead of an earlier general implementation.
+
+  Args:
+    value: An integer Tensor to be packed with values in [0, 2**8 - 1].
+
+  Returns:
+    An integer Tensor representing `value` of the same dtype as `value`.
+  """
+  value = tf.reshape(value, [-1])
+  extra_zeros = tf.zeros(tf.math.mod(-tf.shape(value), 7), value.dtype)
+  val = tf.reshape(tf.concat([value, extra_zeros], 0), [-1, 7])
+
+  a = (val[:, 0] +
+       val[:, 1] * 2**8 +
+       val[:, 2] * 2**16 +
+       tf.math.mod(val[:, 3], 2**4) * 2**24)
+  b = (tf.math.floordiv(val[:, 3], 2**4) +
+       val[:, 4] * 2**4 +
+       val[:, 5] * 2**12 +
+       val[:, 6] * 2**20)
+
+  packed_val = tf.reshape(tf.stack([a, b], 1), [-1, 1])
+  if extra_zeros.shape[0] in [4, 5, 6]:
+    # We added unnecessary sum of zeros to the representation.
+    packed_val = tf.slice(packed_val, [0, 0], [packed_val.shape[0] - 1, 1])
+  return packed_val
+
+
+def _pack_into_int_12_28(value):
+  """Implementation of `pack_into_int` for specific bitranges.
+
+  This method corresponts to `(input_bitrange, target_bitrange)` form the
+  `pack_into_int` method equal to `(12, 28)`. This method relies on the fact
+  that 7 values in 12-bit bitrange can be packed into 3 values in 28-bitrange
+  (7 = least_common_multiple(12, 28) / 12).
+
+  It reshapes the input into matrix of 7 columns and performs operations on the
+  columns of the matrix, thus vectorizing the operations and avoiding memory
+  overhead of an earlier general implementation.
+
+  Args:
+    value: An integer Tensor to be packed with values in [0, 2**8 - 1].
+
+  Returns:
+    An integer Tensor representing `value` of the same dtype as `value`.
+  """
+  value = tf.reshape(value, [-1])
+  extra_zeros = tf.zeros(tf.math.mod(-tf.shape(value), 7), value.dtype)
+  val = tf.reshape(tf.concat([value, extra_zeros], 0), [-1, 7])
+
+  a = (val[:, 0] +
+       val[:, 1] * 2**12 +
+       tf.math.mod(val[:, 2], 2**4) * 2**24)
+  b = (tf.math.floordiv(val[:, 2], 2**4) +
+       val[:, 3] * 2**8 +
+       tf.math.mod(val[:, 4], 2**8) * 2**20)
+  c = (tf.math.floordiv(val[:, 4], 2**8) +
+       val[:, 5] * 2**4 +
+       val[:, 6] * 2**16)
+
+  packed_val = tf.reshape(tf.stack([a, b, c], 1), [-1, 1])
+  if extra_zeros.shape[0] in [3, 4]:
+    # We added unnecessary sum of zeros to the representation.
+    packed_val = tf.slice(packed_val, [0, 0], [packed_val.shape[0] - 1, 1])
+  if extra_zeros.shape[0] in [5, 6]:
+    # We added unnecessary two sums of zeros to the representation.
+    packed_val = tf.slice(packed_val, [0, 0], [packed_val.shape[0] - 2, 1])
+  return packed_val
+
+
+def _unpack_from_int_8_28(value, shape):
+  """Inverse operation of `_pack_into_int_8_28`."""
+  value = tf.reshape(value, [-1])
+  extra_zeros = tf.zeros(tf.math.mod(-tf.shape(value), 2), value.dtype)
+  val = tf.reshape(tf.concat([value, extra_zeros], 0), [-1, 2])
+
+  a = tf.math.mod(val[:, 0], 2**8)
+  b = tf.math.mod(tf.math.floordiv(val[:, 0], 2**8), 2**8)
+  c = tf.math.mod(tf.math.floordiv(val[:, 0], 2**16), 2**8)
+  d = tf.math.floordiv(val[:, 0], 2**24) + tf.math.mod(val[:, 1], 2**4) * 2**4
+  e = tf.math.mod(tf.math.floordiv(val[:, 1], 2**4), 2**8)
+  f = tf.math.mod(tf.math.floordiv(val[:, 1], 2**12), 2**8)
+  g = tf.math.floordiv(val[:, 1], 2**20)
+
+  unpacked_val = tf.reshape(tf.stack([a, b, c, d, e, f, g], 1), [-1,])
+  unpacked_val = tf.slice(unpacked_val, [0], [tf.reduce_prod(shape)])
+  return tf.reshape(unpacked_val, shape)
+
+
+def _unpack_from_int_12_28(value, shape):
+  """Inverse operation of `_pack_into_int_12_28`."""
+  value = tf.reshape(value, [-1])
+  extra_zeros = tf.zeros(tf.math.mod(-tf.shape(value), 3), value.dtype)
+  val = tf.reshape(tf.concat([value, extra_zeros], 0), [-1, 3])
+
+  a = tf.math.mod(val[:, 0], 2**12)
+  b = tf.math.mod(tf.math.floordiv(val[:, 0], 2**12), 2**12)
+  c = tf.math.floordiv(val[:, 0], 2**24) + tf.math.mod(val[:, 1], 2**8) * 2**4
+  d = tf.math.mod(tf.math.floordiv(val[:, 1], 2**8), 2**12)
+  e = tf.math.floordiv(val[:, 1], 2**20) + tf.math.mod(val[:, 2], 2**4) * 2**8
+  f = tf.math.mod(tf.math.floordiv(val[:, 2], 2**4), 2**12)
+  g = tf.math.mod(tf.math.floordiv(val[:, 2], 2**16), 2**12)
+
+  unpacked_val = tf.reshape(tf.stack([a, b, c, d, e, f, g], 1), [-1,])
+  unpacked_val = tf.slice(unpacked_val, [0], [tf.reduce_prod(shape)])
+  return tf.reshape(unpacked_val, shape)

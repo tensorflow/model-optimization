@@ -79,8 +79,8 @@ class QuantizeRegistryTest(
 
   def setUp(self):
     super(QuantizeRegistryTest, self).setUp()
-    self.quantize_registry = default_8bit_quantize_registry.QuantizeRegistry(
-    )
+    self.quantize_registry = default_8bit_quantize_registry.\
+        Default8BitQuantizeRegistry()
 
   class CustomLayer(l.Layer):
     pass

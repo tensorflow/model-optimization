@@ -11,9 +11,9 @@ This page provides an overview on quantization aware training to help you
 determine how it fits with your use case.
 
 *   To dive right into an end-to-end example, see the
-    [quantization aware training example](training_example.md).
+    [quantization aware training example](training_example.ipynb).
 *   To quickly find the APIs you need for your use case, see the
-    [quantization aware training comprehensive guide](training_comprehensive_guide.md).
+    [quantization aware training comprehensive guide](training_comprehensive_guide.ipynb).
 
 ## Overview
 
@@ -64,7 +64,7 @@ It is on our roadmap to add support in the following areas:
 Support is available in the following areas:
 
 *   Model coverage: models using
-    [whitelisted layers](https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_registry.py),
+    [allowlisted layers](https://github.com/tensorflow/model-optimization/tree/master/tensorflow_model_optimization/python/core/quantization/keras/default_8bit/default_8bit_quantize_registry.py),
     BatchNormalization when it follows Conv2D and DepthwiseConv2D layers, and in
     limited cases, `Concat`.
     <!-- TODO(tfmot): add more details and ensure they are all correct. -->
@@ -145,7 +145,7 @@ The models were tested on Imagenet and evaluated in both TensorFlow and TFLite.
 ## Examples
 
 In addition to the
-[quantization aware training example](training_example.md),
+[quantization aware training example](training_example.ipynb),
 see the following examples:
 
 *   CNN model on the MNIST handwritten digit classification task with

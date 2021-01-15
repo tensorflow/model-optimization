@@ -69,7 +69,8 @@ class _RNNHelper(object):
       return [rnn_layer.cell]
 
 
-class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
+class Default8BitQuantizeRegistry(
+    quantize_registry.QuantizeRegistry, _RNNHelper):
   """QuantizationRegistry for built-in Keras classes for default 8-bit scheme."""
 
   # TODO(tfmot): expand layers test in quantize_functional_test.py
@@ -97,7 +98,21 @@ class QuantizeRegistry(quantize_registry.QuantizeRegistry, _RNNHelper):
       _no_quantize(layers.Cropping2D),
       _no_quantize(layers.Cropping3D),
       # _no_quantize(layers.UpSampling1D),
-      # _no_quantize(layers.UpSampling2D),
+
+      # TODO(tfmot): Reduce the quantization errors for bilinear interpolation
+      # type for UpSampling2D op. UpSampling2D supports two interpolation types,
+      # nearest and bilinear. we convert the op to ResizeBilnear integer op on
+      # TFLite. This ResizeBilinear TFLite op only for input and output has the
+      # same quantization parameters. (scale and zero_point) To do that, The
+      # TFLite converter inserts quantization cast op right after the input to
+      # match quantization params for the output. Current QAT doesn’t consider
+      # this behavior yet, so now we have larger quantization errors than we
+      # expected. We have to add support for it on QAT or change the TFLite
+      # kernel op to support different quantization params for input and output.
+      # (Note that the nearest case just copies the number so there’s no more
+      # errors even if the quantization order is different.)
+      _QuantizeInfo(layers.UpSampling2D, [], [], True),
+
       # _no_quantize(layers.UpSampling3D),
       _no_quantize(layers.ZeroPadding1D),
       _no_quantize(layers.ZeroPadding2D),

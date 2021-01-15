@@ -116,7 +116,7 @@ class PruneTest(test.TestCase, parameterized.TestCase):
   @staticmethod
   def _count_pruned_layers(model):
     count = 0
-    for layer in model._layers:
+    for layer in model.submodules:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         count += 1
     return count

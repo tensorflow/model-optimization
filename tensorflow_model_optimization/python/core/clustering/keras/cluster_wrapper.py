@@ -31,8 +31,7 @@ CentroidInitialization = cluster_config.CentroidInitialization
 
 
 class ClusterWeights(Wrapper):
-  """This wrapper augments a keras layer so that the weight tensor(s) can be
-  clustered.
+  """This wrapper augments a keras layer so that the weight tensor(s) can be clustered.
 
   This wrapper implements nearest neighbor clustering algorithm. This algorithm
   ensures that only a specified number of unique values are used in a weight
@@ -57,6 +56,7 @@ class ClusterWeights(Wrapper):
                layer,
                number_of_clusters,
                cluster_centroids_init,
+               preserve_sparsity=False,
                **kwargs):
     if not isinstance(layer, Layer):
       raise ValueError(
@@ -85,17 +85,14 @@ class ClusterWeights(Wrapper):
 
     if not isinstance(number_of_clusters, int):
       raise ValueError(
-          "number_of_clusters must be an integer. Given: {}".format(
-              number_of_clusters.__class__
-          )
-      )
+          'number_of_clusters must be an integer. Given: {}'.format(
+              number_of_clusters.__class__))
 
-    if number_of_clusters <= 1:
+    limit_number_of_clusters = 2 if preserve_sparsity else 1
+    if number_of_clusters <= limit_number_of_clusters:
       raise ValueError(
-          "number_of_clusters must be greater than 1. Given: {}".format(
-              number_of_clusters
-          )
-      )
+          'number_of_clusters must be greater than {}. Given: {}'.format(
+              limit_number_of_clusters, number_of_clusters))
 
     self._track_trackable(layer, name='layer')
 
@@ -104,6 +101,12 @@ class ClusterWeights(Wrapper):
 
     # The number of cluster centroids
     self.number_of_clusters = number_of_clusters
+
+    # Whether to apply sparsity preservation or not
+    self.preserve_sparsity = preserve_sparsity
+
+    # Stores the pairs of weight names and their respective sparsity masks
+    self.sparsity_masks = {}
 
     # Stores the pairs of weight names and references to their tensors
     self.ori_weights_vars_tf = {}
@@ -187,7 +190,7 @@ class ClusterWeights(Wrapper):
       centroid_initializer = clustering_centroids.CentroidsInitializerFactory.\
           get_centroid_initializer(
               self.cluster_centroids_init
-          )(weight, self.number_of_clusters)
+          )(weight, self.number_of_clusters, self.preserve_sparsity)
 
       cluster_centroids = centroid_initializer.get_cluster_centroids()
 
@@ -229,6 +232,18 @@ class ClusterWeights(Wrapper):
           )
       )
 
+      if self.preserve_sparsity:
+        # Get the clustered weights
+        clustered_weights = self.clustering_impl[
+            weight_name].get_clustered_weight(pulling_indices)
+
+        # Create the sparsity mask
+        sparsity_mask = tf.cast(
+            tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
+
+        # Store the sparsity mask for training
+        self.sparsity_masks[weight_name] = sparsity_mask
+
       # We store these pairs to easily update this variables later on
       self.ori_weights_vars_tf[weight_name] = self.add_weight(
           '{}{}'.format('ori_weights_vars_tf_', weight_name),
@@ -241,13 +256,21 @@ class ClusterWeights(Wrapper):
       )
 
     # We use currying here to get an updater which can be triggered at any time
-    # in future and it would return the latest version of clustered weights
+    # in the future and it would return the latest version of clustered weights
     def get_updater(for_weight_name):
       def fn():
         # Get the clustered weights
         pulling_indices = self.pulling_indices_tf[for_weight_name]
         clustered_weights = self.clustering_impl[for_weight_name].\
             get_clustered_weight(pulling_indices)
+
+        if self.preserve_sparsity:
+          # Get the sparsity mask
+          sparsity_mask = self.sparsity_masks[for_weight_name]
+
+          # Apply the sparsity mask to the clustered weights
+          clustered_weights = tf.math.multiply(clustered_weights, sparsity_mask)
+
         return clustered_weights
 
       return fn
@@ -279,9 +302,17 @@ class ClusterWeights(Wrapper):
           pulling_indices.dtype
       ))
 
+      # Get the clustered weights
       clustered_weights = self.clustering_impl[weight_name].\
           get_clustered_weight_forward(pulling_indices,\
               self.ori_weights_vars_tf[weight_name])
+
+      if self.preserve_sparsity:
+        # Get the sparsity mask
+        sparsity_mask = self.sparsity_masks[weight_name]
+
+        # Apply the sparsity mask to the clustered weights
+        clustered_weights = tf.math.multiply(clustered_weights, sparsity_mask)
 
       # Replace the weights with their clustered counterparts
       setattr(self.layer, weight_name, clustered_weights)
@@ -295,7 +326,8 @@ class ClusterWeights(Wrapper):
     base_config = super(ClusterWeights, self).get_config()
     config = {
         'number_of_clusters': self.number_of_clusters,
-        'cluster_centroids_init': self.cluster_centroids_init
+        'cluster_centroids_init': self.cluster_centroids_init,
+        'preserve_sparsity': self.preserve_sparsity
     }
     return dict(list(base_config.items()) + list(config.items()))
 
@@ -305,9 +337,11 @@ class ClusterWeights(Wrapper):
 
     number_of_clusters = config.pop('number_of_clusters')
     cluster_centroids_init = config.pop('cluster_centroids_init')
+    preserve_sparsity = config.pop('preserve_sparsity')
     config['number_of_clusters'] = number_of_clusters
     config['cluster_centroids_init'] = cluster_config.CentroidInitialization(
         cluster_centroids_init)
+    config['preserve_sparsity'] = preserve_sparsity
 
     from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
     layer = deserialize_layer(config.pop('layer'),
@@ -326,11 +360,11 @@ class ClusterWeights(Wrapper):
 
   @property
   def trainable_weights(self):
-    return self.layer.trainable_weights
+    return self.layer.trainable_weights + self._trainable_weights
 
   @property
   def non_trainable_weights(self):
-    return self.layer.non_trainable_weights
+    return self.layer.non_trainable_weights + self._non_trainable_weights
 
   @property
   def updates(self):

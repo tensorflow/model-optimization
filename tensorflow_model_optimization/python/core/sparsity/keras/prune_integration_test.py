@@ -94,12 +94,12 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
         # TODO(tf-mot): fix for Conv2DTranspose on some form of eager,
         # with or without functions. The weights become nan (though the
         # mask seems fine still).
-        #layers.Conv2DTranspose: ([2, (3, 3)], (7, 6, 3)),
+        # layers.Conv2DTranspose: ([2, (3, 3)], (7, 6, 3)),
         layers.Conv3D: ([2, (3, 3, 3)], (5, 7, 6, 3)),
         # TODO(tf-mot): fix for Conv3DTranspose on some form of eager,
         # with or without functions. The weights become nan (though the
         # mask seems fine still).
-        #layers.Conv3DTranspose: ([2, (3, 3, 3)], (5, 7, 6, 3)),
+        # layers.Conv3DTranspose: ([2, (3, 3, 3)], (5, 7, 6, 3)),
         layers.SeparableConv1D: ([4, 3], (3, 6)),
         layers.SeparableConv2D: ([4, (2, 2)], (4, 6, 1)),
         layers.Dense: ([4], (6,)),
@@ -193,17 +193,19 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     self._assert_weights_different_objects(model, pruned_model)
     self._assert_weights_same_values(model, pruned_model)
 
-  # TODO(tfmot): https://github.com/tensorflow/model-optimization/issues/215
-  def testPruneWithHighSparsity_Fails(self):
+  def testPruneWithHighSparsity(self):
     params = self.params
     params['pruning_schedule'] = pruning_schedule.ConstantSparsity(
         target_sparsity=0.99, begin_step=0, frequency=1)
 
     model = prune.prune_low_magnitude(
         keras_test_utils.build_simple_dense_model(), **params)
-
-    with self.assertRaises(tf.errors.InvalidArgumentError):
-      self._train_model(model, epochs=1)
+    self._train_model(model, epochs=1)
+    for layer in model.layers:
+      if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+        for weight in layer.layer.get_prunable_weights():
+          self.assertEqual(
+              1, np.count_nonzero(tf.keras.backend.get_value(weight)))
 
   ###################################################################
   # Tests for training with pruning with pretrained models or weights.

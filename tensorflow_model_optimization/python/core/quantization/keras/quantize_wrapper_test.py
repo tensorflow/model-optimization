@@ -29,7 +29,7 @@ from tensorflow_model_optimization.python.core.quantization.keras.default_8bit i
 
 QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 QuantizeWrapper = quantize_wrapper.QuantizeWrapper
-QuantizeRegistry = default_8bit_quantize_registry.QuantizeRegistry
+QuantizeRegistry = default_8bit_quantize_registry.Default8BitQuantizeRegistry
 
 keras = tf.keras
 layers = tf.keras.layers
