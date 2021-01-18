@@ -12,13 +12,3 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Module containing collaborative optimization code."""
-
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve.default_8bit_prune_preserve_quantize_scheme import (
-    Default8BitPrunePreserveQuantizeScheme,)
-
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve.default_8bit_cluster_preserve_quantize_scheme import (
-    Default8BitClusterPreserveQuantizeScheme,)
-
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve.cluster_utils import (
-    strip_clustering_cqat,)
