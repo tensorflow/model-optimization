@@ -26,9 +26,8 @@ import tensorflow as tf
 
 # b/(139939526): update to use public API.
 from tensorflow.python.keras.utils import generic_utils
-
+from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 from tensorflow_model_optimization.python.core.keras import utils
-
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
@@ -234,11 +233,14 @@ class PruneLowMagnitude(Wrapper):
     if training is None:
       training = K.learning_phase()
 
+    def increment_step():
+      return tf_compat.assign(self.pruning_step, self.pruning_step + 1)
+
     def add_update():
       with tf.control_dependencies([
           tf.debugging.assert_greater_equal(
               self.pruning_step,
-              np.int64(0),
+              np.int64(1),
               message=self._PRUNE_CALLBACK_ERROR_MSG)
       ]):
         with tf.control_dependencies(
@@ -248,8 +250,14 @@ class PruneLowMagnitude(Wrapper):
     def no_op():
       return tf.no_op('no_update')
 
-    update_op = utils.smart_cond(training, add_update, no_op)
-    self.add_update(update_op)
+    # Increment the 'pruning_step' after each step.
+    update_pruning_step = utils.smart_cond(training, increment_step, no_op)
+    self.add_update(update_pruning_step)
+
+    # Update mask tensor after each 'pruning_frequency' steps.
+    update_mask = utils.smart_cond(training, add_update, no_op)
+    self.add_update(update_mask)
+
     # Always execute the op that performs weights = weights * mask
     # Relies on UpdatePruningStep callback to ensure the weights
     # are sparse after the final backpropagation.

@@ -91,6 +91,7 @@ py_library(
         # numpy dep1,
         # tensorflow dep1,
         # python/keras/utils:generic_utils tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras:utils",
     ],
 )
