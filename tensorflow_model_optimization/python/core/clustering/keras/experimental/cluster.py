@@ -1,4 +1,4 @@
-# Copyright 2020 The TensorFlow Authors. All Rights Reserved.
+# Copyright 2021 The TensorFlow Authors. All Rights Reserved.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -17,11 +17,8 @@
 from tensorflow_model_optimization.python.core.clustering.keras.cluster import _cluster_weights
 
 
-def cluster_weights(to_cluster,
-                    number_of_clusters,
-                    cluster_centroids_init,
-                    preserve_sparsity,
-                    **kwargs):
+def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
+                    preserve_sparsity, **kwargs):
   """Modify a keras layer or model to be clustered during training (experimental).
 
   This function wraps a keras model or layer with clustering functionality
@@ -102,8 +99,5 @@ def cluster_weights(to_cluster,
     ValueError: if the keras layer is unsupported, or the keras model contains
     an unsupported layer.
   """
-  return _cluster_weights(to_cluster,
-                          number_of_clusters,
-                          cluster_centroids_init,
-                          preserve_sparsity,
-                          **kwargs)
+  return _cluster_weights(to_cluster, number_of_clusters,
+                          cluster_centroids_init, preserve_sparsity, **kwargs)

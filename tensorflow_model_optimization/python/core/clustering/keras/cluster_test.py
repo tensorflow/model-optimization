@@ -15,16 +15,17 @@
 """Tests for keras clustering API."""
 
 import json
-import tensorflow as tf
 
 from absl.testing import parameterized
-from tensorflow.python.keras import keras_parameterized
+import tensorflow as tf
 
+from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 
@@ -131,10 +132,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterKerasClusterableLayer(self):
-    """
-    Verifies that a built-in keras layer marked as clusterable is being
-    clustered correctly.
-    """
+    """Verifies that a built-in keras layer marked as clusterable is being clustered correctly."""
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_clusterable_layer)
 
@@ -142,22 +140,17 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterKerasClusterableLayerWithSparsityPreservation(self):
-    """
-    Verifies that a built-in keras layer marked as clusterable is being
-    clustered correctly when sparsity preservation is enabled.
-    """
-    preserve_sparsity_params = { 'preserve_sparsity': True }
-    params = { **self.params, **preserve_sparsity_params }
-    wrapped_layer = experimental_cluster.cluster_weights(self.keras_clusterable_layer, **params)
+    """Verifies that a built-in keras layer marked as clusterable is being clustered correctly when sparsity preservation is enabled."""
+    preserve_sparsity_params = {'preserve_sparsity': True}
+    params = {**self.params, **preserve_sparsity_params}
+    wrapped_layer = experimental_cluster.cluster_weights(
+        self.keras_clusterable_layer, **params)
 
     self._validate_clustered_layer(self.keras_clusterable_layer, wrapped_layer)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterKerasNonClusterableLayer(self):
-    """
-    Verifies that a built-in keras layer not marked as clusterable is
-    not being clustered.
-    """
+    """Verifies that a built-in keras layer not marked as clusterable is not being clustered."""
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_non_clusterable_layer)
 
@@ -167,36 +160,25 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testDepthwiseConv2DLayerNonClusterable(self):
-     """
-     Verifies that we don't cluster a DepthwiseConv2D layer,
-     because clustering of this type of layer gives
-     big unrecoverable accuracy loss.
-     """
-     wrapped_layer = self._build_clustered_layer_model(
-         self.keras_depthwiseconv2d_layer,
-         input_shape=(1, 10, 10, 10)
-     )
+    """Verifies that we don't cluster a DepthwiseConv2D layer, because clustering of this type of layer gives big unrecoverable accuracy loss."""
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_depthwiseconv2d_layer, input_shape=(1, 10, 10, 10))
 
-     self._validate_clustered_layer(self.keras_depthwiseconv2d_layer,
-                                    wrapped_layer)
-     self.assertEqual([], wrapped_layer.layer.get_clusterable_weights())
+    self._validate_clustered_layer(self.keras_depthwiseconv2d_layer,
+                                   wrapped_layer)
+    self.assertEqual([], wrapped_layer.layer.get_clusterable_weights())
 
   def testClusterKerasUnsupportedLayer(self):
-    """
-    Verifies that attempting to cluster an unsupported layer raises an
-    exception.
-    """
+    """Verifies that attempting to cluster an unsupported layer raises an exception."""
     keras_unsupported_layer = self.keras_unsupported_layer
     # We need to build weights before check.
-    keras_unsupported_layer.build(input_shape = (10, 10))
+    keras_unsupported_layer.build(input_shape=(10, 10))
     with self.assertRaises(ValueError):
       cluster.cluster_weights(keras_unsupported_layer, **self.params)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterCustomClusterableLayer(self):
-    """
-    Verifies that a custom clusterable layer is being clustered correctly.
-    """
+    """Verifies that a custom clusterable layer is being clustered correctly."""
     wrapped_layer = self._build_clustered_layer_model(
         self.custom_clusterable_layer)
 
@@ -206,13 +188,11 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterCustomClusterableLayerWithSparsityPreservation(self):
-    """
-    Verifies that a custom clusterable layer is being clustered correctly
-    when sparsity preservation is enabled.
-    """
-    preserve_sparsity_params = { 'preserve_sparsity': True }
-    params = { **self.params, **preserve_sparsity_params }
-    wrapped_layer = experimental_cluster.cluster_weights(self.custom_clusterable_layer, **params)
+    """Verifies that a custom clusterable layer is being clustered correctly when sparsity preservation is enabled."""
+    preserve_sparsity_params = {'preserve_sparsity': True}
+    params = {**self.params, **preserve_sparsity_params}
+    wrapped_layer = experimental_cluster.cluster_weights(
+        self.custom_clusterable_layer, **params)
     self.model.add(wrapped_layer)
     self.model.build(input_shape=(10, 1))
 
@@ -221,14 +201,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
                      wrapped_layer.layer.get_clusterable_weights())
 
   def testClusterCustomNonClusterableLayer(self):
-    """
-    Verifies that attempting to cluster a custom non-clusterable layer raises
-    an exception.
-    """
+    """Verifies that attempting to cluster a custom non-clusterable layer raises an exception."""
     custom_non_clusterable_layer = self.custom_non_clusterable_layer
     # Once layer is empty with no weights allocated, clustering is supported.
-    cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
-                                  **self.params)
+    cluster_wrapper.ClusterWeights(custom_non_clusterable_layer, **self.params)
     # We need to build weights before check that clustering is not supported.
     custom_non_clusterable_layer.build(input_shape=(10, 10))
     with self.assertRaises(ValueError):
@@ -253,17 +229,34 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelSelectively(self):
-    """
-    Verifies that layers within a sequential model can be clustered
-    selectively.
-    """
+    """Verifies that layers within a sequential model can be clustered selectively."""
     clustered_model = keras.Sequential()
-    clustered_model.add(cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
+    clustered_model.add(
+        cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
     clustered_model.add(self.keras_clusterable_layer)
     clustered_model.build(input_shape=(1, 10))
 
-    self.assertIsInstance(clustered_model.layers[0], cluster_wrapper.ClusterWeights)
-    self.assertNotIsInstance(clustered_model.layers[1], cluster_wrapper.ClusterWeights)
+    self.assertIsInstance(clustered_model.layers[0],
+                          cluster_wrapper.ClusterWeights)
+    self.assertNotIsInstance(clustered_model.layers[1],
+                             cluster_wrapper.ClusterWeights)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterSequentialModelSelectivelyWithSparsityPreservation(self):
+    """Verifies that layers within a sequential model can be clustered selectively when sparsity preservation is enabled."""
+    preserve_sparsity_params = {'preserve_sparsity': True}
+    params = {**self.params, **preserve_sparsity_params}
+    clustered_model = keras.Sequential()
+    clustered_model.add(
+        experimental_cluster.cluster_weights(self.keras_clusterable_layer,
+                                             **params))
+    clustered_model.add(self.keras_clusterable_layer)
+    clustered_model.build(input_shape=(1, 10))
+
+    self.assertIsInstance(clustered_model.layers[0],
+                          cluster_wrapper.ClusterWeights)
+    self.assertNotIsInstance(clustered_model.layers[1],
+                             cluster_wrapper.ClusterWeights)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelSelectivelyWithSparsityPreservation(self):
@@ -283,9 +276,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelSelectively(self):
-    """
-    Verifies that layers within a functional model can be clustered
-    selectively.
+    """Verifies that layers within a functional model can be clustered selectively.
     """
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
@@ -294,8 +285,27 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     outputs = layers.Add()([x1, x2])
     clustered_model = keras.Model(inputs=[i1, i2], outputs=outputs)
 
-    self.assertIsInstance(clustered_model.layers[2], cluster_wrapper.ClusterWeights)
-    self.assertNotIsInstance(clustered_model.layers[3], cluster_wrapper.ClusterWeights)
+    self.assertIsInstance(clustered_model.layers[2],
+                          cluster_wrapper.ClusterWeights)
+    self.assertNotIsInstance(clustered_model.layers[3],
+                             cluster_wrapper.ClusterWeights)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterFunctionalModelSelectivelyWithSparsityPreservation(self):
+    """Verifies that layers within a functional model can be clustered selectively when sparsity preservation is enabled."""
+    preserve_sparsity_params = {'preserve_sparsity': True}
+    params = {**self.params, **preserve_sparsity_params}
+    i1 = keras.Input(shape=(10,))
+    i2 = keras.Input(shape=(10,))
+    x1 = experimental_cluster.cluster_weights(layers.Dense(10), **params)(i1)
+    x2 = layers.Dense(10)(i2)
+    outputs = layers.Add()([x1, x2])
+    clustered_model = keras.Model(inputs=[i1, i2], outputs=outputs)
+
+    self.assertIsInstance(clustered_model.layers[2],
+                          cluster_wrapper.ClusterWeights)
+    self.assertNotIsInstance(clustered_model.layers[3],
+                             cluster_wrapper.ClusterWeights)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelSelectivelyWithSparsityPreservation(self):
@@ -317,10 +327,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterModelValidLayersSuccessful(self):
-    """
-    Verifies that clustering a sequential model results in all clusterable
-    layers within the model being clustered.
-    """
+    """Verifies that clustering a sequential model results in all clusterable layers within the model being clustered."""
     model = keras.Sequential([
         self.keras_clusterable_layer,
         self.keras_non_clusterable_layer,
@@ -335,15 +342,11 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterModelValidLayersSuccessfulWithSparsityPreservation(self):
-    """
-    Verifies that clustering a sequential model results in all clusterable
-    layers within the model being clustered when sparsity preservation is enabled.
-    """
-    preserve_sparsity_params = { 'preserve_sparsity': True }
-    params = { **self.params, **preserve_sparsity_params }
+    """Verifies that clustering a sequential model results in all clusterable layers within the model being clustered when sparsity preservation is enabled."""
+    preserve_sparsity_params = {'preserve_sparsity': True}
+    params = {**self.params, **preserve_sparsity_params}
     model = keras.Sequential([
-        self.keras_clusterable_layer,
-        self.keras_non_clusterable_layer,
+        self.keras_clusterable_layer, self.keras_non_clusterable_layer,
         self.custom_clusterable_layer
     ])
     clustered_model = experimental_cluster.cluster_weights(model, **params)
@@ -354,13 +357,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       self._validate_clustered_layer(layer, clustered_layer)
 
   def testClusterModelUnsupportedKerasLayerRaisesError(self):
-    """
-    Verifies that attempting to cluster a model that contains an unsupported
-    layer raises an exception.
-    """
+    """Verifies that attempting to cluster a model that contains an unsupported layer raises an exception."""
     keras_unsupported_layer = self.keras_unsupported_layer
     # We need to build weights before check.
-    keras_unsupported_layer.build(input_shape = (10, 10))
+    keras_unsupported_layer.build(input_shape=(10, 10))
     with self.assertRaises(ValueError):
       cluster.cluster_weights(
           keras.Sequential([
@@ -369,14 +369,11 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
           ]), **self.params)
 
   def testClusterModelCustomNonClusterableLayerRaisesError(self):
-    """
-    Verifies that attempting to cluster a model that contains a custom
-    non-clusterable layer raises an exception.
-    """
+    """Verifies that attempting to cluster a model that contains a custom non-clusterable layer raises an exception."""
     with self.assertRaises(ValueError):
       custom_non_clusterable_layer = self.custom_non_clusterable_layer
       # We need to build weights before check.
-      custom_non_clusterable_layer.build(input_shape = (1, 2))
+      custom_non_clusterable_layer.build(input_shape=(1, 2))
       cluster.cluster_weights(
           keras.Sequential([
               self.keras_clusterable_layer, self.keras_non_clusterable_layer,
@@ -385,11 +382,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterModelDoesNotWrapAlreadyWrappedLayer(self):
-    """
-    Verifies that clustering a model that contains an already clustered layer
-    does not result in wrapping the clustered layer into another
-    cluster_wrapper.
-    """
+    """Verifies that clustering a model that contains an already clustered layer does not result in wrapping the clustered layer into another cluster_wrapper."""
     model = keras.Sequential(
         [
             layers.Flatten(),
@@ -406,10 +399,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
                                    clustered_model.layers[1])
 
   def testClusterValidLayersListSuccessful(self):
-    """
-    Verifies that clustering a list of layers results in all clusterable
-    layers within the list being clustered.
-    """
+    """Verifies that clustering a list of layers results in all clusterable layers within the list being clustered."""
     model_layers = [
         self.keras_clusterable_layer,
         self.keras_non_clusterable_layer,
@@ -422,10 +412,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       self._validate_clustered_layer(layer, clustered_layer)
 
   def testClusterSequentialModelNoInput(self):
-    """
-    Verifies that a sequential model without an input layer is being clustered
-    correctly.
-    """
+    """Verifies that a sequential model without an input layer is being clustered correctly."""
     # No InputLayer
     model = keras.Sequential([
         layers.Dense(10),
@@ -436,10 +423,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelWithInput(self):
-    """
-    Verifies that a sequential model with an input layer is being clustered
-    correctly.
-    """
+    """Verifies that a sequential model with an input layer is being clustered correctly."""
     # With InputLayer
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
@@ -449,10 +433,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(self._count_clustered_layers(clustered_model), 2)
 
   def testClusterSequentialModelPreservesBuiltStateNoInput(self):
-    """
-    Verifies that clustering a sequential model without an input layer
-    preserves the built state of the model.
-    """
+    """Verifies that clustering a sequential model without an input layer preserves the built state of the model."""
     # No InputLayer
     model = keras.Sequential([
         layers.Dense(10),
@@ -470,10 +451,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelPreservesBuiltStateWithInput(self):
-    """
-    Verifies that clustering a sequential model with an input layer preserves
-    the built state of the model.
-    """
+    """Verifies that clustering a sequential model with an input layer preserves the built state of the model."""
     # With InputLayer
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
@@ -491,10 +469,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelPreservesBuiltState(self):
-    """
-    Verifies that clustering a functional model preserves the built state of
-    the model.
-    """
+    """Verifies that clustering a functional model preserves the built state of the model."""
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = layers.Dense(10)(i1)
@@ -513,9 +488,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModel(self):
-    """
-    Verifies that a functional model is being clustered correctly.
-    """
+    """Verifies that a functional model is being clustered correctly."""
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = layers.Dense(10)(i1)
@@ -569,10 +542,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelWithLayerReused(self):
-    """
-    Verifies that a layer reused within a functional model multiple times is
-    only being clustered once.
-    """
+    """Verifies that a layer reused within a functional model multiple times is only being clustered once."""
     # The model reuses the Dense() layer. Make sure it's only clustered once.
     inp = keras.Input(shape=(10,))
     dense_layer = layers.Dense(10)
@@ -583,19 +553,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(self._count_clustered_layers(clustered_model), 1)
 
   @keras_parameterized.run_all_keras_modes
-  def testClusterConfigAcceptsStrParameters(self):
-    """
-    Verifies that cluster_config enum accepts enum set as a string.
-    We need this, for example, when we use keras-tuner with
-    clustering.
-    """
-    wrapped_layer = cluster.cluster_weights(self.keras_clusterable_layer,
-      **self.params_str)
-
-    self._validate_clustered_layer(self.keras_clusterable_layer, wrapped_layer)
-
-  @keras_parameterized.run_all_keras_modes
-  def testClusterSubclassedModel(self):
+  def testClusterSubclassModel(self):
     """
     Verifies clustering of a subclassed model.
     """
@@ -609,24 +567,15 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSubclassModelAsSubmodel(self):
-    """
-    Verifies that attempting to cluster a model with submodel
-    that is a subclass throws an exception.
-    """
+    """Verifies that attempting to cluster a model with submodel that is a subclass throws an exception."""
     model_subclass = SubclassedModel()
-    model = keras.Sequential([
-        layers.Dense(10),
-        model_subclass
-    ])
-    with self.assertRaisesRegexp(ValueError, "Subclassed models.*"):
+    model = keras.Sequential([layers.Dense(10), model_subclass])
+    with self.assertRaisesRegex(ValueError, 'Subclassed models.*'):
       _ = cluster.cluster_weights(model, **self.params)
 
   @keras_parameterized.run_all_keras_modes
   def testStripClusteringSequentialModel(self):
-    """
-    Verifies that stripping the clustering wrappers from a sequential model
-    produces the expected config.
-    """
+    """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     model = keras.Sequential([
         layers.Dense(10),
         layers.Dense(10),
@@ -639,10 +588,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(model.get_config(), stripped_model.get_config())
   @keras_parameterized.run_all_keras_modes
   def testClusterStrippingFunctionalModel(self):
-    """
-    Verifies that stripping the clustering wrappers from a functional model
-    produces the expected config.
-    """
+    """Verifies that stripping the clustering wrappers from a functional model produces the expected config."""
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = layers.Dense(10)(i1)
@@ -658,10 +604,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterWeightsStrippedWeights(self):
-    """
-    Verifies that stripping the clustering wrappers from a functional model
-    preserves the clustered weights.
-    """
+    """Verifies that stripping the clustering wrappers from a functional model preserves the clustered weights."""
     i1 = keras.Input(shape=(10,))
     x1 = layers.BatchNormalization()(i1)
     outputs = x1
@@ -672,14 +615,11 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     stripped_model = cluster.strip_clustering(clustered_model)
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
-    self.assertEqual(len(stripped_model.get_weights()), cluster_weight_length)
+    self.assertLen(stripped_model.get_weights(), cluster_weight_length)
 
   @keras_parameterized.run_all_keras_modes
   def testStrippedKernel(self):
-    """
-    Verifies that stripping the clustering wrappers from a functional model
-    restores the layers kernel and the layers weight array to the new clustered weight value .
-    """
+    """Verifies that stripping the clustering wrappers from a functional model restores the layers kernel and the layers weight array to the new clustered weight value ."""
     i1 = keras.Input(shape=(1, 1, 1))
     x1 = layers.Conv2D(1, 1)(i1)
     outputs = x1
@@ -698,10 +638,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testStripSelectivelyClusteredFunctionalModel(self):
-    """
-    Verifies that invoking strip_clustering() on a selectively clustered
-    functional model strips the clustering wrappers from the clustered layers.
-    """
+    """Verifies that invoking strip_clustering() on a selectively clustered functional model strips the clustering wrappers from the clustered layers."""
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = cluster.cluster_weights(layers.Dense(10), **self.params)(i1)
@@ -716,13 +653,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testStripSelectivelyClusteredSequentialModel(self):
-    """
-    Verifies that invoking strip_clustering() on a selectively clustered
-    sequential model strips the clustering wrappers from the clustered layers.
-    """
+    """Verifies that invoking strip_clustering() on a selectively clustered sequential model strips the clustering wrappers from the clustered layers."""
     clustered_model = keras.Sequential([
-      cluster.cluster_weights(layers.Dense(10), **self.params),
-      layers.Dense(10),
+        cluster.cluster_weights(layers.Dense(10), **self.params),
+        layers.Dense(10),
     ])
     clustered_model.build(input_shape=(1, 10))
 

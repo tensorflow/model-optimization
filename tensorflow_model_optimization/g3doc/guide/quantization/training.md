@@ -11,9 +11,9 @@ This page provides an overview on quantization aware training to help you
 determine how it fits with your use case.
 
 *   To dive right into an end-to-end example, see the
-    [quantization aware training example](training_example.md).
+    [quantization aware training example](training_example.ipynb).
 *   To quickly find the APIs you need for your use case, see the
-    [quantization aware training comprehensive guide](training_comprehensive_guide.md).
+    [quantization aware training comprehensive guide](training_comprehensive_guide.ipynb).
 
 ## Overview
 
@@ -145,7 +145,7 @@ The models were tested on Imagenet and evaluated in both TensorFlow and TFLite.
 ## Examples
 
 In addition to the
-[quantization aware training example](training_example.md),
+[quantization aware training example](training_example.ipynb),
 see the following examples:
 
 *   CNN model on the MNIST handwritten digit classification task with

@@ -16,7 +16,6 @@
 
 from tensorflow import keras
 
-from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 
@@ -77,7 +76,7 @@ def cluster_weights(to_cluster,
                     number_of_clusters,
                     cluster_centroids_init,
                     **kwargs):
-  """Modify a keras layer or model to be clustered during training.
+  """Modifies a keras layer or model to be clustered during training.
 
   This function wraps a keras model or layer with clustering functionality
   which clusters the layer's weights during training. For examples, using
@@ -126,8 +125,17 @@ def cluster_weights(to_cluster,
       number_of_clusters: the number of cluster centroids to form when
         clustering a layer/model. For example, if number_of_clusters=8 then only
         8 unique values will be used in each weight array.
-      cluster_centroids_init: `tfmot.clustering.keras.CentroidInitialization`
-        instance that determines how the cluster centroids will be initialized.
+      cluster_centroids_init: enum value that determines how the cluster
+        centroids will be initialized.
+        Can have following values:
+          1. RANDOM : centroids are sampled using the uniform distribution
+            between the minimum and maximum weight values in a given layer
+          2. DENSITY_BASED : density-based sampling. First, cumulative
+            distribution function is built for weights, then y-axis is evenly
+            spaced into number_of_clusters regions. After this the corresponding
+            x values are obtained and used to initialize clusters centroids.
+          3. LINEAR : cluster centroids are evenly spaced between the minimum
+            and maximum values of a given weight
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 
@@ -138,19 +146,17 @@ def cluster_weights(to_cluster,
     ValueError: if the keras layer is unsupported, or the keras model contains
     an unsupported layer.
   """
-  return _cluster_weights(to_cluster,
-                          number_of_clusters,
-                          cluster_centroids_init,
-                          preserve_sparsity=False,
-                          **kwargs)
+  return _cluster_weights(
+      to_cluster,
+      number_of_clusters,
+      cluster_centroids_init,
+      preserve_sparsity=False,
+      **kwargs)
 
 
-def _cluster_weights(to_cluster,
-                     number_of_clusters,
-                     cluster_centroids_init,
-                     preserve_sparsity,
-                     **kwargs):
-  """Modify a keras layer or model to be clustered during training (private method).
+def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
+                     preserve_sparsity, **kwargs):
+  """Modifies a keras layer or model to be clustered during training.
 
   This function wraps a keras model or layer with clustering functionality
   which clusters the layer's weights during training. For examples, using
@@ -218,8 +224,8 @@ def _cluster_weights(to_cluster,
         8 unique values will be used in each weight array.
       cluster_centroids_init: `tfmot.clustering.keras.CentroidInitialization`
         instance that determines how the cluster centroids will be initialized.
-      preserve_sparsity (experimental): optional boolean value that determines whether or not
-        sparsity preservation will be enforced during training.
+      preserve_sparsity (experimental): optional boolean value that determines
+        whether or not sparsity preservation will be enforced during training.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 
@@ -230,34 +236,31 @@ def _cluster_weights(to_cluster,
     ValueError: if the keras layer is unsupported, or the keras model contains
     an unsupported layer.
   """
-  if not clustering_centroids.CentroidsInitializerFactory.\
-      init_is_supported(cluster_centroids_init):
-    raise ValueError("Cluster centroid initialization {} not supported".\
-        format(cluster_centroids_init))
+  if not clustering_centroids.CentroidsInitializerFactory.init_is_supported(
+      cluster_centroids_init):
+    raise ValueError('Cluster centroid initialization {} not supported'.format(
+        cluster_centroids_init))
 
   def _add_clustering_wrapper(layer):
-
-    if (isinstance(layer, keras.Model)):
-      # Check whether the model is subclassed.
+    if isinstance(layer, keras.Model):
+      # Check whether the model is a subclass.
       # NB: This check is copied from keras.py file in tensorflow.
       # There is no available public API to do this check.
+      # pylint: disable=protected-access
       if (not layer._is_graph_network and
           not isinstance(layer, keras.models.Sequential)):
-        raise ValueError("Subclassed models are not supported currently.")
+        raise ValueError('Subclassed models are not supported currently.')
 
-      return keras.models.clone_model(layer,
-                                    input_tensors=None,
-                                    clone_function=_add_clustering_wrapper)
+      return keras.models.clone_model(
+          layer, input_tensors=None, clone_function=_add_clustering_wrapper)
     if isinstance(layer, cluster_wrapper.ClusterWeights):
       return layer
     if isinstance(layer, InputLayer):
       return layer.__class__.from_config(layer.get_config())
 
-    return cluster_wrapper.ClusterWeights(layer,
-                                          number_of_clusters,
+    return cluster_wrapper.ClusterWeights(layer, number_of_clusters,
                                           cluster_centroids_init,
-                                          preserve_sparsity,
-                                          **kwargs)
+                                          preserve_sparsity, **kwargs)
 
   def _wrap_list(layers):
     output = []
@@ -292,7 +295,7 @@ def _cluster_weights(to_cluster,
         'or a list of layers'.format(input=to_cluster.__class__.__name__))
 
 def strip_clustering(to_strip):
-  """Strip clustering wrappers from the model.
+  """Strips clustering wrappers from the model.
 
   Once a model has been clustered, this method can be used
   to restore the original model or layer with the clustered weights.
@@ -327,16 +330,17 @@ def strip_clustering(to_strip):
 
   def _strip_clustering_wrapper(layer):
     if isinstance(layer, keras.Model):
-      return keras.models.clone_model(layer,
-                               input_tensors=None,
-                               clone_function=_strip_clustering_wrapper)
+      return keras.models.clone_model(
+          layer, input_tensors=None, clone_function=_strip_clustering_wrapper)
     elif isinstance(layer, cluster_wrapper.ClusterWeights):
       if not hasattr(layer.layer, '_batch_input_shape') and\
           hasattr(layer, '_batch_input_shape'):
+        # pylint: disable=protected-access
         layer.layer._batch_input_shape = layer._batch_input_shape
 
       # We reset both arrays of weights, so that we can guarantee the correct
       # order of newly created weights
+      # pylint: disable=protected-access
       layer.layer._trainable_weights = []
       layer.layer._non_trainable_weights = []
       for i in range(len(layer.restore)):

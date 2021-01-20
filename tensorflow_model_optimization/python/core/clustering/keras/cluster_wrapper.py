@@ -31,8 +31,7 @@ CentroidInitialization = cluster_config.CentroidInitialization
 
 
 class ClusterWeights(Wrapper):
-  """This wrapper augments a keras layer so that the weight tensor(s) can be
-  clustered.
+  """This wrapper augments a keras layer so that the weight tensor(s) can be clustered.
 
   This wrapper implements nearest neighbor clustering algorithm. This algorithm
   ensures that only a specified number of unique values are used in a weight
@@ -86,19 +85,14 @@ class ClusterWeights(Wrapper):
 
     if not isinstance(number_of_clusters, int):
       raise ValueError(
-          "number_of_clusters must be an integer. Given: {}".format(
-              number_of_clusters.__class__
-          )
-      )
+          'number_of_clusters must be an integer. Given: {}'.format(
+              number_of_clusters.__class__))
 
     limit_number_of_clusters = 2 if preserve_sparsity else 1
     if number_of_clusters <= limit_number_of_clusters:
       raise ValueError(
-          "number_of_clusters must be greater than {}. Given: {}".format(
-              limit_number_of_clusters,
-              number_of_clusters
-          )
-      )
+          'number_of_clusters must be greater than {}. Given: {}'.format(
+              limit_number_of_clusters, number_of_clusters))
 
     self._track_trackable(layer, name='layer')
 
@@ -240,10 +234,12 @@ class ClusterWeights(Wrapper):
 
       if self.preserve_sparsity:
         # Get the clustered weights
-        clustered_weights = self.clustering_impl[weight_name].get_clustered_weight(pulling_indices)
+        clustered_weights = self.clustering_impl[
+            weight_name].get_clustered_weight(pulling_indices)
 
         # Create the sparsity mask
-        sparsity_mask = tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
+        sparsity_mask = tf.cast(
+            tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
 
         # Store the sparsity mask for training
         self.sparsity_masks[weight_name] = sparsity_mask
@@ -305,9 +301,17 @@ class ClusterWeights(Wrapper):
           pulling_indices.dtype
       ))
 
+      # Get the clustered weights
       clustered_weights = self.clustering_impl[weight_name].\
           get_clustered_weight_forward(pulling_indices,\
               self.ori_weights_vars_tf[weight_name])
+
+      if self.preserve_sparsity:
+        # Get the sparsity mask
+        sparsity_mask = self.sparsity_masks[weight_name]
+
+        # Apply the sparsity mask to the clustered weights
+        clustered_weights = tf.math.multiply(clustered_weights, sparsity_mask)
 
       # Replace the weights with their clustered counterparts
       setattr(self.layer, weight_name, clustered_weights)
