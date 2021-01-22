@@ -41,3 +41,20 @@ class Default8BitConvWeightsQuantizer(quantizers.LastValueQuantizer):
         trainable=False)
 
     return {'min_var': min_weight, 'max_var': max_weight}
+
+
+class Default8BitConvTransposeWeightsQuantizer(quantizers.LastValueQuantizer):
+  """Quantizer for handling weights in Conv2DTranspose layers."""
+
+  def __init__(self):
+    """Construct LastValueQuantizer with params specific for TFLite Conv2DTranpose."""
+
+    super(Default8BitConvTransposeWeightsQuantizer, self).__init__(
+        num_bits=8, per_axis=False, symmetric=True, narrow_range=True)
+
+  def __call__(self, inputs, training, weights, **kwargs):
+    outputs = tf.transpose(inputs, (0, 1, 3, 2))
+    outputs = super(Default8BitConvTransposeWeightsQuantizer,
+                    self).__call__(outputs, training, weights, **kwargs)
+    outputs = tf.transpose(outputs, (0, 1, 3, 2))
+    return outputs

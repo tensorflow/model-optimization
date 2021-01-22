@@ -153,6 +153,13 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
     x = tf.keras.layers.UpSampling2D(size=(1, 5), interpolation='bilinear')(i)
     return tf.keras.Model(i, x)
 
+  def _get_conv2d_transpose_model(self):
+    i = tf.keras.Input(shape=(32, 32, 3))
+    x = tf.keras.layers.Conv2DTranspose(
+        2, kernel_size=(3, 3), strides=(2, 2))(
+            i)
+    return tf.keras.Model(i, x)
+
   @parameterized.parameters([
       _get_single_conv_model, _get_single_dense_model,
       _get_single_conv_relu_model, _get_stacked_convs_model,
@@ -165,6 +172,7 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
       # TODO(tfmot): There are gaps between ResizeBilinear with FakeQuant and
       # TFLite quantized ResizeBilinear op. It has a bit more quantization
       # error than other ops in this test now.
+      _get_conv2d_transpose_model,
   ])
   def testModelEndToEnd(self, model_fn):
     # 1. Check whether quantized model graph can be constructed.
