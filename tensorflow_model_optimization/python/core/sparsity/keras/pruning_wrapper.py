@@ -229,7 +229,7 @@ class PruneLowMagnitude(Wrapper):
         block_size=self.block_size,
         block_pooling_type=self.block_pooling_type)
 
-  def call(self, inputs, training=None):
+  def call(self, inputs, training=None, **kwargs):
     if training is None:
       training = K.learning_phase()
 
@@ -273,9 +273,9 @@ class PruneLowMagnitude(Wrapper):
     # Propagate the training bool to the underlying layer if it accepts
     # training as an arg.
     if 'training' in args:
-      return self.layer.call(inputs, training=training)
+      return self.layer.call(inputs, training=training, **kwargs)
 
-    return self.layer.call(inputs)
+    return self.layer.call(inputs, **kwargs)
 
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(input_shape)
