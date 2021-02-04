@@ -67,8 +67,10 @@ class PruneLowMagnitude(Wrapper):
   Custom keras layers:
   The pruning wrapper can also be applied to a user-defined keras layer.
   Such a layer may contain one or more weight tensors that may be pruned.
-  To apply pruning wrapper to such layers, set prunable_weight_names to mark
-  the weight tensors for pruning.
+  To apply pruning wrapper to such layers, the layer should be a `PrunableLayer`
+  instance or, more directly, user should define a `get_prunable_weights` method
+  for the layer (Check the pruning_wrapper_test.CustomLayerPrunable for more
+  details about how to define a user-defined prunable layer).
 
   Sparsity function:
   The target sparsity for the weight tensors are set through the
@@ -141,7 +143,8 @@ class PruneLowMagnitude(Wrapper):
     kwargs.update({'name': '{}_{}'.format(
         generic_utils.to_snake_case(self.__class__.__name__), layer.name)})
 
-    if isinstance(layer, prunable_layer.PrunableLayer):
+    if isinstance(layer, prunable_layer.PrunableLayer) or hasattr(
+        layer, 'get_prunable_weights'):
       # Custom layer in client code which supports pruning.
       super(PruneLowMagnitude, self).__init__(layer, **kwargs)
     elif prune_registry.PruneRegistry.supports(layer):
@@ -151,8 +154,10 @@ class PruneLowMagnitude(Wrapper):
     else:
       raise ValueError(
           'Please initialize `Prune` with a supported layer. Layers should '
-          'either be a `PrunableLayer` instance, or should be supported by the '
-          'PruneRegistry. You passed: {input}'.format(input=layer.__class__))
+          'either be supported by the PruneRegistry (built-in keras layers) or '
+          'should be a `PrunableLayer` instance, or should has a customer '
+          'defined `get_prunable_weights` method. You passed: '
+          '{input}'.format(input=layer.__class__))
 
     self._track_trackable(layer, name='layer')
 
