@@ -27,8 +27,8 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster_c
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
     default_8bit_cluster_preserve_quantize_scheme,)
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
-    cluster_utils,)
+from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve.cluster_utils import (
+    strip_clustering_cqat,)
 
 layers = tf.keras.layers
 
@@ -194,7 +194,7 @@ def main(unused_args):
   cqat_acc = evaluate_model_fp32(cqat_model, test_images, test_labels)
   # This only removes extra variables introduced by clustering
   # but the quantize_wrapper stays
-  cqat_model_stripped = cluster_utils.strip_clustering_cqat(cqat_model)
+  cqat_model_stripped = strip_clustering_cqat(cqat_model)
 
   # Compare between clustering and cqat in terms of FP32 accuracy
   # and numbers of unique weights
