@@ -298,7 +298,6 @@ class QuantizeFullIntegerModelTest(tf.test.TestCase, parameterized.TestCase):
           layers.UpSampling3D,
           # Not done since not registered since not per-axis yet.
           layers.Conv1D,
-          layers.Conv2DTranspose,
       ]
   ])
   def testQuantizeSingleLayer_ProducesFullIntegerModel_TF2(

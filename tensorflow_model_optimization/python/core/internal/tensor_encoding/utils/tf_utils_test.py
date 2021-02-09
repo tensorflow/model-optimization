@@ -375,7 +375,8 @@ class PackingUtilsTests(tf.test.TestCase, parameterized.TestCase):
         packed_value, original_bitrange=4, target_bitrange=28, shape=(2,))
     self.assertAllEqual([9, 0], self.evaluate(unpacked_value))
 
-  @parameterized.parameters([(1, 28), (2, 28), (8, 28), (12, 28)])
+  @parameterized.parameters([(1, 28), (2, 28), (6, 28), (7, 28), (8, 28),
+                             (12, 28)])
   def test_boundary_conditions(self, input_bitrange, target_bitrange):
     max_v = 2**input_bitrange - 1
     input_value = tf.constant(
@@ -390,7 +391,8 @@ class PackingUtilsTests(tf.test.TestCase, parameterized.TestCase):
 
     self.assertAllEqual(self.evaluate(value), self.evaluate(unpacked_value))
 
-  @parameterized.parameters([(1, 28), (2, 28), (8, 28), (12, 28)])
+  @parameterized.parameters([(1, 28), (2, 28), (6, 28), (7, 28), (8, 28),
+                             (12, 28)])
   def test_random_input(self, input_bitrange, target_bitrange):
     # Tests that packing/unpacking amounts to identity, regardless of the input.
     num_elements = np.random.randint(low=1, high=50)
@@ -406,6 +408,42 @@ class PackingUtilsTests(tf.test.TestCase, parameterized.TestCase):
       self.assertAllEqual(value, unpacked_value)
     except:  # pylint: disable=bare-except
       self.fail(f'Random input test failed with input value: {value}')
+
+  def test_pack_into_int_special_case_6_28(self):
+    value = tf.constant(
+        [50, 19, 51, 59, 10, 53, 36, 44, 31, 44, 31, 10, 31, 56, 49, 48, 35])
+    packed_value = tf_utils.pack_into_int(
+        value, input_bitrange=6, target_bitrange=28)
+    expected_packed_value = tf.constant([[183448818], [33236180], [236923387],
+                                         [146481]])
+    self.assertAllEqual(self.evaluate(expected_packed_value),
+                        self.evaluate(packed_value))
+
+  def test_unpack_from_int_special_case_6_28(self):
+    packed_value = tf.constant([[183448818], [33236180], [236923387], [146481]])
+    unpacked_value = tf_utils.unpack_from_int(
+        packed_value, original_bitrange=6, target_bitrange=28, shape=(17,))
+    expected_unpacked_value = tf.constant(
+        [50, 19, 51, 59, 10, 53, 36, 44, 31, 44, 31, 10, 31, 56, 49, 48, 35])
+    self.assertAllEqual(self.evaluate(expected_unpacked_value),
+                        self.evaluate(unpacked_value))
+
+  def test_pack_into_int_special_case_7_28(self):
+    value = tf.constant([117, 86, 42, 69, 9, 70, 66, 8, 112, 116])
+    packed_value = tf_utils.pack_into_int(
+        value, input_bitrange=7, target_bitrange=28)
+    expected_packed_value = tf.constant([[145402741], [17867529], [14960]])
+    self.assertAllEqual(self.evaluate(expected_packed_value),
+                        self.evaluate(packed_value))
+
+  def test_unpack_from_int_special_case_7_28(self):
+    packed_value = tf.constant([[145402741], [17867529], [14960]])
+    unpacked_value = tf_utils.unpack_from_int(
+        packed_value, original_bitrange=7, target_bitrange=28, shape=(10,))
+    expected_unpacked_value = tf.constant(
+        [117, 86, 42, 69, 9, 70, 66, 8, 112, 116])
+    self.assertAllEqual(self.evaluate(expected_unpacked_value),
+                        self.evaluate(unpacked_value))
 
   def test_pack_into_int_special_case_8_28(self):
     value = tf.constant([38, 147, 1, 201, 205, 36, 155, 78, 163, 98])

@@ -92,7 +92,6 @@ class Default8BitQuantizeRegistry(
       # layers.DepthwiseConv2D is supported and handled in code below.
 
       # _QuantizeInfo(layers.Conv3D, ['kernel'], ['activation']),
-      # _QuantizeInfo(layers.Conv2DTranspose, ['kernel'], ['activation']),
       # _QuantizeInfo(layers.Conv3DTranspose, ['kernel'], ['activation']),
       _no_quantize(layers.Cropping1D),
       _no_quantize(layers.Cropping2D),
@@ -198,6 +197,9 @@ class Default8BitQuantizeRegistry(
     self._layer_quantize_map[
         layers.DepthwiseConv2D] = Default8BitConvQuantizeConfig(
             ['depthwise_kernel'], ['activation'], False)
+    self._layer_quantize_map[layers.Conv2DTranspose] = \
+        Default8BitConvTransposeQuantizeConfig(
+            ['kernel'], ['activation'], False)
 
   def _is_supported_layer(self, layer_class):
     return layer_class in self._layer_quantize_map
@@ -506,6 +508,17 @@ class Default8BitConvQuantizeConfig(Default8BitQuantizeConfig):
           self).__init__(weight_attrs, activation_attrs, quantize_output)
 
     self.weight_quantizer = default_8bit_quantizers.Default8BitConvWeightsQuantizer(
+    )
+
+
+class Default8BitConvTransposeQuantizeConfig(Default8BitQuantizeConfig):
+  """QuantizeConfig for Conv2DTranspose layers."""
+
+  def __init__(self, weight_attrs, activation_attrs, quantize_output):
+    super(Default8BitConvTransposeQuantizeConfig,
+          self).__init__(weight_attrs, activation_attrs, quantize_output)
+
+    self.weight_quantizer = default_8bit_quantizers.Default8BitConvTransposeWeightsQuantizer(
     )
 
 
