@@ -64,15 +64,13 @@ class UpdatePruningStep(callbacks.Callback):
   def on_train_begin(self, logs=None):
     # Collect all the prunable layers in the model.
     self.prunable_layers = _collect_prunable_layers(self.model)
-    self.step = K.get_value(self.model.optimizer.iterations)
-
-  def on_train_batch_begin(self, batch, logs=None):
-    tuples = []
-    for layer in self.prunable_layers:
-      tuples.append((layer.pruning_step, self.step))
-
-    K.batch_set_value(tuples)
-    self.step = self.step + 1
+    # If the model is newly created/initialized, set the 'pruning_step' to 0.
+    # If the model is saved and then restored, do nothing.
+    if self.prunable_layers[0].pruning_step == -1:
+      tuples = []
+      for layer in self.prunable_layers:
+        tuples.append((layer.pruning_step, 0))
+      K.batch_set_value(tuples)
 
   def on_epoch_end(self, batch, logs=None):
     # At the end of every epoch, remask the weights. This ensures that when

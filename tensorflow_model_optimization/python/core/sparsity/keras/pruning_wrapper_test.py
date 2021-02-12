@@ -28,6 +28,35 @@ layers = keras.layers
 Prune = pruning_wrapper.PruneLowMagnitude
 
 
+class CustomLayer(keras.layers.Layer):
+  """A custom layer which is not prunable."""
+
+  def __init__(self, input_dim=16, output_dim=32):
+    super(CustomLayer, self).__init__()
+    self.weight = self.add_weight(
+        shape=(input_dim, output_dim),
+        initializer='random_normal',
+        trainable=True)
+    self.bias = self.add_weight(
+        shape=(output_dim),
+        initializer='zeros',
+        trainable=True)
+
+  def call(self, inputs):
+    return tf.matmul(inputs, self.weight) + self.bias
+
+
+class CustomLayerPrunable(CustomLayer):
+  """A prunable custom layer.
+
+  The layer is same with the CustomLayer except it has a 'get_prunable_weights'
+  attribute.
+  """
+
+  def get_prunable_weights(self):
+    return [self.weight, self.bias]
+
+
 class PruningWrapperTest(tf.test.TestCase):
 
   def setUp(self):
@@ -99,6 +128,19 @@ class PruningWrapperTest(tf.test.TestCase):
             custom_objects={
                 'PruneLowMagnitude': pruning_wrapper.PruneLowMagnitude
             }).get_config())
+
+  def testCustomLayerNonPrunable(self):
+    layer = CustomLayer(input_dim=16, output_dim=32)
+    inputs = keras.layers.Input(shape=(16))
+    _ = layer(inputs)
+    with self.assertRaises(ValueError):
+      pruning_wrapper.PruneLowMagnitude(layer, block_pooling_type='MAX')
+
+  def testCustomLayerPrunable(self):
+    layer = CustomLayerPrunable(input_dim=16, output_dim=32)
+    inputs = keras.layers.Input(shape=(16))
+    _ = layer(inputs)
+    pruning_wrapper.PruneLowMagnitude(layer, block_pooling_type='MAX')
 
 
 if __name__ == '__main__':
