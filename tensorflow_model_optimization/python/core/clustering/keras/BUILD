@@ -12,6 +12,7 @@ py_library(
     srcs_version = "PY3",
     deps = [
         ":cluster",
+        ":clustering_callbacks",
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental",
     ],
 )
