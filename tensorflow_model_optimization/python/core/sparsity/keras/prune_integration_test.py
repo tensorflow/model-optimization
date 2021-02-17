@@ -126,8 +126,8 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
   # these checks are redundant.
   def _check_strip_pruning_matches_original(
       self, model, sparsity, input_data=None):
+    test_utils.assert_model_sparsity(self, sparsity, model)
     stripped_model = prune.strip_pruning(model)
-    test_utils.assert_model_sparsity(self, sparsity, stripped_model)
 
     if input_data is None:
       input_data = np.random.randn(
