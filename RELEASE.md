@@ -30,6 +30,14 @@ Keras pruning API:
 * Tested against TensorFlow 1.14.0, 2.0.0, and nightly, and Python 3.
 
 
+# TensorFlow Model Optimization next release TBD
+
+Keras clustering API:
+
+* Added *ClusteringSummaries* to create additional output for the clustering
+progress for TensorBoard.
+* Tested against TensorFlow 1.14.0, 2.0.0, and nightly, and Python 3.
+
 # TensorFlow Model Optimization 0.5.0
 
 TFMOT 0.5.0 adds some additional features for Quantization Aware Training. QAT
