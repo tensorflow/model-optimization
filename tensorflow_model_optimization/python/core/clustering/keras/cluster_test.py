@@ -55,7 +55,7 @@ class CustomNonClusterableLayer(layers.Dense):
   pass
 
 
-class MyCustomerableLayer(keras.layers.Dense,
+class MyClusterableLayer(keras.layers.Dense,
   clusterable_layer.ClusterableLayer):
 
   def __init__(self, num_units):
@@ -65,7 +65,7 @@ class MyCustomerableLayer(keras.layers.Dense,
     # Cluster kernel and bias.
     return [('kernel', self.kernel), ('bias', self.bias)]
 
-class MyCustomerableLayerInvalid(keras.layers.Dense,
+class MyClusterableLayerInvalid(keras.layers.Dense,
   clusterable_layer.ClusterableLayer):
   """ This layer is invalid, because it does not provide
   get_clusterable_weights function.
@@ -107,8 +107,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.custom_clusterable_layer = CustomClusterableLayer(10)
     self.custom_non_clusterable_layer = CustomNonClusterableLayer(10)
     self.keras_depthwiseconv2d_layer = layers.DepthwiseConv2D((3, 3), (1, 1))
-    self.customerable_layer = MyCustomerableLayer(10)
-    self.keras_custom_layer = KerasCustomLayer()
+    self.clusterable_layer = MyClusterableLayer(10)
 
     clustering_registry.ClusteringLookupRegistry.register_new_implementation(
         {
@@ -225,12 +224,12 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
                                      **self.params)
 
-  def testClusterMyCustomerableLayer(self):
+  def testClusterMyClusterableLayer(self):
     # we have weights to cluster.
-    customerable_layer = self.customerable_layer
-    customerable_layer.build(input_shape=(10, 10))
+    clusterable_layer = self.clusterable_layer
+    clusterable_layer.build(input_shape=(10, 10))
 
-    wrapped_layer = cluster_wrapper.ClusterWeights(customerable_layer,
+    wrapped_layer = cluster_wrapper.ClusterWeights(clusterable_layer,
                                      **self.params)
 
     self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
@@ -239,40 +238,24 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """
     Verifies that we can wrap keras custom layer that is customerable.
     """
-    customerable_layer = KerasCustomLayerClusterable()
-    wrapped_layer = cluster_wrapper.ClusterWeights(customerable_layer,
+    clusterable_layer = KerasCustomLayerClusterable()
+    wrapped_layer = cluster_wrapper.ClusterWeights(clusterable_layer,
                                      **self.params)
 
     self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
 
-  def testClusterMyCustomerableLayerInvalid(self):
+  def testClusterMyClusterableLayerInvalid(self):
     """
     Verifies that assertion is thrown when function
     get_clusterable_weights is not provided.
     """
     with self.assertRaises(TypeError):
-      MyCustomerableLayerInvalid(10) # pylint: disable=abstract-class-instantiated
+      MyClusterableLayerInvalid(10) # pylint: disable=abstract-class-instantiated
 
-  def testClusterKerasCustomLayer(self):
-    """
-    Verifies that attempting to cluster a keras custom layer raises
-    an exception.
-    """
-    # If layer is not built, it has not weights, so
-    # we just skip it.
-    keras_custom_layer = self.keras_custom_layer
-    cluster_wrapper.ClusterWeights(keras_custom_layer,
-                                  **self.params)
-    # We need to build weights before check that clustering is not supported.
-    keras_custom_layer.build(input_shape=(10, 10))
-    with self.assertRaises(ValueError):
-      cluster_wrapper.ClusterWeights(keras_custom_layer,
-                                     **self.params)
-
->>>>>>> 8fe29ec... MLTOOLS-1031 Customerable layer API.
   @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelSelectively(self):
     clustered_model = keras.Sequential()
+    clustered_model.add(cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
     clustered_model.add(self.keras_clusterable_layer)
     clustered_model.build(input_shape=(1, 10))
 

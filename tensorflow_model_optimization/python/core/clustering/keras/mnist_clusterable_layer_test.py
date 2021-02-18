@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for a simple convnet with customerable layer on the MNIST dataset. """
+"""Tests for a simple convnet with clusterable layer on the MNIST dataset. """
 
 import tensorflow as tf
 
@@ -38,7 +38,7 @@ class MyDenseLayer(keras.layers.Dense, clusterable_layer.ClusterableLayer):
     # Cluster kernel and bias.
     return [('kernel', self.kernel), ('bias', self.bias)]
 
-class CustomerableWeightsCA(clustering_registry.AbstractClusteringAlgorithm):
+class ClusterableWeightsCA(clustering_registry.AbstractClusteringAlgorithm):
   """
     This class provided a special lookup function for the the weights 'w'.
     It reshapes and tile centroids the same way as the weights. This allows us
@@ -58,10 +58,10 @@ class CustomerableWeightsCA(clustering_registry.AbstractClusteringAlgorithm):
 
     return pulling_indices
 
-class MyCustomerableLayer(keras.layers.Layer, clusterable_layer.ClusterableLayer):
+class MyClusterableLayer(keras.layers.Layer, clusterable_layer.ClusterableLayer):
 
   def __init__(self, units=32):
-    super(MyCustomerableLayer, self).__init__()
+    super(MyClusterableLayer, self).__init__()
     self.units = units
 
   def build(self, input_shape):
@@ -87,7 +87,7 @@ class MyCustomerableLayer(keras.layers.Layer, clusterable_layer.ClusterableLayer
     """ Returns clustering algorithm for the custom weights 'w'.
     """
     if weight_name == 'w':
-      return CustomerableWeightsCA
+      return ClusterableWeightsCA
     else:
       # We don't cluster other weights.
       return None
@@ -110,7 +110,7 @@ def _build_model():
 
 def _build_model_2():
   """
-  Builds model with MyCustomerableLayer layer.
+  Builds model with MyClusterableLayer layer.
   """
   i = tf.keras.layers.Input(shape=(28, 28), name='input')
   x = tf.keras.layers.Reshape((28, 28, 1))(i)
@@ -119,7 +119,7 @@ def _build_model_2():
           x)
   x = tf.keras.layers.MaxPool2D(2, 2)(x)
   x = tf.keras.layers.Flatten()(x)
-  output = MyCustomerableLayer(units=10)(x)
+  output = MyClusterableLayer(units=10)(x)
 
   model = tf.keras.Model(inputs=[i], outputs=[output])
   return model
@@ -220,13 +220,13 @@ class FunctionalTest(tf.test.TestCase):
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     # checks 'bias' weights of the last layer: MyDenseLayer
-    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 0)
+    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 1)
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
-  def testMnistCustomerableLayer(self):
+  def testMnistClusterableLayer(self):
     """ We test the keras custom layer with the provided
-      clustering algorithm (see MyCustomerableLayer above).
-      We cluster only 'w' weights and the class CustomerableWeightsCA
+      clustering algorithm (see MyClusterableLayer above).
+      We cluster only 'w' weights and the class ClusterableWeightsCA
       provides the function get_pulling_indices for the
       layer-out of 'w' weights.
 

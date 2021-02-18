@@ -166,8 +166,19 @@ py_test(
 )
 
 py_test(
-    name = "mnist_customerable_test",
-    srcs = ["mnist_customerable_test.py"],
+    name = "mnist_clusterable_layer_test",
+    srcs = ["mnist_clusterable_layer_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cluster"
+        # tensorflow dep1,
+    ],
+)
+
+py_test(
+    name = "mnist_clustering_test",
+    srcs = ["mnist_clustering_test.py"],
     python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
