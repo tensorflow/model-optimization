@@ -64,6 +64,8 @@ class UpdatePruningStep(callbacks.Callback):
   def on_train_begin(self, logs=None):
     # Collect all the prunable layers in the model.
     self.prunable_layers = _collect_prunable_layers(self.model)
+    if not self.prunable_layers:
+      return
     # If the model is newly created/initialized, set the 'pruning_step' to 0.
     # If the model is saved and then restored, do nothing.
     if self.prunable_layers[0].pruning_step == -1:
