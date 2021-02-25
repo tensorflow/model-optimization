@@ -120,6 +120,7 @@ class FunctionalTest(tf.test.TestCase):
 
     # Record the number of unique values of 'bias'
     nr_of_bias_weights = _get_number_of_unique_weights(model, -1, 1)
+    self.assertGreater(nr_of_bias_weights, NUMBER_OF_CLUSTERS)
 
     _, (x_test, y_test) = _get_dataset()
 
