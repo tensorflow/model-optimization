@@ -19,7 +19,7 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
-from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+from tensorflow_model_optimization.python.core.clustering.keras import clustering_algorithm
 
 tf.random.set_seed(42)
 
@@ -38,7 +38,7 @@ class MyDenseLayer(keras.layers.Dense, clusterable_layer.ClusterableLayer):
     # Cluster kernel and bias.
     return [('kernel', self.kernel), ('bias', self.bias)]
 
-class ClusterableWeightsCA(clustering_registry.AbstractClusteringAlgorithm):
+class ClusterableWeightsCA(clustering_algorithm.AbstractClusteringAlgorithm):
   """
     This class provided a special lookup function for the the weights 'w'.
     It reshapes and tile centroids the same way as the weights. This allows us

@@ -43,6 +43,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":clusterable_layer",
+        ":clustering_algorithm"
     ],
 )
 
@@ -70,6 +71,16 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_config",
+    ],
+)
+
+py_library(
+    name = "clustering_algorithm",
+    srcs = ["clustering_algorithm.py"],
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
     ],
 )
 
