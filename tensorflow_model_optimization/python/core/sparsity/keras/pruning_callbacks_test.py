@@ -70,9 +70,9 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
         ])
 
     self.assertEqual(
-        2, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))
+        3, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))
     self.assertEqual(
-        2, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
+        3, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
 
     self._assertLogsExist(log_dir)
 
@@ -111,10 +111,22 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
       step_callback.on_epoch_end(batch=unused_arg)
 
     self.assertEqual(
-        2, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))
+        3, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))
     self.assertEqual(
-        2, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
+        3, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
     self._assertLogsExist(log_dir)
+
+  @keras_parameterized.run_all_keras_modes
+  def testUpdatePruningStepsAndLogsSummaries_RunInference(self):
+    pruned_model, _, _, x_train, _ = self._pruned_model_setup(
+        custom_training_loop=True)
+    model_output = pruned_model(x_train)
+    del model_output
+
+    self.assertEqual(
+        -1, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))
+    self.assertEqual(
+        -1, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
 
   @keras_parameterized.run_all_keras_modes
   def testPruneTrainingRaisesError_PruningStepCallbackMissing(self):

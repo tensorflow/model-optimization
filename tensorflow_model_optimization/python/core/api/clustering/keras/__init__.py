@@ -23,4 +23,6 @@ from tensorflow_model_optimization.python.core.clustering.keras import clusterab
 
 from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import CentroidInitialization
 from tensorflow_model_optimization.python.core.clustering.keras.clustering_algorithm import AbstractClusteringAlgorithm
+from tensorflow_model_optimization.python.core.clustering.keras.clustering_callbacks import ClusteringSummaries
+
 # pylint: enable=g-bad-import-order
