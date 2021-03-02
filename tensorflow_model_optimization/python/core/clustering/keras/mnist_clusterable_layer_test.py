@@ -207,13 +207,13 @@ class FunctionalTest(tf.test.TestCase):
     _, (x_test, y_test) = _get_dataset()
 
     results_original = model.evaluate(x_test, y_test)
-    self.assertGreater(results_original[1], 0.85)
+    self.assertGreater(results_original[1], 0.8)
 
     clustered_model = _cluster_model(model, NUMBER_OF_CLUSTERS)
 
     results = clustered_model.evaluate(x_test, y_test)
 
-    self.assertGreater(results[1], 0.85)
+    self.assertGreater(results[1], 0.8)
 
     # checks 'kernel' weights of the last layer: MyDenseLayer
     nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 0)
