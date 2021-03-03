@@ -17,3 +17,6 @@ from tensorflow_model_optimization.python.core.api import clustering
 from tensorflow_model_optimization.python.core.api import experimental
 from tensorflow_model_optimization.python.core.api import quantization
 from tensorflow_model_optimization.python.core.api import sparsity
+# pylint: disable=g-bad-import-order,line-too-long
+# from tensorflow_model_optimization.google import metrics  # DisableOnExport
+# pylint: enable=g-bad-import-order,line-too-long

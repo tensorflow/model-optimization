@@ -19,6 +19,7 @@ py_library(
     ],
     srcs_version = "PY3",
     deps = [
+#         "//tensorflow_model_optimization/google/metrics",  # DisableOnExport
         "//tensorflow_model_optimization/python/core/clustering/keras",
         "//tensorflow_model_optimization/python/core/quantization/keras",
         "//tensorflow_model_optimization/python/core/sparsity/keras",
