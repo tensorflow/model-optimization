@@ -110,7 +110,16 @@ class _TrainingWrapper(tf.keras.layers.Wrapper):
 
       self.training_weights[attr_name] = weights
 
-  def call(self, inputs):
+  def call(self, inputs, training=None):
+    if (hasattr(self.algorithm.params, 'iterations') and
+        hasattr(self.algorithm.params, 'compiled')):
+      if not self.algorithm.params.compiled:
+        # It is necessary to count iterations only during training=True.
+        if training is not None:
+          self.algorithm.params.iterations.assign_add(
+              tf.cast(training, dtype=tf.int64))
+          tf.print('hi', training, self.algorithm.params.iterations)
+          self.algorithm.params.compiled = training
     for attr_name in self.compressible_weights:
       # TODO(tfmot): move constant folding prevention to the inference graph
       # only, since constant folding won't happen during training.

@@ -6,6 +6,7 @@ py_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        ":schedules",
         "//tensorflow_model_optimization/python/core/common/keras/compression/internal:optimize",
         #TODO(tfmot): remove when we stick to Python 3.7, which includes this by default.
         # dataclasses dep1,
@@ -17,6 +18,7 @@ py_library(
     name = "schedules",
     srcs = ["schedules.py"],
     srcs_version = "PY3ONLY",
+    visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
     ],

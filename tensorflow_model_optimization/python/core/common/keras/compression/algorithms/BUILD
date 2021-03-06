@@ -21,6 +21,7 @@ py_test(
         ":same_training_and_inference",
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/common/keras/compression:schedules",
     ],
 )
 

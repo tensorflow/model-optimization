@@ -20,6 +20,7 @@ import tempfile
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.common.keras.compression import schedules
 from tensorflow_model_optimization.python.core.common.keras.compression.algorithms import same_training_and_inference as svd
 
 
@@ -240,6 +241,26 @@ class FunctionalTest(tf.test.TestCase):
 
     # bias
     assert (dense_layer_weights[1] == dense_layer_compressed_weights[2]).all()
+
+  def testSVD_ScheduledTFLiteModelSize(self):
+    model = _build_model()
+
+    original_saved_model_dir = _save_as_saved_model(model)
+    original_tflite_file = _convert_to_tflite(original_saved_model_dir)
+
+    scheduled_rank = schedules.PolynomialDecay(100, 32, 16, dtype=tf.int64)
+    params = svd.SVDParams(rank=scheduled_rank)
+    compressed_model = svd.optimize(model, params)
+    _train_model(compressed_model)
+    tf.print(params.iterations)
+
+    saved_model_dir = _save_as_saved_model(compressed_model)
+    compressed_tflite_file = _convert_to_tflite(saved_model_dir)
+
+    original_size = os.path.getsize(original_tflite_file)
+    compressed_size = os.path.getsize(compressed_tflite_file)
+
+    self.assertLess(compressed_size, original_size / 6)
 
 
 if __name__ == '__main__':

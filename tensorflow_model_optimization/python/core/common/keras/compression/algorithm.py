@@ -19,6 +19,7 @@ import dataclasses
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.common.keras.compression import schedules
 from tensorflow_model_optimization.python.core.common.keras.compression.internal import optimize
 
 
@@ -36,6 +37,29 @@ class WeightRepr:
   use_resource: Any = None
   synchronization: Any = tf.VariableSynchronization.AUTO
   aggregation: Any = tf.compat.v1.VariableAggregation.NONE
+
+
+class Parameters(tf.Module):
+  """Parameters."""
+
+  def __init__(self, name=None):
+    super(Parameters, self).__init__(name)
+    self.compiled = False
+    with self.name_scope:
+      self.iterations = tf.Variable(0, name='iter', trainable=False,
+                                    dtype=tf.int64)
+
+  def get_config(self):
+    return {'iterations': self.iterations}
+
+  def __getattribute__(self, name):
+    val = super(Parameters, self).__getattribute__(name)
+    if isinstance(val, schedules.Scheduler):
+      # For the case of Scheduler, to provide seamless interface between
+      # a Python constant and Scheduler, we call Scheduler function and
+      # return the result value.
+      val = val(self.iterations)
+    return val
 
 
 class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
