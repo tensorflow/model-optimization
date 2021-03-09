@@ -15,7 +15,7 @@
 """Clustering API functions for Keras models."""
 
 from tensorflow import keras
-from tensorflow.keras import initializers
+import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
@@ -336,35 +336,24 @@ def strip_clustering(to_strip):
     elif isinstance(layer, cluster_wrapper.ClusterWeights):
       if not hasattr(layer.layer, '_batch_input_shape') and\
           hasattr(layer, '_batch_input_shape'):
-        # pylint: disable=protected-access
+        # The _batch_input_shape attribute in the first layer makes a Sequential
+        # model to be built. This makes sure that when we remove the wrapper from
+        # the first layer the model's built state preserves.
         layer.layer._batch_input_shape = layer._batch_input_shape
 
-      # We reset both arrays of weights, so that we can guarantee the correct
-      # order of newly created weights
-      # pylint: disable=protected-access
-      layer.layer._trainable_weights = []
-      layer.layer._non_trainable_weights = []
-      for i in range(len(layer.restore)):
-        # This is why we used integers as keys
-        name, weight_name, weight = layer.restore[i]
-        # In both cases we use k.batch_get_value since we need physical copies
-        # of the arrays to initialize a new tensor
-        if i in layer.gone_variables:
-          # If the variable was removed because it was clustered, we restore it
-          # by using updater we created earlier
-          new_weight_value = k.batch_get_value([weight()])[0]
-        else:
-          # If the value was not clustered(e.g. bias), we still store a valid
-          # reference to the tensor. We use this reference to get the value
-          new_weight_value = k.batch_get_value([weight])[0]
-        setattr(layer.layer,
-                name,
-                k.variable(new_weight_value, name=weight_name))
-      if layer.regularizers:
-        setattr(layer.layer, 'kernel_regularizer', layer.regularizers)
+      # Update cluster associations in order to get the latest weights
+      layer.update_clustered_weights_associations()
+
+      # Restore original weights variables with updated clustered values
+      for weight_name, original_weight in layer.original_clusterable_weights.items():
+        clustered_weight = getattr(layer.layer, weight_name)
+        original_weight.assign(clustered_weight)
+        setattr(layer.layer, weight_name, original_weight)
+
       # When all weights are filled with the values, just return the underlying
       # layer since it is now fully autonomous from its wrapper
       return layer.layer
+
     return layer
 
   (is_sequential_or_functional, is_keras_layer, is_subclassed_model) =\

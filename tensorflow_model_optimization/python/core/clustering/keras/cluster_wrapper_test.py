@@ -225,7 +225,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     weights_name = clusterable_weights[0][0]
     self.assertEqual(weights_name, 'kernel')
     # Get cluster centroids
-    centroids = l.cluster_centroids_tf[weights_name]
+    centroids = l.cluster_centroids[weights_name]
 
     # Calculate some statistics of the weights to set the centroids later on
     mean_weight = tf.reduce_mean(l.layer.kernel)
@@ -275,6 +275,8 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     )
     # Build a layer with the given shape
     original_layer.build(input_shape)
+    # Update cluster association at least once
+    original_layer.update_clustered_weights_associations()
 
     # Save and load the layer in a temp directory
     with tempfile.TemporaryDirectory() as tmp_dir_name:

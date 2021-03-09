@@ -197,7 +197,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         original_model, **clustering_params)
 
     stripped_model_before_tuning = cluster.strip_clustering(clustered_model)
-    weights_before_tuning = stripped_model_before_tuning.get_weights()[0]
+    weights_before_tuning = stripped_model_before_tuning.layers[0].kernel
     non_zero_weight_indices_before_tuning = np.nonzero(weights_before_tuning)
 
     clustered_model.compile(
@@ -208,9 +208,9 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     clustered_model.fit(x=self.dataset_generator2(), steps_per_epoch=1)
 
     stripped_model_after_tuning = cluster.strip_clustering(clustered_model)
-    weights_after_tuning = stripped_model_after_tuning.get_weights()[0]
+    weights_after_tuning = stripped_model_after_tuning.layers[0].kernel
     non_zero_weight_indices_after_tuning = np.nonzero(weights_after_tuning)
-    weights_as_list_after_tuning = weights_after_tuning.reshape(-1,).tolist()
+    weights_as_list_after_tuning = weights_after_tuning.numpy().reshape(-1,).tolist()
     unique_weights_after_tuning = set(weights_as_list_after_tuning)
 
     # Check that the null weights stayed the same before and after tuning.
@@ -436,6 +436,54 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
           len(unique_weights), self.params["number_of_clusters"])
 
     self.end_to_end_testing(original_model, clusters_check)
+
+  @keras_parameterized.run_all_keras_modes
+  def testWeightsAreLearningDuringClustering(self):
+    """Verifies that training a clustered model does update
+    original_weights, clustered_centroids and bias."""
+    original_model = keras.Sequential([
+      layers.Dense(5, input_shape=(5,))
+    ])
+
+    clustered_model = cluster.cluster_weights(original_model, **self.params)
+
+    clustered_model.compile(
+      loss=keras.losses.categorical_crossentropy,
+      optimizer="adam",
+      metrics=["accuracy"],
+    )
+
+    class CheckWeightsCallback(keras.callbacks.Callback):
+      def on_train_batch_begin(self, batch, logs=None):
+        # Save weights before batch
+        self.original_weight_kernel = (
+          self.model.layers[0].original_clusterable_weights['kernel'].numpy()
+        )
+        self.cluster_centroids_kernel = (
+          self.model.layers[0].cluster_centroids['kernel'].numpy()
+        )
+        self.bias = (
+          self.model.layers[0].layer.bias.numpy()
+        )
+
+      def on_train_batch_end(self, batch, logs=None):
+        # Check weights are different after batch
+        assert not np.array_equal(
+          self.original_weight_kernel,
+          self.model.layers[0].original_clusterable_weights['kernel'].numpy()
+        )
+        assert not np.array_equal(
+          self.cluster_centroids_kernel,
+          self.model.layers[0].cluster_centroids['kernel'].numpy()
+        )
+        assert not np.array_equal(
+          self.bias,
+          self.model.layers[0].layer.bias.numpy()
+        )
+
+    clustered_model.fit(x=self.dataset_generator(),
+                        steps_per_epoch=5,
+                        callbacks=[CheckWeightsCallback()])
 
 
 if __name__ == "__main__":

@@ -245,5 +245,8 @@ class FunctionalTest(tf.test.TestCase):
     nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 0)
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
+    # Train again normally for sanity check
+    _train_model(clustered_model)
+
 if __name__ == '__main__':
   tf.test.main()

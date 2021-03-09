@@ -14,8 +14,6 @@
 # ==============================================================================
 """Registry responsible for built-in keras classes."""
 
-import abc
-import six
 import tensorflow as tf
 from tensorflow.keras import layers
 
@@ -309,8 +307,8 @@ class ClusteringRegistry(object):
       raise ValueError('Layer ' + str(layer.__class__) + ' is not supported.')
 
     def get_clusterable_weights():
-      return [(weight, getattr(layer, weight)) for weight in
-              cls._weight_names(layer)]
+      return [(weight_name, getattr(layer, weight_name))
+              for weight_name in cls._weight_names(layer)]
 
     def get_clusterable_weights_rnn():  # pylint: disable=missing-docstring
       def get_clusterable_weights_rnn_cell(cell):
