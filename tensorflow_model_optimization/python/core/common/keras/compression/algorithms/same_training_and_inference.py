@@ -20,25 +20,17 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
 
 
-class SVDParams(object):
-  """Define container for parameters for SVD algorithm."""
+class SVD(algorithm.WeightCompressor):
+  """Define how to apply SVD algorithm."""
 
   def __init__(self, rank):
     self.rank = rank
 
-
-class SVD(algorithm.WeightCompressionAlgorithm):
-  """Define how to apply SVD algorithm."""
-
-  def __init__(self, params):
-    self.params = params
-
   # TODO(tfmot): communicate that `pretrained_weight` will sometimes
   # be a dummy tensor and sometimes be actual pretrained values during
   # its actual usage.
-  def init_training_weights_repr(
-      self, pretrained_weight: tf.Tensor) -> List[algorithm.WeightRepr]:
-    rank = self.params.rank
+  def init_training_weights(self, pretrained_weight: tf.Tensor):
+    rank = self.rank
     s, u, v = tf.linalg.svd(pretrained_weight)
 
     if len(pretrained_weight.shape) == 2:
@@ -59,42 +51,48 @@ class SVD(algorithm.WeightCompressionAlgorithm):
     # TODO(tfmot): note that it does not suffice to just have the initializer
     # to derive the shape from, in the case of a constant initializer.
     # The unit test fail without providing the shape.
-    return [
-        algorithm.WeightRepr(
-            name='u',
-            shape=u.shape,
-            initializer=tf.keras.initializers.Constant(u)),
-        algorithm.WeightRepr(
-            name='sv',
-            shape=sv.shape,
-            initializer=tf.keras.initializers.Constant(sv))
-    ]
+    self.add_training_weight(
+        name='u',
+        shape=u.shape,
+        dtype=u.dtype,
+        initializer=tf.keras.initializers.Constant(u))
+    self.add_training_weight(
+        name='sv',
+        shape=sv.shape,
+        dtype=sv.dtype,
+        initializer=tf.keras.initializers.Constant(sv))
 
-  def decompress(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
+  def decompress_weights(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
     return tf.matmul(u, sv)
 
-  def training(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
-    return self.decompress(u, sv)
+  def project_training_weights(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
+    return self.decompress_weights(u, sv)
 
   def get_compressible_weights(
       self, original_layer: tf.keras.layers.Layer) -> List[str]:
     if isinstance(original_layer, tf.keras.layers.Conv2D) or \
        isinstance(original_layer, tf.keras.layers.Dense):
-      return ['kernel']
+      return [original_layer.kernel]
     return []
 
-
-def optimize(to_optimize: tf.keras.Model, params: SVDParams) -> tf.keras.Model:
-  """Model developer API for optimizing a model."""
-
-  def _optimize_layer(layer):
-    # Require layer to be built so that the SVD-factorized weights
-    # can be initialized from the weights.
-    if not layer.built:
+  def compress_model(self, to_optimize: tf.keras.Model) -> tf.keras.Model:
+    """Model developer API for optimizing a model."""
+    # pylint: disable=protected-access
+    if not isinstance(to_optimize, tf.keras.Sequential) \
+        and not to_optimize._is_graph_network:
       raise ValueError(
-          'Applying SVD currently requires passing in a built model')
+          '`compress_model` can only either be a tf.keras Sequential or '
+          'Functional model.')
+    # pylint: enable=protected-access
 
-    return algorithm.create_layer_for_training(layer, algorithm=SVD(params))
+    def _optimize_layer(layer):
+      # Require layer to be built so that the SVD-factorized weights
+      # can be initialized from the weights.
+      if not layer.built:
+        raise ValueError(
+            'Applying SVD currently requires passing in a built model')
 
-  return tf.keras.models.clone_model(
-      to_optimize, clone_function=_optimize_layer)
+      return algorithm.create_layer_for_training(layer, algorithm=self)
+
+    return tf.keras.models.clone_model(
+        to_optimize, clone_function=_optimize_layer)
