@@ -93,11 +93,11 @@ class FunctionalTest(tf.test.TestCase):
     _train_model(model)
     original_saved_model_dir = _save_as_saved_model(model)
 
-    params = weight_clustering.WeightClusteringParams(
+    algorithm = weight_clustering.WeightClustering(
         number_of_clusters=number_of_clusters,
         cluster_centroids_init=\
         cluster_config.CentroidInitialization.DENSITY_BASED)
-    compressed_model = weight_clustering.optimize(model, params)
+    compressed_model = algorithm.compress_model(model)
 
     _train_model(compressed_model)
 
@@ -130,11 +130,11 @@ class FunctionalTest(tf.test.TestCase):
 
     dense_layer_weights = model.layers[1].get_weights()
 
-    params = weight_clustering.WeightClusteringParams(
+    algorithm = weight_clustering.WeightClustering(
         number_of_clusters=number_of_clusters,
         cluster_centroids_init=\
         cluster_config.CentroidInitialization.DENSITY_BASED)
-    compressed_model = weight_clustering.optimize(model, params)
+    compressed_model = algorithm.compress_model(model)
 
     dense_layer_compressed_weights = compressed_model.layers[1].get_weights()
 

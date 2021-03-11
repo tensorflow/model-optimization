@@ -23,58 +23,64 @@ from tensorflow_model_optimization.python.core.common.keras.compression import a
 # TODO(tfmot): This algorithm is showcase for bias only compression. if we find
 # better algorithm that can show better compressible weights coverage, then
 # we can remove this algorithm.
-class BiasOnly(algorithm.WeightCompressionAlgorithm):
+class BiasOnly(algorithm.WeightCompressor):
   """Define how to apply BiasOnly algorithm."""
 
   # TODO(tfmot): communicate that `pretrained_weight` will sometimes
   # be a dummy tensor and sometimes be actual pretrained values during
   # its actual usage.
-  def init_training_weights_repr(
-      self, pretrained_weight: tf.Tensor) -> List[algorithm.WeightRepr]:
+  def init_training_weights(
+      self, pretrained_weight: tf.Tensor):
     bias_mean = tf.reduce_mean(pretrained_weight)
     bias_shape = tf.shape(pretrained_weight)
 
     # TODO(tfmot): note that it does not suffice to just have the initializer
     # to derive the shape from, in the case of a constant initializer.
     # The unit test fail without providing the shape.
-    return [
-        algorithm.WeightRepr(
-            name='bias_mean',
-            shape=(),
-            initializer=tf.keras.initializers.Constant(bias_mean)),
-        algorithm.WeightRepr(
-            name='bias_shape',
-            shape=bias_shape.shape,
-            dtype=bias_shape.dtype,
-            initializer=tf.keras.initializers.Constant(bias_shape))
-    ]
+    self.add_training_weight(
+        name='bias_mean',
+        shape=bias_mean.shape,
+        dtype=bias_mean.dtype,
+        initializer=tf.keras.initializers.Constant(bias_mean))
+    self.add_training_weight(
+        name='bias_shape',
+        shape=bias_shape.shape,
+        dtype=bias_shape.dtype,
+        initializer=tf.keras.initializers.Constant(bias_shape))
 
-  def decompress(
+  def decompress_weights(
       self, bias_mean: tf.Tensor, bias_shape: tf.Tensor) -> tf.Tensor:
     return tf.broadcast_to(bias_mean, bias_shape)
 
-  def training(
+  def project_training_weights(
       self, bias_mean: tf.Tensor, bias_shape: tf.Tensor) -> tf.Tensor:
-    return self.decompress(bias_mean, bias_shape)
+    return self.decompress_weights(bias_mean, bias_shape)
 
   def get_compressible_weights(
       self, original_layer: tf.keras.layers.Layer) -> List[str]:
     if isinstance(original_layer, tf.keras.layers.Conv2D) or \
        isinstance(original_layer, tf.keras.layers.Dense):
-      return ['bias']
+      return [original_layer.bias]
     return []
 
-
-def optimize(to_optimize: tf.keras.Model) -> tf.keras.Model:
-  """Model developer API for optimizing a model."""
-
-  def _optimize_layer(layer):
-    # Require layer to be built so that the average of bias can be initialized.
-    if not layer.built:
+  def compress_model(self, to_optimize: tf.keras.Model) -> tf.keras.Model:
+    """Model developer API for optimizing a model."""
+    # pylint: disable=protected-access
+    if not isinstance(to_optimize, tf.keras.Sequential) \
+        and not to_optimize._is_graph_network:
       raise ValueError(
-          'Applying BiasOnly currently requires passing in a built model')
+          '`compress_model` can only either be a tf.keras Sequential or '
+          'Functional model.')
+    # pylint: enable=protected-access
 
-    return algorithm.create_layer_for_training(layer, algorithm=BiasOnly())
+    def _optimize_layer(layer):
+      # Require layer to be built so that the average of bias can be
+      # initialized.
+      if not layer.built:
+        raise ValueError(
+            'Applying BiasOnly currently requires passing in a built model')
 
-  return tf.keras.models.clone_model(
-      to_optimize, clone_function=_optimize_layer)
+      return algorithm.create_layer_for_training(layer, algorithm=self)
+
+    return tf.keras.models.clone_model(
+        to_optimize, clone_function=_optimize_layer)

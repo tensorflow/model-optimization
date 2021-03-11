@@ -24,21 +24,11 @@ from tensorflow_model_optimization.python.core.common.keras.compression.internal
 
 @dataclasses.dataclass
 class WeightRepr:
-  """Dataclass that wraps `tf.keras.layers.Layer.add_weight` parameters."""
-  name: Any = None
-  shape: Any = None
-  dtype: Any = None
-  initializer: Any = None
-  regularizer: Any = None
-  trainable: Any = None
-  constraint: Any = None
-  partitioner: Any = None
-  use_resource: Any = None
-  synchronization: Any = tf.VariableSynchronization.AUTO
-  aggregation: Any = tf.compat.v1.VariableAggregation.NONE
+  args: Any = None
+  kwargs: Any = None
 
 
-class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
+class WeightCompressor(metaclass=abc.ABCMeta):
   """Interface for weight compression algorithm that acts on a per-layer basis.
 
      This allows both options of either decompressing during inference or
@@ -48,42 +38,110 @@ class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
      This interface is a purely functional one.
   """
 
+  # TODO(tfmot): Consider separate from algorithm API for custom layer supports.
+  def get_compressible_weights(
+      self, original_layer: tf.keras.layers.Layer) -> List[tf.Variable]:
+    """Define compressible weights for each layer.
+
+    Args:
+       original_layer: tf.keras.layers.Layer representing a layer from the
+       original model.
+
+    Returns:
+       List of compressible weights for the given layer.
+    """
+    del original_layer
+    return []
+
   @abc.abstractmethod
-  def init_training_weights_repr(
-      self, pretrained_weight: tf.Tensor) -> List[WeightRepr]:
-    """Create training weight representations for initializing layer variables.
+  def init_training_weights(
+      self, pretrained_weight: tf.Tensor):
+    """Initialize training weights for the compressible weight.
+
+    It calls the `add_training_weight` to add a training weight for a given
+    `pretrained_weight`. A `pretrained_weight` can have multiple training
+    weights. We initialize the training weights for each compressible
+    weight by just calling this function for each.
 
     Args:
       pretrained_weight: tf.Tensor of a pretrained weight of a layer that will
         be compressed eventually.
-
-    Returns:
-      A list of `WeightRepr`, a container for arguments to
-      `tf.keras.layers.Layer.add_weight`for each tf.Variable to create.
     """
 
-  def compress(self, *training_weights: tf.Tensor) -> List[tf.Tensor]:
-    """Define the operations to compress a single weight after training.
+  def add_training_weight(
+      self, *args, **kwargs):
+    """Add a training weight for the compressible weight.
 
-    'Compress' can refer to making the weight more amenable to compression
-    or actually compress the weight.
+    When this method is called from the `init_training_weights`, this adds
+    training weights for the pretrained_weight that is the input of the
+    `init_training_weights`.
+
+    Args:
+      *args: Passed through to training_model.add_weight.
+      **kwargs: Passed through to training_model.add_weight.
+    """
+    weight_repr = WeightRepr(args=args, kwargs=kwargs)
+    if hasattr(self, 'weight_reprs'):
+      self.weight_reprs.append(weight_repr)
+    else:
+      self.weight_reprs = [weight_repr]
+
+  @abc.abstractmethod
+  def project_training_weights(
+      self, *training_weights: tf.Tensor) -> tf.Tensor:
+    """Define a piece of the forward pass during training.
+
+    It operates on a single compressible weight.
+    The default throws an error when training occurs.
+
+    Args:
+       *training_weights: tf.Tensors representing any variables used during
+         training, for a single compressible weight, in the order returned in
+         `init_training_weights`.
+
+    Returns:
+       tf.Tensor to set the compressible weight to.
+    """
+
+  def update_training_weight(
+      self, training_weight: tf.Tensor, tensor: tf.Tensor):
+    """Update a training weight to a given tensor value.
+
+    This method is for the case that training weight should update to a specific
+    value not from the model optimizer. It will throw an error if it can't
+    find the training weight.
+
+    Args:
+      training_weight: tf.Tensor representing a training weight.
+      tensor: tf.Tensor representing a value to be assigned to the training
+        weight.
+    """
+
+  def compress_training_weights(
+      self, *training_weights: tf.Tensor) -> List[tf.Tensor]:
+    """Define the operations to compress a single weight’s training form.
+
+    'compress_training_weights' can refer to making the weight more amenable to
+    compression or actually compress the weight.
 
     The default is an identity.
 
     Args:
       *training_weights: tf.Tensors representing all variables used during
         training, for a single compressible weight, in the order returned in
-        `init_training_weights_repr`.
+        `init_training_weights`.
 
     Returns:
       List of tf.Tensors to set to compressed or more compressible form.
     """
     return list(training_weights)
 
-  def decompress(self, *compressed_weights: tf.Tensor) -> tf.Tensor:
-    """Define the operations to decompress a single weight’s compressed form during inference.
+  @abc.abstractmethod
+  def decompress_weights(
+      self, *compressed_weights: tf.Tensor) -> tf.Tensor:
+    """Define the operations to decompress a single weight’s compressed form.
 
-    The default is an identity. TODO(): actually isn't.
+    The default is an identity.
 
     Args:
        *compressed_weights: tf.Tensors representing a single weight’s compressed
@@ -92,49 +150,15 @@ class WeightCompressionAlgorithm(metaclass=abc.ABCMeta):
     Returns:
       A tf.Tensor representing the decompressed `compressed_weights`.
     """
-    return compressed_weights[0]
-
-  @abc.abstractmethod
-  def training(self, *training_weights: tf.Tensor) -> tf.Tensor:
-    """Define a piece of the forward pass during training, which operates on a single compressible weight.
-
-    TODO(tfmot): throw this error.
-    The default throws an error when training occurs.
-
-    Args:
-       *training_weights: tf.Tensors representing any variables used during
-         training, for a single compressible weight, in the order returned in
-         `init_training_weights_repr`.
-
-    Returns:
-       tf.Tensor to set the compressible weight to.
-    """
-
-  # TODO(tfmot): Consider separate from algorithm API for custom layer supports.
-  def get_compressible_weights(
-      self, original_layer: tf.keras.layers.Layer) -> List[str]:
-    """Define compressible weights for each layer.
-
-    Args:
-       original_layer: tf.keras.layers.Layer representing a layer from the
-       original model.
-
-    Returns:
-       List of atrribute names as string representing list of compressible
-       weights for the given layer. (e.g. return value ['kernel'] means
-       layer.kernel is compressible.)
-    """
-    del original_layer
-    return []
 
 
 def create_layer_for_training(
     layer: tf.keras.layers.Layer,
-    algorithm: WeightCompressionAlgorithm) -> tf.keras.layers.Layer:
+    algorithm: WeightCompressor) -> tf.keras.layers.Layer:
   return optimize.create_layer_for_training(layer, algorithm)
 
 
 def create_layer_for_inference(
     layer_for_training: tf.keras.layers.Layer,
-    algorithm: WeightCompressionAlgorithm) -> tf.keras.layers.Layer:
+    algorithm: WeightCompressor) -> tf.keras.layers.Layer:
   return optimize.create_layer_for_inference(layer_for_training, algorithm)
