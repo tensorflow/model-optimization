@@ -23,7 +23,14 @@ from tensorflow_model_optimization.python.core.quantization.keras.default_8bit i
 class Default8BitClusterPreserveQuantizeScheme(
     default_8bit_quantize_scheme.Default8BitQuantizeScheme):
   """Default 8 bit Cluster Preserve Quantization Scheme."""
+  def __init__(self, preserve_sparsity=True):
+    """This scheme does the same as Default8BitQuantizeScheme but it preserves
+    clusters and sparsity if the special flag is set.
+    Args:
+      preserve_sparsity: the flag to enable prune-cluster-preserving QAT.
+    """
+    self.preserve_sparsity = preserve_sparsity
 
   def get_quantize_registry(self):
     return cluster_preserve_quantize_registry.\
-        Default8bitClusterPreserveQuantizeRegistry()
+      Default8bitClusterPreserveQuantizeRegistry(self.preserve_sparsity)

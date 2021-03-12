@@ -39,23 +39,6 @@ def _type_model(model):
   return (is_sequential_or_functional, is_keras_layer, is_subclassed_model)
 
 
-def _get_clustered_weights(cluster_indices, cluster_centroids):
-  """This function is for generating clustered weights using centroids and cluster indices.
-
-  Arguments:
-    cluster_indices: a variable representing cluster indices
-    cluster_centroids: a variable representing cluster centroids
-  Returns:
-    A tensor representing current clustered weights for a layer
-  """
-
-  return tf.reshape(
-      tf.gather(cluster_centroids,
-                tf.reshape(cluster_indices, shape=(-1,))),
-      shape=cluster_indices.shape
-  )
-
-
 def strip_clustering_cqat(to_strip):
   """Strip clustering variables from the model.
 
@@ -100,30 +83,6 @@ def strip_clustering_cqat(to_strip):
       if 'depthwise' not in layer.layer.name:
         if isinstance(layer.layer, tf.keras.layers.Conv2D) or \
           isinstance(layer.layer, tf.keras.layers.Dense):
-          clst_indices = None
-          clst_centroids = None
-          # replace the kernel weight with the clustered weight
-          for v in layer._trainable_weights:
-            if 'cluster_centroids_tf' in v.name:
-              clst_centroids = v
-          for v in layer._non_trainable_weights:
-            if 'pulling_indices_tf' in v.name:
-              clst_indices = v
-          if clst_indices is None or clst_centroids is None:
-            # We don't issue an error here as we could have layers
-            # that are not wrapped during selective CQAT.
-            # So, we just return.
-            return layer
-
-          clst_weights = _get_clustered_weights(
-              clst_indices, clst_centroids)
-
-          for i in range(len(layer.weights)):
-            if 'kernel:0' in layer.weights[i].name:
-              layer.weights[i].assign(clst_weights)
-
-          # remove clustering specific trainable weights to reduce
-          # the model size for inference
           new_variables = []
           for v in layer._trainable_weights:
             if 'cluster_centroids_tf' in v.name \
