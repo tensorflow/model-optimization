@@ -231,7 +231,7 @@ class ClusteringLookupRegistry(object):
     """
     if not layer.__class__ in cls._LAYERS_RESHAPE_MAP:
       raise ValueError(
-          "Class {given_class} has not been registerd in the"
+          "Class {given_class} has not been registered in the "
           "ClusteringLookupRegistry. Use ClusteringLookupRegistry."
           "register_new_implemenetation to fix this.".format(
               given_class=layer.__class__
@@ -240,7 +240,7 @@ class ClusteringLookupRegistry(object):
     if weight_name not in cls._LAYERS_RESHAPE_MAP[layer.__class__]:
       raise ValueError(
           "Weight with the name '{given_weight_name}' for class {given_class} "
-          "has not been registerd in the ClusteringLookupRegistry. Use "
+          "has not been registered in the ClusteringLookupRegistry. Use "
           "ClusteringLookupRegistry.register_new_implemenetation "
           "to fix this.".format(
               given_class=layer.__class__,
