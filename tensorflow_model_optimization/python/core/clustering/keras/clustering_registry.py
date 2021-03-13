@@ -233,7 +233,7 @@ class ClusteringLookupRegistry(object):
       raise ValueError(
           "Class {given_class} has not been registered in the "
           "ClusteringLookupRegistry. Use ClusteringLookupRegistry."
-          "register_new_implemenetation to fix this.".format(
+          "register_new_implementation to fix this.".format(
               given_class=layer.__class__
           )
       )
@@ -241,7 +241,7 @@ class ClusteringLookupRegistry(object):
       raise ValueError(
           "Weight with the name '{given_weight_name}' for class {given_class} "
           "has not been registered in the ClusteringLookupRegistry. Use "
-          "ClusteringLookupRegistry.register_new_implemenetation "
+          "ClusteringLookupRegistry.register_new_implementation "
           "to fix this.".format(
               given_class=layer.__class__,
               given_weight_name=weight_name
