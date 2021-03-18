@@ -36,7 +36,11 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
   """Unit tests for clustering lookup algorithms"""
 
   def _check_pull_values(self, clustering_algo, pulling_indices, expected_output):
-    clustered_weight = clustering_algo.get_clustered_weight(pulling_indices)
+    pulling_indices = tf.convert_to_tensor(pulling_indices)
+
+    clustered_weight = clustering_algo.get_clustered_weight(
+      pulling_indices, original_weight=tf.zeros(pulling_indices.shape, dtype=tf.float32)
+    )
     self.assertAllEqual(clustered_weight, expected_output)
 
   def _check_gradients_clustered_weight(
@@ -47,13 +51,16 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
       expected_grad_centroids,
   ):
     weight = tf.convert_to_tensor(weight)
+    pulling_indices = tf.convert_to_tensor(pulling_indices)
     cluster_centroids = clustering_algo.cluster_centroids
 
     with tf.GradientTape(persistent=True) as t:
       t.watch(weight)
       t.watch(cluster_centroids)
 
-      out = clustering_algo.get_clustered_weight(pulling_indices, weight)
+      out = clustering_algo.get_clustered_weight(
+        pulling_indices, original_weight=weight
+      )
 
     grad_original_weight = t.gradient(out, weight)
     grad_cluster_centroids = t.gradient(out, cluster_centroids)
@@ -77,8 +84,30 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
         [1, 0, 0, 0],
         [0, 1, 1, 0],
         [0, 0, 1, 0]],
-       [8, 8],
-      )
+       [1, 1],
+      ),
+    ([-0.800450444, 0.864694357],
+     [[0.220442653, 0.854694366, 0.0328432359, 0.506857157],
+      [0.0527950861, -0.659555554, -0.849919915, -0.54047],
+      [-0.305815876, 0.0865516588, 0.659202456, -0.355699599],
+      [-0.348868281, -0.662001, 0.6171574, -0.296582848]],
+     [[1, 1, 1, 1],
+      [1, 1, 1, 0],
+      [0, 1, 1, 0],
+      [0, 0, 1, 0]],
+     [1, 1],
+     ),
+    ([-0.800450444, 0.864694357],
+     [[0.220442653, 0.854694366, 0.0328432359, 0.506857157],
+      [0.0527950861, -0.659555554, -0.849919915, -0.54047],
+      [-0.305815876, 0.0865516588, 0.659202456, -0.355699599],
+      [-0.348868281, -0.662001, 0.6171574, -0.296582848]],
+     [[1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1]],
+     [0, 1],
+     )
   )
   def testDenseWeightsCAGrad(self,
                              clustering_centroids,
@@ -109,7 +138,7 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
     """
     Verifies that DenseWeightsCA works as expected.
     """
-    clustering_centroids = tf.Variable(clustering_centroids)
+    clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
     clustering_algo = clustering_registry.DenseWeightsCA(clustering_centroids)
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
 
@@ -124,7 +153,7 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
     """
     Verifies that BiasWeightsCA works as expected.
     """
-    clustering_centroids = tf.Variable(clustering_centroids)
+    clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
     clustering_algo = clustering_registry.BiasWeightsCA(clustering_centroids)
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
 
@@ -136,8 +165,17 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
        [[0, 0, 0],
         [1, 1, 1],
         [0, 0, 0]],
-       [6, 3]
-      )
+       [1, 1]
+      ),
+    ([0.0, 3.0],
+     [[0.1, 0.1, 0.1],
+      [3.0, 3.0, 3.0],
+      [0.2, 0.2, 0.2]],
+     [[0, 0, 0],
+      [0, 0, 0],
+      [0, 0, 0]],
+     [1, 0]
+     )
   )
   def testConvolutionalWeightsCAGrad(self,
                                      clustering_centroids,
@@ -148,7 +186,7 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
     """
     Verifies that the gradients of ConvolutionalWeightsCA work as expected.
     """
-    clustering_centroids = tf.Variable(clustering_centroids)
+    clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
     clustering_algo = clustering_registry.ConvolutionalWeightsCA(clustering_centroids)
     self._check_gradients_clustered_weight(
       clustering_algo,
@@ -171,7 +209,7 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
     """
     Verifies that ConvolutionalWeightsCA works as expected.
     """
-    clustering_centroids = tf.Variable(clustering_centroids)
+    clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
     clustering_algo = clustering_registry.ConvolutionalWeightsCA(clustering_centroids)
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
 
