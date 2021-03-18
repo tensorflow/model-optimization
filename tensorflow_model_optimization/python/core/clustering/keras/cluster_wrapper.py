@@ -205,8 +205,8 @@ class ClusterWeights(Wrapper):
       if self.preserve_sparsity:
         # Init the sparsity mask
         clustered_weights = (
-            self.clustering_algorithms[weight_name]
-            .get_clustered_weight(pulling_indices)
+          self.clustering_algorithms[weight_name]
+          .get_clustered_weight(pulling_indices, original_weight)
         )
         self.sparsity_weights_masks[weight_name] = (
             tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
@@ -233,7 +233,9 @@ class ClusterWeights(Wrapper):
       # Update clustered weights
       clustered_weights = (
         self.clustering_algorithms[weight_name]
-        .get_clustered_weight(pulling_indices, original_weight)
+        .get_clustered_weight(
+          pulling_indices, original_weight
+        )
       )
       if self.preserve_sparsity:
         # Apply the sparsity mask to the clustered weights

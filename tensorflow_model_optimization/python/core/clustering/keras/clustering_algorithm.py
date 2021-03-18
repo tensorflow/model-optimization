@@ -63,19 +63,31 @@ class AbstractClusteringAlgorithm(object):
     """
     pass
 
-  def get_clustered_weight(self, pulling_indices, original_weight=None):
+  def get_clustered_weight(self, pulling_indices, original_weight):
     """
-    Takes indices (pulling_indices) and original weights (weight) as inputs
-    and then forms a new array according to the given indices. The original
-    weights (weight) here are added to the graph since we want the backprop
-    to update their values via the new implementation using tf.custom_gradient
-    :param pulling_indices: an array of indices used for lookup.
+    Take indices (pulling_indices) as input and then form a new array
+    by gathering cluster centroids based on the given pulling indices.
+    The original gradients will also be modified in two ways:
+    - By averaging the gradient of cluster_centroids based on the size of
+      each cluster.
+    - By adding an estimated gradient onto the non-differentiable
+      original weight.
+    :param pulling_indices: a tensor of indices used for lookup of the same
+      size as original_weight.
     :param original_weight: the original weights of the wrapped layer.
-      If None, no custom gradient will be added.
     :return: array with the same shape as `pulling_indices`. Each array element
-      is a member of self.cluster_centroids
+      is a member of self.cluster_centroids. The backward pass is modified by
+      adding custom gradients.
     """
-    clustered_weight = tf.gather(self.cluster_centroids, pulling_indices)
+
+    @tf.custom_gradient
+    def average_centroids_gradient_by_cluster_size(cluster_centroids, cluster_sizes):
+      def grad(d_cluster_centroids):
+        # Average the gradient based on the number of weights belonging to each cluster
+        d_cluster_centroids = tf.math.divide_no_nan(d_cluster_centroids, cluster_sizes)
+        return d_cluster_centroids, None
+
+      return cluster_centroids, grad
 
     @tf.custom_gradient
     def add_gradient_to_original_weight(clustered_weight, original_weight):
@@ -98,7 +110,24 @@ class AbstractClusteringAlgorithm(object):
 
       return override_clustered_weight, grad
 
-    if original_weight is not None:
-      clustered_weight = add_gradient_to_original_weight(clustered_weight, original_weight)
+    # Compute the size of each cluster (number of weights belonging to each cluster)
+    cluster_sizes = tf.math.bincount(
+      arr=tf.cast(pulling_indices, dtype=tf.int32),
+      minlength=tf.size(self.cluster_centroids),
+      dtype=self.cluster_centroids.dtype,
+    )
+    # Modify the gradient of cluster_centroids to be averaged by cluster sizes
+    cluster_centroids = average_centroids_gradient_by_cluster_size(
+      self.cluster_centroids,
+      tf.stop_gradient(cluster_sizes),
+    )
+
+    # Gather the clustered weights based on cluster centroids and pulling indices
+    clustered_weight = tf.gather(cluster_centroids, pulling_indices)
+
+    # Add an estimated gradient to the original weight
+    clustered_weight = add_gradient_to_original_weight(
+      clustered_weight, original_weight
+    )
 
     return clustered_weight
