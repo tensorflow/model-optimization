@@ -141,8 +141,7 @@ class FunctionalTest(tf.test.TestCase):
 
     original_saved_model_dir = _save_as_saved_model(model)
 
-    params = svd.SVDParams(rank=16)
-    model_for_inference = svd.optimize(model, params)
+    model_for_inference = svd.SVD(rank=16).compress_model(model)
 
     saved_model_dir = _save_as_saved_model(model_for_inference)
 
@@ -155,9 +154,7 @@ class FunctionalTest(tf.test.TestCase):
     model = _build_model()
     _train_model(model)
 
-    params = svd.SVDParams(rank=16)
-
-    model_for_inference = svd.optimize(model, params)
+    model_for_inference = svd.SVD(rank=16).compress_model(model)
 
     _, (x_test, y_test) = _get_dataset()
 
@@ -176,9 +173,7 @@ class FunctionalTest(tf.test.TestCase):
     original_saved_model_dir = _save_as_saved_model(model)
     original_tflite_file = _convert_to_tflite(original_saved_model_dir)
 
-    params = svd.SVDParams(rank=16)
-
-    model_for_inference = svd.optimize(model, params)
+    model_for_inference = svd.SVD(rank=16).compress_model(model)
 
     saved_model_dir = _save_as_saved_model(model_for_inference)
     compressed_tflite_file = _convert_to_tflite(saved_model_dir)
@@ -192,9 +187,7 @@ class FunctionalTest(tf.test.TestCase):
     model = _build_model()
     _train_model(model)
 
-    params = svd.SVDParams(rank=16)
-
-    model_for_inference = svd.optimize(model, params)
+    model_for_inference = svd.SVD(rank=16).compress_model(model)
 
     saved_model_dir = _save_as_saved_model(model_for_inference)
     compressed_tflite_file = _convert_to_tflite(saved_model_dir)
@@ -210,9 +203,7 @@ class FunctionalTest(tf.test.TestCase):
     first_conv_layer = model.layers[2]
     self.assertLen(first_conv_layer.weights, 2)
 
-    params = svd.SVDParams(rank=16)
-
-    model_for_inference = svd.optimize(model, params)
+    model_for_inference = svd.SVD(rank=16).compress_model(model)
 
     first_conv_layer = model_for_inference.layers[2]
 
@@ -226,15 +217,14 @@ class FunctionalTest(tf.test.TestCase):
 
     dense_layer_weights = model.layers[1].get_weights()
 
-    params = svd.SVDParams(rank=1)
-
-    model_for_inference = svd.optimize(model, params)
+    algorithm = svd.SVD(rank=1)
+    model_for_inference = algorithm.compress_model(model)
 
     dense_layer_compressed_weights = model_for_inference.layers[1].get_weights()
 
     # kernel
-    algorithm = svd.SVD(params)
-    w1, w2 = algorithm.compress(tf.constant(dense_layer_weights[0]))
+    w1, w2 = algorithm.compress_training_weights(
+        tf.constant(dense_layer_weights[0]))
     assert (w1 == dense_layer_compressed_weights[0]).numpy().all()
     assert (w2 == dense_layer_compressed_weights[1]).numpy().all()
 

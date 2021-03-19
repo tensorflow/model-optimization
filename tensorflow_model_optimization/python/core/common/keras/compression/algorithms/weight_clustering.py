@@ -24,29 +24,20 @@ from tensorflow_model_optimization.python.core.clustering.keras import clusterin
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
 
 
-class WeightClusteringParams(object):
-  """Weight clustering parameters."""
+class WeightClustering(algorithm.WeightCompressor):
+  """Weight clustering compression module config."""
 
-  def __init__(self,
-               number_of_clusters,
-               cluster_centroids_init):
+  def __init__(self, number_of_clusters, cluster_centroids_init):
     self.number_of_clusters = number_of_clusters
     self.cluster_centroids_init = cluster_centroids_init
 
-
-class WeightClustering(algorithm.WeightCompressionAlgorithm):
-  """Weight clustering compression module config."""
-
-  def __init__(self, params):
-    self.params = params
-
-  def init_training_weights_repr(
-      self, pretrained_weight: tf.Tensor) -> List[algorithm.WeightRepr]:
+  def init_training_weights(
+      self, pretrained_weight: tf.Tensor):
     """Init function from pre-trained model case."""
     centroid_initializer = clustering_centroids.CentroidsInitializerFactory.\
         get_centroid_initializer(
-            self.params.cluster_centroids_init
-        )(pretrained_weight, self.params.number_of_clusters)
+            self.cluster_centroids_init
+        )(pretrained_weight, self.number_of_clusters)
 
     cluster_centroids = centroid_initializer.get_cluster_centroids()
 
@@ -66,55 +57,52 @@ class WeightClustering(algorithm.WeightCompressionAlgorithm):
     # stored forever. We use to make look-ups from self.cluster_centroids_tf
     pulling_indices = clustering_impl.get_pulling_indices(pretrained_weight)
 
-    return [
-        algorithm.WeightRepr(
-            name='cluster_centroids',
-            shape=cluster_centroids.shape,
-            dtype=cluster_centroids.dtype,
-            initializer=tf.keras.initializers.Constant(cluster_centroids)),
-        algorithm.WeightRepr(
-            name='pulling_indices',
-            shape=pulling_indices.shape,
-            dtype=pulling_indices.dtype,
-            initializer=tf.keras.initializers.Constant(pulling_indices))
-    ]
+    self.add_training_weight(
+        name='cluster_centroids',
+        shape=cluster_centroids.shape,
+        dtype=cluster_centroids.dtype,
+        initializer=tf.keras.initializers.Constant(cluster_centroids))
+    self.add_training_weight(
+        name='pulling_indices',
+        shape=pulling_indices.shape,
+        dtype=pulling_indices.dtype,
+        initializer=tf.keras.initializers.Constant(pulling_indices))
 
-  def decompress(self,
-                 cluster_centroids: tf.Tensor,
-                 pulling_indices: tf.Tensor) -> tf.Tensor:
+  def decompress_weights(self,
+                         cluster_centroids: tf.Tensor,
+                         pulling_indices: tf.Tensor) -> tf.Tensor:
     return tf.reshape(
         tf.gather(cluster_centroids,
                   tf.reshape(pulling_indices, shape=(-1,))),
         pulling_indices.shape)
 
-  def training(self,
-               cluster_centroids: tf.Tensor,
-               pulling_indices: tf.Tensor) -> tf.Tensor:
-    return self.decompress(cluster_centroids, pulling_indices)
+  def project_training_weights(self,
+                               cluster_centroids: tf.Tensor,
+                               pulling_indices: tf.Tensor) -> tf.Tensor:
+    return self.decompress_weights(cluster_centroids, pulling_indices)
 
   def get_compressible_weights(
       self, original_layer: tf.keras.layers.Layer) -> List[str]:
     if isinstance(original_layer, tf.keras.layers.Conv2D) or \
        isinstance(original_layer, tf.keras.layers.Dense):
-      return ['kernel']
+      return [original_layer.kernel]
     return []
 
+  def compress_model(
+      self,
+      to_optimize: tf.keras.Model) -> tf.keras.Model:
+    """Model developer API for optimizing a model."""
 
-def optimize(
-    to_optimize: tf.keras.Model,
-    params: WeightClusteringParams) -> tf.keras.Model:
-  """Model developer API for optimizing a model."""
+    def _optimize_layer(layer):
+      # Require layer to be built so that the SVD-factorized weights
+      # can be initialized from the weights.
+      if not layer.built:
+        raise ValueError(
+            'Applying weight clustering currently '
+            'requires passing in a built model')
 
-  def _optimize_layer(layer):
-    # Require layer to be built so that the SVD-factorized weights
-    # can be initialized from the weights.
-    if not layer.built:
-      raise ValueError(
-          'Applying weight clustering currently '
-          'requires passing in a built model')
+      return algorithm.create_layer_for_training(
+          layer, algorithm=self)
 
-    return algorithm.create_layer_for_training(
-        layer, algorithm=WeightClustering(params))
-
-  return tf.keras.models.clone_model(
-      to_optimize, clone_function=_optimize_layer)
+    return tf.keras.models.clone_model(
+        to_optimize, clone_function=_optimize_layer)

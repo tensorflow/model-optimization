@@ -141,8 +141,7 @@ class FunctionalTest(tf.test.TestCase):
 
     original_saved_model_dir = _save_as_saved_model(model)
 
-    params = svd.SVDParams(rank=16)
-    compressed_model = svd.optimize(model, params)
+    compressed_model = svd.SVD(rank=16).compress_model(model)
 
     saved_model_dir = _save_as_saved_model(compressed_model)
 
@@ -154,8 +153,7 @@ class FunctionalTest(tf.test.TestCase):
   def testSVD_HasReasonableAccuracy_TF(self):
     model = _build_model()
 
-    params = svd.SVDParams(rank=16)
-    compressed_model = svd.optimize(model, params)
+    compressed_model = svd.SVD(rank=16).compress_model(model)
 
     _train_model(compressed_model)
 
@@ -176,8 +174,7 @@ class FunctionalTest(tf.test.TestCase):
     original_saved_model_dir = _save_as_saved_model(model)
     original_tflite_file = _convert_to_tflite(original_saved_model_dir)
 
-    params = svd.SVDParams(rank=16)
-    compressed_model = svd.optimize(model, params)
+    compressed_model = svd.SVD(rank=16).compress_model(model)
 
     saved_model_dir = _save_as_saved_model(compressed_model)
     compressed_tflite_file = _convert_to_tflite(saved_model_dir)
@@ -190,8 +187,7 @@ class FunctionalTest(tf.test.TestCase):
   def testSVD_HasReasonableAccuracy_TFLite(self):
     model = _build_model()
 
-    params = svd.SVDParams(rank=16)
-    compressed_model = svd.optimize(model, params)
+    compressed_model = svd.SVD(rank=16).compress_model(model)
 
     _train_model(compressed_model)
 
@@ -209,8 +205,7 @@ class FunctionalTest(tf.test.TestCase):
     first_conv_layer = model.layers[2]
     self.assertLen(first_conv_layer.weights, 2)
 
-    params = svd.SVDParams(rank=16)
-    compressed_model = svd.optimize(model, params)
+    compressed_model = svd.SVD(rank=16).compress_model(model)
 
     first_conv_layer = compressed_model.layers[2]
 
@@ -224,19 +219,19 @@ class FunctionalTest(tf.test.TestCase):
 
     dense_layer_weights = model.layers[1].get_weights()
 
-    params = svd.SVDParams(rank=1)
-    compressed_model = svd.optimize(model, params)
+    algorithm = svd.SVD(rank=1)
+    compressed_model = algorithm.compress_model(model)
 
     dense_layer_compressed_weights = compressed_model.layers[1].get_weights()
 
     # kernel
-    algorithm = svd.SVD(params)
-    w1_repr, w2_repr = algorithm.init_training_weights_repr(
-        dense_layer_weights[0])
-    assert ((w1_repr.initializer(None) == dense_layer_compressed_weights[0]
-            ).numpy().all())
-    assert ((w2_repr.initializer(None) == dense_layer_compressed_weights[1]
-            ).numpy().all())
+    algorithm.weight_reprs = []
+    algorithm.init_training_weights(dense_layer_weights[0])
+    w1_repr, w2_repr = algorithm.weight_reprs
+    assert (w1_repr.kwargs['initializer'](None) == \
+             dense_layer_compressed_weights[0]).numpy().all()
+    assert (w2_repr.kwargs['initializer'](None) == \
+             dense_layer_compressed_weights[1]).numpy().all()
 
     # bias
     assert (dense_layer_weights[1] == dense_layer_compressed_weights[2]).all()
