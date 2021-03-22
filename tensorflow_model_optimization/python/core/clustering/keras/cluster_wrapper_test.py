@@ -273,17 +273,19 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       number_of_clusters=2,
       cluster_centroids_init=CentroidInitialization.LINEAR
     )
-    # Build a layer with the given shape
-    original_layer.build(input_shape)
     # Update cluster association at least once
     original_layer.update_clustered_weights_associations()
+    # Wrap it into a model
+    original_model = tf.keras.Sequential(layers=[original_layer])
+    # Build the model with the given shape
+    original_model.build(input_shape)
 
-    # Save and load the layer in a temp directory
+    # Save and load the model in a temp directory
     with tempfile.TemporaryDirectory() as tmp_dir_name:
       keras_file = os.path.join(tmp_dir_name, 'keras_model')
-      keras.models.save_model(original_layer, keras_file)
+      keras.models.save_model(original_model, keras_file)
       with cluster.cluster_scope():
-        loaded_layer = keras.models.load_model(keras_file)
+        loaded_model = keras.models.load_model(keras_file)
 
     def assertListOfVariablesAllEqual(l1, l2):
       assert len(l1) == len(l2), \
@@ -299,6 +301,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
 
     # Check that trainable_weights and non_trainable_weights are the same
     # in the original layer and loaded layer
+    loaded_layer = loaded_model.layers[0]
     assertListOfVariablesAllEqual(original_layer.trainable_weights,
                                   loaded_layer.trainable_weights)
     assertListOfVariablesAllEqual(original_layer.non_trainable_weights,
