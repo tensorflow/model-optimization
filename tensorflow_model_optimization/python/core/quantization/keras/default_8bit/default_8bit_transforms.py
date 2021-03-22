@@ -497,11 +497,12 @@ class SeparableConvQuantize(transforms.Transform):
         metadata=conv_metadata)
 
 
-class AddReLUQuantize(transforms.Transform):
+class LayerReLUQuantize(transforms.Transform):
   """Ensure FQ does not get placed between Add and ReLU."""
 
   def pattern(self):
-    return LayerPattern('ReLU', inputs=[LayerPattern('Add')])
+    return LayerPattern(
+        'ReLU', inputs=[LayerPattern('Add|Conv2D|DepthwiseConv2D|Dense')])
 
   def replacement(self, match_layer):
     relu_layer_node = match_layer
@@ -518,14 +519,14 @@ class AddReLUQuantize(transforms.Transform):
     }
 
 
-class AddActivationQuantize(AddReLUQuantize):
+class LayerReluActivationQuantize(LayerReLUQuantize):
   """Ensure FQ does not get placed between Add and ReLU."""
 
   def pattern(self):
     return LayerPattern(
         'Activation',
         config={'activation': 'relu'},
-        inputs=[LayerPattern('Add')])
+        inputs=[LayerPattern('Add|Conv2D|DepthwiseConv2D|Dense')])
 
 
 class InputLayerQuantize(transforms.Transform):
