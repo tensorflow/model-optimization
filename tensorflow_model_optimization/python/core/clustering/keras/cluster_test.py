@@ -772,6 +772,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     model = SubclassedModel()
 
     clustered_model = cluster.cluster_weights(model, **self.params)
+    clustered_model.build(input_shape=(None, 5))
+
     self.assertEqual(self._count_clustered_layers(model), 1)
 
     stripped_model = cluster.strip_clustering(clustered_model)
@@ -789,7 +791,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testStripClusteringSequentialModel(self):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     model = keras.Sequential([
-        layers.Dense(10),
+        layers.Dense(10, input_shape=(5,)),
         layers.Dense(10),
     ])
 
@@ -876,6 +878,24 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertIsInstance(stripped_model.layers[0], layers.Dense)
+
+  @keras_parameterized.run_all_keras_modes
+  def testStripClusteringAndSetOriginalWeightsBack(self):
+    """Verifies that we can set_weights onto the stripped model."""
+    model = keras.Sequential([
+      layers.Dense(10, input_shape=(5,)),
+      layers.Dense(10),
+    ])
+
+    # Save original weights
+    original_weights = model.get_weights()
+
+    # Cluster and strip
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    stripped_model = cluster.strip_clustering(clustered_model)
+
+    # Set back original weights onto the strip model
+    stripped_model.set_weights(original_weights)
 
 if __name__ == '__main__':
   test.main()

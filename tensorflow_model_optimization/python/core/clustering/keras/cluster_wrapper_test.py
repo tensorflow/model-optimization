@@ -197,6 +197,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
         number_of_clusters=8,
         cluster_centroids_init=CentroidInitialization.DENSITY_BASED
     )
+    clustered_model.build(input_shape=(None, 5))
 
     self.assertIsInstance(clustered_model, cluster_wrapper.WrapperSubclassedModel)
 

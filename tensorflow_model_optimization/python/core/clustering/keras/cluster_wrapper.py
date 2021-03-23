@@ -112,6 +112,10 @@ class ClusterWeights(Wrapper):
     # Those weights will still be updated during backpropagation
     self.original_clusterable_weights = {}
 
+    # Map the position of the original weight variable in the
+    # child layer to the weight name
+    self.position_original_weights = {}
+
     # Map weight names to corresponding clustering algorithms
     self.clustering_algorithms = {}
 
@@ -128,12 +132,16 @@ class ClusterWeights(Wrapper):
         and hasattr(layer, '_batch_input_shape'):
       self._batch_input_shape = self.layer._batch_input_shape
 
+    # Save the input shape specified in the build
+    self.build_input_shape = None
+
   @staticmethod
   def _make_layer_name(layer):
     return '{}_{}'.format('cluster', layer.name)
 
   def build(self, input_shape):
     super(ClusterWeights, self).build(input_shape)
+    self.build_input_shape = input_shape
 
     # For every clusterable weights, create the clustering logic
     for weight_name, weight in self.layer.get_clusterable_weights():
@@ -142,6 +150,11 @@ class ClusterWeights(Wrapper):
       original_weight = getattr(self.layer, weight_name)
       self.original_clusterable_weights[weight_name] = original_weight
       setattr(self, "original_weight_" + weight_name, original_weight)  # Track the variable
+      # Store the position in layer.weights of original_weight to restore during stripping
+      position_original_weight = next(
+        i for i, w in enumerate(self.layer.weights) if w is original_weight
+      )
+      self.position_original_weights[position_original_weight] = weight_name
 
       # Init the cluster centroids
       cluster_centroids = (

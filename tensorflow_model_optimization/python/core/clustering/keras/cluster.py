@@ -346,26 +346,24 @@ def strip_clustering(to_strip):
     if isinstance(layer, keras.Model):
       return keras.models.clone_model(
           layer, input_tensors=None, clone_function=_strip_clustering_wrapper)
-    elif isinstance(layer, cluster_wrapper.ClusterWeights):
-      if not hasattr(layer.layer, '_batch_input_shape') and\
-          hasattr(layer, '_batch_input_shape'):
-        # The _batch_input_shape attribute in the first layer makes a Sequential
-        # model to be built. This makes sure that when we remove the wrapper from
-        # the first layer the model's built state preserves.
-        layer.layer._batch_input_shape = layer._batch_input_shape
 
+    elif isinstance(layer, cluster_wrapper.ClusterWeights):
       # Update cluster associations in order to get the latest weights
       layer.update_clustered_weights_associations()
 
-      # Restore original weights variables with updated clustered values
-      for weight_name, original_weight in layer.original_clusterable_weights.items():
+      # Construct a list of weights to initialize the clean layer
+      updated_weights = layer.layer.get_weights()  # non clusterable weights only
+      for position_variable, weight_name in layer.position_original_weights.items():
+        # Add the clustered weights at the correct position
         clustered_weight = getattr(layer.layer, weight_name)
-        original_weight.assign(clustered_weight)
-        setattr(layer.layer, weight_name, original_weight)
+        updated_weights.insert(position_variable, clustered_weight)
 
-      # When all weights are filled with the values, just return the underlying
-      # layer since it is now fully autonomous from its wrapper
-      return layer.layer
+      # Construct a clean layer with the updated weights
+      clean_layer = layer.layer.from_config(layer.layer.get_config())
+      clean_layer.build(layer.build_input_shape)
+      clean_layer.set_weights(updated_weights)
+
+      return clean_layer
 
     return layer
 
