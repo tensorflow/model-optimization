@@ -400,7 +400,7 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       ))
 
       clustered_inputs = weights['clst_impl'].\
-          get_clustered_weight_forward(
+          get_clustered_weight(
             weights['pulling_indices_tf'], weights['ori_weights_vars_tf']
       )
       weights['set_kernel_weight'].assign(clustered_inputs)
