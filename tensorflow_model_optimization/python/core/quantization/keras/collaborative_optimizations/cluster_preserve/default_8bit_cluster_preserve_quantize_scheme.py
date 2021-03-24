@@ -13,12 +13,11 @@
 # limitations under the License.
 # ==============================================================================
 
-"""Default 8 bit Cluster Preserve Quantization scheme which specifies how quantization should be applied."""
+"""Default 8 bit Cluster Preserve Quantization scheme."""
 
-from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
-    default_8bit_quantize_scheme,)
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
     cluster_preserve_quantize_registry,)
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_scheme
 
 
 class Default8BitClusterPreserveQuantizeScheme(
@@ -26,4 +25,5 @@ class Default8BitClusterPreserveQuantizeScheme(
   """Default 8 bit Cluster Preserve Quantization Scheme."""
 
   def get_quantize_registry(self):
-    return cluster_preserve_quantize_registry.Default8bitClusterPreserveQuantizeRegistry()
+    return cluster_preserve_quantize_registry.\
+        Default8bitClusterPreserveQuantizeRegistry()

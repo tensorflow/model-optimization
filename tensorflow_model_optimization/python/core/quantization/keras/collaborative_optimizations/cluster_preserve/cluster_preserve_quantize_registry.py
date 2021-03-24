@@ -15,26 +15,20 @@
 """Registry responsible for built-in keras classes."""
 
 import tensorflow as tf
+from tensorflow.keras import backend as K
 
+from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
-from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
-    default_8bit_quantizers,)
-from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
-    default_8bit_quantize_registry,)
-
-from tensorflow.keras import backend as K
-from tensorflow_model_optimization.python.core.quantization.keras.\
-    collaborative_optimizations.cluster_preserve import cluster_utils
-
-from tensorflow_model_optimization.python.core.clustering.keras \
-    import clustering_registry
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
 layers = tf.keras.layers
 
 
 def get_unique(t):
-  """Get unique values and lookup index from N-D tensor
+  """Get unique values and lookup index from N-D tensor.
+
   Args:
     t: tensor
   Returns:
@@ -59,9 +53,13 @@ def get_unique(t):
   uniques, index = tf.unique(t_flatten)
   return uniques, tf.reshape(index, shape=tf.shape(t))
 
+
 class _ClusterPreserveInfo(object):
+  """ClusterPreserveInfo."""
+
   def __init__(self, weight_attrs, quantize_config_attrs):
     """ClusterPreserveInfo.
+
     Args:
       weight_attrs: list of cluster preservable weight attributes of layer.
       quantize_config_attrs: list of quantization configuration class name.
@@ -71,8 +69,7 @@ class _ClusterPreserveInfo(object):
 
 
 class ClusterPreserveQuantizeRegistry(object):
-  """ClusterPreserveQuantizeRegistry responsible for built-in keras layers."""
-
+  """ClusterPreserveQuantizeRegistry for built-in keras layers."""
   # The keys represent built-in keras layers; the first values represent the
   # the variables within the layers which hold the kernel weights, second
   # values represent the class name of quantization configuration for layers.
@@ -84,10 +81,12 @@ class ClusterPreserveQuantizeRegistry(object):
       layers.Dense:
       _ClusterPreserveInfo(['kernel'], ['Default8BitQuantizeConfig']),
 
-      # DepthwiseConv2D is supported with 8bit qat, but not with clustering,
-      # thus for DepthwiseConv2D CQAT, preserving clustered weights is disabled.
+      # DepthwiseConv2D is supported with 8bit qat, but not with
+      # clustering, thus for DepthwiseConv2D CQAT,
+      # preserving clustered weights is disabled.
       layers.DepthwiseConv2D:
-      _ClusterPreserveInfo(['depthwise_kernel'], ['Default8BitQuantizeConfig']),
+      _ClusterPreserveInfo(['depthwise_kernel'],
+                           ['Default8BitQuantizeConfig']),
 
       # layers that are supported with clustering, but not yet with qat
       # layers.Conv1D:
@@ -105,20 +104,21 @@ class ClusterPreserveQuantizeRegistry(object):
 
       # SeparableConv need verify from 8bit qat
       # layers.SeparableConv1D:
-      # _ClusterPreserveInfo(['pointwise_kernel'], ['Default8BitConvQuantizeConfig']),
+      # _ClusterPreserveInfo(['pointwise_kernel'],
+      #                      ['Default8BitConvQuantizeConfig']),
       # layers.SeparableConv2D:
-      # _ClusterPreserveInfo(['pointwise_kernel'], ['Default8BitConvQuantizeConfig']),
+      # _ClusterPreserveInfo(['pointwise_kernel'],
+      #                      ['Default8BitConvQuantizeConfig']),
 
       # Embedding need verify from 8bit qat
       # layers.Embedding: _ClusterPreserveInfo(['embeddings'], []),
   }
 
-  _DISABLE_CLUSTER_PRESERVE = {
+  _DISABLE_CLUSTER_PRESERVE = frozenset({
       layers.DepthwiseConv2D,
-  }
+  })
 
   def __init__(self):
-
     self._config_quantizer_map = {
         'Default8BitQuantizeConfig':
         ClusterPreserveDefault8BitWeightsQuantizer(),
@@ -136,8 +136,7 @@ class ClusterPreserveQuantizeRegistry(object):
     Returns:
       True/False whether the layer has trainable weights.
     """
-
-    return len(layer.trainable_weights) == 0
+    return not layer.trainable_weights
 
   @classmethod
   def _disable_cluster_preserve(cls, layer):
@@ -149,7 +148,6 @@ class ClusterPreserveQuantizeRegistry(object):
     Returns:
       True/False whether disabling this layer for preserving clusters.
     """
-
     return layer.__class__ in cls._DISABLE_CLUSTER_PRESERVE
 
   @classmethod
@@ -161,9 +159,7 @@ class ClusterPreserveQuantizeRegistry(object):
 
     Returns:
       True/False whether the layer type is supported.
-
     """
-
     # layers without trainable weights are consider supported,
     # e.g., ReLU, Softmax, and AveragePooling2D.
     if cls._no_trainable_weights(layer):
@@ -184,7 +180,7 @@ class ClusterPreserveQuantizeRegistry(object):
 
   @classmethod
   def get_cluster_preservable_weights(cls, layer):
-    """Get cluster preservable weights from keras layer
+    """Get cluster preservable weights from keras layer.
 
     Args:
       layer: instance of keras layer
@@ -196,7 +192,7 @@ class ClusterPreserveQuantizeRegistry(object):
 
   @classmethod
   def get_suppport_quantize_config_names(cls, layer):
-    """Get class name of supported quantize config for layer
+    """Get class name of supported quantize config for layer.
 
     Args:
       layer: instance of keras layer
@@ -204,7 +200,6 @@ class ClusterPreserveQuantizeRegistry(object):
     Returns:
       List of supported quantize config class name.
     """
-
     # layers without trainable weights don't need quantize_config for cqat
     if cls._no_trainable_weights(layer):
       return []
@@ -212,7 +207,7 @@ class ClusterPreserveQuantizeRegistry(object):
     return cls._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs
 
   def apply_cluster_preserve_quantize_config(self, layer, quantize_config):
-    """ applies cluster-preserve weight quantizer
+    """Applies cluster-preserve weight quantizer.
 
     Args:
       layer: The layer to check for support.
@@ -223,23 +218,23 @@ class ClusterPreserveQuantizeRegistry(object):
       The quantize_config with addon cluster preserve weight_quantizer.
     """
     if not self.supports(layer):
-      raise ValueError("Layer " + str(layer.__class__) + " is not supported.")
+      raise ValueError('Layer ' + str(layer.__class__) + ' is not supported.')
 
     # Example: ReLU, Softmax, and AveragePooling2D (without trainable weights)
     # DepthwiseConv2D (cluster_preserve is disabled)
-    if self._no_trainable_weights(layer) or \
-      self._disable_cluster_preserve(layer):
+    if self._no_trainable_weights(layer) or self._disable_cluster_preserve(
+        layer):
       return quantize_config
     # Example: Conv2D, Dense layers
-    if (quantize_config.__class__.__name__
-        in self._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs):
+    if quantize_config.__class__.__name__ in self._LAYERS_CONFIG_MAP[
+        layer.__class__].quantize_config_attrs:
       quantize_config.weight_quantizer = self._config_quantizer_map[
           quantize_config.__class__.__name__]
     else:
-      raise ValueError("Configuration " +
-                        str(quantize_config.__class__.__name__) +
-                        " is not supported for Layer " +
-                        str(layer.__class__) + ".")
+      raise ValueError('Configuration ' +
+                       str(quantize_config.__class__.__name__) +
+                       ' is not supported for Layer ' + str(layer.__class__) +
+                       '.')
 
     return quantize_config
 
@@ -247,12 +242,9 @@ class ClusterPreserveQuantizeRegistry(object):
 class Default8bitClusterPreserveQuantizeRegistry(
     ClusterPreserveQuantizeRegistry):
   """Default 8 bit ClusterPreserveQuantizeRegistry."""
-  def __init__(self):
-    super(Default8bitClusterPreserveQuantizeRegistry, self).__init__()
 
   def get_quantize_config(self, layer):
-    """Returns the quantization config with addon cluster
-    preserve weight_quantizer for the given layer.
+    """Returns the quantization config with addon cluster preserve weight_quantizer for the given layer.
 
     Args:
       layer: input layer to return quantize config for.
@@ -260,8 +252,9 @@ class Default8bitClusterPreserveQuantizeRegistry(
     Returns:
       Returns the quantization config for cluster preserve weight_quantizer.
     """
-    quantize_config = default_8bit_quantize_registry.\
-      Default8BitQuantizeRegistry().get_quantize_config(layer)
+    quantize_config = (default_8bit_quantize_registry.
+                       Default8BitQuantizeRegistry().
+                       get_quantize_config(layer))
     cluster_aware_quantize_config = super(
         Default8bitClusterPreserveQuantizeRegistry,
         self).apply_cluster_preserve_quantize_config(layer, quantize_config)
@@ -271,8 +264,9 @@ class Default8bitClusterPreserveQuantizeRegistry(
 
 class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
   """Quantize weights while preserving clusters."""
+
   def __init__(self, num_bits, per_axis, symmetric, narrow_range):
-    """ClusterPreserveDefaultWeightsQuantizer
+    """ClusterPreserveDefaultWeightsQuantizer.
 
     Args:
       num_bits: Number of bits for quantization
@@ -292,12 +286,13 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     )
 
   def _build_clusters(self, name, layer):
-    """ Extract the cluster centroids and cluster indices
-        from the pretrained clustered model.
+    """Extract the cluster centroids and cluster indices from the pretrained clustered model.
+
     Args:
       name: Name of weights in layer.
       layer: Quantization wrapped keras layer.
-    Returns: A dictionary of the initial values of the
+    Returns:
+      A dictionary of the initial values of the
       cluster centroids, cluster indices, original weights,
       the pretrained flag for marking the first training
       epoch, and weight name.
@@ -340,20 +335,17 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         dtype=lookup.dtype,
         trainable=False)
 
-    # Passing the kernel weights of the wrapper layer to the quantizer is
-    # important because these weights won't get updated by the backprop
-    # automatically in CQAT, and we need to manually update them.
     for v in layer.weights:
       if 'kernel' in v.name:
         kernel = v
 
     result = {
-        "cluster_centroids_tf": clst_centroids_tf,
-        "pulling_indices_tf": pulling_indices_tf,
-        "ori_weights_vars_tf": ori_weights_tf,
-        "weight_name": name,
-        "clst_impl": clustering_impl,
-        "set_kernel_weight":kernel,
+        'cluster_centroids_tf': clst_centroids_tf,
+        'pulling_indices_tf': pulling_indices_tf,
+        'ori_weights_vars_tf': ori_weights_tf,
+        'weight_name': name,
+        'clst_impl': clustering_impl,
+        'set_kernel_weight': kernel,
     }
 
     return result
@@ -366,16 +358,16 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       name: Name of weights in layer.
       layer: Quantization wrapped keras layer.
 
-    Returns: Dictionary of centroids, indices and
+    Returns:
+      Dictionary of centroids, indices and
       quantization params, the dictionary will be passed
       to __call__ function.
     """
-
     # To get all the initial values from pretrained clustered model
     result = self._build_clusters(name, layer)
     result.update(
         super(ClusterPreserveDefaultWeightsQuantizer,
-            self).build(tensor_shape, name, layer))
+              self).build(tensor_shape, name, layer))
 
     return result
 
@@ -390,18 +382,19 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         created in the `build` function.
       **kwargs: Additional variables which may be passed to the quantizer.
 
-    Returns: quantized tensor.
+    Returns:
+      quantized tensor.
     """
-    # update cluster indices
-    if training is True:
-      weights['pulling_indices_tf'].assign(tf.dtypes.cast(
-          weights['clst_impl'].get_pulling_indices(weights['ori_weights_vars_tf']),
-          weights['pulling_indices_tf'].dtype
-      ))
+    # update associations
+    if training:
+      weights['pulling_indices_tf'].assign(
+          tf.dtypes.cast(weights['clst_impl']
+                         .get_pulling_indices(weights['ori_weights_vars_tf']),
+                         weights['pulling_indices_tf'].dtype)
+      )
 
-      clustered_inputs = weights['clst_impl'].\
-          get_clustered_weight(
-            weights['pulling_indices_tf'], weights['ori_weights_vars_tf']
+      clustered_inputs = weights['clst_impl'].get_clustered_weight_forward(
+          weights['pulling_indices_tf'], weights['ori_weights_vars_tf']
       )
       weights['set_kernel_weight'].assign(clustered_inputs)
     else:
@@ -418,28 +411,31 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         narrow_range=self.narrow_range
     )
 
+
 class ClusterPreserveDefault8BitWeightsQuantizer(
     ClusterPreserveDefaultWeightsQuantizer):
-  """ClusterPreserveWeightsQuantizer for default 8bit weights"""
+  """ClusterPreserveWeightsQuantizer for default 8bit weights."""
+
   def __init__(self):
     super(ClusterPreserveDefault8BitWeightsQuantizer,
-        self).__init__(num_bits=8,
-                        per_axis=False,
-                        symmetric=True,
-                        narrow_range=True)
+          self).__init__(num_bits=8,
+                         per_axis=False,
+                         symmetric=True,
+                         narrow_range=True)
 
 
 class ClusterPreserveDefault8BitConvWeightsQuantizer(
     ClusterPreserveDefaultWeightsQuantizer,
     default_8bit_quantizers.Default8BitConvWeightsQuantizer):
-  """ClusterPreserveWeightsQuantizer for default 8bit Conv2D weights"""
-  def __init__(self):
+  """ClusterPreserveWeightsQuantizer for default 8bit Conv2D weights."""
+
+  def __init__(self):  # pylint:disable=super-init-not-called
     default_8bit_quantizers.Default8BitConvWeightsQuantizer.__init__(self)
 
   def build(self, tensor_shape, name, layer):
     result = ClusterPreserveDefaultWeightsQuantizer._build_clusters(
-      self, name, layer)
+        self, name, layer)
     result.update(
-      default_8bit_quantizers.Default8BitConvWeightsQuantizer.build(
-          self, tensor_shape, name, layer))
+        default_8bit_quantizers.Default8BitConvWeightsQuantizer.build(
+            self, tensor_shape, name, layer))
     return result

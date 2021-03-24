@@ -17,13 +17,13 @@
 from __future__ import print_function
 
 import os
+
+from absl import app as absl_app
 import numpy as np
 import tensorflow as tf
-from absl import app as absl_app
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster as tfmot_cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config as tfmot_cluster_config
-
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
     default_8bit_cluster_preserve_quantize_scheme,)
@@ -34,7 +34,7 @@ layers = tf.keras.layers
 
 
 def setup_model(input_shape, image_train, label_train):
-  """ Baseline model """
+  """Baseline model."""
   model = tf.keras.Sequential([
       tf.keras.layers.InputLayer(input_shape),
       tf.keras.layers.Reshape(target_shape=(28, 28, 1)),
@@ -48,15 +48,17 @@ def setup_model(input_shape, image_train, label_train):
 
   return model
 
+
 def _get_callback(model_dir):
   """Create callbacks for Keras model training."""
   check_point = tf.keras.callbacks.ModelCheckpoint(
-    save_best_only=True,
-    filepath=os.path.join(model_dir, 'model.ckpt-{epoch:04d}'),
-    verbose=1)
+      save_best_only=True,
+      filepath=os.path.join(model_dir, 'model.ckpt-{epoch:04d}'),
+      verbose=1)
   tensorboard = tf.keras.callbacks.TensorBoard(
-    log_dir=model_dir, update_freq=100)
+      log_dir=model_dir, update_freq=100)
   return [check_point, tensorboard]
+
 
 def compile_and_fit(model,
                     image_train,
@@ -80,14 +82,14 @@ def compile_and_fit(model,
 
 
 def cluster_model(model, train_images, train_labels):
-  """ Apply the clustering wrapper, compile and train the model """
+  """Apply the clustering wrapper, compile and train the model."""
   clustering_params = {
       'number_of_clusters': 16,
-      'cluster_centroids_init': \
+      'cluster_centroids_init':
       tfmot_cluster_config.CentroidInitialization.DENSITY_BASED,
   }
   model = tfmot_cluster.cluster_weights(
-    model, **clustering_params)
+      model, **clustering_params)
   model.summary()
   compile_and_fit(model,
                   train_images,
@@ -100,9 +102,9 @@ def cluster_model(model, train_images, train_labels):
 def cluster_preserve_quantize_model(clustered_model,
                                     train_images,
                                     train_labels):
-  """ Cluster-preserve QAT model """
-  quant_aware_annotate_model = \
-    quantize.quantize_annotate_model(clustered_model)
+  """Cluster-preserve QAT model."""
+  quant_aware_annotate_model = (
+      quantize.quantize_annotate_model(clustered_model))
   quant_aware_model = quantize.quantize_apply(
       quant_aware_annotate_model,
       scheme=default_8bit_cluster_preserve_quantize_scheme
@@ -122,26 +124,27 @@ def evaluate_model_fp32(model, image_test, label_test):
 
 
 def print_unique_weights(model):
-  """ Check Dense and Conv2D layers """
+  """Check Dense and Conv2D layers."""
   for layer in model.layers:
-    if isinstance(layer, tf.keras.layers.Conv2D) \
-       or isinstance(layer, tf.keras.layers.Dense) \
-       or isinstance(layer, quantize.quantize_wrapper.QuantizeWrapper):
+    if (isinstance(layer, tf.keras.layers.Conv2D)
+        or isinstance(layer, tf.keras.layers.Dense)
+        or isinstance(layer, quantize.quantize_wrapper.QuantizeWrapper)):
       for weights in layer.trainable_weights:
         np_weights = tf.keras.backend.get_value(weights)
         unique_weights = len(np.unique(np_weights))
         if isinstance(layer, quantize.quantize_wrapper.QuantizeWrapper):
-          print(layer.layer.__class__.__name__, " (", weights.name,
-                ") unique_weights: ", unique_weights)
+          print(layer.layer.__class__.__name__, ' (', weights.name,
+                ') unique_weights: ', unique_weights)
         else:
-          print(layer.__class__.__name__, " (", weights.name,
-                ") unique_weights: ", unique_weights)
+          print(layer.__class__.__name__, ' (', weights.name,
+                ') unique_weights: ', unique_weights)
+
 
 # This code is directly from
 # https://www.tensorflow.org/model_optimization/guide/quantization/training_example
 def evaluate_model(interpreter, test_images, test_labels):
-  input_index = interpreter.get_input_details()[0]["index"]
-  output_index = interpreter.get_output_details()[0]["index"]
+  input_index = interpreter.get_input_details()[0]['index']
+  output_index = interpreter.get_output_details()[0]['index']
 
   # Run predictions on every image in the "test" dataset.
   prediction_digits = []
@@ -174,7 +177,7 @@ def main(unused_args):
   (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
   # Normalize the input images so that each pixel value is between 0 and 1.
   train_images = train_images / 255.0
-  test_images  = test_images / 255.0
+  test_images = test_images / 255.0
 
   input_shape = (28, 28)
   # Create and train the baseline model

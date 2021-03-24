@@ -344,8 +344,8 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
   # Conv2DReshapeBatchNormActivationQuantize
 
   @parameterized.parameters(
-      ('relu', default_8bit_transforms.AddReLUQuantize),
-      ('act_relu', default_8bit_transforms.AddActivationQuantize),
+      ('relu', default_8bit_transforms.LayerReLUQuantize),
+      ('act_relu', default_8bit_transforms.LayerReluActivationQuantize),
   )
   def testAddReLUQuantize(self, activation_type, transform_type):
     add = keras.layers.Add()
@@ -369,6 +369,33 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     self.assertIsInstance(
         updated_metadata.get(add_layer.name).get('quantize_config'),
         default_8bit_quantize_configs.NoOpQuantizeConfig)
+
+  @parameterized.parameters(
+      ('relu', default_8bit_transforms.LayerReLUQuantize),
+      ('act_relu', default_8bit_transforms.LayerReluActivationQuantize))
+  def testLayerReLUQuantize(self, activation_type, transform_type):
+    # TODO(tfmot): Add tests for DepthConv and Dense
+    input_shape = (1, 3, 3, 3)
+    conv_layer = tf.keras.layers.Conv2D(5, 2, input_shape=input_shape)
+    if activation_type == 'relu':
+      act_layer = keras.layers.ReLU(6.0)
+    elif activation_type == 'act_relu':
+      act_layer = keras.layers.Activation('relu')
+
+    model = tf.keras.Sequential([conv_layer, act_layer])
+
+    transformed_model, updated_metadata = ModelTransformer(
+        model,
+        [transform_type()],
+    ).transform()
+
+    self.assertIsInstance(
+        updated_metadata.get(model.layers[0].name).get('quantize_config'),
+        default_8bit_quantize_configs.NoOpQuantizeConfig)
+
+    inputs = np.random.standard_normal(input_shape)
+    self.assertAllClose(
+        transformed_model.predict(inputs), model.predict(inputs))
 
   def testAddsQuantizeLayerAfterInputLayer(self):
     inp1 = keras.layers.Input((3,))

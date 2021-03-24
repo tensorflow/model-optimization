@@ -2,7 +2,7 @@ package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
 ])
 
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_library(
     name = "cluster_preserve",
@@ -36,10 +36,10 @@ py_library(
     srcs_version = "PY3",
     visibility = ["//visibility:private"],
     deps = [
-        # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
-        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         ":cluster_utils",
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
     ],
 )
 
@@ -51,11 +51,11 @@ py_test(
     python_version = "PY3",
     visibility = ["//visibility:private"],
     deps = [
-        # tensorflow dep1,
         ":cluster_preserve_quantize_registry",
-        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
+        # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
-    ]
+        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
+    ],
 )
 
 py_library(
@@ -64,7 +64,6 @@ py_library(
         "default_8bit_cluster_preserve_quantize_scheme.py",
     ],
     srcs_version = "PY3",
-    visibility = ["//visibility:private"],
     deps = [
         ":cluster_preserve_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",

@@ -1,4 +1,4 @@
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_binary(
     name = "mnist_cnn",
@@ -11,7 +11,6 @@ py_binary(
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
-        "//tensorflow_model_optimization/python/core/quantization/keras/cluster_preserve:default_8bit_cluster_preserve_quantize_scheme",
-        "//tensorflow_model_optimization/python/core/clustering/keras",
+        "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/cluster_preserve:default_8bit_cluster_preserve_quantize_scheme",
     ],
 )

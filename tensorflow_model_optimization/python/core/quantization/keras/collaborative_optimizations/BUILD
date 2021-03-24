@@ -7,7 +7,7 @@ py_library(
     srcs = ["__init__.py"],
     srcs_version = "PY3",
     deps = [
-        "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/prune_preserve",
         "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/cluster_preserve",
+        "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/prune_preserve",
     ],
 )
