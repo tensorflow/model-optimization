@@ -288,11 +288,43 @@ class QuantizeApplyTest(tf.test.TestCase):
         zip(annotated_model.layers, quantized_model.layers):
 
       if not isinstance(layer_annotated, QuantizeAnnotate):
-        self.assertNotIsInstance(layer_quantized, QuantizeWrapper)
+        # Possibly wrapped for input quantization.
+        if isinstance(layer_quantized, QuantizeWrapper):
+          self.assertLen(layer_annotated._outbound_nodes, 1)
+          self.assertIsInstance(
+              layer_annotated._outbound_nodes[0].outbound_layer,
+              QuantizeAnnotate)
+
+          # Ensure that only outputs are quantized.
+          self.assertFalse(
+              layer_quantized.quantize_config.get_weights_and_quantizers(
+                  layer_quantized.layer))
         continue
 
       self._assert_layer_quantized(
           layer_annotated, layer_quantized, exclude_keys)
+
+  def _assert_nonannotated_input_layer_quantized(
+      self, quantized_model, layer_index):
+    output_quantized_layer = quantized_model.layers[layer_index]
+    self.assertIsInstance(output_quantized_layer, QuantizeWrapper)
+    output_quantized_config = output_quantized_layer.quantize_config
+    default_quantized_config = output_quantized_config.get_config()[
+        'quantize_config']
+    self.assertIsInstance(
+        default_quantized_config,
+        default_8bit_quantize_registry.Default8BitQuantizeConfig)
+    self.assertFalse(output_quantized_config.get_weights_and_quantizers(
+        output_quantized_layer.layer))
+    self.assertTrue(default_quantized_config.get_weights_and_quantizers(
+        output_quantized_layer.layer))
+    output_quantizers = output_quantized_config.get_output_quantizers(
+        output_quantized_layer.layer)
+    default_output_quantizers = default_quantized_config.get_output_quantizers(
+        output_quantized_layer.layer)
+    for output_quantizer, default_quantizer in zip(output_quantizers,
+                                                   default_output_quantizers):
+      self.assertEqual(output_quantizer, default_quantizer)
 
   # quantize_apply Tests
 
@@ -379,6 +411,18 @@ class QuantizeApplyTest(tf.test.TestCase):
 
     self._assert_model_quantized(model, quantized_model, ['activation'])
 
+  def testAppliesQuantizationToInputsToAnnotatedModel_Sequential(self):
+    model = keras.Sequential([
+        keras.layers.Conv2D(32, 5, input_shape=(28, 28, 1), activation='relu'),
+        keras.layers.Dense(10, activation='relu'),
+        quantize_annotate_layer(keras.layers.Dense(5, activation='softmax')),
+    ])
+    quantized_model = quantize_apply(model)
+    self._assert_model_quantized(model, quantized_model, ['activation'])
+    # Test that Dense layer has output only quantization config.
+    self._assert_nonannotated_input_layer_quantized(
+        quantized_model, layer_index=1)
+
   def testAppliesQuantizationToAnnotatedModel_PreservesBuiltState(self):
     model = keras_test_utils.build_simple_dense_model()
     annotated_model = quantize_annotate_model(model)
@@ -403,6 +447,20 @@ class QuantizeApplyTest(tf.test.TestCase):
     quantized_model = quantize_apply(model)
 
     self._assert_model_quantized(model, quantized_model, ['activation'])
+
+  def testAppliesQuantizationToInputsToAnnotatedModel_Functional(self):
+    inputs = keras.Input(shape=(28, 28, 1))
+    x = keras.layers.Conv2D(32, 5, activation='relu')(inputs)
+    x = keras.layers.Dense(10, activation='relu')(x)
+    results = quantize_annotate_layer(
+        keras.layers.Dense(5, activation='softmax'))(
+            x)
+    model = keras.Model(inputs=inputs, outputs=results)
+    quantized_model = quantize_apply(model)
+    self._assert_model_quantized(model, quantized_model, ['activation'])
+    # Test that Dense layer has output only quantization config.
+    self._assert_nonannotated_input_layer_quantized(
+        quantized_model, layer_index=2)
 
   def testDoesNotQuantizeInputLayer_OutboundLayerNotQuantized(self):
     model = self._get_simple_functional_model()
