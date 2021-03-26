@@ -69,3 +69,20 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
     ],
 )
+
+py_test(
+    name = "cluster_preserve_integration_test",
+    srcs = [
+        "cluster_preserve_integration_test.py",
+    ],
+    python_version = "PY3",
+    visibility = ["//visibility:private"],
+    deps = [
+        ":default_8bit_cluster_preserve_quantize_scheme",
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantize"
+    ],
+)
