@@ -43,3 +43,23 @@ py_library(
         # python:variables tensorflow dep2,
     ],
 )
+
+py_library(
+    name = "metrics",
+    srcs = ["metrics.py"],
+    srcs_version = "PY3",
+    deps = [
+        # python/eager:monitoring tensorflow dep2,
+    ],
+)
+
+py_test(
+    name = "metrics_test",
+    srcs = ["metrics_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":metrics",
+        # mock dep1,
+        # tensorflow dep1,
+    ],
+)
