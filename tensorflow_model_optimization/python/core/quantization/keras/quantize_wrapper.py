@@ -30,6 +30,7 @@ import tensorflow as tf
 
 from tensorflow.python.util import tf_inspect
 
+from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.keras import utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 
@@ -70,6 +71,8 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     self.quantize_config = quantize_config
 
     self._track_trackable(layer, name='layer')
+    metrics.MonitorBoolGauge('quantize_wrapper_usage').set(
+        layer.__class__.__name__)
 
   @staticmethod
   def _make_layer_name(layer):

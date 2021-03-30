@@ -16,6 +16,7 @@
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
@@ -263,6 +264,7 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
       layer=to_annotate, quantize_config=quantize_config)
 
 
+@metrics.MonitorBoolGauge('quantize_apply_usage')
 def quantize_apply(
     model,
     scheme=default_8bit_quantize_scheme.Default8BitQuantizeScheme()):
@@ -341,12 +343,22 @@ def quantize_apply(
   def _extract_original_model(model_to_unwrap):
     """Extracts original model by removing wrappers."""
     layer_quantize_map = {}
+    requires_output_quantize = set()
 
     def _unwrap(layer):
       if not isinstance(layer, quantize_annotate_mod.QuantizeAnnotate):
         return layer
 
       annotate_wrapper = layer
+      # pylint: disable=protected-access
+      if layer._inbound_nodes and len(layer._inbound_nodes) == 1:
+        node = layer._inbound_nodes[0]
+        inbound_layers = tf.nest.flatten(node.inbound_layers)
+        if len(inbound_layers) == 1 and not isinstance(
+            inbound_layers[0], quantize_annotate_mod.QuantizeAnnotate):
+          requires_output_quantize.add(inbound_layers[0].name)
+      # pylint: enable=protected-access
+
       layer_quantize_map[annotate_wrapper.layer.name] = {
           'quantize_config': annotate_wrapper.quantize_config
       }
@@ -355,15 +367,53 @@ def quantize_apply(
     unwrapped_model = keras.models.clone_model(
         model_to_unwrap, input_tensors=None, clone_function=_unwrap)
 
-    return unwrapped_model, layer_quantize_map
+    return unwrapped_model, layer_quantize_map, requires_output_quantize
+
+  class OutputOnlyConfig(quantize_config_mod.QuantizeConfig):
+    """QuantizeConfig that only quantizes output."""
+
+    def __init__(self, quantize_config):
+      self.quantize_config = quantize_config
+
+    def get_weights_and_quantizers(self, layer):
+      return []
+
+    def set_quantize_weights(self, layer, quantize_weights):
+      pass
+
+    def get_activations_and_quantizers(self, layer):
+      return self.quantize_config.get_activations_and_quantizers(layer)
+
+    def set_quantize_activations(self, layer, quantize_activations):
+      return self.quantize_config.set_quantize_activations(
+          layer, quantize_activations)
+
+    def get_output_quantizers(self, layer):
+      return self.quantize_config.get_output_quantizers(layer)
+
+    def get_config(self):
+      return {'quantize_config': self.quantize_config}
+
+    @classmethod
+    def from_config(cls, config):
+      return cls(**config)
 
   def _quantize(layer):  # pylint: disable=missing-docstring
-    if layer.name not in layer_quantize_map:
+    if (layer.name not in layer_quantize_map and
+        layer.name not in requires_output_quantize):
       return layer
 
-    quantize_config = layer_quantize_map[layer.name].get('quantize_config')
-    if not quantize_config and quantize_registry.supports(layer):
-      quantize_config = quantize_registry.get_quantize_config(layer)
+    if layer.name in requires_output_quantize:
+      if not quantize_registry.supports(layer):
+        return layer
+      full_quantize_config = quantize_registry.get_quantize_config(layer)
+      if not full_quantize_config:
+        return layer
+      quantize_config = OutputOnlyConfig(full_quantize_config)
+    else:
+      quantize_config = layer_quantize_map[layer.name].get('quantize_config')
+      if not quantize_config and quantize_registry.supports(layer):
+        quantize_config = quantize_registry.get_quantize_config(layer)
 
     if not quantize_config:
       error_msg = (
@@ -395,7 +445,8 @@ def quantize_apply(
   # 2. Remove QuantizeAnnotate wrappers from the layers in the model. This
   # extracts the original model structure (easier to transform), and
   # stores relevant quantization information in a map.
-  unwrapped_model, layer_quantize_map = _extract_original_model(model_copy)
+  (unwrapped_model, layer_quantize_map,
+   requires_output_quantize) = _extract_original_model(model_copy)
   # Model cloning excludes input layers. Add input layers into the map
   # since they need to be matched for patterns as well.
   # pylint: disable=protected-access

@@ -65,8 +65,8 @@ class Default8BitQuantizeLayoutTransform(
         default_8bit_transforms.ConcatTransform4Inputs(),
         default_8bit_transforms.ConcatTransform3Inputs(),
         default_8bit_transforms.ConcatTransform(),
-        default_8bit_transforms.AddReLUQuantize(),
-        default_8bit_transforms.AddActivationQuantize(),
+        default_8bit_transforms.LayerReLUQuantize(),
+        default_8bit_transforms.LayerReluActivationQuantize(),
     ]
     return model_transformer.ModelTransformer(
         model, transforms,
