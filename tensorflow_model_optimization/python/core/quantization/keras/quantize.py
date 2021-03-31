@@ -16,6 +16,7 @@
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
@@ -263,6 +264,7 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
       layer=to_annotate, quantize_config=quantize_config)
 
 
+@metrics.MonitorBoolGauge('quantize_apply_usage')
 def quantize_apply(
     model,
     scheme=default_8bit_quantize_scheme.Default8BitQuantizeScheme()):

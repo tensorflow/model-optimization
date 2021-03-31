@@ -17,6 +17,7 @@
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
@@ -52,6 +53,7 @@ def prune_scope():
       {'PruneLowMagnitude': pruning_wrapper.PruneLowMagnitude})
 
 
+@metrics.MonitorBoolGauge('prune_low_magnitude_usage')
 def prune_low_magnitude(to_prune,
                         pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
                         block_size=(1, 1),

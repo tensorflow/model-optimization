@@ -27,6 +27,7 @@ py_library(
         ":pruning_schedule",
         ":pruning_wrapper",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:metrics",
     ],
 )
 
@@ -92,6 +93,7 @@ py_library(
         # tensorflow dep1,
         # python/keras/utils:generic_utils tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
+        "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/keras:utils",
     ],
 )

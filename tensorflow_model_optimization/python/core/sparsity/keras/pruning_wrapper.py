@@ -27,6 +27,7 @@ import tensorflow as tf
 # b/(139939526): update to use public API.
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
+from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.keras import utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
@@ -185,6 +186,8 @@ class PruneLowMagnitude(Wrapper):
     if not hasattr(self, '_batch_input_shape') and hasattr(
         layer, '_batch_input_shape'):
       self._batch_input_shape = self.layer._batch_input_shape
+    metrics.MonitorBoolGauge('prune_low_magnitude_wrapper_usage').set(
+        layer.__class__.__name__)
 
   def build(self, input_shape):
     super(PruneLowMagnitude, self).build(input_shape)

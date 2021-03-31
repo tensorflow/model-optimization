@@ -45,6 +45,11 @@ Conv2DBatchNormReLUQuantize = default_8bit_transforms.Conv2DBatchNormReLUQuantiz
 # TODO(alanchiao): reduce redundancy by parameterizing on Depthwise vs Conv.
 class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
+  @classmethod
+  def setUpClass(cls):
+    super(DefaultTransformsTest, cls).setUpClass()
+    np.random.seed(12345678)
+
   def testTransformsConvBNReLUPattern(self):
     model = Conv2DModel.get_nonfolded_batchnorm_model(
         post_bn_activation=keras.layers.ReLU(6.0), model_type='functional')
