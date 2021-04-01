@@ -77,6 +77,76 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
         self.compile_and_fit(quant_aware_model)
 
+    def testEndToEndClusterPreserveKernelInitializers(self):
+        """Verifies that we can run CQAT end to end,
+        when layer is Conv2D + Relu and with kernel_initializers."""
+        inputs = tf.keras.Input(shape=(2, 2, 1), name="inputTensor")
+        out = tf.keras.layers.Conv2D(1, [2, 2],
+            dilation_rate=(1, 1),
+            padding='same',
+            bias_initializer=tf.keras.initializers.Constant(10),
+            kernel_initializer=tf.keras.initializers.Constant(np.array([2, 1, 0, 6])),
+            activation=None)(inputs)
+        outputs = tf.keras.layers.ReLU()(out)
+        model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        clustered_model = cluster.cluster_weights(model,
+            **self.cluster_params)
+        clustered_model = cluster.strip_clustering(clustered_model)
+        quant_aware_annotate_model = quantize.quantize_annotate_model(
+            clustered_model
+        )
+        quant_aware_model = quantize.quantize_apply(
+            quant_aware_annotate_model,
+            scheme=default_8bit_cluster_preserve_quantize_scheme
+            .Default8BitClusterPreserveQuantizeScheme())
+
+    def testEndToEndClusterPreserveBiasInitializers(self):
+        """Verifies that we can run CQAT end to end,
+        when layer is Conv2D + Relu and with bias_initializers."""
+
+        inputs = tf.keras.Input(shape=(2, 2, 1), name="inputTensor")
+        out = tf.keras.layers.Conv2D(2, [2, 2],
+            dilation_rate=(1, 1),
+            padding='same',
+            bias_initializer=tf.keras.initializers.Constant(np.array([1,2])),
+            kernel_initializer=None,
+            activation=None)(inputs)
+        outputs = tf.keras.layers.ReLU()(out)
+        model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        clustered_model = cluster.cluster_weights(model,
+            **self.cluster_params)
+        clustered_model = cluster.strip_clustering(clustered_model)
+        quant_aware_annotate_model = quantize.quantize_annotate_model(
+            clustered_model
+        )
+        quant_aware_model = quantize.quantize_apply(
+            quant_aware_annotate_model,
+            scheme=default_8bit_cluster_preserve_quantize_scheme
+            .Default8BitClusterPreserveQuantizeScheme())
+
+    def testEndToEndClusterPreserveDepthwiseInitializers(self):
+        """Verifies that we can run CQAT end to end,
+        when layer is DepthwiseConv2D + depthwise_initializers."""
+
+        inputs = tf.keras.Input(shape=(3, 3, 3), name="inputTensor")
+        out = tf.keras.layers.DepthwiseConv2D((2, 2),
+            depthwise_initializer=tf.keras.initializers.Constant(
+                np.array([1,2,3,4,5,6,7,8,9,10,11,12])),
+            use_bias=True,
+            activation=None)(inputs)
+        outputs = tf.keras.layers.ReLU()(out)
+        model = tf.keras.Model(inputs=inputs, outputs=outputs)
+        clustered_model = cluster.cluster_weights(model,
+            **self.cluster_params)
+        clustered_model = cluster.strip_clustering(clustered_model)
+        quant_aware_annotate_model = quantize.quantize_annotate_model(
+            clustered_model
+        )
+        quant_aware_model = quantize.quantize_apply(
+            quant_aware_annotate_model,
+            scheme=default_8bit_cluster_preserve_quantize_scheme
+            .Default8BitClusterPreserveQuantizeScheme())
+
     def testEndToEndClusterPreservePerLayer(self):
         """Verifies that we can run CQAT end to end,
         when the model is quantized per layers"""

@@ -117,11 +117,43 @@ class LayerNode(object):
 
     return True
 
+  def _eq_layers(self, d1, d2):
+    """The same problem as in the function _eq, but for layers:
+    if 'kernel_initializer' is set, then config values are
+    np arrays."""
+
+    if len(d1) != len(d2):
+      return False
+
+    ignore_keys = 'config'
+    d1_filtered = {k:v for k,v in d1.items() if k not in ignore_keys}
+    d2_filtered = {k:v for k,v in d2.items() if k not in ignore_keys}
+    if d1_filtered != d2_filtered:
+      return False
+
+    ignore_keys = ['kernel_initializer', 'bias_initializer', 'depthwise_initializer']
+    d1_filtered = {k:v for k,v in d1['config'].items() if k not in ignore_keys}
+    d2_filtered = {k:v for k,v in d2['config'].items() if k not in ignore_keys}
+    if d1_filtered != d2_filtered:
+      return False
+
+    for key in ignore_keys:
+      if (key in d1 and key in d2):
+        return (d1['config'][key]['config']['value'] \
+          != d2['config'][key]['config']['value']).all()
+
+    for key in ignore_keys:
+      if (key in d1 and key not in d2) or\
+        (key in d2 and key not in d1):
+        return False
+
+    return True
+
   def __eq__(self, other):
     if not other or not isinstance(other, LayerNode):
       return False
 
-    if self.layer != other.layer \
+    if not self._eq_layers(self.layer, other.layer) \
         or not self._eq(self.weights, other.weights) \
         or self.metadata != other.metadata:
       return False
