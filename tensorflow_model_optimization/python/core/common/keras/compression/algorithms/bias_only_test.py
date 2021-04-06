@@ -136,7 +136,7 @@ class FunctionalTest(tf.test.TestCase):
 
   def testBiasOnly_ReducesParamaters(self):
     model = _build_model()
-    compressed_model = bias_only.optimize(model)
+    compressed_model = bias_only.BiasOnly().compress_model(model)
 
     self.assertEqual(model.count_params(), 431080)
     self.assertEqual(compressed_model.count_params(), 430508)
@@ -144,7 +144,7 @@ class FunctionalTest(tf.test.TestCase):
   def testBiasOnly_HasReasonableAccuracy_TF(self):
     model = _build_model()
 
-    compressed_model = bias_only.optimize(model)
+    compressed_model = bias_only.BiasOnly().compress_model(model)
 
     _train_model(compressed_model)
 
@@ -162,7 +162,7 @@ class FunctionalTest(tf.test.TestCase):
   def testBiasOnly_HasReasonableAccuracy_TFLite(self):
     model = _build_model()
 
-    compressed_model = bias_only.optimize(model)
+    compressed_model = bias_only.BiasOnly().compress_model(model)
 
     _train_model(compressed_model)
 
@@ -180,7 +180,7 @@ class FunctionalTest(tf.test.TestCase):
     first_conv_layer = model.layers[2]
     self.assertLen(first_conv_layer.weights, 2)
 
-    compressed_model = bias_only.optimize(model)
+    compressed_model = bias_only.BiasOnly().compress_model(model)
 
     first_conv_layer = compressed_model.layers[2]
 
@@ -194,7 +194,8 @@ class FunctionalTest(tf.test.TestCase):
 
     dense_layer_weights = model.layers[1].get_weights()
 
-    compressed_model = bias_only.optimize(model)
+    algorithm = bias_only.BiasOnly()
+    compressed_model = algorithm.compress_model(model)
 
     dense_layer_compressed_weights = compressed_model.layers[1].get_weights()
 
@@ -202,12 +203,14 @@ class FunctionalTest(tf.test.TestCase):
     assert (dense_layer_weights[0] == dense_layer_compressed_weights[2]).all()
 
     # bias
-    algorithm = bias_only.BiasOnly()
-    w1_repr, w2_repr = algorithm.init_training_weights_repr(
-        dense_layer_weights[1])
+    algorithm.weight_reprs = []
+    algorithm.init_training_weights(dense_layer_weights[1])
+    w1_repr, w2_repr = algorithm.weight_reprs
 
-    w1 = w1_repr.initializer(shape=None, dtype=w1_repr.dtype)
-    w2 = w2_repr.initializer(shape=None, dtype=w2_repr.dtype)
+    w1 = w1_repr.kwargs['initializer'](
+        shape=None, dtype=w1_repr.kwargs['dtype'])
+    w2 = w2_repr.kwargs['initializer'](
+        shape=None, dtype=w2_repr.kwargs['dtype'])
 
     assert (w1 == dense_layer_compressed_weights[0]).numpy().all()
     assert (w2 == dense_layer_compressed_weights[1]).numpy().all()

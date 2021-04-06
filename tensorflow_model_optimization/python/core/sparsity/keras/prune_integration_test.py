@@ -473,7 +473,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     if save_restore_fn.__name__ == '_save_restore_tf_model':
       return
 
-    begin_step, end_step = 0, 4
+    begin_step, end_step = 1, 4
     params = self.params
     params['pruning_schedule'] = pruning_schedule.PolynomialDecay(
         0.2, 0.6, begin_step, end_step, 3, 1)
@@ -542,7 +542,9 @@ class PruneIntegrationCustomTrainingLoopTest(tf.test.TestCase,
 
   def testPrunesModel_CustomTrainingLoop_ReachesTargetSparsity(self):
     pruned_model = prune.prune_low_magnitude(
-        keras_test_utils.build_simple_dense_model())
+        keras_test_utils.build_simple_dense_model(),
+        pruning_schedule=pruning_schedule.ConstantSparsity(
+            target_sparsity=0.5, begin_step=0, frequency=1))
 
     batch_size = 20
     x_train = np.random.rand(20, 10)

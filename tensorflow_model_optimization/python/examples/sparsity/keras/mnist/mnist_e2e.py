@@ -119,9 +119,8 @@ def main(unused_argv):
   with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model_dense)
 
-  # The _experimental_sparsify_model is to enable sparse tensor encoding,
-  # otherwise the model is converted as dense.
-  converter._experimental_sparsify_model = True
+  # Enable sparse tensor encoding, otherwise the model is converted as dense.
+  converter.optimizations = {tf.lite.Optimize.EXPERIMENTAL_SPARSITY}
 
   tflite_model = converter.convert()
 
@@ -152,7 +151,7 @@ def main(unused_argv):
   model = train(model, x_train, y_train, x_test, y_test)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
-  converter._experimental_sparsify_model = True
+  converter.optimizations = {tf.lite.Optimize.EXPERIMENTAL_SPARSITY}
 
   tflite_model = converter.convert()
   # Check the model is compressed
@@ -163,6 +162,37 @@ def main(unused_argv):
     f.write(tflite_model)
 
   print('evaluate 1x4 model')
+  print(keras_test_utils.eval_mnist_tflite(model_content=tflite_model))
+
+  ##############################################################################
+  # Train and convert a model with 1x16 block config, and enable post-training
+  # dynamic range quantization during conversion.
+  ##############################################################################
+  pruning_params = {
+      'pruning_schedule':
+          ConstantSparsity(FLAGS.sparsity, begin_step=0, frequency=100),
+      # TFLite transposes the weight during conversion, so we need to specify
+      # the block as (16, 1) in the training API.
+      'block_size': (16, 1)
+  }
+
+  model = build_layerwise_model(input_shape, **pruning_params)
+  model = train(model, x_train, y_train, x_test, y_test)
+
+  converter = tf.lite.TFLiteConverter.from_keras_model(model)
+  converter.optimizations = {
+      tf.lite.Optimize.DEFAULT, tf.lite.Optimize.EXPERIMENTAL_SPARSITY
+  }
+
+  tflite_model = converter.convert()
+  # Check the model is compressed
+  print('Compression ratio: ', len(tflite_model) / len(tflite_model_dense))
+
+  tflite_model_path = '/tmp/sparse_mnist_%s_1x16.tflite' % FLAGS.sparsity
+  with open(tflite_model_path, 'wb') as f:
+    f.write(tflite_model)
+
+  print('evaluate 1x16 model')
   print(keras_test_utils.eval_mnist_tflite(model_content=tflite_model))
 
 

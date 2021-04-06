@@ -2,7 +2,7 @@ package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
 ])
 
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_library(
     name = "keras",
@@ -12,6 +12,8 @@ py_library(
     srcs_version = "PY3",
     deps = [
         ":cluster",
+        ":clustering_callbacks",
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental",
     ],
 )
 
@@ -92,6 +94,7 @@ py_test(
     deps = [
         ":cluster",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
     ],
 )
 
@@ -146,6 +149,7 @@ py_test(
     deps = [
         ":cluster",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )

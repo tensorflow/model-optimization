@@ -17,6 +17,7 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit",
+        "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations",
     ],
 )
 
@@ -210,6 +211,7 @@ py_library(
         ":quantize_config",
         ":quantizers",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/keras:utils",
     ],
 )
@@ -243,6 +245,7 @@ py_library(
         ":quantize_layer",
         ":quantize_wrapper",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",

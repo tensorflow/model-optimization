@@ -22,70 +22,170 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster_c
 
 k = tf.keras.backend
 CentroidInitialization = cluster_config.CentroidInitialization
+
+
 @six.add_metaclass(abc.ABCMeta)
 class AbstractCentroidsInitialisation:
-  """
-  Abstract base class for implementing different cluster centroid
-  initialisation algorithms. Must be initialised with a reference to the
+  """Abstract base class for implementing different cluster centroid initialisation algorithms.
+
+  Must be initialised with a reference to the
   weights and implement the single method below.
+
+  Optionally, zero-centroid initialization (used for sparsity-aware clustering)
+  can be enforced by setting the preserve_sparsity option in the clustering
+  parameters.
+  The procedure is the following:
+  1. First, one centroid is set to zero explicitly
+  2. The zero-point centroid divides the weights into two intervals: positive
+  and negative.
+  3. The remaining centroids are proportionally allocated to the two intervals
+  4. For each interval (positive and negative), the standard initialization is
+  used.
   """
 
-  def __init__(self, weights, number_of_clusters):
+  def __init__(self, weights, number_of_clusters, preserve_sparsity=False):
     self.weights = weights
     self.number_of_clusters = number_of_clusters
+    self.preserve_sparsity = preserve_sparsity
 
   @abc.abstractmethod
-  def get_cluster_centroids(self):
+  def _calculate_centroids_for_interval(self, weight_interval,
+                                        number_of_clusters_for_interval):
     pass
+
+  def _regular_clustering(self):
+    # Regular clustering calculates the centroids using all the weights
+    centroids = self._calculate_centroids_for_interval(self.weights,
+                                                       self.number_of_clusters)
+    cluster_centroids = tf.reshape(centroids, (self.number_of_clusters,))
+    return cluster_centroids
+
+  def _zero_centroid_initialization(self):
+    """The zero-centroid sparsity preservation technique works as follows.
+
+    1. First, one centroid is set to zero explicitly
+    2. The zero-point centroid divides the weights into two intervals:
+       positive and negative
+    3. The remaining centroids are proportionally allocated to the two
+       intervals
+    4. For each interval (positive and negative), the standard initialization
+       is used
+    This method is also referred to as sparsity-aware centroid initialization.
+
+    Returns:
+      centroids.
+    """
+    # Zero-point centroid
+    zero_centroid = tf.zeros(shape=(1,))
+
+    # Get the negative weights
+    negative_weights = tf.boolean_mask(self.weights,
+                                       tf.math.less(self.weights, 0))
+    negative_weights_count = tf.size(negative_weights)
+
+    # Get the positive weights
+    positive_weights = tf.boolean_mask(self.weights,
+                                       tf.math.greater(self.weights, 0))
+    positive_weights_count = tf.size(positive_weights)
+
+    # Get the number of non-zero weights
+    non_zero_weights_count = negative_weights_count + positive_weights_count
+
+    if tf.math.equal(non_zero_weights_count, 0):
+      # No non-zero weights available, simply return the zero-centroid
+      return zero_centroid
+
+    # Reduce the number of clusters by one to allow room for the zero-point
+    # centroid.
+    number_of_non_zero_clusters = self.number_of_clusters - 1
+
+    # Split the non-zero clusters proportionally among negative and positive
+    # weights.
+    negative_weights_ratio = negative_weights_count / non_zero_weights_count
+    number_of_negative_clusters = tf.cast(
+        tf.math.round(number_of_non_zero_clusters * negative_weights_ratio),
+        dtype=tf.int64)
+    number_of_positive_clusters = (
+        number_of_non_zero_clusters - number_of_negative_clusters)
+
+    # Calculate the negative centroids
+    negative_cluster_centroids = self._calculate_centroids_for_interval(
+        negative_weights, number_of_negative_clusters)
+
+    # Calculate the positive centroids
+    positive_cluster_centroids = self._calculate_centroids_for_interval(
+        positive_weights, number_of_positive_clusters)
+
+    # Put all the centroids together: negative, zero, positive
+    centroids = tf.concat(
+        [negative_cluster_centroids, zero_centroid, positive_cluster_centroids],
+        axis=0)
+
+    return centroids
+
+  def get_cluster_centroids(self):
+    # Check whether sparsity preservation should be enforced
+    if self.preserve_sparsity:
+      # Apply the zero-centroid sparsity preservation technique
+      return self._zero_centroid_initialization()
+    else:
+      # Perform regular clustering
+      return self._regular_clustering()
 
 
 class LinearCentroidsInitialisation(AbstractCentroidsInitialisation):
-  """
-  Spaces cluster centroids evenly in the interval [min(weights), max(weights)]
-  """
+  """Spaces cluster centroids evenly in the interval [min(weights), max(weights)]."""
 
-  def get_cluster_centroids(self):
-    weight_min = tf.reduce_min(self.weights)
-    weight_max = tf.reduce_max(self.weights)
-    cluster_centroids = tf.linspace(weight_min,
-                                    weight_max,
-                                    self.number_of_clusters)
+  def _calculate_centroids_for_interval(self, weight_interval,
+                                        number_of_clusters_for_interval):
+    if tf.math.less_equal(number_of_clusters_for_interval, 0):
+      # Return an empty array of centroids
+      return tf.constant([])
+
+    weight_min = tf.reduce_min(weight_interval)
+    weight_max = tf.reduce_max(weight_interval)
+    cluster_centroids = tf.linspace(weight_min, weight_max,
+                                    number_of_clusters_for_interval)
+
     return cluster_centroids
+
 
 class KmeansPlusPlusCentroidsInitialisation(AbstractCentroidsInitialisation):
-  """
-  Cluster centroids based on kmeans++ algorithm
-  """
-  def get_cluster_centroids(self):
+  """Cluster centroids based on kmeans++ algorithm."""
 
-    weights = tf.reshape(self.weights, [-1, 1])
+  def _calculate_centroids_for_interval(self, weight_interval,
+                                        number_of_clusters_for_interval):
+    if tf.math.less_equal(number_of_clusters_for_interval, 0):
+      # Return an empty array of centroids
+      return tf.constant([])
 
-    cluster_centroids = clustering_ops.kmeans_plus_plus_initialization(weights,
-                                                                       self.number_of_clusters,
-                                                                       seed=9,
-                                                                       num_retries_per_sample=-1)
+    weights = tf.reshape(weight_interval, [-1, 1])
+    cluster_centroids = clustering_ops.kmeans_plus_plus_initialization(
+        weights,
+        number_of_clusters_for_interval,
+        seed=9,
+        num_retries_per_sample=-1)
 
-    return cluster_centroids
+    return tf.reshape(cluster_centroids, [number_of_clusters_for_interval])
+
 
 class RandomCentroidsInitialisation(AbstractCentroidsInitialisation):
-  """
-  Sample centroids randomly and uniformly from the interval
-  [min(weights), max(weights)]
-  """
+  """Sample centroids randomly and uniformly from the interval [min(weights), max(weights)]."""
 
-  def get_cluster_centroids(self):
-    weight_min = tf.reduce_min(self.weights)
-    weight_max = tf.reduce_max(self.weights)
-    cluster_centroids = tf.random.uniform(shape=(self.number_of_clusters,),
-                                          minval=weight_min,
-                                          maxval=weight_max,
-                                          dtype=self.weights.dtype)
+  def _calculate_centroids_for_interval(self, weight_interval,
+                                        number_of_clusters_for_interval):
+    weight_min = tf.reduce_min(weight_interval)
+    weight_max = tf.reduce_max(weight_interval)
+    cluster_centroids = tf.random.uniform(
+        shape=(number_of_clusters_for_interval,),
+        minval=weight_min,
+        maxval=weight_max,
+        dtype=weight_interval.dtype)
     return cluster_centroids
 
 
 class TFLinearEquationSolver:
-  """
-  Solves a linear equantion y=ax+b for either y or x.
+  """Solves a linear equation y=ax+b for either y or x.
 
   The line equation is defined with two points (x1, y1) and (x2,y2)
   """
@@ -101,26 +201,28 @@ class TFLinearEquationSolver:
     self.b = y1 - x1 * ((y2 - y1) / tf.maximum(x2 - x1, 0.001))
 
   def solve_for_x(self, y):
-    """
-    For a given y value, find x at which linear function takes value y
-    :param y: the y value
-    :return: the corresponding x value
+    """For a given y value, find x at which linear function takes value y.
+
+    Args:
+      y: the y value
+    Returns:
+      the corresponding x value
     """
     return (y - self.b) / self.a
 
   def solve_for_y(self, x):
-    """
-    For a given x value, find y at which linear function takes value x
-    :param x: the x value
-    :return: the corresponding y value
+    """For a given x value, find y at which linear function takes value x.
+
+    Args:
+      x: the x value
+    Returns:
+      the corresponding y value
     """
     return self.a * x + self.b
 
 
 class TFCumulativeDistributionFunction:
-  """
-  Takes an array and builds cumulative distribution function(CDF)
-  """
+  """Takes an array and builds cumulative distribution function(CDF)."""
 
   def __init__(self, weights):
     self.weights = weights
@@ -132,69 +234,108 @@ class TFCumulativeDistributionFunction:
 
 
 class DensityBasedCentroidsInitialisation(AbstractCentroidsInitialisation):
-  """
+  r"""Density-based centroids initialisation.
+
   This initialisation means that we build a cumulative distribution
   function(CDF), then linearly space y-axis of this function then find the
-  corresponding x-axis points. In order to simplify the implementation, here is
+  corresponding x-axis points.
+
+  In order to simplify the implementation, here is
   a plan how it is achieved:
   1. Calculate CDF values at points spaced linearly between weight_min and
   weight_max(e.g. 20 points)
   2. Build an array of values linearly spaced between 0 and 1(probability)
   3. Go through the second array and find segment of CDF that contains this
-  y-axis value, \\hat{y}
+  y-axis value, \hat{y}
   4. interpolate linearly between those two points, get a line equation y=ax+b
-  5. solve equation \\hat{y}=ax+b for x. The found x value is a new cluster
-  centroid
+  5. solve equation \hat{y}=ax+b for x. The found x value is a new cluster
+  centroid.
   """
 
-  def get_cluster_centroids(self):
-    weight_min = tf.reduce_min(self.weights)
-    weight_max = tf.reduce_max(self.weights)
-    # Calculating interpolation nodes, +/- 0.01 is introduced to guarantee that
-    # CDF will have 0 and 1 and the first and last value respectively.
-    # The value 30 is a guess. We just need a sufficiently large number here
-    # since we are going to interpolate values linearly anyway and the initial
-    # guess will drift away. For these reasons we do not really
-    # care about the granularity of the lookup.
-    cdf_x_grid = tf.linspace(weight_min - 0.01, weight_max + 0.01, 30)
+  def _get_centroids(self, cdf_x_grid, cdf_values, matching_indices):
+    """Interpolates linearly.
 
-    f = TFCumulativeDistributionFunction(weights=self.weights)
+    Between every found index using 'i' as the current position and 'i-1' as
+    a second point. The value of 'x' is a new cluster centroid.
 
-    cdf_values = k.map_fn(f.get_cdf_value, cdf_x_grid)
+    Args:
+      cdf_x_grid: grid of x values.
+      cdf_values: cdf values at grid.
+      matching_indices: indices of each
 
-    probability_space = tf.linspace(0 + 0.01, 1, self.number_of_clusters)
+    Returns:
+      centroids.
+    """
 
-    # Use upper-bound algorithm to find the appropriate bounds
-    matching_indices = tf.searchsorted(sorted_sequence=cdf_values,
-                                       values=probability_space,
-                                       side='right')
-
-    # Interpolate linearly between every found indices I at position using I at
-    # pos n-1 as a second point. The value of x is a new cluster centroid
     def get_single_centroid(i):
       i_clipped = tf.minimum(i, tf.size(cdf_values) - 1)
       i_previous = tf.maximum(0, i_clipped - 1)
 
-      s = TFLinearEquationSolver(x1=cdf_x_grid[i_clipped],
-                                 y1=cdf_values[i_clipped],
-                                 x2=cdf_x_grid[i_previous],
-                                 y2=cdf_values[i_previous])
+      x1 = cdf_x_grid[i_clipped]
+      x2 = cdf_x_grid[i_previous]
+      y1 = cdf_values[i_clipped]
+      y2 = cdf_values[i_previous]
 
-      y = cdf_values[i_clipped]
+      # Check whether interpolation is possible
+      if y2 == y1:
+        # If there's no delta y it doesn't make sense to try to interpolate
+        # the value of x, so just take the lower bound instead
+        single_centroid = x1
+      else:
+        # Interpolate linearly
+        s = TFLinearEquationSolver(x1=x1, y1=y1, x2=x2, y2=y2)
+        single_centroid = s.solve_for_x(y1)
 
-      single_centroid = s.solve_for_x(y)
       return single_centroid
 
     centroids = k.map_fn(get_single_centroid,
                          matching_indices,
                          dtype=tf.float32)
-    cluster_centroids = tf.reshape(centroids, (self.number_of_clusters,))
+    return centroids
+
+  def _calculate_centroids_for_interval(self, weight_interval,
+                                        number_of_clusters_for_interval):
+    if tf.math.less_equal(number_of_clusters_for_interval, 0):
+      # Return an empty array of centroids
+      return tf.constant([])
+
+    # Get the limits of the weight interval
+    weights_min = tf.reduce_min(weight_interval)
+    weights_max = tf.reduce_max(weight_interval)
+
+    # Calculate the gap to put at either side of the given interval
+    weights_gap = 0.01 if not self.preserve_sparsity else tf.minimum(
+        0.01,
+        tf.minimum(tf.math.abs(weights_min), tf.math.abs(weights_max)) / 2)
+
+    # Calculating the interpolation nodes for the given weights.
+    # A gap is introduced on either side to guarantee that the CDF will have
+    # 0 and 1 as the first and last value respectively.
+    # The value 30 is a guess, we just need a sufficiently large number here
+    # since we are going to interpolate values linearly anyway and the initial
+    # guess will drift away. For these reasons we do not really
+    # care about the granularity of the lookup
+    cdf_x_grid = tf.linspace(weights_min - weights_gap,
+                             weights_max + weights_gap, 30)
+
+    # Calculate the centroids within the given interval
+    cdf = TFCumulativeDistributionFunction(weights=weight_interval)
+    cdf_values = k.map_fn(cdf.get_cdf_value, cdf_x_grid)
+    probability_space = tf.linspace(0 + 0.01, 1,
+                                    number_of_clusters_for_interval)
+    matching_indices = tf.searchsorted(
+        sorted_sequence=cdf_values, values=probability_space, side='right')
+
+    centroids = self._get_centroids(cdf_x_grid, cdf_values, matching_indices)
+    cluster_centroids = tf.reshape(centroids,
+                                   (number_of_clusters_for_interval,))
+
     return cluster_centroids
 
 
 class CentroidsInitializerFactory:
-  """
-  Factory that creates concrete initializers for factory centroids.
+  """Factory that creates concrete initializers for factory centroids.
+
   To implement a custom one, inherit from AbstractCentroidsInitialisation
   and implement all the required methods.
 
@@ -202,11 +343,13 @@ class CentroidsInitializerFactory:
   reflect new methods available.
   """
   _initialisers = {
-      CentroidInitialization.LINEAR : LinearCentroidsInitialisation,
-      CentroidInitialization.RANDOM : RandomCentroidsInitialisation,
-      CentroidInitialization.DENSITY_BASED :
+      CentroidInitialization.LINEAR:
+          LinearCentroidsInitialisation,
+      CentroidInitialization.RANDOM:
+          RandomCentroidsInitialisation,
+      CentroidInitialization.DENSITY_BASED:
           DensityBasedCentroidsInitialisation,
-      CentroidInitialization.KMEANS_PLUS_PLUS :
+      CentroidInitialization.KMEANS_PLUS_PLUS:
           KmeansPlusPlusCentroidsInitialisation,
   }
 
@@ -216,19 +359,22 @@ class CentroidsInitializerFactory:
 
   @classmethod
   def get_centroid_initializer(cls, init_method):
-    """
-    :param init_method: a CentroidInitialization value representing the init
+    """Gets centroid initializer.
+
+    Args:
+      init_method: a CentroidInitialization value representing the init
       method requested
-    :return: A concrete implementation of AbstractCentroidsInitialisation
-    :raises: ValueError if the requested centroid initialization method is not
+    Returns:
+      A concrete implementation of AbstractCentroidsInitialisation
+    Raises:
+      ValueError if the requested centroid initialization method is not
       recognised
     """
     if not cls.init_is_supported(init_method):
       raise ValueError(
-          "Unknown initialisation method: {init_method}. Allowed values are : "
-          "{allowed}".format(
+          'Unknown initialisation method: {init_method}. Allowed values are : '
+          '{allowed}'.format(
               init_method=init_method,
-              allowed=','.join(cls._initialisers.keys())
-          ))
+              allowed=','.join(cls._initialisers.keys())))
 
     return cls._initialisers[init_method]

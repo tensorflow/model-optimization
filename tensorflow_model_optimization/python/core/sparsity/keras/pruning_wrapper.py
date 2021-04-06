@@ -26,9 +26,9 @@ import tensorflow as tf
 
 # b/(139939526): update to use public API.
 from tensorflow.python.keras.utils import generic_utils
-
+from tensorflow_model_optimization.python.core.keras import compat as tf_compat
+from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.keras import utils
-
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
@@ -68,8 +68,10 @@ class PruneLowMagnitude(Wrapper):
   Custom keras layers:
   The pruning wrapper can also be applied to a user-defined keras layer.
   Such a layer may contain one or more weight tensors that may be pruned.
-  To apply pruning wrapper to such layers, set prunable_weight_names to mark
-  the weight tensors for pruning.
+  To apply pruning wrapper to such layers, the layer should be a `PrunableLayer`
+  instance or, more directly, user should define a `get_prunable_weights` method
+  for the layer (Check the pruning_wrapper_test.CustomLayerPrunable for more
+  details about how to define a user-defined prunable layer).
 
   Sparsity function:
   The target sparsity for the weight tensors are set through the
@@ -142,7 +144,8 @@ class PruneLowMagnitude(Wrapper):
     kwargs.update({'name': '{}_{}'.format(
         generic_utils.to_snake_case(self.__class__.__name__), layer.name)})
 
-    if isinstance(layer, prunable_layer.PrunableLayer):
+    if isinstance(layer, prunable_layer.PrunableLayer) or hasattr(
+        layer, 'get_prunable_weights'):
       # Custom layer in client code which supports pruning.
       super(PruneLowMagnitude, self).__init__(layer, **kwargs)
     elif prune_registry.PruneRegistry.supports(layer):
@@ -152,8 +155,10 @@ class PruneLowMagnitude(Wrapper):
     else:
       raise ValueError(
           'Please initialize `Prune` with a supported layer. Layers should '
-          'either be a `PrunableLayer` instance, or should be supported by the '
-          'PruneRegistry. You passed: {input}'.format(input=layer.__class__))
+          'either be supported by the PruneRegistry (built-in keras layers) or '
+          'should be a `PrunableLayer` instance, or should has a customer '
+          'defined `get_prunable_weights` method. You passed: '
+          '{input}'.format(input=layer.__class__))
 
     self._track_trackable(layer, name='layer')
 
@@ -181,6 +186,8 @@ class PruneLowMagnitude(Wrapper):
     if not hasattr(self, '_batch_input_shape') and hasattr(
         layer, '_batch_input_shape'):
       self._batch_input_shape = self.layer._batch_input_shape
+    metrics.MonitorBoolGauge('prune_low_magnitude_wrapper_usage').set(
+        layer.__class__.__name__)
 
   def build(self, input_shape):
     super(PruneLowMagnitude, self).build(input_shape)
@@ -230,15 +237,18 @@ class PruneLowMagnitude(Wrapper):
         block_size=self.block_size,
         block_pooling_type=self.block_pooling_type)
 
-  def call(self, inputs, training=None):
+  def call(self, inputs, training=None, **kwargs):
     if training is None:
       training = K.learning_phase()
+
+    def increment_step():
+      return tf_compat.assign(self.pruning_step, self.pruning_step + 1)
 
     def add_update():
       with tf.control_dependencies([
           tf.debugging.assert_greater_equal(
               self.pruning_step,
-              np.int64(0),
+              np.int64(1),
               message=self._PRUNE_CALLBACK_ERROR_MSG)
       ]):
         with tf.control_dependencies(
@@ -248,8 +258,14 @@ class PruneLowMagnitude(Wrapper):
     def no_op():
       return tf.no_op('no_update')
 
-    update_op = utils.smart_cond(training, add_update, no_op)
-    self.add_update(update_op)
+    # Increment the 'pruning_step' after each step.
+    update_pruning_step = utils.smart_cond(training, increment_step, no_op)
+    self.add_update(update_pruning_step)
+
+    # Update mask tensor after each 'pruning_frequency' steps.
+    update_mask = utils.smart_cond(training, add_update, no_op)
+    self.add_update(update_mask)
+
     # Always execute the op that performs weights = weights * mask
     # Relies on UpdatePruningStep callback to ensure the weights
     # are sparse after the final backpropagation.
@@ -265,9 +281,9 @@ class PruneLowMagnitude(Wrapper):
     # Propagate the training bool to the underlying layer if it accepts
     # training as an arg.
     if 'training' in args:
-      return self.layer.call(inputs, training=training)
+      return self.layer.call(inputs, training=training, **kwargs)
 
-    return self.layer.call(inputs)
+    return self.layer.call(inputs, **kwargs)
 
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(input_shape)
