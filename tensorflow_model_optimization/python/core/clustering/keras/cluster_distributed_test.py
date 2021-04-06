@@ -44,7 +44,6 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
         "cluster_centroids_init": CentroidInitialization.LINEAR
     }
 
-  @unittest.skip("MirroredVariable doesn't works with tf.custom_gradient.")
   @parameterized.parameters(_distribution_strategies())
   def testClusterSimpleDenseModel(self, distribution):
     """End-to-end test."""
@@ -69,7 +68,6 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
     unique_weights = set(weights_as_list)
     self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
-  @unittest.skip("MirroredVariable doesn't works with tf.custom_gradient.")
   @parameterized.parameters(_distribution_strategies())
   def testAssociationValuesPerReplica(self, distribution):
     """Verifies that associations of weights are updated per replica."""

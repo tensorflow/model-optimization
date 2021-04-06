@@ -99,6 +99,11 @@ class AbstractClusteringAlgorithm(object):
       return override_clustered_weight, grad
 
     if original_weight is not None:
-      clustered_weight = add_gradient_to_original_weight(clustered_weight, original_weight)
+      clustered_weight = add_gradient_to_original_weight(
+        clustered_weight,
+        # Fix the bug with MirroredVariable and tf.custom_gradient:
+        # tf.identity will transform a MirroredVariable into a Variable
+        tf.identity(original_weight),
+      )
 
     return clustered_weight
