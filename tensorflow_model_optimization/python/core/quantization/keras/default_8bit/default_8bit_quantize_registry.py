@@ -81,7 +81,7 @@ class Default8BitQuantizeRegistry(
       _QuantizeInfo(layers.Softmax, [], []),
       # Enable once verified.
       # layers.ELU,
-      # layers.LeakyReLU,
+      _QuantizeInfo(layers.LeakyReLU, [], [], True),
       # layers.PReLU,
       # layers.ThresholdedReLU,
 
