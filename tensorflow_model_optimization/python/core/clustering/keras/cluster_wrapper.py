@@ -223,12 +223,6 @@ class ClusterWeights(Wrapper):
 
   def update_clustered_weights_associations(self):
     for weight_name, original_weight in self.original_clusterable_weights.items():
-      # In sparsity-aware clustering, set zero centroids manually
-      # to stop them from drifting
-      if self.preserve_sparsity:
-        self.clustering_algorithms[weight_name].cluster_centroids[
-            self.zero_idx[weight_name]].assign(0.0)
-
       # Update pulling indices (cluster associations)
       pulling_indices = (
         self.clustering_algorithms[weight_name]
@@ -244,6 +238,10 @@ class ClusterWeights(Wrapper):
         )
       )
       if self.preserve_sparsity:
+        # Re-discover the sparsity masks to avoid drifting
+        self.sparsity_weights_masks[weight_name] = (
+            tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
+        )
         # Apply the sparsity mask to the clustered weights
         clustered_weights = tf.math.multiply(
             clustered_weights, self.sparsity_weights_masks[weight_name])
