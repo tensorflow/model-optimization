@@ -14,14 +14,18 @@
 # ==============================================================================
 """Distributed clustering test."""
 
-from absl.testing import parameterized
+import itertools
+import unittest
+
 import numpy as np
 import tensorflow as tf
-
-from tensorflow_model_optimization.python.core.clustering.keras import cluster
-from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
-from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
-from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from absl.testing import parameterized
+from tensorflow_model_optimization.python.core.clustering.keras import (
+    cluster, cluster_config, cluster_wrapper)
+from tensorflow_model_optimization.python.core.clustering.keras.experimental import \
+    cluster as experimental_cluster
+from tensorflow_model_optimization.python.core.keras import \
+    test_utils as keras_test_utils
 
 keras = tf.keras
 CentroidInitialization = cluster_config.CentroidInitialization
@@ -30,23 +34,37 @@ CentroidInitialization = cluster_config.CentroidInitialization
 def _distribution_strategies():
   return [tf.distribute.MirroredStrategy()]
 
+def _clustering_strategies():
+  return [
+    {
+      'number_of_clusters': 2,
+      'cluster_centroids_init': CentroidInitialization.LINEAR,
+      'preserve_sparsity': False
+    },
+    {
+      'number_of_clusters': 3,
+      'cluster_centroids_init': CentroidInitialization.KMEANS_PLUS_PLUS,
+      'preserve_sparsity': True
+    }
+  ]
 
 class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
   """Distributed tests for clustering."""
 
   def setUp(self):
     super(ClusterDistributedTest, self).setUp()
-    self.params = {
-        'number_of_clusters': 2,
-        'cluster_centroids_init': CentroidInitialization.LINEAR
-    }
 
-  @parameterized.parameters(_distribution_strategies())
-  def testClusterSimpleDenseModel(self, distribution):
+  @parameterized.parameters(
+    *itertools.product(
+      _distribution_strategies(),
+      _clustering_strategies()
+    )
+  )
+  def testClusterSimpleDenseModel(self, distribution, clustering):
     """End-to-end test."""
     with distribution.scope():
-      model = cluster.cluster_weights(
-          keras_test_utils.build_simple_dense_model(), **self.params)
+      model = experimental_cluster.cluster_weights(
+          keras_test_utils.build_simple_dense_model(), **clustering)
       model.compile(
           loss='categorical_crossentropy',
           optimizer='sgd',
@@ -64,9 +82,11 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
     weights_as_list = stripped_model.layers[0].kernel.numpy().reshape(
         -1,).tolist()
     unique_weights = set(weights_as_list)
-    self.assertLessEqual(len(unique_weights), self.params['number_of_clusters'])
+    self.assertLessEqual(len(unique_weights), clustering["number_of_clusters"])
 
-  @parameterized.parameters(_distribution_strategies())
+  @parameterized.parameters(
+      _distribution_strategies()
+    )
   def testAssociationValuesPerReplica(self, distribution):
     """Verifies that associations of weights are updated per replica."""
     assert tf.distribute.get_replica_context() is not None
@@ -76,8 +96,9 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
       output_shape = (2, 8)
       l = cluster_wrapper.ClusterWeights(
           keras.layers.Dense(8, input_shape=input_shape),
-          number_of_clusters=self.params['number_of_clusters'],
-          cluster_centroids_init=self.params['cluster_centroids_init'])
+          number_of_clusters=2,
+          cluster_centroids_init=CentroidInitialization.LINEAR
+      )
       l.build(input_shape)
 
       clusterable_weights = l.layer.get_clusterable_weights()
