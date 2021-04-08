@@ -27,6 +27,8 @@ from tensorflow_model_optimization.python.core.quantization.keras import quant_o
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
     default_8bit_cluster_preserve_quantize_scheme,)
+from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve.cluster_utils import (
+    strip_clustering_cqat,)
 
 layers = tf.keras.layers
 
@@ -76,6 +78,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
             .Default8BitClusterPreserveQuantizeScheme())
 
         self.compile_and_fit(quant_aware_model)
+        quant_aware_model = strip_clustering_cqat(quant_aware_model)
 
     def testEndToEndClusterPreserveKernelInitializers(self):
         """Verifies that we can run CQAT end to end,
@@ -99,6 +102,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
             quant_aware_annotate_model,
             scheme=default_8bit_cluster_preserve_quantize_scheme
             .Default8BitClusterPreserveQuantizeScheme())
+        quant_aware_model = strip_clustering_cqat(quant_aware_model)
 
     def testEndToEndClusterPreserveBiasInitializers(self):
         """Verifies that we can run CQAT end to end,
@@ -123,6 +127,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
             quant_aware_annotate_model,
             scheme=default_8bit_cluster_preserve_quantize_scheme
             .Default8BitClusterPreserveQuantizeScheme())
+        quant_aware_model = strip_clustering_cqat(quant_aware_model)
 
     def testEndToEndClusterPreserveDepthwiseInitializers(self):
         """Verifies that we can run CQAT end to end,
@@ -146,6 +151,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
             quant_aware_annotate_model,
             scheme=default_8bit_cluster_preserve_quantize_scheme
             .Default8BitClusterPreserveQuantizeScheme())
+        quant_aware_model = strip_clustering_cqat(quant_aware_model)
 
     def testEndToEndClusterPreservePerLayer(self):
         """Verifies that we can run CQAT end to end,
@@ -177,6 +183,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
             .Default8BitClusterPreserveQuantizeScheme())
 
         self.compile_and_fit(quant_aware_model)
+        quant_aware_model = strip_clustering_cqat(quant_aware_model)
 
     def testEndToEndClusterPreserveOneLayer(self):
         """Verifies that we can run CQAT end to end,
@@ -209,6 +216,8 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
             .Default8BitClusterPreserveQuantizeScheme())
 
         self.compile_and_fit(quant_aware_model)
+        quant_aware_model = strip_clustering_cqat(quant_aware_model)
+
 
 if __name__ == '__main__':
   tf.test.main()

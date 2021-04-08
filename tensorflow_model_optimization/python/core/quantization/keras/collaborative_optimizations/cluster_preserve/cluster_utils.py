@@ -100,6 +100,8 @@ def strip_clustering_cqat(to_strip):
       if 'depthwise' not in layer.layer.name:
         if isinstance(layer.layer, tf.keras.layers.Conv2D) or \
           isinstance(layer.layer, tf.keras.layers.Dense):
+          clst_indices = None
+          clst_centroids = None
           # replace the kernel weight with the clustered weight
           for v in layer._trainable_weights:
             if 'cluster_centroids_tf' in v.name:
@@ -108,8 +110,10 @@ def strip_clustering_cqat(to_strip):
             if 'pulling_indices_tf' in v.name:
               clst_indices = v
           if clst_indices is None or clst_centroids is None:
-            raise ValueError(
-                'Expected layer to stripped to contain clustering nodes')
+            # We don't issue an error here as we could have layers
+            # that are not wrapped during selective CQAT.
+            # So, we just return.
+            return layer
 
           clst_weights = _get_clustered_weights(
               clst_indices, clst_centroids)
