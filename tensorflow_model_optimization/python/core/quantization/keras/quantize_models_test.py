@@ -20,6 +20,7 @@ from __future__ import print_function
 
 import inspect
 import tempfile
+import unittest
 
 from absl.testing import parameterized
 
@@ -46,11 +47,11 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
       'MobileNetV2',
       # 'NASNetLarge',
       # 'NASNetMobile',
-      ##'ResNet101',
+      'ResNet101',
       # 'ResNet101V2',
-      ##'ResNet152',
+      'ResNet152',
       # 'ResNet152V2',
-      ##'ResNet50',
+      'ResNet50',
       # 'ResNet50V2',
       # 'VGG16',
       # 'VGG19',
@@ -100,6 +101,7 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
       interpreter.invoke()
       interpreter.get_tensor(output_index)
 
+  @unittest.skip("OOM error for all these models in our CI")
   @parameterized.parameters(_KERAS_APPLICATION_MODELS)
   def testModelEndToEnd(self, model_type):
     # 1. Check whether quantized model graph can be constructed.
