@@ -28,6 +28,7 @@ k = keras.backend
 Layer = keras.layers.Layer
 Wrapper = keras.layers.Wrapper
 CentroidInitialization = cluster_config.CentroidInitialization
+GradientAggregation = cluster_config.GradientAggregation
 
 
 class ClusterWeights(Wrapper):
@@ -57,6 +58,7 @@ class ClusterWeights(Wrapper):
                number_of_clusters,
                cluster_centroids_init,
                preserve_sparsity=False,
+               cluster_gradient_aggregation=GradientAggregation.SUM,
                **kwargs):
     if not isinstance(layer, Layer):
       raise ValueError(
@@ -104,6 +106,9 @@ class ClusterWeights(Wrapper):
 
     # Whether to apply sparsity preservation or not
     self.preserve_sparsity = preserve_sparsity
+
+    # The way to aggregate the gradient of each cluster centroid
+    self.cluster_gradient_aggregation = cluster_gradient_aggregation
 
     # Stores the pairs of weight names and their respective sparsity masks
     self.sparsity_weights_masks = {}
@@ -183,7 +188,8 @@ class ClusterWeights(Wrapper):
       self.clustering_algorithms[weight_name] = (
         clustering_registry.ClusteringLookupRegistry()
         .get_clustering_impl(self.layer, weight_name)(
-          self.cluster_centroids[weight_name]
+          clusters_centroids=self.cluster_centroids[weight_name],
+          cluster_gradient_aggregation=self.cluster_gradient_aggregation,
         )
       )
 
@@ -260,6 +266,7 @@ class ClusterWeights(Wrapper):
         'number_of_clusters': self.number_of_clusters,
         'cluster_centroids_init': self.cluster_centroids_init,
         'preserve_sparsity': self.preserve_sparsity,
+        'cluster_gradient_aggregation': self.cluster_gradient_aggregation,
         **base_config
     }
     return config
@@ -271,10 +278,13 @@ class ClusterWeights(Wrapper):
     number_of_clusters = config.pop('number_of_clusters')
     cluster_centroids_init = config.pop('cluster_centroids_init')
     preserve_sparsity = config.pop('preserve_sparsity')
+    cluster_gradient_aggregation = config.pop('cluster_gradient_aggregation')
+
     config['number_of_clusters'] = number_of_clusters
     config['cluster_centroids_init'] = cluster_config.CentroidInitialization(
         cluster_centroids_init)
     config['preserve_sparsity'] = preserve_sparsity
+    config['cluster_gradient_aggregation'] = cluster_gradient_aggregation
 
     from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
     layer = deserialize_layer(config.pop('layer'),

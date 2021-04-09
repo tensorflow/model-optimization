@@ -35,3 +35,15 @@ class CentroidInitialization(str, enum.Enum):
   RANDOM = "CentroidInitialization.RANDOM"
   DENSITY_BASED = "CentroidInitialization.DENSITY_BASED"
   KMEANS_PLUS_PLUS = "CentroidInitialization.KMEANS_PLUS_PLUS"
+
+
+class GradientAggregation(str, enum.Enum):
+  """Specifies how the cluster gradient should be aggregated.
+
+  * `SUM`: The gradient of each cluster centroid is the sum of their
+      respective child’s weight gradient.
+  * `AVG`: The gradient of each cluster centroid is the averaged sum of
+      their respective child’s weight gradient.
+  """
+  SUM = "GradientAggregation.SUM"
+  AVG = "GradientAggregation.AVG"

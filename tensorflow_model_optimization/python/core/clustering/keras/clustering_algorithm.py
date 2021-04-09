@@ -18,6 +18,8 @@ import abc
 import six
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import GradientAggregation
+
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractClusteringAlgorithm(object):
@@ -35,17 +37,23 @@ class AbstractClusteringAlgorithm(object):
   For example, look-ups for 2D table will be different in the case of 3D.
   """
 
-  def __init__(self, clusters_centroids):
+  def __init__(self,
+               clusters_centroids,
+               cluster_gradient_aggregation=GradientAggregation.SUM,
+               ):
     """
     For generating clustered tensors we will need two things: cluster centroids
     and the final shape tensor must have.
     :param clusters_centroids: An array of shape (N,) that contains initial
       values of clusters centroids.
+    :param cluster_gradient_aggregation: An enum that specify the aggregation
+      method of the cluster gradient.
     """
     if not isinstance(clusters_centroids, tf.Variable):
       raise ValueError("clusters_centroids should be a tf.Variable.")
 
     self.cluster_centroids = clusters_centroids
+    self.cluster_gradient_aggregation = cluster_gradient_aggregation
 
   @abc.abstractmethod
   def get_pulling_indices(self, weight):
@@ -110,17 +118,23 @@ class AbstractClusteringAlgorithm(object):
 
       return override_clustered_weight, grad
 
-    # Compute the size of each cluster (number of weights belonging to each cluster)
-    cluster_sizes = tf.math.bincount(
-      arr=tf.cast(pulling_indices, dtype=tf.int32),
-      minlength=tf.size(self.cluster_centroids),
-      dtype=self.cluster_centroids.dtype,
-    )
-    # Modify the gradient of cluster_centroids to be averaged by cluster sizes
-    cluster_centroids = average_centroids_gradient_by_cluster_size(
-      self.cluster_centroids,
-      tf.stop_gradient(cluster_sizes),
-    )
+    if self.cluster_gradient_aggregation == GradientAggregation.SUM:
+      cluster_centroids = self.cluster_centroids
+    elif self.cluster_gradient_aggregation == GradientAggregation.AVG:
+      # Compute the size of each cluster (number of weights belonging to each cluster)
+      cluster_sizes = tf.math.bincount(
+        arr=tf.cast(pulling_indices, dtype=tf.int32),
+        minlength=tf.size(self.cluster_centroids),
+        dtype=self.cluster_centroids.dtype,
+      )
+      # Modify the gradient of cluster_centroids to be averaged by cluster sizes
+      cluster_centroids = average_centroids_gradient_by_cluster_size(
+        self.cluster_centroids,
+        tf.stop_gradient(cluster_sizes),
+      )
+    else:
+      raise ValueError(f"self.cluster_gradient_aggregation="
+                       f"{self.cluster_gradient_aggregation} not implemented.")
 
     # Gather the clustered weights based on cluster centroids and pulling indices
     clustered_weight = tf.gather(cluster_centroids, pulling_indices)
