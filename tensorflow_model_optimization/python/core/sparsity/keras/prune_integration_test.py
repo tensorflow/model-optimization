@@ -397,6 +397,27 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     input_data = np.random.randint(10, size=(32, 5))
     self._check_strip_pruning_matches_original(model, 0.5, input_data)
 
+  def testPruneRecursivelyReachesTargetSparsity(self):
+    internal_model = keras.Sequential(
+        [keras.layers.Dense(10, input_shape=(10,))])
+    model = keras.Sequential([
+        internal_model,
+        layers.Flatten(),
+        layers.Dense(1),
+    ])
+    model.compile(
+        loss='binary_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    test_utils.assert_model_sparsity(self, 0.0, model)
+    model.fit(
+        np.random.randint(10, size=(32, 10)),
+        np.random.randint(2, size=(32, 1)),
+        callbacks=[pruning_callbacks.UpdatePruningStep()])
+
+    test_utils.assert_model_sparsity(self, 0.5, model)
+
+    input_data = np.random.randint(10, size=(32, 10))
+    self._check_strip_pruning_matches_original(model, 0.5, input_data)
+
   @parameterized.parameters(test_utils.model_type_keys())
   def testPrunesMnist_ReachesTargetSparsity(self, model_type):
     model = test_utils.build_mnist_model(model_type, self.params)

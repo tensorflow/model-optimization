@@ -15,6 +15,9 @@
 """Module containing 8bit default quantization scheme."""
 # pylint: disable=g-bad-import-order
 
+# submodules
+from tensorflow_model_optimization.python.core.api.quantization.keras.default_8bit import default_8bit_transforms
+
 # The 8bit default quantization scheme classes.
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit.default_8bit_quantize_scheme import Default8BitQuantizeScheme
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit.default_8bit_quantize_layout_transform import Default8BitQuantizeLayoutTransform
