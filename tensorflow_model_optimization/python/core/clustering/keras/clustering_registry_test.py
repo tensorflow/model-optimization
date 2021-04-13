@@ -201,11 +201,46 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
       ClusteringLookupRegistry.get_clustering_impl(layers.Dense(10),
                                                    'no_such_weight')
 
+
+class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
+                                         clusterable_layer.ClusterableLayer):
+  """Keras custom layer.
+
+  Custom layer derived from ClusterableLayer provides implementation
+  of the clustering algorithm.
+  """
+
+  def __init__(self, units=10):
+    super(KerasCustomLayerClusterableInvalid, self).__init__()
+    self.units = units
+
+  def build(self, input_shape):
+    self.w = self.add_weight(
+        shape=(input_shape[-1], self.units),
+        initializer='random_normal',
+        trainable=True,
+        )
+
+  def get_clusterable_weights(self):
+    return [('w', self.w)]
+
+  def testKerasCustomLayerClusterableInvalid(self):
+    """Verify get_clustering_impl() raises  error.
+
+    Verify raises error when invoked with a keras custom layer derived from
+    ClusterableLayer, but the function get_clustering_algorithm is not provided.
+    """
+    with self.assertRaises(ValueError):
+      ClusteringLookupRegistry.get_clustering_impl(
+          KerasCustomLayerClusterableInvalid(), 'w')
+
   @parameterized.parameters(
       (layers.Conv3D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
       (layers.Conv2D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
       (layers.Conv1D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
-      (layers.Conv3D, 'kernel', clustering_registry.ConvolutionalWeights3DCA),
+      (layers.Conv3D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
+      (layers.Conv2D, 'bias', clustering_registry.BiasWeightsCA),
+      (layers.Conv1D, 'bias', clustering_registry.BiasWeightsCA),
   )
   def testReturnsResultsForKnownTypeKnownWeights(self,
                                                  layer_type,

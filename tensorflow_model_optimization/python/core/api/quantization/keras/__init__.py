@@ -18,6 +18,7 @@
 # submodules
 from tensorflow_model_optimization.python.core.api.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.api.quantization.keras import default_8bit
+from tensorflow_model_optimization.python.core.api.quantization.keras import graph_transformations
 
 # quantize all layers with default quantization implementation.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_model
@@ -30,6 +31,7 @@ from tensorflow_model_optimization.python.core.quantization.keras.quantize impor
 # quantize with custom quantization parameterization or implementation, or
 # handle custom Keras layers.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_config import QuantizeConfig
+from tensorflow_model_optimization.python.core.quantization.keras.quantize_wrapper import QuantizeWrapper
 
 # Deserialize quantized model for Keras h5 format.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_scope

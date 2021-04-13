@@ -163,6 +163,14 @@ def prune_low_magnitude(to_prune,
     return wrapped_layers
 
   def _add_pruning_wrapper(layer):
+    if isinstance(layer, keras.Model):
+      # Check whether the model is a subclass model.
+      if (not layer._is_graph_network and
+          not isinstance(layer, keras.models.Sequential)):
+        raise ValueError('Subclassed models are not supported currently.')
+
+      return keras.models.clone_model(
+          layer, input_tensors=None, clone_function=_add_pruning_wrapper)
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       return layer
     return pruning_wrapper.PruneLowMagnitude(layer, **params)
@@ -172,6 +180,7 @@ def prune_low_magnitude(to_prune,
       'block_size': block_size,
       'block_pooling_type': block_pooling_type
   }
+
   is_sequential_or_functional = isinstance(
       to_prune, keras.Model) and (isinstance(to_prune, keras.Sequential) or
                                   to_prune._is_graph_network)
@@ -183,8 +192,7 @@ def prune_low_magnitude(to_prune,
   if isinstance(to_prune, list):
     return _prune_list(to_prune, **params)
   elif is_sequential_or_functional:
-    return keras.models.clone_model(
-        to_prune, input_tensors=None, clone_function=_add_pruning_wrapper)
+    return _add_pruning_wrapper(to_prune)
   elif is_keras_layer:
     params.update(kwargs)
     return pruning_wrapper.PruneLowMagnitude(to_prune, **params)

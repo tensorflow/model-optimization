@@ -22,8 +22,13 @@ import six
 class ClusterableLayer:
   """Abstract Base Class for making your own keras layer clusterable.
 
-  Custom keras layers that need to support clustering should implement this
-  class.
+  Your layer could be derived from a keras built-in layer or
+  it could be a keras custom layer.
+
+  The function get_clusterable_weights should be provided in both cases.
+
+  The function get_clusterable_algorithm is provided, when weights for
+  clustering is added in the keras layer.
 
   """
 
@@ -40,3 +45,22 @@ class ClusterableLayer:
         kernel object itself.
     """
     raise NotImplementedError('Must be implemented in subclasses.')
+
+  def get_clusterable_algorithm(self, weight_name):  # pylint: disable=unused-argument
+    """Returns class with the clustering algorithm for the given weight_name.
+
+    This function needs to be implemented for the customerable layers.
+    If the layer is derived from the built-in keras layer, the clustering
+    algorithm for the base built-in keras layer is used.
+
+    The returned class should be derived from AbstractClusteringAlgorithm and
+    implements the function get_pulling_indices.
+    This function is used to provide a special lookup function for the custom
+    weights.
+    It reshapes and tile centroids the same way as the weights. This allows us
+    to find pulling indices efficiently.
+
+    Args:
+        weight_name ([string]): The name of the weight variable.
+    """
+    return None
