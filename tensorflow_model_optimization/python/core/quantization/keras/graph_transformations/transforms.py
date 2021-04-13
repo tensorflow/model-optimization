@@ -79,7 +79,13 @@ class LayerNode(object):
   been found in a model, and layers which should be replaced inside the model.
   """
 
-  def __init__(self, layer, weights=None, input_layers=None, metadata=None):
+  def __init__(
+      self,
+      layer,
+      weights=None,
+      input_layers=None,
+      metadata=None,
+      names_and_weights=None):
     """Construct a LayerNode representing a tree of layers.
 
     Args:
@@ -87,6 +93,8 @@ class LayerNode(object):
       weights: An OrderedDict of weight name => value for the layer.
       input_layers: List of `LayerNode`s that feed into this layer.
       metadata: Dictionary of metadata for a given layer.
+      names_and_weights: A list of tuples (name, weight). It only used when
+        weights dictionary is empty.
     """
     if weights is None:
       weights = collections.OrderedDict()
@@ -94,11 +102,14 @@ class LayerNode(object):
       input_layers = []
     if metadata is None:
       metadata = {}
+    if names_and_weights is None:
+      names_and_weights = []
 
     self.layer = layer
     self.weights = weights
     self.input_layers = input_layers
     self.metadata = metadata
+    self.names_and_weights = names_and_weights
 
   def __str__(self):
     return '{} <- [{}]'.format(
