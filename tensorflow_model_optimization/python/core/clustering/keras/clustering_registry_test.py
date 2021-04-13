@@ -238,7 +238,7 @@ class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
       (layers.Conv3D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
       (layers.Conv2D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
       (layers.Conv1D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
-      (layers.Conv3D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
+      (layers.Conv3D, 'bias', clustering_registry.BiasWeightsCA),
       (layers.Conv2D, 'bias', clustering_registry.BiasWeightsCA),
       (layers.Conv1D, 'bias', clustering_registry.BiasWeightsCA),
   )
