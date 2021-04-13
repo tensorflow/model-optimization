@@ -47,30 +47,6 @@ class ConvolutionalWeightsCA(AbstractClusteringAlgorithm):
 
     return pulling_indices
 
-class ConvolutionalWeights3DCA(AbstractClusteringAlgorithm):
-  """
-  Look-ups for convolutional 3D kernels, e.g. tensors with shape [B,D1,D2,D3,C]
-  """
-
-  def get_pulling_indices(self, weight):
-    clst_num = self.cluster_centroids.shape[0]
-    tiled_weights = tf.tile(tf.expand_dims(weight, 5), [1, 1, 1, 1, 1, clst_num])
-
-    # Do the ugly reshape to the clustering points
-    tiled_cluster_centroids = tf.stack(
-        [tf.tile(tf.stack(
-            [tf.reshape(self.cluster_centroids, [1, 1, 1, clst_num])] *
-            weight.shape[-2], axis=3),
-                 [weight.shape[0], weight.shape[1], weight.shape[2], 1, 1])] * weight.shape[-1],
-        axis=4)
-
-    # We find the nearest cluster centroids and store them so that ops can build
-    # their kernels upon it
-    pulling_indices = tf.argmin(
-        tf.abs(tiled_weights - tiled_cluster_centroids), axis=5
-    )
-
-    return pulling_indices
 
 class DenseWeightsCA(AbstractClusteringAlgorithm):
   """Dense layers store their weights in 2D tables, i.e. tensor shape [U, D]."""
