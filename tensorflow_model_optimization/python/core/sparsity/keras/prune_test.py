@@ -304,6 +304,16 @@ class PruneTest(test.TestCase, parameterized.TestCase):
           json.loads(pruned_model.to_json()))
     self.assertEqual(loaded_model.built, True)
 
+  def testPruneModelRecursively(self):
+    internal_model = keras.Sequential(
+        [keras.layers.Dense(10, input_shape=(10,))])
+    original_model = keras.Sequential([
+        internal_model,
+        layers.Dense(10),
+    ])
+    pruned_model = prune.prune_low_magnitude(original_model, **self.params)
+    self.assertEqual(self._count_pruned_layers(pruned_model), 2)
+
   def testPruneSubclassModel(self):
     model = TestSubclassedModel()
     with self.assertRaises(ValueError) as e:

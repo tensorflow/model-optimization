@@ -75,6 +75,27 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
           [keras.layers.Dense(2, input_shape=(3,)),
            keras.layers.ReLU(6.0)])
 
+  def _nested_model(self, model_type='functional', submodel_type='functional'):
+    if submodel_type == 'functional':
+      inp = keras.layers.Input((3,))
+      x = keras.layers.Dense(2)(inp)
+      out = keras.layers.Dense(2)(x)
+      submodel = keras.Model(inp, out)
+    elif submodel_type == 'sequential':
+      submodel = keras.Sequential(
+          [keras.layers.Dense(2, input_shape=(3,)),
+           keras.layers.Dense(2)])
+
+    if model_type == 'functional':
+      inp = keras.layers.Input((3,))
+      x = submodel(inp)
+      out = keras.layers.ReLU(6.0)(x)
+      return keras.Model(inp, out)
+    elif model_type == 'sequential':
+      return keras.Sequential(
+          [submodel,
+           keras.layers.ReLU(6.0)])
+
   def _assert_config(self, expected_config, actual_config, exclude_keys=None):
     """Asserts that the two config dictionaries are equal.
 
@@ -680,6 +701,24 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
     # considered the same even though the shapes are the same.
     self._assert_config(model.get_config(), transformed_model.get_config(),
                         ['build_input_shape'])
+
+  @parameterized.parameters([
+      ('sequential', 'sequential'),
+      ('sequential', 'functional'),
+      ('functional', 'sequential'),
+      ('functional', 'functional'),])
+  def testNestedModelNoChange(self, model_type, submodel_type):
+    model = self._nested_model(model_type, submodel_type)
+
+    transformed_model, _ = ModelTransformer(
+        model, []).transform()
+
+    # build_input_shape is a TensorShape object and the two objects are not
+    # considered the same even though the shapes are the same.
+    self._assert_config(model.get_config(), transformed_model.get_config(),
+                        ['class_name', 'build_input_shape'])
+
+    self._assert_model_results_equal(model, transformed_model)
 
   # Validation Tests
 

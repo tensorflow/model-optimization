@@ -44,7 +44,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":clusterable_layer",
-        ":clustering_algorithm"
+        ":clustering_algorithm",
     ],
 )
 
@@ -183,7 +183,7 @@ py_test(
     python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
-        ":cluster"
+        ":cluster",
         # tensorflow dep1,
     ],
 )
@@ -194,7 +194,7 @@ py_test(
     python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
-        ":cluster"
+        ":cluster",
         # tensorflow dep1,
     ],
 )

@@ -95,6 +95,9 @@ class ModelTransformer(object):
   def _get_layer_weights(self, layer_name):
     return self._layer_weights_map.get(layer_name, {})
 
+  def _get_layer_names_and_weights(self, layer_name):
+    return self._layer_names_and_weights_map.get(layer_name, {})
+
   def _get_layer_metadata(self, layer_name):
     return self._layer_metadata_map.get(layer_name, {})
 
@@ -191,7 +194,9 @@ class ModelTransformer(object):
     if len(pattern.inputs) == 0:
       # Leaf layer in pattern.
       return LayerNode(layer, self._get_layer_weights(layer['config']['name']),
-                       [], self._get_layer_metadata(layer['config']['name']))
+                       [], self._get_layer_metadata(layer['config']['name']),
+                       self._get_layer_names_and_weights(
+                           layer['config']['name']))
 
     # There is a possible edge case where a single layer may output multiple
     # tensors and multiple tensors from that layer may be used by the
@@ -221,7 +226,8 @@ class ModelTransformer(object):
 
     return LayerNode(layer, self._get_layer_weights(layer['config']['name']),
                      input_match_layer_nodes,
-                     self._get_layer_metadata(layer['config']['name']))
+                     self._get_layer_metadata(layer['config']['name']),
+                     self._get_layer_names_and_weights(layer['config']['name']))
 
   def _find_pattern(self, pattern, matched_layers=None):
     for layer in self._config['layers']:
@@ -265,6 +271,7 @@ class ModelTransformer(object):
     # now that layer has been removed.
     for layer_name in layers_to_remove_names:
       self._layer_weights_map.pop(layer_name, None)
+      self._layer_names_and_weights_map.pop(layer_name, None)
       self._layer_metadata_map.pop(layer_name, None)
 
   def _replace(self, match_layer_node, replacement_layer_node):
@@ -355,8 +362,12 @@ class ModelTransformer(object):
       """Recursively add new layers."""
       self._config['layers'].append(layer_node.layer)
       layer_name = layer_node.layer['config']['name']
+      # TODO(b/184603494): Remove weight map structure from model_transformer.
       if layer_node.weights:
         self._layer_weights_map[layer_name] = layer_node.weights
+      if layer_node.names_and_weights:
+        self._layer_names_and_weights_map[
+            layer_name] = layer_node.names_and_weights
       if layer_node.metadata:
         self._layer_metadata_map[layer_name] = layer_node.metadata
       if self.candidate_layers:
@@ -403,6 +414,9 @@ class ModelTransformer(object):
         layer_name = replacement_node.layer['config']['name']
         if replacement_node.weights:
           self._layer_weights_map[layer_name] = replacement_node.weights
+        if replacement_node.names_and_weights:
+          self._layer_names_and_weights_map[
+              layer_name] = replacement_node.names_and_weights
         if replacement_node.metadata:
           self._layer_metadata_map[layer_name] = replacement_node.metadata
         if self.candidate_layers:
@@ -433,7 +447,16 @@ class ModelTransformer(object):
         zip(keras_layer.weights, keras_layer.get_weights()):
       weights_map[self._weight_name(weight_tensor.name)] = weight_numpy
 
+    if len(weights_map) != len(keras_layer.weights):
+      # The case that variable identifier is not unique. It's a fallback that
+      # uses weight list instead of the weights map.
+      return None
+
     return weights_map
+
+  def _get_keras_layer_names_and_weights(self, keras_layer):
+    return zip([weight.name for weight in keras_layer.weights],
+               keras_layer.get_weights())
 
   def _set_layer_weights(self, layer, weights_map):
     """Sets the values of weights in a Keras layer."""
@@ -446,6 +469,9 @@ class ModelTransformer(object):
             (weight_tensor, weights_map[weight_name]))
 
     K.batch_set_value(weight_value_tuples)
+
+  def _set_layer_names_and_weights(self, layer, names_and_weights):
+    layer.set_weights([weight for _, weight in names_and_weights])
 
   @staticmethod
   def _name(obj):
@@ -496,8 +522,12 @@ class ModelTransformer(object):
     # to prevent infinite loops.
     self._transform_matched_layers_map = {}
     self._layer_weights_map = {}
+    self._layer_names_and_weights_map = {}
+
     for layer in self.model.layers:
       self._layer_weights_map[layer.name] = self._get_keras_layer_weights(layer)
+      self._layer_names_and_weights_map[
+          layer.name] = self._get_keras_layer_names_and_weights(layer)
 
     # Maintains a current mutable copy of the metadata through transformation.
     self._layer_metadata_map = copy.deepcopy(self.layer_metadata)
@@ -557,5 +587,9 @@ class ModelTransformer(object):
       weights = self._layer_weights_map.get(layer.name)
       if weights:
         self._set_layer_weights(layer, weights)
+      else:
+        names_and_weights = self._layer_names_and_weights_map.get(layer.name)
+        if names_and_weights:
+          self._set_layer_names_and_weights(layer, names_and_weights)
 
     return transformed_model, copy.deepcopy(self._layer_metadata_map)
