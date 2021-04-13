@@ -44,6 +44,7 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":clusterable_layer",
+        ":clustering_algorithm",
     ],
 )
 
@@ -71,6 +72,16 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_config",
+    ],
+)
+
+py_library(
+    name = "clustering_algorithm",
+    srcs = ["clustering_algorithm.py"],
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
     ],
 )
 
@@ -163,5 +174,27 @@ py_test(
         ":cluster",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
+    ],
+)
+
+py_test(
+    name = "mnist_clusterable_layer_test",
+    srcs = ["mnist_clusterable_layer_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cluster",
+        # tensorflow dep1,
+    ],
+)
+
+py_test(
+    name = "mnist_clustering_test",
+    srcs = ["mnist_clustering_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cluster",
+        # tensorflow dep1,
     ],
 )
