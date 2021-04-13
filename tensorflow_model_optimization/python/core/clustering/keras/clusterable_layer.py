@@ -55,10 +55,8 @@ class ClusterableLayer:
 
     The returned class should be derived from AbstractClusteringAlgorithm and
     implements the function get_pulling_indices.
-
     This function is used to provide a special lookup function for the custom
     weights.
-
     It reshapes and tile centroids the same way as the weights. This allows us
     to find pulling indices efficiently.
 

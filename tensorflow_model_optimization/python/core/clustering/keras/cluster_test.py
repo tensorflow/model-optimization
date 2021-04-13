@@ -128,7 +128,6 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.keras_custom_layer = KerasCustomLayer()
     self.clusterable_layer = MyClusterableLayer(10)
 
-
     clustering_registry.ClusteringLookupRegistry.register_new_implementation(
         {
             CustomClusterableLayer: {

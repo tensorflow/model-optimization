@@ -23,7 +23,6 @@ from tensorflow_model_optimization.python.core.clustering.keras import clusterin
 AbstractClusteringAlgorithm = clustering_algorithm.AbstractClusteringAlgorithm
 
 
-
 class ConvolutionalWeightsCA(AbstractClusteringAlgorithm):
   """Look-ups for convolutional kernels, e.g. tensors with shape [B,W,H,C]."""
 
@@ -79,6 +78,7 @@ class BiasWeightsCA(AbstractClusteringAlgorithm):
                                 axis=1)
 
     return pulling_indices
+
 
 class ClusteringLookupRegistry(object):
   """Map of layers to strategy.
