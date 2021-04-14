@@ -212,7 +212,9 @@ class _InferenceWrapper(tf.keras.layers.Wrapper):
           *training_tensors)
       weights = []
       for t in compressed_tensors:
-        weight = self.add_weight(name='TODO', shape=t.shape)
+        weight = self.add_weight(
+            name='TODO', dtype=t.dtype, shape=t.shape,
+            initializer=tf.keras.initializers.Constant(t))
         weights.append(weight)
 
       self.compressed_weights[attr_name] = weights
