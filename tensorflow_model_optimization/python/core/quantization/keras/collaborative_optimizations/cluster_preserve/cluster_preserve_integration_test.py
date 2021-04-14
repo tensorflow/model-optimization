@@ -43,7 +43,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
   def compile_and_fit(self, model):
     """ Here we compile and fit the model."""
     model.compile(
-        loss=tf.keras.losses.categorical_crossentropy,
+        loss=tf.keras.losses.CategoricalCrossentropy(),
         optimizer='adam',
         metrics=['accuracy'],
     )
@@ -95,7 +95,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     # Start the sparsity-aware clustering
     clustering_params = {
-        'number_of_clusters': 4,
+        'number_of_clusters': 6,
         'cluster_centroids_init': cluster_config.CentroidInitialization.LINEAR,
         'preserve_sparsity': True
     }
