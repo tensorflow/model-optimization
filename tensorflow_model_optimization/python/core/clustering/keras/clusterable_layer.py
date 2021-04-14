@@ -46,7 +46,7 @@ class ClusterableLayer:
     """
     raise NotImplementedError('Must be implemented in subclasses.')
 
-  def get_clusterable_algorithm(self, weight_name):
+  def get_clusterable_algorithm(self, weight_name):  # pylint: disable=unused-argument
     """Returns class with the clustering algorithm for the given weight_name.
 
     This function needs to be implemented for the customerable layers.
@@ -55,7 +55,8 @@ class ClusterableLayer:
 
     The returned class should be derived from AbstractClusteringAlgorithm and
     implements the function get_pulling_indices.
-    This function is used to provide a special lookup function for the custom weights.
+    This function is used to provide a special lookup function for the custom
+    weights.
     It reshapes and tile centroids the same way as the weights. This allows us
     to find pulling indices efficiently.
 

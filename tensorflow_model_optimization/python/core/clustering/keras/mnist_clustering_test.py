@@ -12,14 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for a simple convnet with clusterable layer on the MNIST dataset. """
+"""Tests for a simple convnet with clusterable layer on the MNIST dataset."""
 
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
-from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
-from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 
 tf.random.set_seed(42)
 
@@ -29,10 +27,9 @@ EPOCHS = 7
 EPOCHS_FINE_TUNING = 4
 NUMBER_OF_CLUSTERS = 8
 
+
 def _build_model():
-  """
-  Builds simple CNN model.
-  """
+  """Builds a simple CNN model."""
   i = tf.keras.layers.Input(shape=(28, 28), name='input')
   x = tf.keras.layers.Reshape((28, 28, 1))(i)
   x = tf.keras.layers.Conv2D(
@@ -44,6 +41,7 @@ def _build_model():
 
   model = tf.keras.Model(inputs=[i], outputs=[output])
   return model
+
 
 def _get_dataset():
   mnist = tf.keras.datasets.mnist
@@ -64,13 +62,16 @@ def _train_model(model):
 
   model.fit(x_train, y_train, epochs=EPOCHS)
 
+
 def _cluster_model(model, number_of_clusters):
 
   (x_train, y_train), _ = _get_dataset()
 
   clustering_params = {
-    'number_of_clusters': NUMBER_OF_CLUSTERS,
-    'cluster_centroids_init': cluster_config.CentroidInitialization.KMEANS_PLUS_PLUS
+      'number_of_clusters':
+          number_of_clusters,
+      'cluster_centroids_init':
+          cluster_config.CentroidInitialization.KMEANS_PLUS_PLUS
   }
 
   # Cluster model
@@ -81,23 +82,21 @@ def _cluster_model(model, number_of_clusters):
   opt = tf.keras.optimizers.Adam(learning_rate=1e-5)
 
   clustered_model.compile(
-  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-  optimizer=opt,
-  metrics=['accuracy'])
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      optimizer=opt,
+      metrics=['accuracy'])
 
   # Fine-tune clustered model
-  clustered_model.fit(
-      x_train,
-      y_train,
-      epochs=EPOCHS_FINE_TUNING)
+  clustered_model.fit(x_train, y_train, epochs=EPOCHS_FINE_TUNING)
 
   stripped_model = cluster.strip_clustering(clustered_model)
   stripped_model.compile(
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=opt,
-    metrics=['accuracy'])
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      optimizer=opt,
+      metrics=['accuracy'])
 
   return stripped_model
+
 
 def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
   layer = stripped_model.layers[layer_nr]
@@ -107,22 +106,23 @@ def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
 
   return nr_of_unique_weights
 
+
 class FunctionalTest(tf.test.TestCase):
 
   def testMnist(self):
-    """ In this test we test that 'kernel' weights
-    are clustered.
-    """
+    """In this test we test that 'kernel' weights are clustered."""
     model = _build_model()
     _train_model(model)
 
-    # Checks that number of original weights('kernel') is greater than the number of clusters
+    # Checks that number of original weights('kernel') is greater than the
+    # number of clusters
     nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'kernel')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     # Record the number of unique values of 'bias'
     nr_of_bias_weights = _get_number_of_unique_weights(model, -1, 'bias')
     self.assertGreater(nr_of_bias_weights, NUMBER_OF_CLUSTERS)
+
     _, (x_test, y_test) = _get_dataset()
 
     results_original = model.evaluate(x_test, y_test)
@@ -138,8 +138,10 @@ class FunctionalTest(tf.test.TestCase):
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     # checks that we don't cluster 'bias' weights
-    clustered_nr_of_bias_weights = _get_number_of_unique_weights(clustered_model, -1, 'bias')
+    clustered_nr_of_bias_weights = _get_number_of_unique_weights(
+        clustered_model, -1, 'bias')
     self.assertEqual(nr_of_bias_weights, clustered_nr_of_bias_weights)
+
 
 if __name__ == '__main__':
   tf.test.main()

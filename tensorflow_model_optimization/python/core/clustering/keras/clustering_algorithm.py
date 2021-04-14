@@ -23,30 +23,31 @@ from tensorflow_model_optimization.python.core.clustering.keras.cluster_config i
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractClusteringAlgorithm(object):
-  """
-  The reason to have an abstract class here is to be able to implement highly
-  efficient vectorised look-ups.
+  """Abstrac class to implement highly efficient vectorised look-ups.
 
-  We do not utilise looping for that purpose, instead we `smartly` reshape and
-  tile arrays. The trade-off is that we are potentially using way more memory
-  than we would have if looping is used.
+    We do not utilise looping for that purpose, instead we `smartly` reshape and
+    tile arrays. The trade-off is that we are potentially using way more memory
+    than we would have if looping is used.
 
-  Each class that inherits from this class is supposed to implement a particular
-  lookup function for a certain shape.
+    Each class that inherits from this class is supposed to implement a
+    particular lookup function for a certain shape.
 
-  For example, look-ups for 2D table will be different in the case of 3D.
+    For example, look-ups for 2D table will be different in the case of 3D.
   """
 
   def __init__(self,
                clusters_centroids,
                cluster_gradient_aggregation=GradientAggregation.SUM,
                ):
-    """
-    For generating clustered tensors we will need two things: cluster centroids
-    and the final shape tensor must have.
-    :param clusters_centroids: An array of shape (N,) that contains initial
+    """Generating clustered tensors.
+
+    For generating clustered tensors we will need two things: cluster
+    centroids and the final shape tensor must have.
+
+    Args:
+      clusters_centroids: An array of shape (N,) that contains initial
       values of clusters centroids.
-    :param cluster_gradient_aggregation: An enum that specify the aggregation
+      cluster_gradient_aggregation: An enum that specify the aggregation
       method of the cluster gradient.
     """
     if not isinstance(clusters_centroids, tf.Variable):
@@ -57,22 +58,28 @@ class AbstractClusteringAlgorithm(object):
 
   @abc.abstractmethod
   def get_pulling_indices(self, weight):
-    """
-    Takes a weight(can be 1D, 2D or ND) and creates tf.int32 array of the same
-    shape that will hold indices of cluster centroids clustered arrays elements
-    will be pulled from.
+    """Returns indices of closest cluster centroids.
 
-    In the current setup pulling indices are meant to be created once and used
-    everywhere
-    :param weight: ND array of weights. For each weight in this array the
+    Takes a weight(can be 1D, 2D or ND) and creates tf.int32 array of the
+    same shape that will hold indices of cluster centroids clustered arrays
+    elements will be pulled from.
+
+    In the current setup pulling indices are meant to be created once and
+    used everywhere
+
+    Args:
+      weight: ND array of weights. For each weight in this array the
       closest cluster centroids is found.
-    :return: ND array of the same shape as `weight` parameter of the type
+
+    Returns:
+      ND array of the same shape as `weight` parameter of the type
       tf.int32. The returned array contain weight lookup indices
     """
     pass
 
   def get_clustered_weight(self, pulling_indices, original_weight):
-    """
+    """Returns clustered weights.
+
     Take indices (pulling_indices) as input and then form a new array
     by gathering cluster centroids based on the given pulling indices.
     The original gradients will also be modified in two ways:
@@ -80,12 +87,14 @@ class AbstractClusteringAlgorithm(object):
       each cluster.
     - By adding an estimated gradient onto the non-differentiable
       original weight.
-    :param pulling_indices: a tensor of indices used for lookup of the same
-      size as original_weight.
-    :param original_weight: the original weights of the wrapped layer.
-    :return: array with the same shape as `pulling_indices`. Each array element
-      is a member of self.cluster_centroids. The backward pass is modified by
-      adding custom gradients.
+
+    Args:
+      pulling_indices: an array of indices used for lookup.
+      original_weight: the original weights of the wrapped layer.
+    Returns:
+      An array with the same shape as `pulling_indices`. Each array element
+      is a member of self.cluster_centroids. The backward pass is modified
+      by adding custom gradients.
     """
 
     @tf.custom_gradient

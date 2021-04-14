@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for a simple convnet with clusterable layer on the MNIST dataset. """
+"""Tests for a simple convnet with clusterable layer on the MNIST dataset."""
 
 import tensorflow as tf
 
@@ -38,12 +38,14 @@ class MyDenseLayer(keras.layers.Dense, clusterable_layer.ClusterableLayer):
     # Cluster kernel and bias.
     return [('kernel', self.kernel), ('bias', self.bias)]
 
+
 class ClusterableWeightsCA(clustering_algorithm.AbstractClusteringAlgorithm):
+  """This class provides a special lookup function for the the weights 'w'.
+
+  It reshapes and tile centroids the same way as the weights. This allows us
+  to find pulling indices efficiently.
   """
-    This class provided a special lookup function for the the weights 'w'.
-    It reshapes and tile centroids the same way as the weights. This allows us
-    to find pulling indices efficiently.
-  """
+
   def get_pulling_indices(self, weight):
     clst_num = self.cluster_centroids.shape[0]
     tiled_weights = tf.tile(tf.expand_dims(weight, axis=2), [1, 1, clst_num])
@@ -53,12 +55,14 @@ class ClusterableWeightsCA(clustering_algorithm.AbstractClusteringAlgorithm):
 
     # We find the nearest cluster centroids and store them so that ops can build
     # their kernels upon it
-    pulling_indices = tf.argmin(tf.abs(tiled_weights - tiled_cluster_centroids),
-                                axis=2)
+    pulling_indices = tf.argmin(
+        tf.abs(tiled_weights - tiled_cluster_centroids), axis=2)
 
     return pulling_indices
 
-class MyClusterableLayer(keras.layers.Layer, clusterable_layer.ClusterableLayer):
+
+class MyClusterableLayer(keras.layers.Layer,
+                         clusterable_layer.ClusterableLayer):
 
   def __init__(self, units=32, **kwargs):
     super(MyClusterableLayer, self).__init__(**kwargs)
@@ -66,15 +70,12 @@ class MyClusterableLayer(keras.layers.Layer, clusterable_layer.ClusterableLayer)
 
   def build(self, input_shape):
     self.w = self.add_weight(
-      shape=(input_shape[-1], self.units),
-      initializer="random_normal",
-      trainable=True,
+        shape=(input_shape[-1], self.units),
+        initializer='random_normal',
+        trainable=True,
     )
     self.b = self.add_weight(
-      shape=(self.units,),
-      initializer="random_normal",
-      trainable=False
-    )
+        shape=(self.units,), initializer='random_normal', trainable=False)
     self.built = True
 
   def call(self, inputs):
@@ -90,18 +91,16 @@ class MyClusterableLayer(keras.layers.Layer, clusterable_layer.ClusterableLayer)
     return [('w', self.w)]
 
   def get_clusterable_algorithm(self, weight_name):
-    """ Returns clustering algorithm for the custom weights 'w'.
-    """
+    """Returns clustering algorithm for the custom weights 'w'."""
     if weight_name == 'w':
       return ClusterableWeightsCA
     else:
       # We don't cluster other weights.
       return None
 
+
 def _build_model():
-  """
-  Builds model with MyDenseLayer.
-  """
+  """Builds model with MyDenseLayer."""
   i = tf.keras.layers.Input(shape=(28, 28), name='input')
   x = tf.keras.layers.Reshape((28, 28, 1))(i)
   x = tf.keras.layers.Conv2D(
@@ -114,10 +113,9 @@ def _build_model():
   model = tf.keras.Model(inputs=[i], outputs=[output])
   return model
 
+
 def _build_model_2():
-  """
-  Builds model with MyClusterableLayer layer.
-  """
+  """Builds model with MyClusterableLayer layer."""
   i = tf.keras.layers.Input(shape=(28, 28), name='input')
   x = tf.keras.layers.Reshape((28, 28, 1))(i)
   x = tf.keras.layers.Conv2D(
@@ -129,6 +127,7 @@ def _build_model_2():
 
   model = tf.keras.Model(inputs=[i], outputs=[output])
   return model
+
 
 def _get_dataset():
   mnist = tf.keras.datasets.mnist
@@ -149,13 +148,16 @@ def _train_model(model):
 
   model.fit(x_train, y_train, epochs=EPOCHS)
 
+
 def _cluster_model(model, number_of_clusters):
 
   (x_train, y_train), _ = _get_dataset()
 
   clustering_params = {
-    'number_of_clusters': NUMBER_OF_CLUSTERS,
-    'cluster_centroids_init': cluster_config.CentroidInitialization.DENSITY_BASED
+      'number_of_clusters':
+          number_of_clusters,
+      'cluster_centroids_init':
+          cluster_config.CentroidInitialization.DENSITY_BASED
   }
 
   # Cluster model
@@ -166,24 +168,21 @@ def _cluster_model(model, number_of_clusters):
   opt = tf.keras.optimizers.Adam(learning_rate=1e-5)
 
   clustered_model.compile(
-  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-  optimizer=opt,
-  metrics=['accuracy'])
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      optimizer=opt,
+      metrics=['accuracy'])
 
   # Fine-tune clustered model
-  clustered_model.fit(
-      x_train,
-      y_train,
-      epochs=EPOCHS_FINE_TUNING)
+  clustered_model.fit(x_train, y_train, epochs=EPOCHS_FINE_TUNING)
 
   stripped_model = cluster.strip_clustering(clustered_model)
-
   stripped_model.compile(
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer=opt,
-    metrics=['accuracy'])
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      optimizer=opt,
+      metrics=['accuracy'])
 
   return stripped_model
+
 
 def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
   layer = stripped_model.layers[layer_nr]
@@ -193,23 +192,26 @@ def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
 
   return nr_of_unique_weights
 
+
 class FunctionalTest(tf.test.TestCase):
 
   def testMnistMyDenseLayer(self):
-    """ In this test we test a model with a customerable layer that
-    is derived from Dense layer. This customerable layer
-    (see MyDenseLayer definition above) provides the function
-    get_clusterable_weights() so that both 'kernel' weights
-    as well as 'bias' weights are clustered.
+    """Test model with a custom clusterable layer derived from Dense.
+
+    This customerable layer (see MyDenseLayer definition above) provides the
+    function get_clusterable_weights() so that both 'kernel' weights as well
+    as 'bias' weights are clustered.
     """
     model = _build_model()
     _train_model(model)
 
-    # Checks that number of original weights('kernel') is greater than the number of clusters
+    # Checks that number of original weights('kernel') is greater than the
+    # number of clusters.
     nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'kernel')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
-    # Checks that number of original weights('bias') is greater than the number of clusters
+    # Checks that number of original weights('bias') is greater than the number
+    # of clusters
     nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'bias')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
@@ -233,18 +235,20 @@ class FunctionalTest(tf.test.TestCase):
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
   def testMnistClusterableLayer(self):
-    """ We test the keras custom layer with the provided
-      clustering algorithm (see MyClusterableLayer above).
-      We cluster only 'w' weights and the class ClusterableWeightsCA
-      provides the function get_pulling_indices for the
-      layer-out of 'w' weights.
+    """Test keras custom layer.
 
-      We skip evaluation in this test as it takes some time.
+    We test the keras custom layer with the provided clustering algorithm
+    (see MyClusterableLayer above). We cluster only 'w' weights and the class
+    ClusterableWeightsCA provides the function get_pulling_indices for the
+    layer-out of 'w' weights.
+
+    We skip evaluation in this test as it takes some time.
     """
     model = _build_model_2()
     _train_model(model)
 
-    # Checks that number of original weights 'w' is greater than the number of clusters.
+    # Checks that number of original weights 'w' is greater than the number
+    # of clusters.
     nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'w')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 

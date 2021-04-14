@@ -15,8 +15,8 @@
 """Tests for keras ClusterWeights wrapper API."""
 
 import itertools
-import tempfile
 import os
+import tempfile
 
 from absl.testing import parameterized
 import tensorflow as tf
@@ -265,8 +265,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     assert_all_weights_associated(l.layer.kernel, centroid_index=1)
 
   def testSameWeightsAreReturnedBeforeAndAfterSerialisation(self):
-    """Verify that the weights of a cluster_wrapper are the same
-    before and after serialisation."""
+    """Verify weights of cluster_wrapper are the same after serialisation."""
     # Create a dummy layer for this test
     input_shape = (1, 2,)
     original_layer = cluster_wrapper.ClusterWeights(
@@ -286,27 +285,28 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       keras_file = os.path.join(tmp_dir_name, 'keras_model')
       keras.models.save_model(original_model, keras_file)
       with cluster.cluster_scope():
-        loaded_model = keras.models.load_model(keras_file)
+        loaded_layer = keras.models.load_model(keras_file).layers[0]
 
-    def assertListOfVariablesAllEqual(l1, l2):
-      assert len(l1) == len(l2), \
-        "lists l1 and l2 are not equal: \n l1={l1} \n l2={l2}".format(
-          l1=[v.name for v in l1],
-          l2=[v.name for v in l2])
+    def assert_list_of_variables_all_equal(l1, l2):
+      self.assertLen(
+          l1, len(l2),
+          'lists l1 and l2 are not equal: \n l1={l1} \n l2={l2}'.format(
+              l1=[v.name for v in l1],
+              l2=[v.name for v in l2]))
 
       name_to_var_from_l1 = {var.name: var for var in l1}
       for var2 in l2:
+        self.assertIn(var2.name, name_to_var_from_l1)
         arr1 = name_to_var_from_l1[var2.name].numpy()
         arr2 = var2.numpy()
         self.assertAllEqual(arr1, arr2)
 
     # Check that trainable_weights and non_trainable_weights are the same
     # in the original layer and loaded layer
-    loaded_layer = loaded_model.layers[0]
-    assertListOfVariablesAllEqual(original_layer.trainable_weights,
-                                  loaded_layer.trainable_weights)
-    assertListOfVariablesAllEqual(original_layer.non_trainable_weights,
-                                  loaded_layer.non_trainable_weights)
+    assert_list_of_variables_all_equal(original_layer.trainable_weights,
+                                       loaded_layer.trainable_weights)
+    assert_list_of_variables_all_equal(original_layer.non_trainable_weights,
+                                       loaded_layer.non_trainable_weights)
 
 if __name__ == '__main__':
   test.main()

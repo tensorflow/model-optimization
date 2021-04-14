@@ -22,7 +22,7 @@ from tensorflow_model_optimization.python.core.clustering.keras.cluster import s
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 
 from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import CentroidInitialization
-from tensorflow_model_optimization.python.core.clustering.keras.clustering_callbacks import ClusteringSummaries
 from tensorflow_model_optimization.python.core.clustering.keras.clustering_algorithm import AbstractClusteringAlgorithm
+from tensorflow_model_optimization.python.core.clustering.keras.clustering_callbacks import ClusteringSummaries
 from tensorflow_model_optimization.python.core.clustering.keras.clusterable_layer import ClusterableLayer
 # pylint: enable=g-bad-import-order
