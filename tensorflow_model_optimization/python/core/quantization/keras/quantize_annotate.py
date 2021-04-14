@@ -87,8 +87,12 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
         hasattr(layer, '_batch_input_shape')):
       self._batch_input_shape = self.layer._batch_input_shape  # pylint: disable=protected-access
 
-  def call(self, inputs, training=None):
-    return self.layer.call(inputs)
+  def call(self, *args, **kwargs):
+    # TODO(b/185306646): Explicitly wants to pass training argument for the
+    # layer. Currently, we remove training argument.
+    if 'training' in kwargs:
+      del kwargs['training']
+    return self.layer.call(*args, **kwargs)
 
   def get_config(self):
     base_config = super(QuantizeAnnotate, self).get_config()
