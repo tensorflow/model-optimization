@@ -37,6 +37,7 @@ class WeightCompressor(metaclass=abc.ABCMeta):
 
      This interface is a purely functional one.
   """
+  update_ops = []  # type: List
 
   # TODO(tfmot): Consider separate from algorithm API for custom layer supports.
   def get_compressible_weights(
@@ -103,19 +104,40 @@ class WeightCompressor(metaclass=abc.ABCMeta):
        tf.Tensor to set the compressible weight to.
     """
 
-  def update_training_weight(
-      self, training_weight: tf.Tensor, tensor: tf.Tensor):
-    """Update a training weight to a given tensor value.
+  def init_update_ops(self, tensor_weight_pairs):
+    self.update_ops = []
+    self.tensor_weight_pairs = tensor_weight_pairs
 
-    This method is for the case that training weight should update to a specific
-    value not from the model optimizer. It will throw an error if it can't
-    find the training weight.
+  def update_training_weight(
+      self, training_weight: tf.Tensor, value: tf.Tensor):
+    """Add training weight assign op to the model update list.
+
+     This method is for the case that training weight should update to a
+    specific value not from the model optimizer. It will throw an error if it
+    can't find the training weight.
+
+     This method should called in project_training_weights. During the training,
+    We collect all update_training_weight calls and make an UpdateOp for each
+    call. Finally, we put all these update ops to model.add_update.
 
     Args:
       training_weight: tf.Tensor representing a training weight.
-      tensor: tf.Tensor representing a value to be assigned to the training
+      value: tf.Tensor representing a value to be assigned to the training
         weight.
+    Raises:
+      ValueError if it can't find the training weight.
     """
+    for tensor, weight in self.tensor_weight_pairs:
+      if training_weight is tensor:
+        self.update_ops.append(weight.assign(value))
+        return
+
+    raise ValueError('Training weight not found. Please call '
+                     'the update_training_weight with given training '
+                     'weight tensor.')
+
+  def get_update_ops(self):
+    return self.update_ops
 
   def compress_training_weights(
       self, *training_weights: tf.Tensor) -> List[tf.Tensor]:
