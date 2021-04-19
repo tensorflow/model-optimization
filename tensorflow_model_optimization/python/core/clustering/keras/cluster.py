@@ -18,6 +18,7 @@ from tensorflow import keras
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
+from tensorflow_model_optimization.python.core.clustering.keras.clustering_registry import ClusteringRegistry
 
 k = keras.backend
 CustomObjectScope = keras.utils.CustomObjectScope
@@ -236,6 +237,14 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
       return layer
     if isinstance(layer, InputLayer):
       return layer.__class__.from_config(layer.get_config())
+    if isinstance(layer, keras.layers.RNN):
+      return cluster_wrapper.ClusterWeightsRNN(
+        layer,
+        number_of_clusters,
+        cluster_centroids_init,
+        preserve_sparsity,
+        **kwargs,
+      )
 
     return cluster_wrapper.ClusterWeights(layer, number_of_clusters,
                                           cluster_centroids_init,
@@ -300,9 +309,10 @@ def strip_clustering(model):
 
       # Construct a list of weights to initialize the clean layer
       updated_weights = layer.layer.get_weights()  # non clusterable weights only
+
       for position_variable, weight_name in layer.position_original_weights.items():
         # Add the clustered weights at the correct position
-        clustered_weight = getattr(layer.layer, weight_name)
+        clustered_weight = layer.get_weight_from_layer(weight_name)
         updated_weights.insert(position_variable, clustered_weight)
 
       # Construct a clean layer with the updated weights
