@@ -52,9 +52,11 @@ if release:
 else:
   # Nightly releases use date-based versioning of the form
   # '0.0.1.dev20180305'
+  # Edit: will give version of the form
+  # '0.0.1.dev20180305215623'
   project_name = 'tf-model-optimization-nightly'
-  datestring = datetime.datetime.now().strftime('%Y%m%d')
-  __version__ += datestring
+  datetimestring = datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+  __version__ += datetimestring
 
 
 class BinaryDistribution(Distribution):
