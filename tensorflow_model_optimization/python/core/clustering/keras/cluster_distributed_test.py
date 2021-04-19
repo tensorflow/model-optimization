@@ -24,6 +24,7 @@ from tensorflow_model_optimization.python.core.keras import test_utils as keras_
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
+from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 
 keras = tf.keras
 CentroidInitialization = cluster_config.CentroidInitialization
@@ -63,7 +64,7 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
   def testClusterSimpleDenseModel(self, distribution, clustering):
     """End-to-end test."""
     with distribution.scope():
-      model = cluster._cluster_weights(
+      model = experimental_cluster.cluster_weights(
           keras_test_utils.build_simple_dense_model(), **clustering)
       model.compile(
           loss='categorical_crossentropy',

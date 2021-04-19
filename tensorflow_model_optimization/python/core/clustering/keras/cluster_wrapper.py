@@ -113,9 +113,6 @@ class ClusterWeights(Wrapper):
     # Stores the pairs of weight names and their respective sparsity masks
     self.sparsity_weights_masks = {}
 
-    # Stores the pairs of weight names and the zero centroids
-    self.zero_idx = {}
-
     # Map weight names to original clusterable weights variables
     # Those weights will still be updated during backpropagation
     self.original_clusterable_weights = {}
@@ -217,8 +214,6 @@ class ClusterWeights(Wrapper):
         self.sparsity_weights_masks[weight_name] = (
             tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
         )
-        self.zero_idx[weight_name] = tf.argmin(
-            tf.abs(cluster_centroids), axis=-1)
 
 
   def update_clustered_weights_associations(self):

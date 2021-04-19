@@ -175,6 +175,7 @@ py_test(
         ":cluster",
         "//tensorflow_model_optimization/python/core/keras:test_utils",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
     ],
 )
 
