@@ -37,7 +37,7 @@ class MyDenseLayer(keras.layers.Dense, clusterable_layer.ClusterableLayer):
     return [('kernel', self.kernel), ('bias', self.bias)]
 
 
-class ClusterableWeightsCA(clustering_algorithm.AbstractClusteringAlgorithm):
+class ClusterableWeightsCA(clustering_algorithm.ClusteringAlgorithm):
   """This class provides a special lookup function for the the weights 'w'.
 
   It reshapes and tile centroids the same way as the weights. This allows us

@@ -84,12 +84,33 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
     """
     Verifies that the gradients of DenseWeightsCA work as expected.
     """
+<<<<<<< HEAD
     ca = clustering_registry.DenseWeightsCA(clustering_centroids)
     self._check_gradients(ca, weight, pulling_indices, expected_output)
+=======
+    clustering_centroids = tf.Variable([-0.800450444, 0.864694357])
+    weight = tf.constant(
+        [[0.220442653, 0.854694366, 0.0328432359, 0.506857157],
+        [0.0527950861, -0.659555554, -0.849919915, -0.54047],
+        [-0.305815876, 0.0865516588, 0.659202456, -0.355699599],
+        [-0.348868281, -0.662001, 0.6171574, -0.296582848]]
+    )
+
+    clustering_algo = clustering_registry.ClusteringAlgorithm(
+        clustering_centroids, cluster_gradient_aggregation
+    )
+    self._check_gradients_clustered_weight(
+      clustering_algo,
+      weight,
+      pulling_indices,
+      expected_grad_centroids,
+    )
+>>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 
   @parameterized.parameters(
       ([-1, 1], [[0, 0, 1], [1, 1, 1]], [[-1, -1, 1], [1, 1, 1]]),
       ([-1, 0, 1], [[1, 1, 1], [1, 1, 1]], [[0, 0, 0], [0, 0, 0]]),
+<<<<<<< HEAD
   )
   def testDenseWeightsCA(self,
                          clustering_centroids,
@@ -102,18 +123,30 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
     self._pull_values(ca, pulling_indices, expected_output)
 
   @parameterized.parameters(
+=======
+>>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
       ([-1, 1], [0, 0, 0, 0, 1], [-1, -1, -1, -1, 1]),
       ([0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3]),
   )
-  def testBiasWeightsCA(self,
-                        clustering_centroids,
-                        pulling_indices,
-                        expected_output):
+  def testClusteringAlgorithmPullIndices(self,
+                                         clustering_centroids,
+                                         pulling_indices,
+                                         expected_output):
     """
-    Verifies that BiasWeightsCA works as expected.
+    Verifies that get_pull_indices from ClusteringAlgorithm works as expected,
+    for tensor layout as for dense layer or bias layer.
     """
+<<<<<<< HEAD
     ca = clustering_registry.BiasWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
+=======
+    clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
+    clustering_algo = clustering_registry.ClusteringAlgorithm(
+        clustering_centroids, GradientAggregation.SUM
+    )
+    self._check_pull_values(clustering_algo, pulling_indices, expected_output)
+>>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
+
 
   @parameterized.parameters(
       ([0.0, 3.0],
@@ -126,6 +159,7 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
        [1, 1, 1, 1, 1, 1, 1, 1, 1]
       )
   )
+<<<<<<< HEAD
   def testConvolutionalWeightsCAGrad(self,
                                      clustering_centroids,
                                      weight,
@@ -136,6 +170,30 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
     """
     ca = clustering_registry.DenseWeightsCA(clustering_centroids)
     self._check_gradients(ca, weight, pulling_indices, expected_output)
+=======
+  def testConvolutionalClusteringAlgorithmGrad(self,
+                                               cluster_gradient_aggregation,
+                                               pulling_indices,
+                                               expected_grad_centroids,
+  ):
+    """Verifies that the gradients of convolutional layer work as expected."""
+    clustering_centroids = tf.Variable([0.0, 3.0], dtype=tf.float32)
+    weight = tf.constant(
+        [[0.1, 0.1, 0.1],
+         [3.0, 3.0, 3.0],
+         [0.2, 0.2, 0.2]])
+
+
+    clustering_algo = clustering_registry.ClusteringAlgorithm(
+        clustering_centroids, cluster_gradient_aggregation
+    )
+    self._check_gradients_clustered_weight(
+      clustering_algo,
+      weight,
+      pulling_indices,
+      expected_grad_centroids,
+    )
+>>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 
 
   @parameterized.parameters(
@@ -148,11 +206,20 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
                                  clustering_centroids,
                                  pulling_indices,
                                  expected_output):
+<<<<<<< HEAD
     """
     Verifies that ConvolutionalWeightsCA works as expected.
     """
     ca = clustering_registry.ConvolutionalWeightsCA(clustering_centroids)
     self._pull_values(ca, pulling_indices, expected_output)
+=======
+    """Verifies that ClusteringAlgorithm works as expected."""
+    clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
+    clustering_algo = clustering_registry.ClusteringAlgorithm(
+        clustering_centroids, GradientAggregation.SUM
+    )
+    self._check_pull_values(clustering_algo, pulling_indices, expected_output)
+>>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 
 
 class CustomLayer(layers.Layer):
@@ -166,6 +233,7 @@ class CustomLayer(layers.Layer):
   def call(self, inputs):
     return tf.matmul(inputs, self.weights)
 
+<<<<<<< HEAD
 class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
   """Unit tests for the ClusteringLookupRegistry class."""
 
@@ -201,6 +269,8 @@ class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
       ClusteringLookupRegistry.get_clustering_impl(layers.Dense(10),
                                                    'no_such_weight')
 
+=======
+>>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 
 class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
                                          clusterable_layer.ClusterableLayer):
@@ -234,6 +304,7 @@ class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
       ClusteringLookupRegistry.get_clustering_impl(
           KerasCustomLayerClusterableInvalid(), 'w')
 
+<<<<<<< HEAD
   @parameterized.parameters(
       (layers.Conv3D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
       (layers.Conv2D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
@@ -293,6 +364,8 @@ class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
       })
 
 
+=======
+>>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 class ClusterRegistryTest(test.TestCase):
   """Unit tests for the ClusteringRegistry class."""
 

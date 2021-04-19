@@ -20,8 +20,8 @@ import tensorflow as tf
 
 
 @six.add_metaclass(abc.ABCMeta)
-class AbstractClusteringAlgorithm(object):
-  """Abstrac class to implement highly efficient vectorised look-ups.
+class ClusteringAlgorithm(object):
+  """Class to implement highly efficient vectorised look-ups.
 
     We do not utilise looping for that purpose, instead we `smartly` reshape and
     tile arrays. The trade-off is that we are potentially using way more memory
@@ -45,7 +45,6 @@ class AbstractClusteringAlgorithm(object):
     """
     self.cluster_centroids = clusters_centroids
 
-  @abc.abstractmethod
   def get_pulling_indices(self, weight):
     """Returns indices of closest cluster centroids.
 
@@ -54,7 +53,7 @@ class AbstractClusteringAlgorithm(object):
     elements will be pulled from.
 
     In the current setup pulling indices are meant to be created once and
-    used everywhere
+    used everywhere.
 
     Args:
       weight: ND array of weights. For each weight in this array the
@@ -64,7 +63,13 @@ class AbstractClusteringAlgorithm(object):
       ND array of the same shape as `weight` parameter of the type
       tf.int32. The returned array contain weight lookup indices
     """
-    pass
+    # We find the nearest cluster centroids and store them so that ops can build
+    # their kernels upon it.
+    pulling_indices = tf.argmin(
+        tf.abs(tf.expand_dims(weight, axis=-1) - self.cluster_centroids), axis=-1
+    )
+
+    return pulling_indices
 
   @tf.custom_gradient
   def add_custom_gradients(self, clst_weights, weights):
