@@ -90,3 +90,25 @@ py_test(
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
     ],
 )
+
+py_library(
+    name = "periodical_update_and_scheduling",
+    srcs = ["periodical_update_and_scheduling.py"],
+    srcs_version = "PY3",
+    deps = [
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+    ],
+)
+
+py_test(
+    name = "periodical_update_and_scheduling_test",
+    timeout = "long",
+    srcs = ["periodical_update_and_scheduling_test.py"],
+    python_version = "PY3",
+    deps = [
+        ":periodical_update_and_scheduling",
+        # numpy dep1,
+        # tensorflow dep1,
+    ],
+)
