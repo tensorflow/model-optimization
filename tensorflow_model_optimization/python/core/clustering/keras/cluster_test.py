@@ -216,9 +216,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testConv1DLayer(self):
-     """
-     Verifies that we can cluster a Conv1D layer.
-     """
+     """ Verifies that we can cluster a Conv1D layer."""
      input_shape =(4, 28, 1)
      wrapped_layer = self._build_clustered_layer_model(
          self.keras_conv1d_layer,
@@ -232,9 +230,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testConv2DLayer(self):
-     """
-     Verifies that we can cluster a Conv2D layer.
-     """
+     """ Verifies that we can cluster a Conv2D layer."""
      input_shape =(4, 28, 28, 1)
      wrapped_layer = self._build_clustered_layer_model(
          self.keras_conv2d_layer,
@@ -248,9 +244,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testConv3DLayer(self):
-     """
-     Verifies that we can cluster a Conv3D layer.
-     """
+     """ Verifies that we can cluster a Conv3D layer."""
      input_shape =(4, 28, 28, 28, 1)
      wrapped_layer = self._build_clustered_layer_model(
          self.keras_conv3d_layer,
