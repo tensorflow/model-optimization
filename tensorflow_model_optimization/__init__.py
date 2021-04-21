@@ -81,6 +81,7 @@ import sys as _sys
 
 # To ensure users only access the expected public API, the API structure is
 # created in the `api` directory. Import all api modules.
+from tensorflow_model_optimization.python.core import version
 # pylint: disable=wildcard-import
 from tensorflow_model_optimization.python.core.api import *
 # pylint: enable=wildcard-import
@@ -110,3 +111,5 @@ try:
 except NameError:
   pass
 # pylint: enable=undefined-variable
+
+__version__ = version.__version__

@@ -94,8 +94,12 @@ class SplitBySmallValueEncodingStage(encoding_stage.EncodingStageInterface):
     non_zero_x = encoded_tensors[self.ENCODED_VALUES_KEY]
 
     indices = tf.expand_dims(indices, 1)
-    shape = tf.cast(shape, indices.dtype)
-    decoded_x = tf.scatter_nd(indices=indices, updates=non_zero_x, shape=shape)
+
+    indices = tf.cast(indices, tf.int64)
+    shape = tf.cast(shape, tf.int64)
+    sparse_tensor = tf.SparseTensor(indices=indices, values=non_zero_x,
+                                    dense_shape=shape)
+    decoded_x = tf.sparse.to_dense(sparse_tensor)
 
     return decoded_x
 
