@@ -9,7 +9,8 @@
 *   Quantization aware training for (8b) fixed-point kernels and experimentation
     for <8b --
     [Launched](https://blog.tensorflow.org/2020/04/quantization-aware-training-with-tensorflow-model-optimization-toolkit.html)
-*   [WIP] Post training quantization for (8b) fixed-point RNNs
+*   Post training quantization for (8b) fixed-point RNNs --
+    [Launched](https://arxiv.org/abs/2101.05453)
 *   Quantization aware training for (8b) fixed-point RNNs
 *   [WIP] Quality and performance improvements to post training dynamic-range
     quantization
