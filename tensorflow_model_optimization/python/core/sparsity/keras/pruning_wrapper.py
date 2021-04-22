@@ -316,8 +316,7 @@ class PruneLowMagnitude(Wrapper):
         module_objects=globals(),
         custom_objects=custom_objects)
 
-    from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
-    layer = deserialize_layer(config.pop('layer'))
+    layer = keras.layers.deserialize(config.pop('layer'))
     config['layer'] = layer
 
     return cls(**config)
