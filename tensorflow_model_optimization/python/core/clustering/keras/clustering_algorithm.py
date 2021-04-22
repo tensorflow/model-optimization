@@ -21,7 +21,7 @@ import tensorflow as tf
 
 @six.add_metaclass(abc.ABCMeta)
 class AbstractClusteringAlgorithm(object):
-  """Abstrac class to implement highly efficient vectorised look-ups.
+  """Abstract class to implement highly efficient vectorised look-ups.
 
     We do not utilise looping for that purpose, instead we `smartly` reshape and
     tile arrays. The trade-off is that we are potentially using way more memory
