@@ -242,7 +242,9 @@ class PruneLowMagnitude(Wrapper):
       training = K.learning_phase()
 
     def increment_step():
-      return tf_compat.assign(self.pruning_step, self.pruning_step + 1)
+      with tf.control_dependencies(
+          [tf_compat.assign(self.pruning_step, self.pruning_step + 1)]):
+        return tf.no_op('update')
 
     def add_update():
       with tf.control_dependencies([
