@@ -144,10 +144,10 @@ class ClusterWeights(Wrapper):
   def _make_layer_name(layer):
     return '{}_{}'.format('cluster', layer.name)
 
-  def get_weight_of_child_layer(self, weight_name):
+  def get_weight_from_layer(self, weight_name):
     return getattr(self.layer, weight_name)
 
-  def set_weight_of_child_layer(self, weight_name, new_weight):
+  def set_weight_to_layer(self, weight_name, new_weight):
     setattr(self.layer, weight_name, new_weight)
 
   def build(self, input_shape):
@@ -159,7 +159,7 @@ class ClusterWeights(Wrapper):
       # Store the original weight in this wrapper
       # The child reference will be overridden in
       # update_clustered_weights_associations
-      original_weight = self.get_weight_of_child_layer(weight_name)
+      original_weight = self.get_weight_from_layer(weight_name)
       self.original_clusterable_weights[weight_name] = original_weight
       # Track the variable
       setattr(self, "original_weight_" + weight_name, original_weight)
@@ -248,7 +248,7 @@ class ClusterWeights(Wrapper):
             clustered_weights, self.sparsity_weights_masks[weight_name])
 
       # Replace the weights with their clustered counterparts
-      self.set_weight_of_child_layer(weight_name, clustered_weights)
+      self.set_weight_to_layer(weight_name, clustered_weights)
 
   def call(self, inputs, training=None, **kwargs):
     # Update cluster associations in order to set the latest weights
@@ -356,8 +356,8 @@ class WrapperSubclassedModel(keras.Model):
 class ClusterWeightsRNN(ClusterWeights):
   """This wrapper augments a keras RNN layer so that the weights can be clustered."""
 
-  def get_weight_of_child_layer(self, weight_name):
+  def get_weight_from_layer(self, weight_name):
     return getattr(self.layer.cell, weight_name)
 
-  def set_weight_of_child_layer(self, weight_name, new_weight):
+  def set_weight_to_layer(self, weight_name, new_weight):
     setattr(self.layer.cell, weight_name, new_weight)

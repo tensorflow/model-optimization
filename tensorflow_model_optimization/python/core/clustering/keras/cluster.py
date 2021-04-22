@@ -365,7 +365,7 @@ def strip_clustering(to_strip):
 
       for position_variable, weight_name in layer.position_original_weights.items():
         # Add the clustered weights at the correct position
-        clustered_weight = layer.get_weight_of_child_layer(weight_name)
+        clustered_weight = layer.get_weight_from_layer(weight_name)
         updated_weights.insert(position_variable, clustered_weight)
 
       # Construct a clean layer with the updated weights
