@@ -18,7 +18,7 @@
 # be used to reproduce errors locally by modifying WORKDIR to be
 # the top-level directory of the checked out TFMOT Github repository.
 
-# TODO(tfmot): switch to prebuilt Docker image to speed this up.
+# TODO(b/185727163): switch to prebuilt Docker image to speed this up.
 
 # Fail on any error.
 set -e

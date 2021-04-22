@@ -121,7 +121,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     }
 
   # TODO(pulkitb): Also assert correct weights are pruned.
-  # TODO(tfmot): this should not be verified in all the unit tests.
+  # TODO(b/185968817): this should not be verified in all the unit tests.
   # As long as there are a few unit tests for strip_pruning,
   # these checks are redundant.
   def _check_strip_pruning_matches_original(

@@ -15,7 +15,7 @@
 # An image for building prerequisites for testing TensorFlow Model Optimization
 # on ubuntu.
 #
-# TODO(tfmot): generalize to different versions of TensorFlow to
+# TODO(b/185727356): generalize to different versions of TensorFlow to
 # run CI against.
 #
 #  Build as follows:
