@@ -5,17 +5,6 @@ package(default_visibility = [
 licenses(["notice"])
 
 py_library(
-    name = "experimental",
-    srcs = [
-        "__init__.py",
-    ],
-    srcs_version = "PY3",
-    deps = [
-        ":cluster",
-    ],
-)
-
-py_library(
     name = "cluster",
     srcs = ["cluster.py"],
     srcs_version = "PY3",

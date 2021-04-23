@@ -13,7 +13,9 @@
 # limitations under the License.
 # ==============================================================================
 """Import API modules for Tensorflow Model Optimization."""
+# LINT.IfChange
 from tensorflow_model_optimization.python.core.api import clustering
 from tensorflow_model_optimization.python.core.api import experimental
 from tensorflow_model_optimization.python.core.api import quantization
 from tensorflow_model_optimization.python.core.api import sparsity
+# LINT.ThenChange(//tensorflow_model_optimization/__init__.py)

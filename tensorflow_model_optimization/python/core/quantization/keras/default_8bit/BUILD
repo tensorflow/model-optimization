@@ -5,15 +5,6 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
-    name = "default_8bit",
-    srcs = [
-        "__init__.py",
-    ],
-    srcs_version = "PY3",
-    deps = [],
-)
-
-py_library(
     name = "default_8bit_quantizers",
     srcs = [
         "default_8bit_quantizers.py",

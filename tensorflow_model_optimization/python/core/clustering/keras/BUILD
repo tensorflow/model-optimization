@@ -5,19 +5,6 @@ package(default_visibility = [
 licenses(["notice"])
 
 py_library(
-    name = "keras",
-    srcs = [
-        "__init__.py",
-    ],
-    srcs_version = "PY3",
-    deps = [
-        ":cluster",
-        ":clustering_callbacks",
-        "//tensorflow_model_optimization/python/core/clustering/keras/experimental",
-    ],
-)
-
-py_library(
     name = "cluster",
     srcs = ["cluster.py"],
     srcs_version = "PY3",

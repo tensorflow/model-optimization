@@ -1,19 +1,14 @@
+# buildifier: disable=same-origin-load
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
 ])
 
 licenses(["notice"])  # Apache 2.0
-
-py_strict_library(
-    name = "keras",
-    srcs = ["__init__.py"],
-    deps = [
-        ":compat",
-        ":utils",
-    ],
-)
 
 # TODO(alanchiao): split into test_utils and utils.
 py_strict_library(
@@ -55,7 +50,7 @@ py_strict_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "metrics_test",
     srcs = ["metrics_test.py"],
     python_version = "PY3",
@@ -63,5 +58,6 @@ py_test(
         ":metrics",
         # mock dep1,
         # tensorflow dep1,
+        # python/eager:monitoring tensorflow dep2,
     ],
 )

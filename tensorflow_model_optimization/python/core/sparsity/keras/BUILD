@@ -7,20 +7,6 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_strict_library(
-    name = "keras",
-    srcs = [
-        "__init__.py",
-    ],
-    srcs_version = "PY3",
-    deps = [
-        ":prunable_layer",
-        ":prune",
-        ":pruning_callbacks",
-        ":pruning_schedule",
-    ],
-)
-
-py_strict_library(
     name = "prune",
     srcs = ["prune.py"],
     srcs_version = "PY3",

@@ -6,22 +6,6 @@ package(default_visibility = [
 licenses(["notice"])  # Apache 2.0
 
 py_library(
-    name = "keras",
-    srcs = [
-        "__init__.py",
-    ],
-    srcs_version = "PY3",
-    deps = [
-        ":quantize",
-        # APIs are not exposed, but still needed for internal imports.
-        "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations",
-        "//tensorflow_model_optimization/python/core/quantization/keras/layers",
-        "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit",
-        "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations",
-    ],
-)
-
-py_library(
     name = "quant_ops",
     srcs = ["quant_ops.py"],
     srcs_version = "PY3",

@@ -14,7 +14,7 @@
 # ==============================================================================
 """Module containing clustering code built on Keras abstractions."""
 # pylint: disable=g-bad-import-order
-from tensorflow_model_optimization.python.core.clustering.keras import experimental
+from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster
 
 from tensorflow_model_optimization.python.core.clustering.keras.cluster import cluster_scope
 from tensorflow_model_optimization.python.core.clustering.keras.cluster import cluster_weights

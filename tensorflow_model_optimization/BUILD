@@ -5,6 +5,7 @@
 #  used to optimize machine learning models for deployment and execution.
 #
 #  https://github.com/tensorflow/model-optimization
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -12,17 +13,13 @@ licenses(["notice"])
 
 exports_files(["LICENSE"])
 
-py_library(
+py_strict_library(
     name = "tensorflow_model_optimization",
     srcs = ["__init__.py"],
     srcs_version = "PY3",
     deps = [
-        "//tensorflow_model_optimization/python",
+        "//tensorflow_model_optimization/python/core:version",
         "//tensorflow_model_optimization/python/core/api",
-        "//tensorflow_model_optimization/python/core/clustering",
-        "//tensorflow_model_optimization/python/core/keras:compat",
-        "//tensorflow_model_optimization/python/core/quantization",
-        "//tensorflow_model_optimization/python/core/sparsity",
     ],
 )
 

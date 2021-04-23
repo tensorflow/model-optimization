@@ -12,6 +12,8 @@ py_binary(
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
         "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/prune_preserve:default_8bit_prune_preserve_quantize_scheme",
-        "//tensorflow_model_optimization/python/core/sparsity/keras",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
     ],
 )
