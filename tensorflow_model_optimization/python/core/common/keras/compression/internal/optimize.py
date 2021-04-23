@@ -136,12 +136,17 @@ class _TrainingWrapper(tf.keras.layers.Wrapper):
       # TODO(tfmot): move constant folding prevention to the inference graph
       # only, since constant folding won't happen during training.
       training_weight_tensors = []
+      tensor_weight_pairs = []
       for v in self.training_weights[name]:
-        training_weight_tensors.append(
-            _prevent_constant_folding(v.read_value(), inputs))
+        tensor = _prevent_constant_folding(v.read_value(), inputs)
+        training_weight_tensors.append(tensor)
+        tensor_weight_pairs.append((tensor, v))
 
+      self.algorithm.init_update_ops(tensor_weight_pairs)
       weight_tensor = self.algorithm.project_training_weights(
           *training_weight_tensors)
+      # TODO(tfmot): Needs to check when this update is happen.
+      self.add_update(self.algorithm.get_update_ops())
       setattr(self.layer, attr_name, weight_tensor)
 
     # This assumes that all changes to the forward pass happen "prior" to
@@ -212,7 +217,9 @@ class _InferenceWrapper(tf.keras.layers.Wrapper):
           *training_tensors)
       weights = []
       for t in compressed_tensors:
-        weight = self.add_weight(name='TODO', shape=t.shape)
+        weight = self.add_weight(
+            name='TODO', dtype=t.dtype, shape=t.shape,
+            initializer=tf.keras.initializers.Constant(t))
         weights.append(weight)
 
       self.compressed_weights[attr_name] = weights

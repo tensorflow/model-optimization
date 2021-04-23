@@ -97,10 +97,10 @@ def _cluster_model(model, number_of_clusters):
 
   return stripped_model
 
-
-def _get_number_of_unique_weights(stripped_model, layer_nr, weights_nr):
-  weights_as_list = stripped_model.layers[layer_nr].get_weights(
-  )[weights_nr].reshape(-1,).tolist()
+def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
+  layer = stripped_model.layers[layer_nr]
+  weight = getattr(layer, weight_name)
+  weights_as_list = weight.numpy().reshape(-1, ).tolist()
   nr_of_unique_weights = len(set(weights_as_list))
 
   return nr_of_unique_weights
@@ -115,11 +115,11 @@ class FunctionalTest(tf.test.TestCase):
 
     # Checks that number of original weights('kernel') is greater than the
     # number of clusters
-    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 0)
+    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'kernel')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     # Record the number of unique values of 'bias'
-    nr_of_bias_weights = _get_number_of_unique_weights(model, -1, 1)
+    nr_of_bias_weights = _get_number_of_unique_weights(model, -1, 'bias')
     self.assertGreater(nr_of_bias_weights, NUMBER_OF_CLUSTERS)
 
     _, (x_test, y_test) = _get_dataset()
@@ -133,12 +133,13 @@ class FunctionalTest(tf.test.TestCase):
 
     self.assertGreater(results[1], 0.8)
 
-    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 0)
+    nr_of_unique_weights = _get_number_of_unique_weights(
+        clustered_model, -1, 'kernel')
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     # checks that we don't cluster 'bias' weights
     clustered_nr_of_bias_weights = _get_number_of_unique_weights(
-        clustered_model, -1, 1)
+        clustered_model, -1, 'bias')
     self.assertEqual(nr_of_bias_weights, clustered_nr_of_bias_weights)
 
 

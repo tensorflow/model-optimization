@@ -14,13 +14,13 @@
 # ==============================================================================
 """Tests for keras clustering registry API."""
 
-import numpy as np
 import tensorflow as tf
 
 from absl.testing import parameterized
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import GradientAggregation
 
 keras = tf.keras
 k = keras.backend
@@ -33,61 +33,92 @@ ClusterRegistry = clustering_registry.ClusteringRegistry
 ClusteringLookupRegistry = clustering_registry.ClusteringLookupRegistry
 
 
-class ClusteringAlgorithmTest(parameterized.TestCase):
+class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
   """Unit tests for clustering lookup algorithms"""
 
-  def _pull_values(self, ca, pulling_indices, expected_output):
-    pulling_indices_np = np.array(pulling_indices)
-    res_tf = ca.get_clustered_weight(pulling_indices_np)
+  def _check_pull_values(self, clustering_algo, pulling_indices, expected_output):
+    pulling_indices = tf.convert_to_tensor(pulling_indices)
 
-    res_np = k.batch_get_value([res_tf])[0]
-    res_np_list = res_np.tolist()
+    clustered_weight = clustering_algo.get_clustered_weight(
+      pulling_indices, original_weight=tf.zeros(pulling_indices.shape, dtype=tf.float32)
+    )
+    self.assertAllEqual(clustered_weight, expected_output)
 
-    self.assertSequenceEqual(res_np_list, expected_output)
+  def _check_gradients_clustered_weight(
+      self,
+      clustering_algo,
+      weight,
+      pulling_indices,
+      expected_grad_centroids,
+  ):
+    pulling_indices = tf.convert_to_tensor(pulling_indices)
+    cluster_centroids = clustering_algo.cluster_centroids
 
-  def _check_gradients(self, ca, weight, pulling_indices, expected_output):
-    pulling_indices_tf = tf.convert_to_tensor(pulling_indices)
-    weight_tf = tf.convert_to_tensor(weight)
     with tf.GradientTape(persistent=True) as t:
-      t.watch(pulling_indices_tf)
-      t.watch(weight_tf)
-      cls_weights_tf = tf.reshape(
-          ca.get_clustered_weight(pulling_indices_tf), shape=(-1,))
-      t.watch(cls_weights_tf)
-      out_forward = ca.add_custom_gradients(cls_weights_tf, weight_tf)
-      grad_cls_weight = t.gradient(out_forward, cls_weights_tf)
-      grad_weight = t.gradient(out_forward, weight_tf)
+      t.watch(weight)
+      t.watch(cluster_centroids)
 
-      chk_output = tf.math.equal(grad_cls_weight, grad_weight)
-      chk_output_np = k.batch_get_value(chk_output)
+      out = clustering_algo.get_clustered_weight(
+        pulling_indices, original_weight=weight
+      )
 
-      self.assertSequenceEqual(chk_output_np, expected_output)
+    grad_original_weight = t.gradient(out, weight)
+    grad_cluster_centroids = t.gradient(out, cluster_centroids)
+    # Because of tf.gather, the grad will be of type tf.IndexedSlices
+    # Convert it back to a tf.tensor
+    grad_cluster_centroids = tf.convert_to_tensor(grad_cluster_centroids)
+
+    # grad_original_weight with respect to out should always be 1s
+    expected_grad_weight = tf.ones(shape=grad_original_weight.shape)
+
+    self.assertAllEqual(grad_original_weight, expected_grad_weight)
+    self.assertAllEqual(grad_cluster_centroids, expected_grad_centroids)
 
   @parameterized.parameters(
-      ([-0.800450444, 0.864694357],
-       [[0.220442653, 0.854694366, 0.0328432359, 0.506857157],
-        [0.0527950861, -0.659555554, -0.849919915, -0.54047],
-        [-0.305815876, 0.0865516588, 0.659202456, -0.355699599],
-        [-0.348868281, -0.662001, 0.6171574, -0.296582848]],
-       [[1, 1, 1, 1],
-        [1, 0, 0, 0],
-        [0, 1, 1, 0],
-        [0, 0, 1, 0]],
-       [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1]
-      )
+    (GradientAggregation.AVG,
+     [[1, 1, 1, 1],
+      [1, 0, 0, 0],
+      [0, 1, 1, 0],
+      [0, 0, 1, 0]],
+     [1, 1],
+    ),
+    (GradientAggregation.SUM,
+     [[1, 1, 1, 1],
+      [1, 0, 0, 0],
+      [0, 1, 1, 0],
+      [0, 0, 1, 0]],
+     [8, 8],
+     ),
+    (GradientAggregation.AVG,
+     [[1, 1, 1, 1],
+      [1, 1, 1, 0],
+      [0, 1, 1, 0],
+      [0, 0, 1, 0]],
+     [1, 1],
+     ),
+    (GradientAggregation.AVG,
+     [[1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1]],
+     [0, 1],
+    ),
+    (GradientAggregation.SUM,
+     [[1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1],
+      [1, 1, 1, 1]],
+     [0, 16],
+    ),
   )
   def testDenseWeightsCAGrad(self,
-                             clustering_centroids,
-                             weight,
+                             cluster_gradient_aggregation,
                              pulling_indices,
-                             expected_output):
+                             expected_grad_centroids,
+                             ):
     """
     Verifies that the gradients of DenseWeightsCA work as expected.
     """
-<<<<<<< HEAD
-    ca = clustering_registry.DenseWeightsCA(clustering_centroids)
-    self._check_gradients(ca, weight, pulling_indices, expected_output)
-=======
     clustering_centroids = tf.Variable([-0.800450444, 0.864694357])
     weight = tf.constant(
         [[0.220442653, 0.854694366, 0.0328432359, 0.506857157],
@@ -105,26 +136,10 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
       pulling_indices,
       expected_grad_centroids,
     )
->>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 
   @parameterized.parameters(
       ([-1, 1], [[0, 0, 1], [1, 1, 1]], [[-1, -1, 1], [1, 1, 1]]),
       ([-1, 0, 1], [[1, 1, 1], [1, 1, 1]], [[0, 0, 0], [0, 0, 0]]),
-<<<<<<< HEAD
-  )
-  def testDenseWeightsCA(self,
-                         clustering_centroids,
-                         pulling_indices,
-                         expected_output):
-    """
-    Verifies that DenseWeightsCA works as expected.
-    """
-    ca = clustering_registry.DenseWeightsCA(clustering_centroids)
-    self._pull_values(ca, pulling_indices, expected_output)
-
-  @parameterized.parameters(
-=======
->>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
       ([-1, 1], [0, 0, 0, 0, 1], [-1, -1, -1, -1, 1]),
       ([0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3]),
   )
@@ -136,41 +151,38 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
     Verifies that get_pull_indices from ClusteringAlgorithm works as expected,
     for tensor layout as for dense layer or bias layer.
     """
-<<<<<<< HEAD
-    ca = clustering_registry.BiasWeightsCA(clustering_centroids)
-    self._pull_values(ca, pulling_indices, expected_output)
-=======
     clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
     clustering_algo = clustering_registry.ClusteringAlgorithm(
         clustering_centroids, GradientAggregation.SUM
     )
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
->>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
-
 
   @parameterized.parameters(
-      ([0.0, 3.0],
-       [[0.1, 0.1, 0.1],
-        [3.0, 3.0, 3.0],
-        [0.2, 0.2, 0.2]],
+      (GradientAggregation.AVG,
        [[0, 0, 0],
         [1, 1, 1],
         [0, 0, 0]],
-       [1, 1, 1, 1, 1, 1, 1, 1, 1]
-      )
+       [1, 1]
+      ),
+      (GradientAggregation.SUM,
+       [[0, 0, 0],
+        [1, 1, 1],
+        [0, 0, 0]],
+       [6, 3]
+      ),
+      (GradientAggregation.AVG,
+       [[0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]],
+       [1, 0]
+      ),
+      (GradientAggregation.SUM,
+       [[0, 0, 0],
+        [0, 0, 0],
+        [0, 0, 0]],
+       [9, 0]
+       ),
   )
-<<<<<<< HEAD
-  def testConvolutionalWeightsCAGrad(self,
-                                     clustering_centroids,
-                                     weight,
-                                     pulling_indices,
-                                     expected_output):
-    """
-    Verifies that the gradients of ConvolutionalWeightsCA work as expected.
-    """
-    ca = clustering_registry.DenseWeightsCA(clustering_centroids)
-    self._check_gradients(ca, weight, pulling_indices, expected_output)
-=======
   def testConvolutionalClusteringAlgorithmGrad(self,
                                                cluster_gradient_aggregation,
                                                pulling_indices,
@@ -193,7 +205,6 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
       pulling_indices,
       expected_grad_centroids,
     )
->>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 
 
   @parameterized.parameters(
@@ -206,20 +217,12 @@ class ClusteringAlgorithmTest(parameterized.TestCase):
                                  clustering_centroids,
                                  pulling_indices,
                                  expected_output):
-<<<<<<< HEAD
-    """
-    Verifies that ConvolutionalWeightsCA works as expected.
-    """
-    ca = clustering_registry.ConvolutionalWeightsCA(clustering_centroids)
-    self._pull_values(ca, pulling_indices, expected_output)
-=======
     """Verifies that ClusteringAlgorithm works as expected."""
     clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
     clustering_algo = clustering_registry.ClusteringAlgorithm(
         clustering_centroids, GradientAggregation.SUM
     )
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
->>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 
 
 class CustomLayer(layers.Layer):
@@ -233,44 +236,6 @@ class CustomLayer(layers.Layer):
   def call(self, inputs):
     return tf.matmul(inputs, self.weights)
 
-<<<<<<< HEAD
-class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
-  """Unit tests for the ClusteringLookupRegistry class."""
-
-  def testLookupHasEverythingFromRegistry(self):
-    """
-    Verifies that every layer that has non-empty ClusteringRegistry records is
-    also presented in the ClusteringLookup.
-    """
-    for layer, clustering_record in ClusterRegistry._LAYERS_WEIGHTS_MAP.items():
-      if clustering_record == []:
-        continue
-
-      self.assertIn(layer, ClusteringLookupRegistry._LAYERS_RESHAPE_MAP)
-
-      for cr in clustering_record:
-        self.assertIn(cr, ClusteringLookupRegistry._LAYERS_RESHAPE_MAP[layer])
-
-  def testGetClusteringImplFailsWithUnknonwClassUnknownWeight(self):
-    """
-    Verifies that get_clustering_impl() raises an error when invoked with an
-    unsupported layer class and an unsupported weight name.
-    """
-    with self.assertRaises(ValueError):
-      ClusteringLookupRegistry.get_clustering_impl(CustomLayer(),
-                                                   'no_such_weight')
-
-  def testGetClusteringImplFailsWithKnonwClassUnknownWeight(self):
-    """
-    Verifies that get_clustering_impl() raises an error when invoked with a
-    supported layer class and an unsupported weight name.
-    """
-    with self.assertRaises(ValueError):
-      ClusteringLookupRegistry.get_clustering_impl(layers.Dense(10),
-                                                   'no_such_weight')
-
-=======
->>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 
 class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
                                          clusterable_layer.ClusterableLayer):
@@ -304,68 +269,6 @@ class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
       ClusteringLookupRegistry.get_clustering_impl(
           KerasCustomLayerClusterableInvalid(), 'w')
 
-<<<<<<< HEAD
-  @parameterized.parameters(
-      (layers.Conv3D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
-      (layers.Conv2D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
-      (layers.Conv1D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
-      (layers.Conv3D, 'bias', clustering_registry.BiasWeightsCA),
-      (layers.Conv2D, 'bias', clustering_registry.BiasWeightsCA),
-      (layers.Conv1D, 'bias', clustering_registry.BiasWeightsCA),
-  )
-  def testReturnsResultsForKnownTypeKnownWeights(self,
-                                                 layer_type,
-                                                 weight,
-                                                 expected):
-    """
-    Verifies that get_clustering_impl() returns the expected clustering lookup
-    algorithm for the inputs provided.
-    """
-    # layer_type is a class, thus constructing an object here
-    self.assertTrue(ClusteringLookupRegistry.get_clustering_impl(
-        layer_type(32, 3), weight) is expected)
-
-  def testRegisterNewImplWorks(self):
-    """
-    Verifies that registering a custom clustering lookup algorithm works as
-    expected.
-    """
-    class NewKernelCA(clustering_registry.AbstractClusteringAlgorithm):
-
-      def get_pulling_indices(self, weight):
-        return 1, 2, 3
-
-    new_impl = {
-        CustomLayer: {
-            'new_kernel': NewKernelCA
-        }
-    }
-
-    ClusteringLookupRegistry.register_new_implementation(new_impl)
-    self.assertTrue(ClusteringLookupRegistry.get_clustering_impl(
-        CustomLayer(), 'new_kernel') is NewKernelCA)
-
-  def testFailsIfNotADictIsGivenAsInput(self):
-    """
-    Verifies that registering a custom clustering lookup algorithm fails if the
-    input provided is not a dict.
-    """
-    with self.assertRaises(TypeError):
-      ClusteringLookupRegistry.register_new_implementation([1, 2, 3, 4])
-
-  def testFailsIfNotADictIsGivenAsConcreteImplementation(self):
-    """
-    Verifies that registering a custom clustering lookup algorithm fails if the
-    input provided for the concrete implementation is not a dict.
-    """
-    with self.assertRaises(TypeError):
-      ClusteringLookupRegistry.register_new_implementation({
-          ClusteringLookupRegistry: [('new_kernel', lambda x: x)]
-      })
-
-
-=======
->>>>>>> 01f1504... MLTOOLS-1110 Removing of clustering registry completely.
 class ClusterRegistryTest(test.TestCase):
   """Unit tests for the ClusteringRegistry class."""
 

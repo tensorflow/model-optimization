@@ -242,7 +242,9 @@ class PruneLowMagnitude(Wrapper):
       training = K.learning_phase()
 
     def increment_step():
-      return tf_compat.assign(self.pruning_step, self.pruning_step + 1)
+      with tf.control_dependencies(
+          [tf_compat.assign(self.pruning_step, self.pruning_step + 1)]):
+        return tf.no_op('update')
 
     def add_update():
       with tf.control_dependencies([
@@ -314,8 +316,7 @@ class PruneLowMagnitude(Wrapper):
         module_objects=globals(),
         custom_objects=custom_objects)
 
-    from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
-    layer = deserialize_layer(config.pop('layer'))
+    layer = keras.layers.deserialize(config.pop('layer'))
     config['layer'] = layer
 
     return cls(**config)

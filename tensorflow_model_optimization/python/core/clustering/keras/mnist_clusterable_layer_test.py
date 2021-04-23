@@ -31,6 +31,8 @@ NUMBER_OF_CLUSTERS = 8
 
 
 class MyDenseLayer(keras.layers.Dense, clusterable_layer.ClusterableLayer):
+  def __init__(self, units, **kwargs):
+    super().__init__(units, **kwargs)
 
   def get_clusterable_weights(self):
     # Cluster kernel and bias.
@@ -62,8 +64,8 @@ class ClusterableWeightsCA(clustering_algorithm.ClusteringAlgorithm):
 class MyClusterableLayer(keras.layers.Layer,
                          clusterable_layer.ClusterableLayer):
 
-  def __init__(self, units=32):
-    super(MyClusterableLayer, self).__init__()
+  def __init__(self, units=32, **kwargs):
+    super(MyClusterableLayer, self).__init__(**kwargs)
     self.units = units
 
   def build(self, input_shape):
@@ -73,10 +75,19 @@ class MyClusterableLayer(keras.layers.Layer,
         trainable=True,
     )
     self.b = self.add_weight(
-        shape=(self.units,), initializer='random_normal', trainable=False)
+      shape=(self.units,),
+      initializer="random_normal",
+      trainable=False,
+    )
+    self.built = True
 
   def call(self, inputs):
     return tf.matmul(inputs, self.w) + self.b
+
+  def get_config(self):
+    config = super(MyClusterableLayer, self).get_config()
+    config.update({"units": self.units})
+    return config
 
   def get_clusterable_weights(self):
     # Cluster only weights 'w'
@@ -168,6 +179,7 @@ def _cluster_model(model, number_of_clusters):
   clustered_model.fit(x_train, y_train, epochs=EPOCHS_FINE_TUNING)
 
   stripped_model = cluster.strip_clustering(clustered_model)
+
   stripped_model.compile(
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       optimizer=opt,
@@ -175,10 +187,10 @@ def _cluster_model(model, number_of_clusters):
 
   return stripped_model
 
-
-def _get_number_of_unique_weights(stripped_model, layer_nr, weights_nr):
-  weights_as_list = stripped_model.layers[layer_nr].get_weights(
-  )[weights_nr].reshape(-1,).tolist()
+def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
+  layer = stripped_model.layers[layer_nr]
+  weight = getattr(layer, weight_name)
+  weights_as_list = weight.numpy().reshape(-1,).tolist()
   nr_of_unique_weights = len(set(weights_as_list))
 
   return nr_of_unique_weights
@@ -196,14 +208,12 @@ class FunctionalTest(tf.test.TestCase):
     model = _build_model()
     _train_model(model)
 
-    # Checks that number of original weights('kernel') is greater than the
-    # number of clusters.
-    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 0)
+    # Checks that number of original weights('kernel') is greater than the number of clusters
+    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'kernel')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
-    # Checks that number of original weights('bias') is greater than the number
-    # of clusters
-    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 1)
+    # Checks that number of original weights('bias') is greater than the number of clusters
+    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'bias')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     _, (x_test, y_test) = _get_dataset()
@@ -218,11 +228,11 @@ class FunctionalTest(tf.test.TestCase):
     self.assertGreater(results[1], 0.8)
 
     # checks 'kernel' weights of the last layer: MyDenseLayer
-    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 0)
+    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 'kernel')
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     # checks 'bias' weights of the last layer: MyDenseLayer
-    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 1)
+    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 'bias')
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
   def testMnistClusterableLayer(self):
@@ -238,17 +248,18 @@ class FunctionalTest(tf.test.TestCase):
     model = _build_model_2()
     _train_model(model)
 
-    # Checks that number of original weights 'w' is greater than the number
-    # of clusters.
-    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 0)
+    # Checks that number of original weights 'w' is greater than the number of clusters.
+    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'w')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     clustered_model = _cluster_model(model, NUMBER_OF_CLUSTERS)
 
     # Checks clustered weights 'w'.
-    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 0)
+    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 'w')
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
+    # Train again normally for sanity check
+    _train_model(clustered_model)
 
 if __name__ == '__main__':
   tf.test.main()

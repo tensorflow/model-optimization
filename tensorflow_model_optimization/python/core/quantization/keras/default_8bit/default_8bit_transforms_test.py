@@ -379,7 +379,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       ('relu', default_8bit_transforms.LayerReLUQuantize),
       ('act_relu', default_8bit_transforms.LayerReluActivationQuantize))
   def testLayerReLUQuantize(self, activation_type, transform_type):
-    # TODO(tfmot): Add tests for DepthConv and Dense
+    # TODO(b/185727342): Add tests for DepthConv and Dense
     input_shape = (1, 3, 3, 3)
     conv_layer = tf.keras.layers.Conv2D(5, 2, input_shape=input_shape)
     if activation_type == 'relu':

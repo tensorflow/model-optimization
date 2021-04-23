@@ -397,7 +397,7 @@ class PruneTest(test.TestCase, parameterized.TestCase):
     same_architecture_model.load_weights(tf_weights)
 
   def testPruneScope_NotNeededForTF2SavedModel(self):
-    # TODO(tfmot): replace with shared v1 test_util.
+    # TODO(b/185726968): replace with shared v1 test_util.
     is_v1_apis = hasattr(tf, 'assign')
     if is_v1_apis:
       return
@@ -413,7 +413,7 @@ class PruneTest(test.TestCase, parameterized.TestCase):
     tf.saved_model.load(saved_model_dir)
 
   def testPruneScope_NeededForTF1SavedModel(self):
-    # TODO(tfmot): replace with shared v1 test_util.
+    # TODO(b/185726968): replace with shared v1 test_util.
     is_v1_apis = hasattr(tf, 'assign')
     if not is_v1_apis:
       return

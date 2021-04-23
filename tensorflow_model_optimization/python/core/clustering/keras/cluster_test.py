@@ -16,6 +16,9 @@
 
 import json
 
+import tempfile
+
+import os
 from absl.testing import parameterized
 import tensorflow as tf
 
@@ -294,6 +297,34 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(custom_non_clusterable_layer,
                                      **self.params)
 
+  def testClusterMyClusterableLayer(self):
+    # we have weights to cluster.
+    clusterable_layer = self.clusterable_layer
+    clusterable_layer.build(input_shape=(10, 10))
+
+    wrapped_layer = cluster_wrapper.ClusterWeights(clusterable_layer,
+                                     **self.params)
+
+    self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
+
+  def testKerasCustomLayerClusterable(self):
+    """
+    Verifies that we can wrap keras custom layer that is customerable.
+    """
+    clusterable_layer = KerasCustomLayerClusterable()
+    wrapped_layer = cluster_wrapper.ClusterWeights(clusterable_layer,
+                                     **self.params)
+
+    self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
+
+  def testClusterMyClusterableLayerInvalid(self):
+    """
+    Verifies that assertion is thrown when function
+    get_clusterable_weights is not provided.
+    """
+    with self.assertRaises(TypeError):
+      MyClusterableLayerInvalid(10) # pylint: disable=abstract-class-instantiated
+
   def testClusterKerasCustomLayer(self):
     """Verifies that attempting to cluster a keras custom layer raises an exception."""
     # If layer is not built, it has not weights, so
@@ -304,6 +335,76 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     keras_custom_layer.build(input_shape=(10, 10))
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(keras_custom_layer, **self.params)
+
+  def testStripClusteringSequentialModelWithKernelRegularizer(self):
+    """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
+    model = keras.Sequential([
+        layers.Dense(10, input_shape=(10,)),
+        layers.Dense(10, kernel_regularizer=tf.keras.regularizers.L1(0.01)),
+    ])
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    stripped_model = cluster.strip_clustering(clustered_model)
+    # check that kernel regularizer is present in the second dense layer
+    self.assertIsNotNone(stripped_model.layers[1].kernel_regularizer)
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+      keras_file = os.path.join(tmp_dir_name, 'cluster_test')
+      stripped_model.save(keras_file, save_traces = True)
+
+  def testStripClusteringSequentialModelWithBiasRegularizer(self):
+    """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
+    model = keras.Sequential([
+        layers.Dense(10, input_shape=(10,)),
+        layers.Dense(10, bias_regularizer=tf.keras.regularizers.L1(0.01)),
+    ])
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    stripped_model = cluster.strip_clustering(clustered_model)
+    # check that kernel regularizer is present in the second dense layer
+    self.assertIsNotNone(stripped_model.layers[1].bias_regularizer)
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+      keras_file = os.path.join(tmp_dir_name, 'cluster_test')
+      stripped_model.save(keras_file, save_traces = True)
+
+  def testStripClusteringSequentialModelWithActivityRegularizer(self):
+    """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
+    model = keras.Sequential([
+        layers.Dense(10, input_shape=(10,)),
+        layers.Dense(10, activity_regularizer=tf.keras.regularizers.L1(0.01)),
+    ])
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    stripped_model = cluster.strip_clustering(clustered_model)
+    # check that kernel regularizer is present in the second dense layer
+    self.assertIsNotNone(stripped_model.layers[1].activity_regularizer)
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+      keras_file = os.path.join(tmp_dir_name, 'cluster_test')
+      stripped_model.save(keras_file, save_traces = True)
+
+  def testStripClusteringSequentialModelWithKernelConstraint(self):
+    """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
+    model = keras.Sequential([
+        layers.Dense(10, input_shape=(10,)),
+        layers.Dense(10, kernel_constraint=tf.keras.constraints.max_norm(2.)),
+    ])
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    stripped_model = cluster.strip_clustering(clustered_model)
+    # check that kernel regularizer is present in the second dense layer
+    self.assertIsNotNone(stripped_model.layers[1].kernel_constraint)
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+      keras_file = os.path.join(tmp_dir_name, 'cluster_test')
+      stripped_model.save(keras_file, save_traces = True)
+
+  def testStripClusteringSequentialModelWithBiasConstraint(self):
+    """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
+    model = keras.Sequential([
+        layers.Dense(10, input_shape=(10,)),
+        layers.Dense(10, bias_constraint=tf.keras.constraints.max_norm(2.)),
+    ])
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    stripped_model = cluster.strip_clustering(clustered_model)
+    # check that kernel regularizer is present in the second dense layer
+    self.assertIsNotNone(stripped_model.layers[1].bias_constraint)
+    with tempfile.TemporaryDirectory() as tmp_dir_name:
+      keras_file = os.path.join(tmp_dir_name, 'cluster_test')
+      stripped_model.save(keras_file, save_traces = True)
 
   def testClusterMyClusterableLayer(self):
     # we have weights to cluster.
@@ -327,8 +428,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelSelectively(self):
     clustered_model = keras.Sequential()
-    clustered_model.add(
-        cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
+    clustered_model.add(cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
     clustered_model.add(self.keras_clusterable_layer)
     clustered_model.build(input_shape=(1, 10))
 
@@ -591,7 +691,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testStripClusteringSequentialModel(self):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     model = keras.Sequential([
-        layers.Dense(10),
+        layers.Dense(10, input_shape=(5,)),
         layers.Dense(10),
     ])
 
@@ -634,7 +734,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testStrippedKernel(self):
-    """Verifies that stripping the clustering wrappers from a functional model restores the layers kernel and the layers weight array to the new clustered weight value ."""
+    """Verifies that stripping the clustering wrappers from a functional model restores the layers kernel and the layers weight array to the new clustered weight value."""
     i1 = keras.Input(shape=(1, 1, 1))
     x1 = layers.Conv2D(1, 1)(i1)
     outputs = x1
@@ -648,8 +748,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertIsNot(stripped_conv2d_layer.kernel, clustered_kernel)
-    self.assertEqual(stripped_conv2d_layer.kernel,
-                     stripped_conv2d_layer.weights[0])
+    self.assertIn(stripped_conv2d_layer.kernel, stripped_conv2d_layer.weights)
 
   @keras_parameterized.run_all_keras_modes
   def testStripSelectivelyClusteredFunctionalModel(self):
@@ -679,6 +778,24 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertIsInstance(stripped_model.layers[0], layers.Dense)
+
+  @keras_parameterized.run_all_keras_modes
+  def testStripClusteringAndSetOriginalWeightsBack(self):
+    """Verifies that we can set_weights onto the stripped model."""
+    model = keras.Sequential([
+      layers.Dense(10, input_shape=(5,)),
+      layers.Dense(10),
+    ])
+
+    # Save original weights
+    original_weights = model.get_weights()
+
+    # Cluster and strip
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    stripped_model = cluster.strip_clustering(clustered_model)
+
+    # Set back original weights onto the strip model
+    stripped_model.set_weights(original_weights)
 
 if __name__ == '__main__':
   test.main()

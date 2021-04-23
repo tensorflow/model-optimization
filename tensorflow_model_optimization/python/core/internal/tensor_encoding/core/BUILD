@@ -1,10 +1,16 @@
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+
 package(default_visibility = [
     "//tensorflow_model_optimization/python/core/internal/tensor_encoding:__subpackages__",
 ])
 
 licenses(["notice"])  # Apache 2.0
 
-py_library(
+py_strict_library(
     name = "core",
     srcs = ["__init__.py"],
     visibility = ["//visibility:public"],
@@ -16,7 +22,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "core_encoder",
     srcs = ["core_encoder.py"],
     deps = [
@@ -27,7 +33,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "core_encoder_test",
     size = "small",
     srcs = ["core_encoder_test.py"],
@@ -41,7 +47,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "encoding_stage",
     srcs = ["encoding_stage.py"],
     deps = [
@@ -51,7 +57,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "encoding_stage_test",
     size = "small",
     srcs = ["encoding_stage_test.py"],
@@ -66,7 +72,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "gather_encoder",
     srcs = ["gather_encoder.py"],
     deps = [
@@ -76,7 +82,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "gather_encoder_test",
     size = "small",
     srcs = ["gather_encoder_test.py"],
@@ -93,7 +99,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "simple_encoder",
     srcs = ["simple_encoder.py"],
     deps = [
@@ -103,7 +109,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "simple_encoder_test",
     size = "small",
     srcs = ["simple_encoder_test.py"],

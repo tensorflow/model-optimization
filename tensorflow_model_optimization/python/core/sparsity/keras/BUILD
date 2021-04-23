@@ -1,10 +1,12 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
 ])
 
 licenses(["notice"])  # Apache 2.0
 
-py_library(
+py_strict_library(
     name = "keras",
     srcs = [
         "__init__.py",
@@ -18,7 +20,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "prune",
     srcs = ["prune.py"],
     srcs_version = "PY3",
@@ -31,7 +33,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "prunable_layer",
     srcs = ["prunable_layer.py"],
     srcs_version = "PY3",
@@ -41,7 +43,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "prune_registry",
     srcs = ["prune_registry.py"],
     srcs_version = "PY3",
@@ -53,7 +55,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "pruning_schedule",
     srcs = ["pruning_schedule.py"],
     srcs_version = "PY3",
@@ -79,7 +81,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "pruning_wrapper",
     srcs = ["pruning_wrapper.py"],
     srcs_version = "PY3",
@@ -98,7 +100,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "pruning_callbacks",
     srcs = ["pruning_callbacks.py"],
     srcs_version = "PY3",
@@ -142,7 +144,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "pruning_utils",
     srcs = ["pruning_utils.py"],
     srcs_version = "PY3",
@@ -164,7 +166,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "test_utils",
     testonly = 1,
     srcs = ["test_utils.py"],

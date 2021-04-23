@@ -293,36 +293,25 @@ def strip_clustering(model):
     if isinstance(layer, keras.Model):
       return keras.models.clone_model(
           layer, input_tensors=None, clone_function=_strip_clustering_wrapper)
-    elif isinstance(layer, cluster_wrapper.ClusterWeights):
-      if not hasattr(layer.layer, '_batch_input_shape') and\
-          hasattr(layer, '_batch_input_shape'):
-        # pylint: disable=protected-access
-        layer.layer._batch_input_shape = layer._batch_input_shape
 
-      # We reset both arrays of weights, so that we can guarantee the correct
-      # order of newly created weights
-      # pylint: disable=protected-access
-      layer.layer._trainable_weights = []
-      layer.layer._non_trainable_weights = []
-      for i in range(len(layer.restore)):
-        # This is why we used integers as keys
-        name, weight_name, weight = layer.restore[i]
-        # In both cases we use k.batch_get_value since we need physical copies
-        # of the arrays to initialize a new tensor
-        if i in layer.gone_variables:
-          # If the variable was removed because it was clustered, we restore it
-          # by using updater we created earlier
-          new_weight_value = k.batch_get_value([weight()])[0]
-        else:
-          # If the value was not clustered(e.g. bias), we still store a valid
-          # reference to the tensor. We use this reference to get the value
-          new_weight_value = k.batch_get_value([weight])[0]
-        setattr(layer.layer,
-                name,
-                k.variable(new_weight_value, name=weight_name))
-      # When all weights are filled with the values, just return the underlying
-      # layer since it is now fully autonomous from its wrapper
-      return layer.layer
+    elif isinstance(layer, cluster_wrapper.ClusterWeights):
+      # Update cluster associations in order to get the latest weights
+      layer.update_clustered_weights_associations()
+
+      # Construct a list of weights to initialize the clean layer
+      updated_weights = layer.layer.get_weights()  # non clusterable weights only
+      for position_variable, weight_name in layer.position_original_weights.items():
+        # Add the clustered weights at the correct position
+        clustered_weight = getattr(layer.layer, weight_name)
+        updated_weights.insert(position_variable, clustered_weight)
+
+      # Construct a clean layer with the updated weights
+      clean_layer = layer.layer.from_config(layer.layer.get_config())
+      clean_layer.build(layer.build_input_shape)
+      clean_layer.set_weights(updated_weights)
+
+      return clean_layer
+
     return layer
 
   # Just copy the model with the right callback
