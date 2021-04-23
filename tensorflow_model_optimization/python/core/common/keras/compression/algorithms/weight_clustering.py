@@ -21,7 +21,24 @@ import tensorflow as tf
 # move the APIs into the same directory.
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import GradientAggregation
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
+
+
+class ConvolutionalWeightsCA(clustering_registry.ConvolutionalWeightsCA):
+
+  def __init__(self, clusters_centroids,
+               cluster_gradient_aggregation=GradientAggregation.SUM):
+    self.cluster_centroids = clusters_centroids
+    self.cluster_gradient_aggregation = cluster_gradient_aggregation
+
+
+class DenseWeightsCA(clustering_registry.DenseWeightsCA):
+
+  def __init__(self, clusters_centroids,
+               cluster_gradient_aggregation=GradientAggregation.SUM):
+    self.cluster_centroids = clusters_centroids
+    self.cluster_gradient_aggregation = cluster_gradient_aggregation
 
 
 class WeightClustering(algorithm.WeightCompressor):
@@ -34,17 +51,18 @@ class WeightClustering(algorithm.WeightCompressor):
   def init_training_weights(
       self, pretrained_weight: tf.Tensor):
     """Init function from pre-trained model case."""
-    centroid_initializer = clustering_centroids.CentroidsInitializerFactory.\
+    centroid_initializer = (
+        clustering_centroids.CentroidsInitializerFactory.
         get_centroid_initializer(
             self.cluster_centroids_init
-        )(pretrained_weight, self.number_of_clusters)
+            )(pretrained_weight, self.number_of_clusters))
 
     cluster_centroids = centroid_initializer.get_cluster_centroids()
 
     if len(pretrained_weight.shape) == 2:
-      clustering_impl_cls = clustering_registry.DenseWeightsCA
+      clustering_impl_cls = DenseWeightsCA
     elif len(pretrained_weight.shape) == 4:
-      clustering_impl_cls = clustering_registry.ConvolutionalWeightsCA
+      clustering_impl_cls = ConvolutionalWeightsCA
     else:
       raise NotImplementedError('Only for dimension=2 or 4 is supported.')
 
@@ -83,8 +101,8 @@ class WeightClustering(algorithm.WeightCompressor):
 
   def get_compressible_weights(
       self, original_layer: tf.keras.layers.Layer) -> List[str]:
-    if isinstance(original_layer, tf.keras.layers.Conv2D) or \
-       isinstance(original_layer, tf.keras.layers.Dense):
+    if (isinstance(original_layer, tf.keras.layers.Conv2D) or
+        isinstance(original_layer, tf.keras.layers.Dense)):
       return [original_layer.kernel]
     return []
 
