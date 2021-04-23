@@ -1,6 +1,8 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_library")
+
 licenses(["notice"])
 
-py_library(
+pytype_library(
     name = "algorithm",
     srcs = ["algorithm.py"],
     srcs_version = "PY3",

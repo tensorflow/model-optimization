@@ -1,10 +1,16 @@
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+
 package(default_visibility = [
     "//tensorflow_model_optimization/python/core/internal/tensor_encoding:__subpackages__",
 ])
 
 licenses(["notice"])  # Apache 2.0
 
-py_library(
+py_strict_library(
     name = "utils",
     srcs = ["__init__.py"],
     visibility = ["//visibility:public"],
@@ -14,7 +20,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "py_utils",
     srcs = ["py_utils.py"],
     deps = [
@@ -26,7 +32,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "py_utils_test",
     size = "small",
     srcs = ["py_utils_test.py"],
@@ -39,7 +45,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "tf_utils",
     srcs = ["tf_utils.py"],
     deps = [
@@ -48,7 +54,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "tf_utils_test",
     size = "medium",
     srcs = ["tf_utils_test.py"],

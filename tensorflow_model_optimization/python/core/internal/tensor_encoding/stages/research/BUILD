@@ -1,10 +1,16 @@
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+
 package(default_visibility = [
     "//tensorflow_model_optimization/python/core/internal/tensor_encoding:__subpackages__",
 ])
 
 licenses(["notice"])  # Apache 2.0
 
-py_library(
+py_strict_library(
     name = "research",
     srcs = ["__init__.py"],
     visibility = ["//visibility:public"],
@@ -16,7 +22,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "clipping",
     srcs = ["clipping.py"],
     deps = [
@@ -25,7 +31,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "clipping_test",
     size = "small",
     srcs = ["clipping_test.py"],
@@ -39,7 +45,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "kashin",
     srcs = ["kashin.py"],
     deps = [
@@ -50,7 +56,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "kashin_test",
     size = "medium",
     srcs = ["kashin_test.py"],
@@ -64,7 +70,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "quantization",
     srcs = ["quantization.py"],
     deps = [
@@ -74,7 +80,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "quantization_test",
     size = "small",
     srcs = ["quantization_test.py"],
@@ -88,7 +94,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "misc",
     srcs = ["misc.py"],
     deps = [
@@ -97,7 +103,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "misc_test",
     size = "small",
     srcs = ["misc_test.py"],

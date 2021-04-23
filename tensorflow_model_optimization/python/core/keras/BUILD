@@ -1,10 +1,12 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
 ])
 
 licenses(["notice"])  # Apache 2.0
 
-py_library(
+py_strict_library(
     name = "keras",
     srcs = ["__init__.py"],
     deps = [
@@ -14,7 +16,7 @@ py_library(
 )
 
 # TODO(alanchiao): split into test_utils and utils.
-py_library(
+py_strict_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
     srcs_version = "PY3",
@@ -24,7 +26,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "compat",
     srcs = ["compat.py"],
     srcs_version = "PY3",
@@ -33,7 +35,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "utils",
     srcs = ["utils.py"],
     srcs_version = "PY3",
@@ -44,7 +46,7 @@ py_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "metrics",
     srcs = ["metrics.py"],
     srcs_version = "PY3",
