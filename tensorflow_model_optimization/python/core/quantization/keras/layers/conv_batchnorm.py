@@ -24,8 +24,8 @@ from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers import convolutional
-from tensorflow.python.keras.layers import deserialize as deserialize_layer
 from tensorflow.python.keras.layers import normalization
+from tensorflow.python.keras.layers import serialization
 from tensorflow.python.keras.utils import conv_utils
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
@@ -114,7 +114,8 @@ class _ConvBatchNormMixin(object):
     config.pop('use_bias')
     is_advanced_activation = 'class_name' in config['post_activation']
     if is_advanced_activation:
-      config['post_activation'] = deserialize_layer(config['post_activation'])
+      config['post_activation'] = serialization.deserialize(
+          config['post_activation'])
     else:
       config['post_activation'] = activations.deserialize(
           config['post_activation'])
