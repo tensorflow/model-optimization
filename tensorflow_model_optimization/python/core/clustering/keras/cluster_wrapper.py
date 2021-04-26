@@ -111,7 +111,7 @@ class ClusterWeights(Wrapper):
     self.cluster_gradient_aggregation = cluster_gradient_aggregation
 
     # Stores the pairs of weight names and their respective sparsity masks
-    self.sparsity_weights_masks = {}
+    self.sparsity_masks = {}
 
     # Map weight names to original clusterable weights variables
     # Those weights will still be updated during backpropagation
@@ -217,10 +217,9 @@ class ClusterWeights(Wrapper):
           self.clustering_algorithms[weight_name]
           .get_clustered_weight(pulling_indices, original_weight)
         )
-        self.sparsity_weights_masks[weight_name] = (
-            tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
+        self.sparsity_masks[weight_name] = (
+          tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
         )
-
 
   def update_clustered_weights_associations(self):
     for weight_name, original_weight in self.original_clusterable_weights.items():
@@ -240,12 +239,11 @@ class ClusterWeights(Wrapper):
       )
       if self.preserve_sparsity:
         # Re-discover the sparsity masks to avoid drifting
-        self.sparsity_weights_masks[weight_name] = (
+        self.sparsity_masks[weight_name] = (
             tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
         )
         # Apply the sparsity mask to the clustered weights
-        clustered_weights = tf.math.multiply(
-            clustered_weights, self.sparsity_weights_masks[weight_name])
+        clustered_weights = tf.math.multiply(clustered_weights, self.sparsity_masks[weight_name])
 
       # Replace the weights with their clustered counterparts
       self.set_weight_to_layer(weight_name, clustered_weights)

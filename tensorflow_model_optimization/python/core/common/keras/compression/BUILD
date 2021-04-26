@@ -1,13 +1,15 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_library")
+
 licenses(["notice"])
 
-py_library(
+pytype_library(
     name = "algorithm",
     srcs = ["algorithm.py"],
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         "//tensorflow_model_optimization/python/core/common/keras/compression/internal:optimize",
-        #TODO(tfmot): remove when we stick to Python 3.7, which includes this by default.
+        #TODO(b/185726660): remove when we stick to Python 3.7, which includes this by default.
         # dataclasses dep1,
         # tensorflow dep1,
     ],

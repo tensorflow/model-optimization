@@ -30,6 +30,8 @@ EPOCHS_FINE_TUNING = 4
 NUMBER_OF_CLUSTERS = 8
 
 class MyDenseLayer(keras.layers.Dense, clusterable_layer.ClusterableLayer):
+  def __init__(self, units, **kwargs):
+    super().__init__(units, **kwargs)
 
   def __init__(self, units, **kwargs):
     super().__init__(units, **kwargs)
@@ -75,7 +77,10 @@ class MyClusterableLayer(keras.layers.Layer,
         trainable=True,
     )
     self.b = self.add_weight(
-        shape=(self.units,), initializer='random_normal', trainable=False)
+      shape=(self.units,),
+      initializer="random_normal",
+      trainable=False,
+    )
     self.built = True
 
   def call(self, inputs):
@@ -176,13 +181,13 @@ def _cluster_model(model, number_of_clusters):
   clustered_model.fit(x_train, y_train, epochs=EPOCHS_FINE_TUNING)
 
   stripped_model = cluster.strip_clustering(clustered_model)
+
   stripped_model.compile(
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       optimizer=opt,
       metrics=['accuracy'])
 
   return stripped_model
-
 
 def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
   layer = stripped_model.layers[layer_nr]
@@ -247,8 +252,7 @@ class FunctionalTest(tf.test.TestCase):
     model = _build_model_2()
     _train_model(model)
 
-    # Checks that number of original weights 'w' is greater than the number
-    # of clusters.
+    # Checks that number of original weights 'w' is greater than the number of clusters.
     nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'w')
     self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 

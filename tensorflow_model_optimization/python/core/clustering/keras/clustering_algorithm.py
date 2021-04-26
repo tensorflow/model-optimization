@@ -83,7 +83,7 @@ class ClusteringAlgorithm(object):
     return pulling_indices
 
   def get_clustered_weight(self, pulling_indices, original_weight):
-    """Returns clustered weights.
+    """Returns clustered weights with custom gradients.
 
     Take indices (pulling_indices) as input and then form a new array
     by gathering cluster centroids based on the given pulling indices.
@@ -92,14 +92,14 @@ class ClusteringAlgorithm(object):
       each cluster.
     - By adding an estimated gradient onto the non-differentiable
       original weight.
-
     Args:
-      pulling_indices: an array of indices used for lookup.
+      pulling_indices: a tensor of indices used for lookup of the same
+      size as original_weight.
       original_weight: the original weights of the wrapped layer.
     Returns:
-      An array with the same shape as `pulling_indices`. Each array element
-      is a member of self.cluster_centroids. The backward pass is modified
-      by adding custom gradients.
+      array with the same shape as `pulling_indices`. Each array element
+      is a member of self.cluster_centroids. The backward pass is modified by
+      adding custom gradients.
     """
 
     @tf.custom_gradient

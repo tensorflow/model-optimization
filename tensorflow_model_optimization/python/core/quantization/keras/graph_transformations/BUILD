@@ -1,10 +1,16 @@
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
 ])
 
 licenses(["notice"])  # Apache 2.0
 
-py_library(
+py_strict_library(
     name = "graph_transformations",
     srcs = [
         "__init__.py",
@@ -13,7 +19,7 @@ py_library(
     deps = [],
 )
 
-py_library(
+py_strict_library(
     name = "transforms",
     srcs = [
         "transforms.py",
@@ -25,7 +31,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "transforms_test",
     srcs = [
         "transforms_test.py",
@@ -38,7 +44,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "model_transformer",
     srcs = [
         "model_transformer.py",
@@ -47,12 +53,11 @@ py_library(
     visibility = ["//visibility:public"],
     deps = [
         ":transforms",
-        # six dep1,
         # tensorflow dep1,
     ],
 )
 
-py_test(
+py_strict_test(
     name = "model_transformer_test",
     srcs = [
         "model_transformer_test.py",
@@ -61,6 +66,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":model_transformer",
+        ":transforms",
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,

@@ -11,7 +11,7 @@ py_library(
     ],
     srcs_version = "PY3",
     deps = [
-        ":default_8bit_prune_preserve_quantize_scheme",
+        ":default_8bit_prune_preserve_quantize_scheme",  # buildcleaner: keep
     ],
 )
 

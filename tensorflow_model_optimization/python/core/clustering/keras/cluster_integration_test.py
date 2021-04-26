@@ -213,8 +213,8 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         original_model, **clustering_params)
 
     stripped_model_before_tuning = cluster.strip_clustering(clustered_model)
-    nr_of_unique_weights_before = self._get_number_of_unique_weights(
-        stripped_model_before_tuning, 0, 'kernel')
+    weights_before_tuning = stripped_model_before_tuning.layers[0].kernel
+    non_zero_weight_indices_before_tuning = np.nonzero(weights_before_tuning)
 
     clustered_model.compile(
         loss=keras.losses.categorical_crossentropy,
@@ -225,12 +225,9 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     stripped_model_after_tuning = cluster.strip_clustering(clustered_model)
     weights_after_tuning = stripped_model_after_tuning.layers[0].kernel
-    nr_of_unique_weights_after = self._get_number_of_unique_weights(
-        stripped_model_after_tuning, 0, 'kernel')
-
-    # Check after sparsity-aware clustering, despite zero centroid can drift,
-    # the final number of unique weights remains the same
-    self.assertEqual(nr_of_unique_weights_before, nr_of_unique_weights_after)
+    non_zero_weight_indices_after_tuning = np.nonzero(weights_after_tuning)
+    weights_as_list_after_tuning = weights_after_tuning.numpy().reshape(-1,).tolist()
+    unique_weights_after_tuning = set(weights_as_list_after_tuning)
 
     # Check that the null weights stayed the same before and after tuning.
     # There might be new weights that become zeros but sparsity-aware
@@ -242,8 +239,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     # Check that the number of unique weights matches the number of clusters.
     self.assertLessEqual(
-        nr_of_unique_weights_after,
-        clustering_params["number_of_clusters"])
+        len(unique_weights_after_tuning), self.params["number_of_clusters"])
 
   @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndSequential(self):

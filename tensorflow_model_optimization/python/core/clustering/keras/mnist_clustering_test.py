@@ -97,7 +97,6 @@ def _cluster_model(model, number_of_clusters):
 
   return stripped_model
 
-
 def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
   layer = stripped_model.layers[layer_nr]
   weight = getattr(layer, weight_name)
@@ -134,7 +133,8 @@ class FunctionalTest(tf.test.TestCase):
 
     self.assertGreater(results[1], 0.8)
 
-    nr_of_unique_weights = _get_number_of_unique_weights(clustered_model, -1, 'kernel')
+    nr_of_unique_weights = _get_number_of_unique_weights(
+        clustered_model, -1, 'kernel')
     self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
     # checks that we don't cluster 'bias' weights

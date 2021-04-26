@@ -19,9 +19,9 @@ from __future__ import division
 from __future__ import print_function
 
 import numpy as np
-
 import tensorflow as tf
 
+from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
 
@@ -51,6 +51,21 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
     def get_config(self):
       return {}
+
+  def testAnnotateLayerCallPassesTraningBoolean(self):
+
+    class MockLayer(Layer):
+      self.training = None
+
+      def call(self, training=None):
+        self.training = training
+
+    layer = MockLayer()
+    wrapper = quantize_annotate.QuantizeAnnotate(layer=layer)
+    wrapper.call(training=True)
+    self.assertTrue(layer.training)
+    wrapper.call(training=False)
+    self.assertFalse(layer.training)
 
   def testAnnotatesKerasLayer(self):
     layer = keras.layers.Dense(5, activation='relu', input_shape=(10,))
