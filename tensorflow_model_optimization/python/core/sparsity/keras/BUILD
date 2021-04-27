@@ -1,4 +1,8 @@
+# buildifier: disable=same-origin-load
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
+# buildifier: disable=same-origin-load
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -13,10 +17,10 @@ py_strict_library(
     ],
     srcs_version = "PY3",
     deps = [
-        ":prunable_layer",
-        ":prune",
-        ":pruning_callbacks",
-        ":pruning_schedule",
+        ":prunable_layer",  # buildcleaner: keep
+        ":prune",  # buildcleaner: keep
+        ":pruning_callbacks",  # buildcleaner: keep
+        ":pruning_schedule",  # buildcleaner: keep
     ],
 )
 
@@ -66,7 +70,7 @@ py_strict_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "pruning_schedule_test",
     size = "medium",
     srcs = ["pruning_schedule_test.py"],
@@ -114,7 +118,7 @@ py_strict_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "pruning_callbacks_test",
     size = "medium",
     srcs = ["pruning_callbacks_test.py"],
@@ -123,7 +127,7 @@ py_test(
     deps = [
         ":prune",
         ":pruning_callbacks",
-        ":pruning_schedule",
+        # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
         # python/keras tensorflow dep2,
@@ -131,7 +135,7 @@ py_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "pruning_impl",
     srcs = ["pruning_impl.py"],
     srcs_version = "PY3",
@@ -139,7 +143,6 @@ py_library(
     deps = [
         ":pruning_utils",
         # tensorflow dep1,
-        # python:summary tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
@@ -155,7 +158,7 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "estimator_utils",
     srcs = ["estimator_utils.py"],
     srcs_version = "PY3",
@@ -163,6 +166,7 @@ py_library(
     deps = [
         ":pruning_wrapper",
         # tensorflow dep1,
+        # python/framework:for_generated_wrappers tensorflow dep2,
     ],
 )
 
@@ -183,25 +187,26 @@ py_strict_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "prune_test",
     size = "medium",
     srcs = ["prune_test.py"],
     python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        ":prunable_layer",
         ":prune",
-        ":pruning_callbacks",
         ":pruning_schedule",
-        ":test_utils",
+        ":pruning_wrapper",
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
+        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
 )
 
-py_test(
+py_strict_test(
     name = "prune_integration_test",
     size = "medium",
     timeout = "long",
@@ -210,6 +215,7 @@ py_test(
     visibility = ["//visibility:public"],
     deps = [
         ":prune",
+        ":prune_registry",
         ":pruning_callbacks",
         ":pruning_schedule",
         ":pruning_wrapper",
@@ -217,11 +223,12 @@ py_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
+        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
 )
 
-py_test(
+py_strict_test(
     name = "prune_distributed_test",
     size = "medium",
     timeout = "long",
@@ -240,7 +247,7 @@ py_test(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "prune_registry_test",
     size = "medium",
     srcs = ["prune_registry_test.py"],
@@ -249,12 +256,11 @@ py_test(
     deps = [
         ":prunable_layer",
         ":prune_registry",
-        # absl/testing:parameterized dep1,
         # tensorflow dep1,
     ],
 )
 
-py_test(
+py_strict_test(
     name = "pruning_wrapper_test",
     size = "medium",
     srcs = ["pruning_wrapper_test.py"],
@@ -263,10 +269,11 @@ py_test(
     deps = [
         ":pruning_schedule",
         ":pruning_wrapper",
+        # tensorflow dep1,
     ],
 )
 
-py_test(
+py_strict_test(
     name = "pruning_impl_test",
     size = "medium",
     srcs = ["pruning_impl_test.py"],
@@ -275,13 +282,16 @@ py_test(
     deps = [
         ":pruning_impl",
         ":pruning_schedule",
+        ":pruning_utils",
+        # absl/testing:parameterized dep1,
         # numpy dep1,
+        # tensorflow dep1,
         # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
-py_test(
+py_strict_test(
     name = "pruning_utils_test",
     size = "medium",
     srcs = ["pruning_utils_test.py"],

@@ -15,7 +15,6 @@
 """Registry responsible for built-in keras classes."""
 
 import tensorflow as tf
-from tensorflow.keras import backend as K
 
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
@@ -23,6 +22,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
+K = tf.keras.backend
 layers = tf.keras.layers
 
 
@@ -318,8 +318,9 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         trainable=True)
 
     # Get clustering implementation according to layer type
-    clustering_impl_cls = clustering_registry.ClusteringLookupRegistry().\
-        get_clustering_impl(layer.layer, name)
+    clustering_impl_cls = (
+        clustering_registry.ClusteringLookupRegistry().get_clustering_impl(
+            layer.layer, name))
     clustering_impl = clustering_impl_cls(clst_centroids_tf)
 
     pulling_indices = tf.dtypes.cast(

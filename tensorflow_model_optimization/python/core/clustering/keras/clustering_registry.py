@@ -15,11 +15,11 @@
 """Registry responsible for built-in keras classes."""
 
 import tensorflow as tf
-from tensorflow.keras import layers
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_algorithm
 
+layers = tf.keras.layers
 AbstractClusteringAlgorithm = clustering_algorithm.AbstractClusteringAlgorithm
 
 
