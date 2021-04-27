@@ -21,7 +21,6 @@ py_library(
         "cluster_utils.py",
     ],
     srcs_version = "PY3",
-    visibility = ["//visibility:private"],
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
@@ -34,7 +33,6 @@ py_library(
         "cluster_preserve_quantize_registry.py",
     ],
     srcs_version = "PY3",
-    visibility = ["//visibility:private"],
     deps = [
         ":cluster_utils",
         # tensorflow dep1,

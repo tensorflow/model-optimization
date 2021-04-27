@@ -21,7 +21,6 @@ py_library(
         "prune_preserve_quantize_registry.py",
     ],
     srcs_version = "PY3",
-    visibility = ["//visibility:private"],
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
