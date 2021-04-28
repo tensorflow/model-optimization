@@ -22,8 +22,8 @@ py_strict_test(
     python_version = "PY3",
     deps = [
         ":same_training_and_inference",
-        # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
 )
 
@@ -44,8 +44,8 @@ py_strict_test(
     python_version = "PY3",
     deps = [
         ":different_training_and_inference",
-        # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
 )
 
@@ -66,8 +66,8 @@ py_strict_test(
     python_version = "PY3",
     deps = [
         ":bias_only",
-        # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
 )
 
@@ -112,7 +112,7 @@ py_strict_test(
     python_version = "PY3",
     deps = [
         ":periodical_update_and_scheduling",
-        # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
 )
