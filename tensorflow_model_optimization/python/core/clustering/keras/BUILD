@@ -132,7 +132,7 @@ py_test(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "clustering_centroids_test",
     size = "medium",
     srcs = ["clustering_centroids_test.py"],

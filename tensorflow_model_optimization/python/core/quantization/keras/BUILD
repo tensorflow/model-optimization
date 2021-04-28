@@ -131,7 +131,7 @@ py_strict_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "quantize_annotate_test",
     srcs = [
         "quantize_annotate_test.py",
