@@ -16,20 +16,17 @@
 
 from absl.testing import parameterized
 import tensorflow as tf
-import tensorflow.keras.backend as K
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 
-keras = tf.keras
+K = tf.keras.backend
 errors_impl = tf.errors
-layers = keras.layers
-test = tf.test
 
 CentroidInitialization = cluster_config.CentroidInitialization
 
 
-class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
+class ClusteringCentroidsTest(tf.test.TestCase, parameterized.TestCase):
   """Unit tests for the clustering_centroids module."""
 
   def setUp(self):
@@ -221,4 +218,4 @@ class ClusteringCentroidsTest(test.TestCase, parameterized.TestCase):
 
 
 if __name__ == "__main__":
-  test.main()
+  tf.test.main()

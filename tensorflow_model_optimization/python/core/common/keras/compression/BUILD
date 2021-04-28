@@ -1,8 +1,3 @@
-# buildifier: disable=same-origin-load
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
-
-# buildifier: disable=same-origin-load
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library")
 
 licenses(["notice"])
