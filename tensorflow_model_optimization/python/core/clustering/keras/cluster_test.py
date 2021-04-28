@@ -35,12 +35,12 @@ layers = keras.layers
 test = tf.test
 
 
-class TestModel(keras.Model):
-  """A model subclass."""
+class SubclassedModel(keras.Model):
+  """A subclassed model."""
 
   def __init__(self):
     """A test subclass model with one dense layer."""
-    super(TestModel, self).__init__(name='test_model')
+    super(SubclassedModel, self).__init__(name='test_model')
     self.layer1 = keras.layers.Dense(10, activation='relu')
 
   def call(self, inputs):
@@ -575,6 +575,48 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     outputs = layers.Add()([x1, x2])
     model = keras.Model(inputs=[i1, i2], outputs=outputs)
     clustered_model = cluster.cluster_weights(model, **self.params)
+    # layer Add does not have trainable weights
+    self.assertEqual(self._count_clustered_layers(clustered_model), 2)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterFunctionalModelWithLayerReused(self):
+    """
+    Verifies that a layer reused within a functional model multiple times is
+    only being clustered once.
+    """
+    # The model reuses the Dense() layer. Make sure it's only clustered once.
+    inp = keras.Input(shape=(10,))
+    dense_layer = layers.Dense(10)
+    x = dense_layer(inp)
+    x = dense_layer(x)
+    model = keras.Model(inputs=[inp], outputs=[x])
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    self.assertEqual(self._count_clustered_layers(clustered_model), 1)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterConfigAcceptsStrParameters(self):
+    """
+    Verifies that cluster_config enum accepts enum set as a string.
+    We need this, for example, when we use keras-tuner with
+    clustering.
+    """
+    wrapped_layer = cluster.cluster_weights(self.keras_clusterable_layer,
+      **self.params_str)
+
+    self._validate_clustered_layer(self.keras_clusterable_layer, wrapped_layer)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterFunctionalModel(self):
+    """
+    Verifies that a functional model is being clustered correctly.
+    """
+    i1 = keras.Input(shape=(10,))
+    i2 = keras.Input(shape=(10,))
+    x1 = layers.Dense(10)(i1)
+    x2 = layers.Dense(10)(i2)
+    outputs = layers.Add()([x1, x2])
+    model = keras.Model(inputs=[i1, i2], outputs=outputs)
+    clustered_model = cluster.cluster_weights(model, **self.params)
     self.assertEqual(self._count_clustered_layers(clustered_model), 3)
 
   @keras_parameterized.run_all_keras_modes
@@ -590,18 +632,30 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(self._count_clustered_layers(clustered_model), 1)
 
   @keras_parameterized.run_all_keras_modes
-  def testClusterSubclassModel(self):
-    """Verifies that attempting to cluster an instance of a subclass of keras.Model raises an exception."""
-    model = TestModel()
-    with self.assertRaises(ValueError):
-      _ = cluster.cluster_weights(model, **self.params)
+  def testClusterSubclassedModel(self):
+    """
+    Verifies clustering of a subclassed model.
+    """
+    model = SubclassedModel()
+
+    clustered_model = cluster.cluster_weights(model, **self.params)
+    self.assertEqual(self._count_clustered_layers(model), 1)
+
+    stripped_model = cluster.strip_clustering(clustered_model)
+    self.assertEqual(self._count_clustered_layers(stripped_model), 0)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSubclassModelAsSubmodel(self):
-    """Verifies that attempting to cluster a model with submodel that is a subclass throws an exception."""
-    model_subclass = TestModel()
-    model = keras.Sequential([layers.Dense(10), model_subclass])
-    with self.assertRaisesRegex(ValueError, 'Subclassed models.*'):
+    """
+    Verifies that attempting to cluster a model with submodel
+    that is a subclass throws an exception.
+    """
+    model_subclass = SubclassedModel()
+    model = keras.Sequential([
+        layers.Dense(10),
+        model_subclass
+    ])
+    with self.assertRaisesRegexp(ValueError, "Subclassed models.*"):
       _ = cluster.cluster_weights(model, **self.params)
 
   @keras_parameterized.run_all_keras_modes
@@ -617,7 +671,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
     self.assertEqual(model.get_config(), stripped_model.get_config())
-
+    
   @keras_parameterized.run_all_keras_modes
   def testClusterStrippingFunctionalModel(self):
     """Verifies that stripping the clustering wrappers from a functional model produces the expected config."""
