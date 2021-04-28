@@ -74,16 +74,13 @@ class ClusterWeights(Wrapper):
     elif clustering_registry.ClusteringRegistry.supports(layer):
       super(ClusterWeights, self).__init__(
           clustering_registry.ClusteringRegistry.make_clusterable(layer),
-          **kwargs
-      )
+          **kwargs)
     else:
       raise ValueError(
           'Please initialize `Cluster` with a supported layer. Layers should '
           'either be a `ClusterableLayer` instance, or should be supported by '
           'the ClusteringRegistry. You passed: {input}'.format(
-              input=layer.__class__
-          )
-      )
+              input=layer.__class__))
 
     if not isinstance(number_of_clusters, int):
       raise ValueError(
@@ -133,8 +130,8 @@ class ClusterWeights(Wrapper):
     # If the input shape was specified, then we need to preserve this
     # information in the layer. If this info is not preserved, then the `built`
     # state will not be preserved between serializations.
-    if not hasattr(self, '_batch_input_shape')\
-        and hasattr(layer, '_batch_input_shape'):
+    if (not hasattr(self, '_batch_input_shape')
+        and hasattr(layer, '_batch_input_shape')):
       self._batch_input_shape = self.layer._batch_input_shape
 
     # Save the input shape specified in the build
@@ -151,46 +148,43 @@ class ClusterWeights(Wrapper):
     # For every clusterable weights, create the clustering logic
     for weight_name, weight in self.layer.get_clusterable_weights():
       # Store the original weight in this wrapper
-      # The child reference will be overridden in update_clustered_weights_associations
+      # The child reference will be overridden in
+      # update_clustered_weights_associations
       original_weight = getattr(self.layer, weight_name)
       self.original_clusterable_weights[weight_name] = original_weight
-      setattr(self, "original_weight_" + weight_name, original_weight)  # Track the variable
-      # Store the position in layer.weights of original_weight to restore during stripping
+      setattr(self, 'original_weight_' + weight_name,
+              original_weight)  # Track the variable
+      # Store the position in layer.weights of original_weight to restore during
+      # stripping
       position_original_weight = next(
-        i for i, w in enumerate(self.layer.weights) if w is original_weight
-      )
+          i for i, w in enumerate(self.layer.weights) if w is original_weight)
       self.position_original_weights[position_original_weight] = weight_name
 
       # Init the cluster centroids
       cluster_centroids = (
-        clustering_centroids.CentroidsInitializerFactory
-        .get_centroid_initializer(self.cluster_centroids_init)(
-          weight, self.number_of_clusters, self.preserve_sparsity
-        )
-        .get_cluster_centroids()
-      )
+          clustering_centroids.CentroidsInitializerFactory
+          .get_centroid_initializer(self.cluster_centroids_init)(
+              weight, self.number_of_clusters,
+              self.preserve_sparsity).get_cluster_centroids())
       self.cluster_centroids[weight_name] = self.add_weight(
           '{}{}'.format('cluster_centroids_', weight_name),
           shape=(self.number_of_clusters,),
           dtype=weight.dtype,
           trainable=True,
-          initializer=initializers.Constant(value=cluster_centroids)
-      )
+          initializer=initializers.Constant(value=cluster_centroids))
 
       # Init the weight clustering algorithm
       self.clustering_algorithms[weight_name] = (
-        clustering_registry.ClusteringLookupRegistry()
-        .get_clustering_impl(self.layer, weight_name)(
-          clusters_centroids=self.cluster_centroids[weight_name],
-          cluster_gradient_aggregation=self.cluster_gradient_aggregation,
-        )
-      )
+          clustering_registry.ClusteringLookupRegistry().get_clustering_impl(
+              self.layer, weight_name)
+          (
+              clusters_centroids=self.cluster_centroids[weight_name],
+              cluster_gradient_aggregation=self.cluster_gradient_aggregation,
+          ))
 
       # Init the pulling_indices (weights associations)
       pulling_indices = (
-        self.clustering_algorithms[weight_name]
-        .get_pulling_indices(weight)
-      )
+          self.clustering_algorithms[weight_name].get_pulling_indices(weight))
       self.pulling_indices[weight_name] = self.add_weight(
           '{}{}'.format('pulling_indices_', weight_name),
           shape=pulling_indices.shape,
@@ -198,39 +192,34 @@ class ClusterWeights(Wrapper):
           trainable=False,
           synchronization=tf.VariableSynchronization.ON_READ,
           aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA,
-          initializer=initializers.Constant(value=pulling_indices)
-      )
+          initializer=initializers.Constant(value=pulling_indices))
 
       if self.preserve_sparsity:
         # Init the sparsity mask
         clustered_weights = (
-          self.clustering_algorithms[weight_name]
-          .get_clustered_weight(pulling_indices, original_weight)
-        )
+            self.clustering_algorithms[weight_name].get_clustered_weight(
+                pulling_indices, original_weight))
         self.sparsity_masks[weight_name] = (
-          tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
-        )
+            tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32))
 
   def update_clustered_weights_associations(self):
-    for weight_name, original_weight in self.original_clusterable_weights.items():
+    for weight_name, original_weight in self.original_clusterable_weights.items(
+    ):
       # Update pulling indices (cluster associations)
       pulling_indices = (
-        self.clustering_algorithms[weight_name]
-        .get_pulling_indices(original_weight)
-      )
+          self.clustering_algorithms[weight_name].get_pulling_indices(
+              original_weight))
       self.pulling_indices[weight_name].assign(pulling_indices)
 
       # Update clustered weights
       clustered_weights = (
-        self.clustering_algorithms[weight_name]
-        .get_clustered_weight(
-          pulling_indices, original_weight
-        )
-      )
+          self.clustering_algorithms[weight_name].get_clustered_weight(
+              pulling_indices, original_weight))
 
       if self.preserve_sparsity:
         # Apply the sparsity mask to the clustered weights
-        clustered_weights = tf.math.multiply(clustered_weights, self.sparsity_masks[weight_name])
+        clustered_weights = tf.math.multiply(clustered_weights,
+                                             self.sparsity_masks[weight_name])
 
       # Replace the weights with their clustered counterparts
       setattr(self.layer, weight_name, clustered_weights)
@@ -270,9 +259,8 @@ class ClusterWeights(Wrapper):
     config['preserve_sparsity'] = preserve_sparsity
     config['cluster_gradient_aggregation'] = cluster_gradient_aggregation
 
-    from tensorflow.python.keras.layers import deserialize as deserialize_layer  # pylint: disable=g-import-not-at-top
-    layer = deserialize_layer(config.pop('layer'),
-                              custom_objects=custom_objects)
+    layer = tf.keras.layers.deserialize(
+        config.pop('layer'), custom_objects=custom_objects)
     config['layer'] = layer
 
     return cls(**config)
@@ -306,4 +294,3 @@ class ClusterWeights(Wrapper):
 
   def set_weights(self, weights):
     self.layer.set_weights(weights)
-

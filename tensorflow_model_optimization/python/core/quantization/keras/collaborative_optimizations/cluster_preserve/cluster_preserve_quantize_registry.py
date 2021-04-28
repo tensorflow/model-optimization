@@ -318,8 +318,9 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         trainable=True)
 
     # Get clustering implementation according to layer type
-    clustering_impl_cls = clustering_registry.ClusteringLookupRegistry().\
-        get_clustering_impl(layer.layer, name)
+    clustering_impl_cls = (
+        clustering_registry.ClusteringLookupRegistry().get_clustering_impl(
+            layer.layer, name))
     clustering_impl = clustering_impl_cls(clst_centroids_tf)
 
     pulling_indices = tf.dtypes.cast(

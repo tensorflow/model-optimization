@@ -299,8 +299,10 @@ def strip_clustering(model):
       layer.update_clustered_weights_associations()
 
       # Construct a list of weights to initialize the clean layer
-      updated_weights = layer.layer.get_weights()  # non clusterable weights only
-      for position_variable, weight_name in layer.position_original_weights.items():
+      # non-clusterable weights only
+      updated_weights = layer.layer.get_weights()
+      for (position_variable,
+           weight_name) in layer.position_original_weights.items():
         # Add the clustered weights at the correct position
         clustered_weight = getattr(layer.layer, weight_name)
         updated_weights.insert(position_variable, clustered_weight)

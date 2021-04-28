@@ -18,19 +18,17 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
+from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 
 keras = tf.keras
 CentroidInitialization = cluster_config.CentroidInitialization
 
 
 def _distribution_strategies():
-  return [
-      tf.distribute.MirroredStrategy()
-  ]
+  return [tf.distribute.MirroredStrategy()]
 
 
 class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
@@ -39,8 +37,8 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
   def setUp(self):
     super(ClusterDistributedTest, self).setUp()
     self.params = {
-        "number_of_clusters": 2,
-        "cluster_centroids_init": CentroidInitialization.LINEAR
+        'number_of_clusters': 2,
+        'cluster_centroids_init': CentroidInitialization.LINEAR
     }
 
   @parameterized.parameters(_distribution_strategies())
@@ -63,9 +61,10 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
     model.predict(np.random.rand(20, 10))
 
     stripped_model = cluster.strip_clustering(model)
-    weights_as_list = stripped_model.layers[0].kernel.numpy().reshape(-1,).tolist()
+    weights_as_list = stripped_model.layers[0].kernel.numpy().reshape(
+        -1,).tolist()
     unique_weights = set(weights_as_list)
-    self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
+    self.assertLessEqual(len(unique_weights), self.params['number_of_clusters'])
 
   @parameterized.parameters(_distribution_strategies())
   def testAssociationValuesPerReplica(self, distribution):
@@ -77,13 +76,12 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
       output_shape = (2, 8)
       l = cluster_wrapper.ClusterWeights(
           keras.layers.Dense(8, input_shape=input_shape),
-          number_of_clusters=self.params["number_of_clusters"],
-          cluster_centroids_init=self.params["cluster_centroids_init"]
-      )
+          number_of_clusters=self.params['number_of_clusters'],
+          cluster_centroids_init=self.params['cluster_centroids_init'])
       l.build(input_shape)
 
       clusterable_weights = l.layer.get_clusterable_weights()
-      self.assertEqual(len(clusterable_weights), 1)
+      self.assertLen(clusterable_weights, 1)
       weights_name = clusterable_weights[0][0]
       self.assertEqual(weights_name, 'kernel')
       centroids1 = l.cluster_centroids[weights_name]
@@ -101,18 +99,14 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
           val_tensor = tf.dtypes.cast(
               tf.zeros(shape=output_shape), per_replica[0].dtype)
         for i in range(0, len(per_replica)):
-          all_equal = tf.reduce_all(
-              tf.equal(
-                  per_replica[i], val_tensor
-              )
-          )
+          all_equal = tf.reduce_all(tf.equal(per_replica[i], val_tensor))
           self.assertTrue(all_equal)
 
       def update_fn(v, val):
         return v.assign(val)
 
-      initial_val = tf.Variable([mean_weight, mean_weight + 2.0 * max_dist], \
-        aggregation=tf.VariableAggregation.MEAN)
+      initial_val = tf.Variable([mean_weight, mean_weight + 2.0 * max_dist],
+                                aggregation=tf.VariableAggregation.MEAN)
 
       centroids1 = distribution.extended.update(
           centroids1, update_fn, args=(initial_val,))
@@ -122,8 +116,8 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
       per_replica = distribution.experimental_local_results(clst_indices)
       assert_all_cluster_indices(per_replica, 0)
 
-      second_val = tf.Variable([mean_weight - 2.0 * max_dist, mean_weight], \
-        aggregation=tf.VariableAggregation.MEAN)
+      second_val = tf.Variable([mean_weight - 2.0 * max_dist, mean_weight],
+                               aggregation=tf.VariableAggregation.MEAN)
       centroids2 = l.cluster_centroids[weights_name]
       centroids2 = distribution.extended.update(
           centroids2, update_fn, args=(second_val,))
@@ -132,6 +126,7 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
       clst_indices = l.pulling_indices[weights_name]
       per_replica = distribution.experimental_local_results(clst_indices)
       assert_all_cluster_indices(per_replica, 1)
+
 
 if __name__ == '__main__':
   tf.test.main()
