@@ -1,3 +1,5 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
+
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -9,7 +11,7 @@ filegroup(
     srcs = glob(["**"]),
 )
 
-py_binary(
+py_strict_binary(
     name = "imdb_lstm",
     srcs = [
         "imdb_lstm.py",

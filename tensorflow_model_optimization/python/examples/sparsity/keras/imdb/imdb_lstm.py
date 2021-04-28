@@ -18,17 +18,16 @@ The dataset is actually too small for LSTM to be of any advantage
 compared to simpler, much faster methods such as TF-IDF+LogReg.
 """
 
-from __future__ import print_function
-# import g3
 import numpy as np
+import tensorflow as tf
 
-import tensorflow.keras as keras
-import tensorflow.keras.backend as K
-import tensorflow.keras.preprocessing.sequence as sequence
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
+
+keras = tf.keras
+K = tf.keras.backend
 
 
 def print_model_sparsity(pruned_model):
@@ -75,8 +74,8 @@ print(len(x_train), "train sequences")
 print(len(x_test), "test sequences")
 
 print("Pad sequences (samples x time)")
-x_train = sequence.pad_sequences(x_train, maxlen=maxlen)
-x_test = sequence.pad_sequences(x_test, maxlen=maxlen)
+x_train = keras.sequence.pad_sequences(x_train, maxlen=maxlen)
+x_test = keras.sequence.pad_sequences(x_test, maxlen=maxlen)
 print("x_train shape:", x_train.shape)
 print("x_test shape:", x_test.shape)
 
