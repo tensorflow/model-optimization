@@ -31,7 +31,7 @@ py_strict_library(
         # python/keras:initializers tensorflow dep2,
         # python/keras/layers tensorflow dep2,
         # python/keras/layers:convolutional tensorflow dep2,
-        # python/keras/layers:normalization tensorflow dep2,
+        # python/keras/layers/normalization:batch_normalization_v1 tensorflow dep2,
         # python/keras/utils:engine_utils tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:utils",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",

@@ -19,21 +19,20 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+
 from tensorflow.python.framework import dtypes
 from tensorflow.python.keras import activations
 from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers import convolutional
-from tensorflow.python.keras.layers import normalization
 from tensorflow.python.keras.layers import serialization
+from tensorflow.python.keras.layers.normalization import batch_normalization_v1
 from tensorflow.python.keras.utils import conv_utils
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
 from tensorflow.python.ops import nn
 from tensorflow.python.ops import nn_ops
-
 from tensorflow_model_optimization.python.core.keras import utils
-
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
@@ -232,7 +231,7 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
         name=name,
         **kwargs)
 
-    self.batchnorm = normalization.BatchNormalization(
+    self.batchnorm = batch_normalization_v1.BatchNormalization(
         axis=axis,
         momentum=momentum,
         epsilon=epsilon,
@@ -417,7 +416,7 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
         name=name,
         **kwargs)
 
-    self.batchnorm = normalization.BatchNormalization(
+    self.batchnorm = batch_normalization_v1.BatchNormalization(
         axis=axis,
         momentum=momentum,
         epsilon=epsilon,
