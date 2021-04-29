@@ -16,11 +16,10 @@
 
 import tensorflow as tf
 
-from tensorflow import keras
 from tensorflow_model_optimization.python.core.keras import compat
 
 
-class ClusteringSummaries(keras.callbacks.TensorBoard):
+class ClusteringSummaries(tf.keras.callbacks.TensorBoard):
   """Helper class to create tensorboard summaries for the clustering progress.
 
     This class is derived from tf.keras.callbacks.TensorBoard and just adds

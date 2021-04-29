@@ -16,8 +16,6 @@
 
 import tensorflow as tf
 
-from tensorflow.keras import initializers
-
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
@@ -130,8 +128,8 @@ class ClusterWeights(Wrapper):
     # If the input shape was specified, then we need to preserve this
     # information in the layer. If this info is not preserved, then the `built`
     # state will not be preserved between serializations.
-    if (not hasattr(self, '_batch_input_shape')
-        and hasattr(layer, '_batch_input_shape')):
+    if (not hasattr(self, '_batch_input_shape') and
+        hasattr(layer, '_batch_input_shape')):
       self._batch_input_shape = self.layer._batch_input_shape
 
     # Save the input shape specified in the build
@@ -171,7 +169,7 @@ class ClusterWeights(Wrapper):
           shape=(self.number_of_clusters,),
           dtype=weight.dtype,
           trainable=True,
-          initializer=initializers.Constant(value=cluster_centroids))
+          initializer=tf.keras.initializers.Constant(value=cluster_centroids))
 
       # Init the weight clustering algorithm
       self.clustering_algorithms[weight_name] = (
@@ -192,7 +190,7 @@ class ClusterWeights(Wrapper):
           trainable=False,
           synchronization=tf.VariableSynchronization.ON_READ,
           aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA,
-          initializer=initializers.Constant(value=pulling_indices))
+          initializer=tf.keras.initializers.Constant(value=pulling_indices))
 
       if self.preserve_sparsity:
         # Init the sparsity mask

@@ -19,7 +19,7 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "cluster",
     srcs = ["cluster.py"],
     srcs_version = "PY3",
@@ -38,7 +38,7 @@ py_strict_library(
     visibility = ["//visibility:public"],
 )
 
-py_library(
+py_strict_library(
     name = "clustering_registry",
     srcs = ["clustering_registry.py"],
     srcs_version = "PY3",
@@ -73,7 +73,7 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "cluster_wrapper",
     srcs = ["cluster_wrapper.py"],
     srcs_version = "PY3",
@@ -99,7 +99,7 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "clustering_callbacks",
     srcs = ["clustering_callbacks.py"],
     srcs_version = "PY3",

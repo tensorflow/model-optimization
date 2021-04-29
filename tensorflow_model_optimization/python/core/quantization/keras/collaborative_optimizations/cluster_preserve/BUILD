@@ -28,14 +28,13 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "cluster_preserve_quantize_registry",
     srcs = [
         "cluster_preserve_quantize_registry.py",
     ],
     srcs_version = "PY3",
     deps = [
-        ":cluster_utils",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quant_ops",
