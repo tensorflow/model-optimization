@@ -24,7 +24,7 @@ l = keras.layers
 def layers_list():
   return [
       l.Conv2D(32, 5, padding='same', activation='relu',
-               input_shape=input_shape()),
+               input_shape=image_input_shape()),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       # TODO(pulkitb): Add BatchNorm when transformations are ready.
       # l.BatchNormalization(),
@@ -43,7 +43,7 @@ def sequential_model():
 
 def functional_model():
   """Builds an MNIST functional model."""
-  inp = keras.Input(input_shape())
+  inp = keras.Input(image_input_shape())
   x = l.Conv2D(32, 5, padding='same', activation='relu')(inp)
   x = l.MaxPooling2D((2, 2), (2, 2), padding='same')(x)
   # TODO(pulkitb): Add BatchNorm when transformations are ready.
@@ -58,7 +58,7 @@ def functional_model():
   return keras.models.Model([inp], [out])
 
 
-def input_shape(img_rows=28, img_cols=28):
+def image_input_shape(img_rows=28, img_cols=28):
   if tf.keras.backend.image_data_format() == 'channels_first':
     return 1, img_rows, img_cols
   else:
@@ -92,9 +92,11 @@ def preprocessed_data(img_rows=28,
 
 def eval_tflite(model_path):
   """Evaluate mnist in TFLite for accuracy."""
+
   interpreter = tf.lite.Interpreter(model_path=model_path)
   interpreter.allocate_tensors()
   input_index = interpreter.get_input_details()[0]['index']
+  input_shape = interpreter.get_input_details()[0]['shape']
   output_index = interpreter.get_output_details()[0]['index']
 
   _, _, x_test, y_test = preprocessed_data()
@@ -106,8 +108,7 @@ def eval_tflite(model_path):
   num_correct = 0
 
   for img, label in zip(x_test, y_test):
-    batch_input_shape = (1,) + input_shape()
-    inp = img.reshape(batch_input_shape)
+    inp = img.reshape(input_shape)
     total_seen += 1
     interpreter.set_tensor(input_index, inp)
     interpreter.invoke()

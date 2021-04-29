@@ -1,8 +1,4 @@
-# buildifier: disable=same-origin-load
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
-
-# buildifier: disable=same-origin-load
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -131,7 +127,7 @@ py_strict_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "quantize_annotate_test",
     srcs = [
         "quantize_annotate_test.py",

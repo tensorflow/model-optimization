@@ -1,21 +1,23 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
 ])
 
 licenses(["notice"])
 
-py_library(
+py_strict_library(
     name = "experimental",
     srcs = [
         "__init__.py",
     ],
     srcs_version = "PY3",
     deps = [
-        ":cluster",
+        ":cluster",  # buildcleaner: keep
     ],
 )
 
-py_library(
+py_strict_library(
     name = "cluster",
     srcs = ["cluster.py"],
     srcs_version = "PY3",

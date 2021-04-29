@@ -21,7 +21,6 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras.engine.base_layer import Layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
 
@@ -54,7 +53,7 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
   def testAnnotateLayerCallPassesTraningBoolean(self):
 
-    class MockLayer(Layer):
+    class MockLayer(tf.keras.layers.Layer):
       self.training = None
 
       def call(self, training=None):

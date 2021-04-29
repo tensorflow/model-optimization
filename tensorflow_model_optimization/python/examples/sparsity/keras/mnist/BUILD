@@ -1,3 +1,5 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
+
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -9,7 +11,7 @@ filegroup(
     srcs = glob(["**"]),
 )
 
-py_binary(
+py_strict_binary(
     name = "mnist_estimator",
     srcs = [
         "dataset.py",
@@ -23,12 +25,14 @@ py_binary(
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/sparsity/keras:estimator_utils",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
-        "//third_party/tensorflow_models/official/r1/utils/logs",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
+        "//third_party/tensorflow_models/official/common:distribute_utils",
+        "//third_party/tensorflow_models/official/r1/utils/logs:hooks_helper",
         "//third_party/tensorflow_models/official/utils",
     ],
 )
 
-py_binary(
+py_strict_binary(
     name = "mnist_cnn",
     srcs = [
         "mnist_cnn.py",
@@ -41,11 +45,10 @@ py_binary(
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
-        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_wrapper",
     ],
 )
 
-py_binary(
+py_strict_binary(
     name = "mnist_e2e",
     srcs = [
         "mnist_e2e.py",

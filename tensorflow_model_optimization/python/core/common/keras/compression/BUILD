@@ -1,8 +1,9 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_library")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library")
 
 licenses(["notice"])
 
-pytype_library(
+pytype_strict_library(
     name = "algorithm",
     srcs = ["algorithm.py"],
     srcs_version = "PY3",
@@ -15,7 +16,7 @@ pytype_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "schedules",
     srcs = ["schedules.py"],
     srcs_version = "PY3ONLY",
@@ -24,7 +25,7 @@ py_library(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "schedules_test",
     srcs = [
         "schedules_test.py",
@@ -32,8 +33,6 @@ py_test(
     python_version = "PY3",
     deps = [
         ":schedules",
-        # absl/testing:parameterized dep1,
-        # numpy dep1,
         # tensorflow dep1,
     ],
 )

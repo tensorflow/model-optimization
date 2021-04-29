@@ -82,9 +82,11 @@ import sys as _sys
 # To ensure users only access the expected public API, the API structure is
 # created in the `api` directory. Import all api modules.
 from tensorflow_model_optimization.python.core import version
-# pylint: disable=wildcard-import
-from tensorflow_model_optimization.python.core.api import *
-# pylint: enable=wildcard-import
+
+from tensorflow_model_optimization.python.core.api import clustering
+from tensorflow_model_optimization.python.core.api import experimental
+from tensorflow_model_optimization.python.core.api import quantization
+from tensorflow_model_optimization.python.core.api import sparsity
 
 
 # Use sparsity module to fetch the path for the `api` directory.

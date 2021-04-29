@@ -14,22 +14,13 @@
 # ==============================================================================
 """Utility functions for making pruning wrapper work with estimators."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-# import g3
+import tensorflow as tf
 
-from tensorflow.python.estimator.model_fn import EstimatorSpec
-from tensorflow.python.framework import dtypes
 from tensorflow.python.framework import ops
-from tensorflow.python.ops import control_flow_ops
-from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import state_ops
-from tensorflow.python.training import monitored_session
 from tensorflow_model_optimization.python.core.sparsity.keras.pruning_wrapper import PruneLowMagnitude
 
 
-class PruningEstimatorSpec(EstimatorSpec):
+class PruningEstimatorSpec(tf.estimator.EstimatorSpec):
   """Returns an EstimatorSpec modified to prune the model while training."""
 
   def __new__(cls, model, step=None, train_op=None, **kwargs):
@@ -49,13 +40,12 @@ class PruningEstimatorSpec(EstimatorSpec):
         if isinstance(layer, PruneLowMagnitude):
           if step is None:
             # Add ops to increment the pruning_step by 1
-            increment_ops.append(state_ops.assign_add(layer.pruning_step, 1))
+            increment_ops.append(tf.assign_add(layer.pruning_step, 1))
           else:
             increment_ops.append(
-                state_ops.assign(layer.pruning_step,
-                                 math_ops.cast(step, dtypes.int32)))
+                tf.assign(layer.pruning_step, tf.cast(step, tf.int32)))
 
-      return control_flow_ops.group(increment_ops)
+      return tf.group(increment_ops)
 
     pruning_ops = []
     # Grab the ops to update pruning step in every prunable layer
@@ -64,21 +54,21 @@ class PruningEstimatorSpec(EstimatorSpec):
     # Grab the model updates.
     pruning_ops.append(model.updates)
 
-    kwargs["train_op"] = control_flow_ops.group(pruning_ops, train_op)
+    kwargs["train_op"] = tf.group(pruning_ops, train_op)
 
     def init_fn(scaffold, session):  # pylint: disable=unused-argument
       return session.run(step_increment_ops)
 
     def get_new_scaffold(old_scaffold):
       if old_scaffold.init_fn is None:
-        return monitored_session.Scaffold(
+        return tf.compat.v1.train.Scaffold(
             init_fn=init_fn, copy_from_scaffold=old_scaffold)
       # TODO(suyoggupta): Figure out a way to merge the init_fn of the
       # original scaffold with the one defined above.
       raise ValueError("Scaffold provided to PruningEstimatorSpec must not "
                        "set an init_fn.")
 
-    scaffold = monitored_session.Scaffold(init_fn=init_fn)
+    scaffold = tf.compat.v1.train.Scaffold(init_fn=init_fn)
     if "scaffold" in kwargs:
       scaffold = get_new_scaffold(kwargs["scaffold"])
 
