@@ -16,17 +16,15 @@
 import distutils.version
 
 import tensorflow as tf
-from tensorflow import keras
-import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 from tensorflow_model_optimization.python.core.clustering.keras.clustering_registry import ClusteringRegistry
 
-k = keras.backend
-CustomObjectScope = keras.utils.CustomObjectScope
-Layer = keras.layers.Layer
-InputLayer = keras.layers.InputLayer
+k = tf.keras.backend
+CustomObjectScope = tf.keras.utils.CustomObjectScope
+Layer = tf.keras.layers.Layer
+InputLayer = tf.keras.layers.InputLayer
 
 # After tf version 2.4.0 the internal variable
 # _layers has been renamed to _self_tracked_trackables.
@@ -47,10 +45,10 @@ def cluster_scope():
 
   ```python
   clustered_model = cluster_weights(model, **self.params)
-  keras.models.save_model(clustered_model, keras_file)
+  tf.keras.models.save_model(clustered_model, keras_file)
 
   with cluster_scope():
-    loaded_model = keras.models.load_model(keras_file)
+    loaded_model = tf.keras.models.load_model(keras_file)
   ```
   """
   return CustomObjectScope(
@@ -70,13 +68,13 @@ def _type_model(model):
       [tuple]: (is_sequential_or_functional, is_keras_layer, is_subclassed_model)
   """
   is_sequential_or_functional = isinstance(
-      model, keras.Model) and (isinstance(model, keras.Sequential) or
+      model, tf.keras.Model) and (isinstance(model, tf.keras.Sequential) or
                                   model._is_graph_network)
 
   is_keras_layer = isinstance(
-      model, keras.layers.Layer) and not isinstance(model, keras.Model)
+      model, tf.keras.layers.Layer) and not isinstance(model, tf.keras.Model)
 
-  is_subclassed_model = isinstance(model, keras.Model) and \
+  is_subclassed_model = isinstance(model, tf.keras.Model) and \
     not model._is_graph_network
 
   return (is_sequential_or_functional, is_keras_layer, is_subclassed_model)
@@ -96,8 +94,8 @@ def cluster_weights(to_cluster,
   show some acceptable performance on the testing/validation sets.
 
   The function accepts either a single keras layer
-  (subclass of `keras.layers.Layer`), list of keras layers or a keras model
-  (instance of `keras.models.Model`) and handles them appropriately.
+  (subclass of `tf.keras.layers.Layer`), list of keras layers or a keras model
+  (instance of `tf.keras.models.Model`) and handles them appropriately.
 
   If it encounters a layer it does not know how to handle, it will throw an
   error. While clustering an entire model, even a single unknown layer would
@@ -122,7 +120,7 @@ def cluster_weights(to_cluster,
     'cluster_centroids_init': CentroidInitialization.DENSITY_BASED
   }
 
-  model = keras.Sequential([
+  model = tf.keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
       cluster_weights(layers.Dense(2, activation='tanh'), **clustering_params)
   ])
@@ -176,8 +174,8 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
   show some acceptable performance on the testing/validation sets.
 
   The function accepts either a single keras layer
-  (subclass of `keras.layers.Layer`), list of keras layers or a keras model
-  (instance of `keras.models.Model`) and handles them appropriately.
+  (subclass of `tf.keras.layers.Layer`), list of keras layers or a keras model
+  (instance of `tf.keras.models.Model`) and handles them appropriately.
 
   If it encounters a layer it does not know how to handle, it will throw an
   error. While clustering an entire model, even a single unknown layer would
@@ -204,7 +202,7 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
     'preserve_sparsity': False
   }
 
-  model = keras.Sequential([
+  model = tf.keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
       cluster_weights(layers.Dense(2, activation='tanh'), **clustering_params)
   ])
@@ -219,7 +217,7 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
     'preserve_sparsity': True
   }
 
-  model = keras.Sequential([
+  model = tf.keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
       cluster_weights(layers.Dense(2, activation='tanh'), **clustering_params)
   ])
@@ -251,22 +249,22 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
         cluster_centroids_init))
 
   def _add_clustering_wrapper(layer):
-    if isinstance(layer, keras.Model):
+    if isinstance(layer, tf.keras.Model):
       # Check whether the model is a subclass.
       # NB: This check is copied from keras.py file in tensorflow.
       # There is no available public API to do this check.
       # pylint: disable=protected-access
       if (not layer._is_graph_network and
-          not isinstance(layer, keras.models.Sequential)):
+          not isinstance(layer, tf.keras.models.Sequential)):
         raise ValueError('Subclassed models are not supported currently.')
 
-      return keras.models.clone_model(
+      return tf.keras.models.clone_model(
           layer, input_tensors=None, clone_function=_add_clustering_wrapper)
     if isinstance(layer, cluster_wrapper.ClusterWeights):
       return layer
     if isinstance(layer, InputLayer):
       return layer.__class__.from_config(layer.get_config())
-    if isinstance(layer, keras.layers.RNN):
+    if isinstance(layer, tf.keras.layers.RNN):
       return cluster_wrapper.ClusterWeightsRNN(
         layer,
         number_of_clusters,
@@ -292,7 +290,7 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
   if isinstance(to_cluster, list):
     return _wrap_list(to_cluster)
   elif is_sequential_or_functional:
-    return keras.models.clone_model(to_cluster,
+    return tf.keras.models.clone_model(to_cluster,
                                     input_tensors=None,
                                     clone_function=_add_clustering_wrapper)
   elif is_keras_layer:
@@ -345,15 +343,15 @@ def strip_clustering(to_strip):
   ```
   The exported_model and the orig_model have the same structure.
   """
-  if not isinstance(to_strip, keras.Model) and not isinstance(
-      to_strip, keras.layers.Layer):
+  if not isinstance(to_strip, tf.keras.Model) and not isinstance(
+      to_strip, tf.keras.layers.Layer):
     raise ValueError(
         'Expected to_strip to be a `tf.keras.Model` or \
            `tf.keras.layers.Layer` instance but got: ', to_strip)
 
   def _strip_clustering_wrapper(layer):
-    if isinstance(layer, keras.Model):
-      return keras.models.clone_model(
+    if isinstance(layer, tf.keras.Model):
+      return tf.keras.models.clone_model(
           layer, input_tensors=None, clone_function=_strip_clustering_wrapper)
 
     elif isinstance(layer, cluster_wrapper.ClusterWeights):
@@ -361,9 +359,10 @@ def strip_clustering(to_strip):
       layer.update_clustered_weights_associations()
 
       # Construct a list of weights to initialize the clean layer
-      updated_weights = layer.layer.get_weights()  # non clusterable weights only
-
-      for position_variable, weight_name in layer.position_original_weights.items():
+      # non-clusterable weights only
+      updated_weights = layer.layer.get_weights()
+      for (position_variable,
+           weight_name) in layer.position_original_weights.items():
         # Add the clustered weights at the correct position
         clustered_weight = layer.get_weight_from_layer(weight_name)
         updated_weights.insert(position_variable, clustered_weight)
@@ -382,11 +381,11 @@ def strip_clustering(to_strip):
 
   # Just copy the model with the right callback
   if is_sequential_or_functional:
-    return keras.models.clone_model(to_strip,
+    return tf.keras.models.clone_model(to_strip,
                                   input_tensors=None,
                                   clone_function=_strip_clustering_wrapper)
   elif is_keras_layer:
-    if isinstance(to_strip, keras.layers.Layer):
+    if isinstance(to_strip, tf.keras.layers.Layer):
       return _strip_clustering_wrapper(to_strip)
   elif is_subclassed_model:
     to_strip_model = to_strip.model

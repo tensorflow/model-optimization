@@ -5,7 +5,7 @@
 #  used to optimize machine learning models for deployment and execution.
 #
 #  https://github.com/tensorflow/model-optimization
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary", "py_strict_library")
 
 package(default_visibility = ["//visibility:public"])
 
@@ -24,11 +24,13 @@ py_strict_library(
     ],
 )
 
-py_binary(
+py_strict_binary(
     name = "build_docs",
     srcs = ["build_docs.py"],
     python_version = "PY3",
     deps = [
+        # absl:app dep1,
+        # absl/flags dep1,
         # tensorflow_docs/api_generator:generate_lib dep1,
         "//third_party/tensorflow_model_optimization",
     ],

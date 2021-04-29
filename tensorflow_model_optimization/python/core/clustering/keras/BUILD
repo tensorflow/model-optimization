@@ -1,8 +1,4 @@
-# buildifier: disable=same-origin-load
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
-
-# buildifier: disable=same-origin-load
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -23,7 +19,7 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "cluster",
     srcs = ["cluster.py"],
     srcs_version = "PY3",
@@ -42,7 +38,7 @@ py_strict_library(
     visibility = ["//visibility:public"],
 )
 
-py_library(
+py_strict_library(
     name = "clustering_registry",
     srcs = ["clustering_registry.py"],
     srcs_version = "PY3",
@@ -77,7 +73,7 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "cluster_wrapper",
     srcs = ["cluster_wrapper.py"],
     srcs_version = "PY3",
@@ -103,7 +99,7 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "clustering_callbacks",
     srcs = ["clustering_callbacks.py"],
     srcs_version = "PY3",
@@ -132,7 +128,7 @@ py_test(
     ],
 )
 
-py_test(
+py_strict_test(
     name = "clustering_centroids_test",
     size = "medium",
     srcs = ["clustering_centroids_test.py"],

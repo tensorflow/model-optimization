@@ -97,10 +97,11 @@ def _cluster_model(model, number_of_clusters):
 
   return stripped_model
 
+
 def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
   layer = stripped_model.layers[layer_nr]
   weight = getattr(layer, weight_name)
-  weights_as_list = weight.numpy().reshape(-1, ).tolist()
+  weights_as_list = weight.numpy().reshape(-1,).tolist()
   nr_of_unique_weights = len(set(weights_as_list))
 
   return nr_of_unique_weights

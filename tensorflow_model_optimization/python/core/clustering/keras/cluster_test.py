@@ -15,13 +15,9 @@
 """Tests for keras clustering API."""
 
 import json
-import tempfile
 import os
-import unittest
-
 import tempfile
 
-import os
 from absl.testing import parameterized
 import tensorflow as tf
 
@@ -92,8 +88,7 @@ class MyClusterableLayer(keras.layers.Dense,
 
 class MyClusterableLayerInvalid(keras.layers.Dense,
                                 clusterable_layer.ClusterableLayer):
-  """This layer is invalid: it does not implement get_clusterable_weights(self).
-  """
+  """Invalid layer: it does not implement get_clusterable_weights(self)."""
   pass
 
 
@@ -142,7 +137,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     self.model = keras.Sequential()
     self.params = {
-        'number_of_clusters': 8,
+        'number_of_clusters':
+            8,
         'cluster_centroids_init':
             cluster_config.CentroidInitialization.DENSITY_BASED
     }
@@ -400,31 +396,24 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """
     # We need to build the layer at first, so
     # we have weights to cluster.
-    clusterable_layer = self.clusterable_layer
-    clusterable_layer.build(input_shape=(10, 10))
+    layer = self.clusterable_layer
+    layer.build(input_shape=(10, 10))
 
-    wrapped_layer = cluster_wrapper.ClusterWeights(clusterable_layer,
-                                     **self.params)
+    wrapped_layer = cluster_wrapper.ClusterWeights(layer, **self.params)
 
     self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
 
   def testKerasCustomLayerClusterable(self):
-    """
-    Verifies that we can wrap keras custom layer that is customerable.
-    """
-    clusterable_layer = KerasCustomLayerClusterable()
-    wrapped_layer = cluster_wrapper.ClusterWeights(clusterable_layer,
-                                     **self.params)
+    """Verifies that we can wrap keras custom layer that is customerable."""
+    layer = KerasCustomLayerClusterable()
+    wrapped_layer = cluster_wrapper.ClusterWeights(layer, **self.params)
 
     self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
 
   def testClusterMyClusterableLayerInvalid(self):
-    """
-    Verifies that assertion is thrown when function
-    get_clusterable_weights is not provided.
-    """
+    """Verifies that assertion is thrown when function get_clusterable_weights is not provided."""
     with self.assertRaises(TypeError):
-      MyClusterableLayerInvalid(10) # pylint: disable=abstract-class-instantiated
+      MyClusterableLayerInvalid(10)  # pylint: disable=abstract-class-instantiated
 
   def testClusterKerasCustomLayer(self):
     """Verifies that attempting to cluster a keras custom layer raises an exception."""
@@ -449,7 +438,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsNotNone(stripped_model.layers[1].kernel_regularizer)
     with tempfile.TemporaryDirectory() as tmp_dir_name:
       keras_file = os.path.join(tmp_dir_name, 'cluster_test')
-      stripped_model.save(keras_file, save_traces = True)
+      stripped_model.save(keras_file, save_traces=True)
 
   def testStripClusteringSequentialModelWithBiasRegularizer(self):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
@@ -463,7 +452,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsNotNone(stripped_model.layers[1].bias_regularizer)
     with tempfile.TemporaryDirectory() as tmp_dir_name:
       keras_file = os.path.join(tmp_dir_name, 'cluster_test')
-      stripped_model.save(keras_file, save_traces = True)
+      stripped_model.save(keras_file, save_traces=True)
 
   def testStripClusteringSequentialModelWithActivityRegularizer(self):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
@@ -477,7 +466,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsNotNone(stripped_model.layers[1].activity_regularizer)
     with tempfile.TemporaryDirectory() as tmp_dir_name:
       keras_file = os.path.join(tmp_dir_name, 'cluster_test')
-      stripped_model.save(keras_file, save_traces = True)
+      stripped_model.save(keras_file, save_traces=True)
 
   def testStripClusteringSequentialModelWithKernelConstraint(self):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
@@ -491,7 +480,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsNotNone(stripped_model.layers[1].kernel_constraint)
     with tempfile.TemporaryDirectory() as tmp_dir_name:
       keras_file = os.path.join(tmp_dir_name, 'cluster_test')
-      stripped_model.save(keras_file, save_traces = True)
+      stripped_model.save(keras_file, save_traces=True)
 
   def testStripClusteringSequentialModelWithBiasConstraint(self):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
@@ -505,31 +494,13 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsNotNone(stripped_model.layers[1].bias_constraint)
     with tempfile.TemporaryDirectory() as tmp_dir_name:
       keras_file = os.path.join(tmp_dir_name, 'cluster_test')
-      stripped_model.save(keras_file, save_traces = True)
-
-  def testClusterMyClusterableLayer(self):
-    # we have weights to cluster.
-    layer = self.clusterable_layer
-    layer.build(input_shape=(10, 10))
-
-    wrapped_layer = cluster_wrapper.ClusterWeights(layer, **self.params)
-    self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
-
-  def testKerasCustomLayerClusterable(self):
-    """Verifies that we can wrap keras custom layer that is customerable."""
-    layer = KerasCustomLayerClusterable()
-    wrapped_layer = cluster_wrapper.ClusterWeights(layer, **self.params)
-    self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
-
-  def testClusterMyClusterableLayerInvalid(self):
-    """Verifies that an exception is raised when get_clusterable_weights() is not implemented."""
-    with self.assertRaises(TypeError):
-      MyClusterableLayerInvalid(10)  # pylint: disable=abstract-class-instantiated
+      stripped_model.save(keras_file, save_traces=True)
 
   @keras_parameterized.run_all_keras_modes
   def testClusterSequentialModelSelectively(self):
     clustered_model = keras.Sequential()
-    clustered_model.add(cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
+    clustered_model.add(
+        cluster.cluster_weights(self.keras_clusterable_layer, **self.params))
     clustered_model.add(self.keras_clusterable_layer)
     clustered_model.build(input_shape=(1, 10))
 
@@ -573,8 +544,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testClusterFunctionalModelSelectively(self):
-    """Verifies that layers within a functional model can be clustered selectively.
-    """
+    """Verifies that layers within a functional model can be clustered selectively."""
     i1 = keras.Input(shape=(10,))
     i2 = keras.Input(shape=(10,))
     x1 = cluster.cluster_weights(layers.Dense(10), **self.params)(i1)
@@ -626,8 +596,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testClusterModelValidLayersSuccessful(self):
     """Verifies that clustering a sequential model results in all clusterable layers within the model being clustered."""
     model = keras.Sequential([
-        self.keras_clusterable_layer,
-        self.keras_non_clusterable_layer,
+        self.keras_clusterable_layer, self.keras_non_clusterable_layer,
         self.custom_clusterable_layer
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
@@ -680,11 +649,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @keras_parameterized.run_all_keras_modes
   def testClusterModelDoesNotWrapAlreadyWrappedLayer(self):
     """Verifies that clustering a model that contains an already clustered layer does not result in wrapping the clustered layer into another cluster_wrapper."""
-    model = keras.Sequential(
-        [
-            layers.Flatten(),
-            cluster.cluster_weights(layers.Dense(10), **self.params),
-        ])
+    model = keras.Sequential([
+        layers.Flatten(),
+        cluster.cluster_weights(layers.Dense(10), **self.params),
+    ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     clustered_model.build(input_shape=(10, 10, 1))
 
@@ -698,8 +666,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testClusterValidLayersListSuccessful(self):
     """Verifies that clustering a list of layers results in all clusterable layers within the list being clustered."""
     model_layers = [
-        self.keras_clusterable_layer,
-        self.keras_non_clusterable_layer,
+        self.keras_clusterable_layer, self.keras_non_clusterable_layer,
         self.custom_clusterable_layer
     ]
     clustered_list = cluster.cluster_weights(model_layers, **self.params)
@@ -968,8 +935,8 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testStripClusteringAndSetOriginalWeightsBack(self):
     """Verifies that we can set_weights onto the stripped model."""
     model = keras.Sequential([
-      layers.Dense(10, input_shape=(5,)),
-      layers.Dense(10),
+        layers.Dense(10, input_shape=(5,)),
+        layers.Dense(10),
     ])
 
     # Save original weights
@@ -981,6 +948,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
 
     # Set back original weights onto the strip model
     stripped_model.set_weights(original_weights)
+
 
 if __name__ == '__main__':
   test.main()
