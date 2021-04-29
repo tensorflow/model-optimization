@@ -39,7 +39,7 @@ Users can apply clustering with the following APIs:
     <th colspan="4">Clustered</th>
   </tr>
   <tr>
-  <th>Top-1 accuracy (%)</th>
+    <th>Top-1 accuracy (%)</th>
     <th>Size of compressed .tflite (MB)</th>
     <th>Configuration</th>
     <th># of clusters</th>
@@ -48,37 +48,49 @@ Users can apply clustering with the following APIs:
   </tr>
   <tr>
     <td rowspan="3">MobileNetV1</td>
-    <td rowspan="3">71.02</td>
-    <td rowspan="3">14.96</td>
+    <td rowspan="3">70.976</td>
+    <td rowspan="3">14.97</td>
   </tr>
   <tr>
     <td>Selective (last 3 Conv2D layers)</td>
-    <td>256, 256, 32</td>
-    <td>70.62</td>
-    <td>8.42</td>
+    <td>16, 16, 16</td>
+    <td>70.294</td>
+    <td>7.69</td>
+  </tr>
+  <tr>
+    <td>Selective (last 3 Conv2D layers)</td>
+    <td>32, 32, 32</td>
+    <td>70.69</td>
+    <td>8.22</td>
   </tr>
   <tr>
     <td>Full (all Conv2D layers)</td>
-    <td>64</td>
-    <td>66.07</td>
-    <td>2.98</td>
+    <td>32</td>
+    <td>69.4</td>
+    <td>4.43</td>
   </tr>
   <tr>
     <td rowspan="3">MobileNetV2</td>
-    <td rowspan="3">72.29</td>
-    <td rowspan="3">12.90</td>
+    <td rowspan="3">71.778</td>
+    <td rowspan="3">12.38</td>
   </tr>
   <tr>
     <td>Selective (last 3 Conv2D layers)</td>
-    <td>256, 256, 32</td>
-    <td>72.31</td>
-    <td>7.00</td>
+    <td>16, 16, 16</td>
+    <td>70.742</td>
+    <td>6.68</td>
+ </tr>
+ <tr>
+    <td>Selective (last 3 Conv2D layers)</td>
+    <td>32, 32, 32</td>
+    <td>70.926</td>
+    <td>7.03</td>
  </tr>
  <tr>
    <td>Full (all Conv2D layers)</td>
    <td>32</td>
-   <td>69.33</td>
-   <td>2.60</td>
+   <td>69.744</td>
+   <td>4.05</td>
   </tr>
 </table>
 
@@ -88,9 +100,9 @@ The models were trained and tested on ImageNet.
 
 <table>
   <tr>
-    <th rowspan=2>Model</th>
-    <th colspan=2>Original</th>
-    <th colspan=4>Clustered</th>
+    <th rowspan="2">Model</th>
+    <th colspan="2">Original</th>
+    <th colspan="4">Clustered</th>
   </tr>
   <tr>
     <th>Top-1 accuracy (%)</th>
@@ -101,17 +113,25 @@ The models were trained and tested on ImageNet.
     <th>Size of compressed .tflite (MB)</th>
   </tr>
   <tr>
-    <td>DS-CNN-L</td>
-    <td>95.03</td>
-    <td>1.5</td>
-    <td>Full</td>
-    <td>32</td>
-    <td>94.71</td>
-    <td>0.3</td>
+    <td rowspan="3">DS-CNN-L</td>
+    <td rowspan="3">95.233</td>
+    <td rowspan="3">1.46</td>
+  </tr>
+  <tr>
+   <td>Full (all Conv2D layers)</td>
+   <td>32</td>
+   <td>95.09</td>
+   <td>0.39</td>
+  </tr>
+  <tr>
+   <td>Full (all Conv2D layers)</td>
+   <td>8</td>
+   <td>94.272</td>
+   <td>0.27</td>
   </tr>
 </table>
 
-The models were trained and tested on SpeechCommands v0.02.
+The model was trained and tested on SpeechCommands v0.02.
 
 NOTE: *Size of compressed .tflite* refers to the size of the zipped .tflite file obtained from the model from the following process:
 1. Serialize the Keras model into .h5 file
