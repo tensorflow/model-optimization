@@ -131,7 +131,7 @@ py_strict_test(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "pruning_impl",
     srcs = ["pruning_impl.py"],
     srcs_version = "PY3",
@@ -139,7 +139,6 @@ py_library(
     deps = [
         ":pruning_utils",
         # tensorflow dep1,
-        # python:summary tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
@@ -155,16 +154,14 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "estimator_utils",
     srcs = ["estimator_utils.py"],
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
-        # python:control_flow_ops tensorflow dep2,
-        # python:math_ops tensorflow dep2,
-        # python:state_ops tensorflow dep2,
+        # tensorflow dep1,
         # python/framework:for_generated_wrappers tensorflow dep2,
     ],
 )
