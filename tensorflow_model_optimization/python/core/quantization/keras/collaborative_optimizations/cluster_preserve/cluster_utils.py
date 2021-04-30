@@ -42,7 +42,7 @@ def _type_model(model):
 def _get_clustered_weights(cluster_indices, cluster_centroids):
   """This function is for generating clustered weights using centroids and cluster indices.
 
-  Arguments:
+  Args:
     cluster_indices: a variable representing cluster indices
     cluster_centroids: a variable representing cluster centroids
   Returns:
@@ -64,7 +64,7 @@ def strip_clustering_cqat(to_strip):
   After the CQAT is done, these variables should be removed and the layer
   with the clustered weights should be restored.
 
-  Arguments:
+  Args:
       to_strip: A `tf.keras.Model` instance with clustered layers or a
       `tf.keras.layers.Layer` instance
 
