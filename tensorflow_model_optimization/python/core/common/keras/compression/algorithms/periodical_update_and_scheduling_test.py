@@ -17,10 +17,10 @@
 import os
 import tempfile
 
-import numpy as np
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.common.keras.compression.algorithms import periodical_update_and_scheduling as svd
+from tensorflow_model_optimization.python.core.keras.testing import test_utils_mnist
 
 
 def _build_model():
@@ -79,38 +79,6 @@ def _convert_to_tflite(saved_model_dir):
     f.write(tflite_model)
 
   return tflite_file
-
-
-# TODO(tfmot): reuse test_utils_mnist.py.
-def _test_tflite(tflite_file):
-  interpreter = tf.lite.Interpreter(model_path=tflite_file)
-  interpreter.allocate_tensors()
-
-  input_index = interpreter.get_input_details()[0]['index']
-  output_index = interpreter.get_output_details()[0]['index']
-
-  (_, _), (x_test, y_test) = _get_dataset()
-
-  # Testing the entire dataset is too slow. Verifying only 300 of 10k samples.
-  x_test = x_test[0:300, :]
-  y_test = y_test[0:300]
-
-  total_seen = 0
-  num_correct = 0
-
-  for img, label in zip(x_test, y_test):
-    batch_input_shape = (1, 28, 28)
-    inp = img.reshape(batch_input_shape)
-    inp = inp.astype(np.float32)
-    total_seen += 1
-    interpreter.set_tensor(input_index, inp)
-    interpreter.invoke()
-    predictions = interpreter.get_tensor(output_index)
-
-    if np.argmax(predictions) == label:
-      num_correct += 1
-
-  return float(num_correct) / float(total_seen)
 
 
 def _get_directory_size_in_bytes(directory):
@@ -204,7 +172,7 @@ class FunctionalTest(tf.test.TestCase):
     saved_model_dir = _save_as_saved_model(compressed_model)
     compressed_tflite_file = _convert_to_tflite(saved_model_dir)
 
-    accuracy = _test_tflite(compressed_tflite_file)
+    accuracy = test_utils_mnist.eval_tflite(compressed_tflite_file)
 
     self.assertGreater(accuracy, 0.60)
 

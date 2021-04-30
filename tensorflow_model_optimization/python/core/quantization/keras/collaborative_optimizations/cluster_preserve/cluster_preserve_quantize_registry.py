@@ -24,6 +24,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
+K = tf.keras.backend
 layers = tf.keras.layers
 
 
@@ -313,6 +314,29 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
           lookup.dtype
       )
 
+      # Prepare trainable variables for the Keras graph
+      clst_centroids_tf = layer.add_weight(
+          'cluster_centroids_tf',
+          shape=centroids.shape,
+          initializer=tf.keras.initializers.Constant(
+              value=K.batch_get_value([centroids])[0]),
+          dtype=centroids.dtype,
+          trainable=True)
+
+      ori_weights_tf = layer.add_weight(
+          'ori_weights_vars_tf',
+          shape=weights.shape,
+          initializer=tf.keras.initializers.Constant(
+              value=K.batch_get_value([weights])[0]),
+          dtype=weights.dtype,
+          trainable=True)
+
+      # Get clustering implementation according to layer type
+      clustering_impl_cls = (
+          clustering_registry.ClusteringLookupRegistry().get_clustering_impl(
+              layer.layer, name))
+      clustering_impl = clustering_impl_cls(clst_centroids_tf)
+
       pulling_indices_tf = layer.add_weight(
           'pulling_indices_tf',
           shape=lookup.shape,
@@ -330,7 +354,7 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
           'centroids_mask': centroids_mask,
       }
       result.update(result_clst)
-      return result
+    return result
 
   def build(self, tensor_shape, name, layer):
     """ Build (P)CQAT wrapper when preserve_sparsity is true and the

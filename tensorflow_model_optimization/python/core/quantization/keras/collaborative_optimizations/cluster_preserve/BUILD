@@ -28,14 +28,13 @@ py_strict_library(
     ],
 )
 
-py_library(
+py_strict_library(
     name = "cluster_preserve_quantize_registry",
     srcs = [
         "cluster_preserve_quantize_registry.py",
     ],
     srcs_version = "PY3",
     deps = [
-        ":cluster_utils",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quant_ops",
@@ -72,6 +71,7 @@ py_test(
     deps = [
         # tensorflow dep1,
         ":default_8bit_cluster_preserve_quantize_scheme",
+        ":cluster_utils",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
@@ -100,6 +100,7 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":default_8bit_cluster_preserve_quantize_scheme",
+        ":cluster_utils",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",

@@ -184,8 +184,8 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testSparsityIsPreservedDuringTraining(self):
-    """Set a specific random seed to ensure that we get some null weights
-    to test sparsity preservation with."""
+    # Set a specific random seed to ensure that we get some null weights to
+    # test sparsity preservation with.
     tf.random.set_seed(1)
 
     # Verifies that training a clustered model with null weights in it
@@ -226,7 +226,8 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     stripped_model_after_tuning = cluster.strip_clustering(clustered_model)
     weights_after_tuning = stripped_model_after_tuning.layers[0].kernel
     non_zero_weight_indices_after_tuning = np.nonzero(weights_after_tuning)
-    weights_as_list_after_tuning = weights_after_tuning.numpy().reshape(-1,).tolist()
+    weights_as_list_after_tuning = weights_after_tuning.numpy().reshape(
+        -1,).tolist()
     unique_weights_after_tuning = set(weights_as_list_after_tuning)
 
     # Check that the null weights stayed the same before and after tuning.
@@ -403,15 +404,15 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     def clusters_check(stripped_model):
       # inner dense layer
-      weights_as_list = stripped_model.submodules[1].trainable_weights[0].\
-        numpy().flatten()
+      weights_as_list = (
+          stripped_model.submodules[1].trainable_weights[0].numpy().flatten())
       unique_weights = set(weights_as_list)
       self.assertLessEqual(
           len(unique_weights), self.params["number_of_clusters"])
 
       # outer dense layer
-      weights_as_list = stripped_model.submodules[4].trainable_weights[0].\
-        numpy().flatten()
+      weights_as_list = (
+          stripped_model.submodules[4].trainable_weights[0].numpy().flatten())
       unique_weights = set(weights_as_list)
       self.assertLessEqual(
           len(unique_weights), self.params["number_of_clusters"])
@@ -433,23 +434,22 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     def clusters_check(stripped_model):
       # first inner dense layer
-      weights_as_list = stripped_model.submodules[1].trainable_weights[0].\
-        numpy().flatten()
+      weights_as_list = (
+          stripped_model.submodules[1].trainable_weights[0].numpy().flatten())
       unique_weights = set(weights_as_list)
       self.assertLessEqual(
           len(unique_weights), self.params["number_of_clusters"])
 
       # second inner dense layer
-      weights_as_list = stripped_model.submodules[4].\
-        trainable_weights[0].\
-        numpy().flatten()
+      weights_as_list = (
+          stripped_model.submodules[4].trainable_weights[0].numpy().flatten())
       unique_weights = set(weights_as_list)
       self.assertLessEqual(
           len(unique_weights), self.params["number_of_clusters"])
 
       # outer dense layer
-      weights_as_list = stripped_model.submodules[7].trainable_weights[0].\
-        numpy().flatten()
+      weights_as_list = (
+          stripped_model.submodules[7].trainable_weights[0].numpy().flatten())
       unique_weights = set(weights_as_list)
       self.assertLessEqual(
           len(unique_weights), self.params["number_of_clusters"])
@@ -458,51 +458,46 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testWeightsAreLearningDuringClustering(self):
-    """Verifies that training a clustered model does update
-    original_weights, clustered_centroids and bias."""
-    original_model = keras.Sequential([
-      layers.Dense(5, input_shape=(5,))
-    ])
+    """Verifies that weights are updated during training a clustered model.
+
+    Training a clustered model should update original_weights,
+    clustered_centroids and bias.
+    """
+    original_model = keras.Sequential([layers.Dense(5, input_shape=(5,))])
 
     clustered_model = cluster.cluster_weights(original_model, **self.params)
 
     clustered_model.compile(
-      loss=keras.losses.categorical_crossentropy,
-      optimizer="adam",
-      metrics=["accuracy"],
+        loss=keras.losses.categorical_crossentropy,
+        optimizer="adam",
+        metrics=["accuracy"],
     )
 
     class CheckWeightsCallback(keras.callbacks.Callback):
+
       def on_train_batch_begin(self, batch, logs=None):
         # Save weights before batch
         self.original_weight_kernel = (
-          self.model.layers[0].original_clusterable_weights['kernel'].numpy()
-        )
+            self.model.layers[0].original_clusterable_weights["kernel"].numpy())
         self.cluster_centroids_kernel = (
-          self.model.layers[0].cluster_centroids['kernel'].numpy()
-        )
-        self.bias = (
-          self.model.layers[0].layer.bias.numpy()
-        )
+            self.model.layers[0].cluster_centroids["kernel"].numpy())
+        self.bias = (self.model.layers[0].layer.bias.numpy())
 
       def on_train_batch_end(self, batch, logs=None):
         # Check weights are different after batch
         assert not np.array_equal(
-          self.original_weight_kernel,
-          self.model.layers[0].original_clusterable_weights['kernel'].numpy()
-        )
+            self.original_weight_kernel,
+            self.model.layers[0].original_clusterable_weights["kernel"].numpy())
         assert not np.array_equal(
-          self.cluster_centroids_kernel,
-          self.model.layers[0].cluster_centroids['kernel'].numpy()
-        )
-        assert not np.array_equal(
-          self.bias,
-          self.model.layers[0].layer.bias.numpy()
-        )
+            self.cluster_centroids_kernel,
+            self.model.layers[0].cluster_centroids["kernel"].numpy())
+        assert not np.array_equal(self.bias,
+                                  self.model.layers[0].layer.bias.numpy())
 
-    clustered_model.fit(x=self.dataset_generator(),
-                        steps_per_epoch=5,
-                        callbacks=[CheckWeightsCallback()])
+    clustered_model.fit(
+        x=self.dataset_generator(),
+        steps_per_epoch=5,
+        callbacks=[CheckWeightsCallback()])
 
 
 class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):

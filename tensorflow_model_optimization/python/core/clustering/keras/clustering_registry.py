@@ -15,7 +15,6 @@
 """Registry responsible for built-in keras classes."""
 
 import tensorflow as tf
-from tensorflow.keras import layers
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_algorithm
@@ -51,27 +50,27 @@ class ClusteringRegistry(object):
   # the variables within the layers which hold the kernel weights. This
   # allows the wrapper to access and modify the weights.
   _LAYERS_WEIGHTS_MAP = {
-      layers.Conv1D: ['kernel'],
-      layers.Conv2D: ['kernel'],
-      layers.Conv2DTranspose: ['kernel'],
-      layers.Conv3D: ['kernel'],
-      layers.Conv3DTranspose: ['kernel'],
+      tf.keras.layers.Conv1D: ['kernel'],
+      tf.keras.layers.Conv2D: ['kernel'],
+      tf.keras.layers.Conv2DTranspose: ['kernel'],
+      tf.keras.layers.Conv3D: ['kernel'],
+      tf.keras.layers.Conv3DTranspose: ['kernel'],
       # non-clusterable due to big unrecoverable accuracy loss
-      layers.DepthwiseConv2D: [],
-      layers.SeparableConv1D: ['pointwise_kernel'],
-      layers.SeparableConv2D: ['pointwise_kernel'],
-      layers.Dense: ['kernel'],
-      layers.Embedding: ['embeddings'],
-      layers.LocallyConnected1D: ['kernel'],
-      layers.LocallyConnected2D: ['kernel'],
-      layers.BatchNormalization: [],
-      layers.LayerNormalization: [],
+      tf.keras.layers.DepthwiseConv2D: [],
+      tf.keras.layers.SeparableConv1D: ['pointwise_kernel'],
+      tf.keras.layers.SeparableConv2D: ['pointwise_kernel'],
+      tf.keras.layers.Dense: ['kernel'],
+      tf.keras.layers.Embedding: ['embeddings'],
+      tf.keras.layers.LocallyConnected1D: ['kernel'],
+      tf.keras.layers.LocallyConnected2D: ['kernel'],
+      tf.keras.layers.BatchNormalization: [],
+      tf.keras.layers.LayerNormalization: [],
   }
 
   _SUPPORTED_RNN_LAYERS = {
-      layers.GRU,
-      layers.LSTM,
-      layers.SimpleRNN,
+      tf.keras.layers.GRU,
+      tf.keras.layers.LSTM,
+      tf.keras.layers.SimpleRNN,
   }
 
   @classmethod
@@ -87,7 +86,7 @@ class ClusteringRegistry(object):
     """
     # Automatically enable layers with zero trainable weights.
     # Example: Reshape, AveragePooling2D, Maximum/Minimum, etc.
-    if not layer.trainable_weights and not isinstance(layer, layers.RNN):
+    if not layer.trainable_weights and not isinstance(layer, tf.keras.layers.RNN):
       return True
 
     if layer.__class__ in cls._LAYERS_WEIGHTS_MAP:

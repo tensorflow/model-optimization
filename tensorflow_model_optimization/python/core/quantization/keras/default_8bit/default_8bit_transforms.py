@@ -181,10 +181,10 @@ class Conv2DBatchNormQuantize(transforms.Transform):
     if _has_custom_quantize_config(bn_layer_node, conv_layer_node):
       return bn_layer_node
 
-    conv_layer_node.layer['config']['activation'] = \
-      keras.activations.serialize(quantize_aware_activation.NoOpActivation())
-    bn_layer_node.metadata['quantize_config'] = \
-      default_8bit_quantize_configs.Default8BitOutputQuantizeConfig()
+    conv_layer_node.layer['config']['activation'] = (
+        keras.activations.serialize(quantize_aware_activation.NoOpActivation()))
+    bn_layer_node.metadata['quantize_config'] = (
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig())
 
     return bn_layer_node
 
@@ -235,10 +235,10 @@ class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
         relu_layer_node, bn_layer_node, conv_layer_node):
       return relu_layer_node
 
-    conv_layer_node.layer['config']['activation'] = \
-      keras.activations.serialize(quantize_aware_activation.NoOpActivation())
-    bn_layer_node.metadata['quantize_config'] = \
-      default_8bit_quantize_configs.NoOpQuantizeConfig()
+    conv_layer_node.layer['config']['activation'] = (
+        keras.activations.serialize(quantize_aware_activation.NoOpActivation()))
+    bn_layer_node.metadata['quantize_config'] = (
+        default_8bit_quantize_configs.NoOpQuantizeConfig())
 
     return relu_layer_node
 
@@ -508,8 +508,8 @@ class LayerReLUQuantize(transforms.Transform):
     relu_layer_node = match_layer
     add_layer_node = relu_layer_node.input_layers[0]
 
-    add_layer_node.metadata['quantize_config'] = \
-      default_8bit_quantize_configs.NoOpQuantizeConfig()
+    add_layer_node.metadata['quantize_config'] = (
+        default_8bit_quantize_configs.NoOpQuantizeConfig())
 
     return match_layer
 
@@ -585,8 +585,8 @@ class ConcatTransform(transforms.Transform):
     concat_layer_node = match_layer
     feeding_layer_nodes = match_layer.input_layers
 
-    default_registry = default_8bit_quantize_registry.\
-        Default8BitQuantizeRegistry()
+    default_registry = (
+        default_8bit_quantize_registry.Default8BitQuantizeRegistry())
 
     feed_quantize_configs = []
     for feed_layer_node in feeding_layer_nodes:
@@ -599,8 +599,8 @@ class ConcatTransform(transforms.Transform):
 
         if layer_class == keras.layers.Concatenate:
           # Input layer to Concat is also Concat. Don't quantize it.
-          feed_layer_node.metadata['quantize_config'] = \
-            default_8bit_quantize_configs.NoOpQuantizeConfig()
+          feed_layer_node.metadata['quantize_config'] = (
+              default_8bit_quantize_configs.NoOpQuantizeConfig())
           continue
 
         if not default_registry._is_supported_layer(layer_class):
@@ -619,8 +619,8 @@ class ConcatTransform(transforms.Transform):
       self._disable_output_quantize(quantize_config)
 
     if not concat_layer_node.metadata.get('quantize_config'):
-      concat_layer_node.metadata['quantize_config'] = \
-        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig()
+      concat_layer_node.metadata['quantize_config'] = (
+          default_8bit_quantize_configs.Default8BitOutputQuantizeConfig())
 
     return concat_layer_node
 
