@@ -57,6 +57,7 @@ class ClusterWeights(Wrapper):
                cluster_centroids_init,
                preserve_sparsity=False,
                cluster_gradient_aggregation=GradientAggregation.SUM,
+               tie_zero=False,
                **kwargs):
     if not isinstance(layer, Layer):
       raise ValueError(
@@ -135,6 +136,9 @@ class ClusterWeights(Wrapper):
     # Save the input shape specified in the build
     self.build_input_shape = None
 
+    # tie one centroid to zero if number_of_clusters is low
+    self.tie_zero = tie_zero
+
   @staticmethod
   def _make_layer_name(layer):
     return '{}_{}'.format('cluster', layer.name)
@@ -209,6 +213,12 @@ class ClusterWeights(Wrapper):
   def update_clustered_weights_associations(self):
     for weight_name, original_weight in self.original_clusterable_weights.items(
     ):
+      # Tie zero
+      if self.tie_zero and self.number_of_clusters <= 5:
+        cluster_centroids = self.clustering_algorithms[weight_name].cluster_centroids
+        zero_cluster_id = tf.argmin(tf.abs(cluster_centroids))
+        cluster_centroids[zero_cluster_id].assign(0.0)
+
       # Update pulling indices (cluster associations)
       pulling_indices = (
           self.clustering_algorithms[weight_name].get_pulling_indices(

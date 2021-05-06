@@ -231,3 +231,15 @@ py_strict_test(
         # tensorflow dep1,
     ],
 )
+
+py_strict_test(
+    name = "mnist_clustering_tie_zero_test",
+    srcs = ["mnist_clustering_tie_zero_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":cluster",
+        ":cluster_config",
+        # tensorflow dep1,
+    ],
+)
