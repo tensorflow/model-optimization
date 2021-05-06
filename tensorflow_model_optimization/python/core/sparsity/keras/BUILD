@@ -56,6 +56,16 @@ py_strict_library(
 )
 
 py_strict_library(
+    name = "pruning_policy",
+    srcs = ["pruning_policy.py"],
+    srcs_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        # tensorflow dep1,
+    ],
+)
+
+py_strict_library(
     name = "pruning_schedule",
     srcs = ["pruning_schedule.py"],
     srcs_version = "PY3",
@@ -298,5 +308,20 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
+    ],
+)
+
+py_test(
+    name = "pruning_policy_test",
+    size = "medium",
+    srcs = ["pruning_policy_test.py"],
+    python_version = "PY3",
+    visibility = ["//visibility:public"],
+    deps = [
+        ":prune",
+        ":pruning_policy",
+        ":pruning_schedule",
+        ":pruning_wrapper",
+        # tensorflow dep1,
     ],
 )
