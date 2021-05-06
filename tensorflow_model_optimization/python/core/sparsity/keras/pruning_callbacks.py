@@ -30,19 +30,6 @@ K = tf.keras.backend
 callbacks = tf.keras.callbacks
 
 
-def _collect_prunable_layers(model):
-  """Recursively collect the prunable layers in the model."""
-  prunable_layers = []
-  for layer in model.layers:
-    # A keras model may have other models as layers.
-    if isinstance(layer, tf.keras.Model):
-      prunable_layers += _collect_prunable_layers(layer)
-    if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
-      prunable_layers.append(layer)
-
-  return prunable_layers
-
-
 class UpdatePruningStep(callbacks.Callback):
   """Keras callback which updates pruning wrappers with the optimizer step.
 
@@ -63,7 +50,7 @@ class UpdatePruningStep(callbacks.Callback):
 
   def on_train_begin(self, logs=None):
     # Collect all the prunable layers in the model.
-    self.prunable_layers = _collect_prunable_layers(self.model)
+    self.prunable_layers = pruning_wrapper.collect_prunable_layers(self.model)
     if not self.prunable_layers:
       return
     # If the model is newly created/initialized, set the 'pruning_step' to 0.
@@ -125,7 +112,7 @@ class PruningSummaries(callbacks.TensorBoard):
 
     pruning_logs = {}
     params = []
-    prunable_layers = _collect_prunable_layers(self.model)
+    prunable_layers = pruning_wrapper.collect_prunable_layers(self.model)
     for layer in prunable_layers:
       for _, mask, threshold in layer.pruning_vars:
         params.append(mask)
