@@ -79,7 +79,7 @@ def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
   ])
   ```
 
-  Arguments:
+  Args:
       to_cluster: A single keras layer, list of keras layers, or a
         `tf.keras.Model` instance.
       number_of_clusters: the number of cluster centroids to form when

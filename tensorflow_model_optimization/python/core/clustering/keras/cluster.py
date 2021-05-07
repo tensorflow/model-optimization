@@ -98,7 +98,7 @@ def cluster_weights(to_cluster,
   ])
   ```
 
-  Arguments:
+  Args:
       to_cluster: A single keras layer, list of keras layers, or a
         `tf.keras.Model` instance.
       number_of_clusters: the number of cluster centroids to form when
@@ -195,7 +195,7 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
   ])
   ```
 
-  Arguments:
+  Args:
       to_cluster: A single keras layer, list of keras layers, or a
         `tf.keras.Model` instance.
       number_of_clusters: the number of cluster centroids to form when
@@ -265,7 +265,7 @@ def strip_clustering(model):
 
   Only sequential and functional models are supported for now.
 
-  Arguments:
+  Args:
       model: A `tf.keras.Model` instance with clustered layers.
 
   Returns:

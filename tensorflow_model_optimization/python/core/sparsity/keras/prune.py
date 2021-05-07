@@ -124,7 +124,7 @@ def prune_low_magnitude(to_prune,
   upon inspection, the weights of checkpoints are not sparse
   (https://github.com/tensorflow/model-optimization/issues/206).
 
-  Arguments:
+  Args:
       to_prune: A single keras layer, list of keras layers, or a
         `tf.keras.Model` instance.
       pruning_schedule: A `PruningSchedule` object that controls pruning rate
@@ -212,7 +212,7 @@ def strip_pruning(model):
 
   Only sequential and functional models are supported for now.
 
-  Arguments:
+  Args:
       model: A `tf.keras.Model` instance with pruned layers.
 
   Returns:

@@ -31,7 +31,7 @@ def assign(ref, value, name=None):
 def initialize_variables(testcase):
   """Handle global variable initialization in TF 1.X.
 
-  Arguments:
+  Args:
     testcase: instance of tf.test.TestCase
   """
   if hasattr(tf, 'global_variables_initializer') and not tf.executing_eagerly():
