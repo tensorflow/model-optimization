@@ -202,6 +202,7 @@ py_strict_test(
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
     ],
 )
 
