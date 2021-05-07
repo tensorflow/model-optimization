@@ -59,8 +59,7 @@ l = tf.keras.layers
 
 model = tf.keras.Sequential([
     quantize.quantize_annotate_layer(
-        l.Conv2D(32, 5, padding='same', activation='relu'),
-        input_shape=input_shape),
+        l.Conv2D(32, 5, padding='same', activation='relu', input_shape=input_shape)),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
     quantize.quantize_annotate_layer(
         l.Conv2D(64, 5, padding='same', activation='relu')),
