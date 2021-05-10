@@ -19,7 +19,7 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_algorithm
 
-
+layers = tf.keras.layers
 ClusteringAlgorithm = clustering_algorithm.ClusteringAlgorithm
 
 
