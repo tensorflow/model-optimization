@@ -350,3 +350,11 @@ class PruneLowMagnitude(Wrapper):
 
   def set_weights(self, weights):
     self.layer.set_weights(weights)
+
+
+def collect_prunable_layers(model):
+  """Recursively collect the prunable layers in the model."""
+  return [
+      layer for layer in model.submodules
+      if isinstance(layer, PruneLowMagnitude)
+  ]
