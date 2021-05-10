@@ -20,8 +20,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow.python.ops import summary_ops_v2
-from tensorflow.python.summary import summary as summary_ops_v1
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 
@@ -255,9 +253,9 @@ class Pruning(object):
   def add_pruning_summaries(self):
     """Adds summaries of weight sparsities and thresholds."""
     # b/(139939526): update to use public API.
-    summary = summary_ops_v1
-    if tf.executing_eagerly():
-      summary = summary_ops_v2
+    summary = tf.summary
+    if not tf.executing_eagerly():
+      summary = tf.compat.v1.summary
     summary.scalar('sparsity', self._pruning_schedule(self._step_fn())[1])
     for _, mask, threshold in self._pruning_vars:
       summary.scalar(mask.name + '/sparsity', 1.0 - tf.math.reduce_mean(mask))

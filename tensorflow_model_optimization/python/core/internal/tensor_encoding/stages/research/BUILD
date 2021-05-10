@@ -1,8 +1,4 @@
-# buildifier: disable=same-origin-load
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
-
-# buildifier: disable=same-origin-load
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 
 package(default_visibility = [
     "//tensorflow_model_optimization/python/core/internal/tensor_encoding:__subpackages__",

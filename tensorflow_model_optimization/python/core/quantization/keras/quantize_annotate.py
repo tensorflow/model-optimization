@@ -19,6 +19,8 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import inspect
+
 import tensorflow as tf
 
 deserialize_keras_object = tf.keras.utils.deserialize_keras_object
@@ -88,9 +90,11 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
       self._batch_input_shape = self.layer._batch_input_shape  # pylint: disable=protected-access
 
   def call(self, *args, **kwargs):
-    # TODO(b/185306646): Explicitly wants to pass training argument for the
-    # layer. Currently, we remove training argument.
-    if 'training' in kwargs:
+    arg = inspect.getfullargspec(self.layer.call).args
+
+    # Do not propagate the training bool to the underlying layer if it doesn't
+    # accepts the training bool.
+    if 'training' not in arg and 'training' in kwargs:
       del kwargs['training']
     return self.layer.call(*args, **kwargs)
 
