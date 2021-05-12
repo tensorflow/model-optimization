@@ -229,5 +229,6 @@ py_strict_test(
         ":cluster",
         ":cluster_config",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras/experimental",
     ],
 )

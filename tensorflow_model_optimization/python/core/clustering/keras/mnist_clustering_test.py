@@ -14,10 +14,12 @@
 # ==============================================================================
 """Tests for a simple convnet with clusterable layer on the MNIST dataset."""
 
+from absl.testing import parameterized
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
+from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 
 tf.random.set_seed(42)
 
@@ -63,7 +65,7 @@ def _train_model(model):
   model.fit(x_train, y_train, epochs=EPOCHS)
 
 
-def _cluster_model(model, number_of_clusters):
+def _cluster_model(model, number_of_clusters, preserve_sparsity=False):
 
   (x_train, y_train), _ = _get_dataset()
 
@@ -71,11 +73,13 @@ def _cluster_model(model, number_of_clusters):
       'number_of_clusters':
           number_of_clusters,
       'cluster_centroids_init':
-          cluster_config.CentroidInitialization.KMEANS_PLUS_PLUS
+          cluster_config.CentroidInitialization.KMEANS_PLUS_PLUS,
+      'preserve_sparsity':
+          preserve_sparsity,
   }
 
   # Cluster model
-  clustered_model = cluster.cluster_weights(model, **clustering_params)
+  clustered_model = experimental_cluster.cluster_weights(model, **clustering_params)
 
   # Use smaller learning rate for fine-tuning
   # clustered model
@@ -106,13 +110,29 @@ def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
 
   return nr_of_unique_weights
 
+def _deepcopy_model(model):
+  model_copy = keras.models.clone_model(model)
+  model_copy.set_weights(model.get_weights())
+  return model_copy
 
-class FunctionalTest(tf.test.TestCase):
 
-  def testMnist(self):
-    """In this test we test that 'kernel' weights are clustered."""
+class FunctionalTest(tf.test.TestCase, parameterized.TestCase):
+
+  def setUp(self):
     model = _build_model()
     _train_model(model)
+    self.model = model
+    self.dataset = _get_dataset()
+
+
+  @parameterized.parameters(
+      (False),
+      (True),
+  )
+  def testMnist(self, preserve_sparisty):
+    """In this test we test that 'kernel' weights are clustered."""
+    model = self.model
+    _, (x_test, y_test) = self.dataset
 
     # Checks that number of original weights('kernel') is greater than the
     # number of clusters
@@ -123,12 +143,11 @@ class FunctionalTest(tf.test.TestCase):
     nr_of_bias_weights = _get_number_of_unique_weights(model, -1, 'bias')
     self.assertGreater(nr_of_bias_weights, NUMBER_OF_CLUSTERS)
 
-    _, (x_test, y_test) = _get_dataset()
-
     results_original = model.evaluate(x_test, y_test)
     self.assertGreater(results_original[1], 0.8)
 
-    clustered_model = _cluster_model(model, NUMBER_OF_CLUSTERS)
+    model_copy = _deepcopy_model(model)
+    clustered_model = _cluster_model(model_copy, NUMBER_OF_CLUSTERS, preserve_sparisty)
 
     results = clustered_model.evaluate(x_test, y_test)
 
