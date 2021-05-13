@@ -26,7 +26,6 @@ from tensorflow.python.keras import backend as K
 from tensorflow.python.keras import initializers
 from tensorflow.python.keras.layers import convolutional
 from tensorflow.python.keras.layers import serialization
-from tensorflow.python.keras.layers.normalization import batch_normalization_v1
 from tensorflow.python.keras.utils import conv_utils
 from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
@@ -231,7 +230,8 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
         name=name,
         **kwargs)
 
-    self.batchnorm = batch_normalization_v1.BatchNormalization(
+    # TODO(b/187881826): conv_batchnorm should use v2 BatchNormalization layer
+    self.batchnorm = tf.compat.v1.layers.BatchNormalization(
         axis=axis,
         momentum=momentum,
         epsilon=epsilon,
@@ -416,7 +416,8 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
         name=name,
         **kwargs)
 
-    self.batchnorm = batch_normalization_v1.BatchNormalization(
+    # TODO(b/187881826): conv_batchnorm should use v2 BatchNormalization layer
+    self.batchnorm = tf.compat.v1.layers.BatchNormalization(
         axis=axis,
         momentum=momentum,
         epsilon=epsilon,

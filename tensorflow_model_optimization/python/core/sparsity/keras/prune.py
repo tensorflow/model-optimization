@@ -58,6 +58,7 @@ def prune_low_magnitude(to_prune,
                         pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
                         block_size=(1, 1),
                         block_pooling_type='AVG',
+                        pruning_policy=None,
                         **kwargs):
   """Modify a tf.keras layer or model to be pruned during training.
 
@@ -133,6 +134,9 @@ def prune_low_magnitude(to_prune,
         sparse pattern in rank-2 weight tensors.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
+      pruning_policy: (optional) The object that controls to which layers
+        `PruneLowMagnitude` wrapper will be applied. This API is experimental
+        and is subject to change.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_prune is not a keras layer.
 
@@ -173,7 +177,10 @@ def prune_low_magnitude(to_prune,
           layer, input_tensors=None, clone_function=_add_pruning_wrapper)
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       return layer
-    return pruning_wrapper.PruneLowMagnitude(layer, **params)
+    if pruning_policy and not pruning_policy.allow_pruning(layer):
+      return layer
+    else:
+      return pruning_wrapper.PruneLowMagnitude(layer, **params)
 
   params = {
       'pruning_schedule': pruning_schedule,
@@ -192,6 +199,8 @@ def prune_low_magnitude(to_prune,
   if isinstance(to_prune, list):
     return _prune_list(to_prune, **params)
   elif is_sequential_or_functional:
+    if pruning_policy:
+      pruning_policy.ensure_model_supports_pruning(to_prune)
     return _add_pruning_wrapper(to_prune)
   elif is_keras_layer:
     params.update(kwargs)
