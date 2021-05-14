@@ -27,8 +27,10 @@ layers = keras.layers
 
 class PruningPolicyTest(tf.test.TestCase):
   INVALID_TO_PRUNE_START_LAYER_ERROR = (
-      'Could not find `Conv2D 3x3` layer with stride 2x2, `input filters == 3` '
-      'and `VALID` padding in all input branches of the model')
+      'Could not find `Conv2D 3x3` layer with stride 2x2, `input filters == 3`'
+      ' and `VALID` padding and preceding `ZeroPadding2D` with `padding == 1` '
+      'in all input branches of the model'
+  )
 
   INVALID_TO_PRUNE_STOP_LAYER_ERROR = (
       'Could not find a `GlobalAveragePooling2D` layer with `keepdims = True` '
@@ -164,18 +166,18 @@ class PruningPolicyTest(tf.test.TestCase):
     self.assertEqual(self._count_pruned_layers(pruned_model), 1)
 
   def testPruneModelRecursivelyForLatencyOnXNNPackPolicy(self):
-    internal_model = keras.Sequential(
-        [layers.ZeroPadding2D(padding=1, input_shape=(8, 8, 3))])
     original_model = keras.Sequential([
-        internal_model,
+        layers.ZeroPadding2D(padding=1, input_shape=(8, 8, 3)),
         layers.Conv2D(
             filters=4,
             kernel_size=(3, 3),
             strides=(2, 2),
             padding='valid',
         ),
-        layers.Conv2D(filters=8, kernel_size=[1, 1]),
-        layers.Conv2D(filters=16, kernel_size=[1, 1]),
+        keras.Sequential([
+            layers.Conv2D(filters=8, kernel_size=[1, 1]),
+            layers.Conv2D(filters=16, kernel_size=[1, 1]),
+        ]),
         layers.GlobalAveragePooling2D(keepdims=True),
     ])
     pruned_model = prune.prune_low_magnitude(
