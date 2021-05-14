@@ -16,6 +16,7 @@ py_strict_library(
         ":prunable_layer",  # buildcleaner: keep
         ":prune",  # buildcleaner: keep
         ":pruning_callbacks",  # buildcleaner: keep
+        ":pruning_policy",  # buildcleaner: keep
         ":pruning_schedule",  # buildcleaner: keep
     ],
 )

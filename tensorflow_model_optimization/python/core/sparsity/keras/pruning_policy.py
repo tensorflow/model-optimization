@@ -47,6 +47,8 @@ class PruningPolicy(abc.ABC):
   ```
 
   You can inherit this class to write your own custom pruning policy.
+
+  The API is experimental and is subject to change.
   """
 
   @abc.abstractmethod

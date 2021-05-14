@@ -50,6 +50,7 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/sparsity/keras:prunable_layer",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_policy",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
     ],
 )

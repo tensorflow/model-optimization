@@ -28,4 +28,7 @@ from tensorflow_model_optimization.python.core.sparsity.keras.pruning_schedule i
 
 from tensorflow_model_optimization.python.core.sparsity.keras.prunable_layer import PrunableLayer
 
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_policy import PruningPolicy
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_policy import PruneForLatencyOnXNNPack
+
 # pylint: enable=g-bad-import-order
