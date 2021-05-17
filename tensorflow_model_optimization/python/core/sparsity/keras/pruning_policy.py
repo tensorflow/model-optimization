@@ -47,6 +47,8 @@ class PruningPolicy(abc.ABC):
   ```
 
   You can inherit this class to write your own custom pruning policy.
+
+  The API is experimental and is subject to change.
   """
 
   @abc.abstractmethod
@@ -101,7 +103,12 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
     return producers
 
   def _get_consumers(self, layer):
-    return [node.outbound_layer for node in layer._outbound_nodes]
+
+    def unpack(layer):
+      return (unpack(layer.layers[0])
+              if isinstance(layer, tf.keras.Sequential) else layer)
+
+    return [unpack(node.outbound_layer) for node in layer._outbound_nodes]
 
   def _lookup_layers(self, source_layers, stop_fn, next_fn):
     """Traverses the model and returns layers satisfying `stop_fn` criteria."""
@@ -125,9 +132,15 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
 
   def _start_layer_stop_fn(self, layer):
     """Determines whether the layer starts a subgraph of sparse inference."""
-    return (isinstance(layer, layers.Conv2D) and hasattr(layer, 'kernel') and
-            layer.kernel.shape[:3] == (3, 3, 3) and layer.strides == (2, 2) and
-            layer.padding.lower() == 'valid')
+    if isinstance(layer, layers.Conv2D):
+      producers = self._get_producers(layer)
+      return (hasattr(layer, 'kernel') and
+              layer.kernel.shape[:3] == (3, 3, 3) and
+              layer.strides == (2, 2) and layer.padding.lower() == 'valid' and
+              len(producers) == 1 and
+              isinstance(producers[0], layers.ZeroPadding2D) and
+              producers[0].padding == ((1, 1), (1, 1)))
+    return False
 
   def _end_layer_stop_fn(self, layer):
     """Determines whether the layer ends a subgraph of sparse inference."""
@@ -155,10 +168,36 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
       # 3x3 stride-2 convolution (no dilation, padding 1 on each side).
       # 5x5 stride-1 convolution (no dilation, padding 2 on each side).
       # 5x5 stride-2 convolution (no dilation, padding 2 on each side).
-      return (layer.depth_multiplier == 1 and layer.dilation_rate == (1, 1) and
-              (layer.kernel_size == (3, 3) or layer.kernel_size == (5, 5)) and
-              ((layer.padding.lower() == 'same' and layer.strides == (1, 1)) or
-               (layer.padding.lower() == 'valid' and layer.strides == (2, 2))))
+      padding = layer.padding.lower()
+      producers = self._get_producers(layer)
+      zero_padding = (
+          producers[0] if len(producers) == 1 and
+          isinstance(producers[0], layers.ZeroPadding2D) else None)
+
+      supported_case_1 = (
+          layer.kernel_size == (3, 3) and layer.strides == (1, 1) and
+          padding == 'same')
+
+      supported_case_2 = (
+          layer.kernel_size == (3, 3) and layer.strides == (2, 2) and
+          padding == 'valid' and zero_padding and
+          zero_padding.padding == ((1, 1), (1, 1)))
+
+      supported_case_3 = (
+          layer.kernel_size == (5, 5) and layer.strides == (1, 1) and
+          padding == 'same')
+
+      supported_case_4 = (
+          layer.kernel_size == (5, 5) and layer.strides == (2, 2) and
+          padding == 'valid' and zero_padding and
+          zero_padding.padding == ((2, 2), (2, 2)))
+
+      supported = (
+          layer.depth_multiplier == 1 and layer.dilation_rate == (1, 1) and
+          (supported_case_1 or supported_case_2 or supported_case_3 or
+           supported_case_4))
+
+      return supported
     elif isinstance(layer, layers.Conv2D):
       # 1x1 convolution (no stride, no dilation, no padding, no groups).
       return (layer.groups == 1 and layer.dilation_rate == (1, 1) and
@@ -198,8 +237,9 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
     )
     if not start_layers:
       raise ValueError(('Could not find `Conv2D 3x3` layer with stride 2x2, '
-                        '`input filters == 3` and `VALID` padding in all input '
-                        'branches of the model'))
+                        '`input filters == 3` and `VALID` padding and '
+                        'preceding `ZeroPadding2D` with `padding == 1` in all '
+                        'input branches of the model'))
 
     # Search for the end layer (GlobalAveragePooling with `keepdims = True`)
     # for every output branch (backward).
