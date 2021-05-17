@@ -36,6 +36,15 @@ Keras clustering API:
 
 * Added *ClusteringSummaries* to create additional output for the clustering
 progress for TensorBoard.
+* Added ClusterableLayer API to support clustering of a keras custom layer.
+In addition, now clustering can be done for bias of the layer.
+* Introduced two new experimental quantization scheme for Quantization Aware Training
+for collaborative model optimization:
+    - Prune Preserve QAT: pruned model can be QAT trained with preserved sparsity;
+    - Cluster Preserve QAT: clustered model can be QAT trained with preserved clustering;
+* Added a new feature to clustering: average gradient aggregation, which can
+improve performance for some models.
+* Updated clustering results in the documentation.
 * Tested against TensorFlow 1.14.0, 2.0.0, and nightly, and Python 3.
 
 # TensorFlow Model Optimization 0.5.0
