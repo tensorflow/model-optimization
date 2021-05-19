@@ -255,6 +255,8 @@ class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
   def _build_sparsity_mask(self, name, layer):
     weights = getattr(layer.layer, name)
     sparsity_mask = tf.math.divide_no_nan(weights, weights)
+    layer.prune_preserve_vars = {
+        'weights': weights, 'sparsity_mask': sparsity_mask}
 
     return {'sparsity_mask': sparsity_mask}
 

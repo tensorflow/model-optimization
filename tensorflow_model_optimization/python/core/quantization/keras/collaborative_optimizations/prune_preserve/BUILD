@@ -14,6 +14,7 @@ py_strict_library(
     srcs_version = "PY3",
     deps = [
         ":default_8bit_prune_preserve_quantize_scheme",  # buildcleaner: keep
+        ":prune_preserve_callbacks",
     ],
 )
 
@@ -58,5 +59,16 @@ py_strict_library(
     deps = [
         ":prune_preserve_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
+    ],
+)
+
+py_strict_library(
+    name = "prune_preserve_callbacks",
+    srcs = [
+        "prune_preserve_callbacks.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        # tensorflow dep1,
     ],
 )
