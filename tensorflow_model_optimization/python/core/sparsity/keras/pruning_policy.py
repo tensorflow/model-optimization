@@ -160,8 +160,9 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
     References:
       - https://github.com/google/XNNPACK/blob/master/src/subgraph.c#L130
     """
-    if isinstance(layer, (layers.Add, layers.Multiply, layers.ZeroPadding2D,
-                          layers.ReLU, layers.LeakyReLU, layers.ELU)):
+    if isinstance(layer,
+                  (layers.Add, layers.Multiply, layers.ZeroPadding2D,
+                   layers.ReLU, layers.LeakyReLU, layers.ELU, layers.Dropout)):
       return True
     elif isinstance(layer, layers.DepthwiseConv2D):
       # 3x3 stride-1 convolution (no dilation, padding 1 on each side).

@@ -9,6 +9,8 @@ fits with your use case.
     [Pruning with Keras](pruning_with_keras.ipynb) example.
 *   To quickly find the APIs you need for your use case, see the
     [pruning comprehensive guide](comprehensive_guide.ipynb).
+*   To explore the application of pruning for on-device inference, see the
+    [Pruning for on on-device inference with XNNPACK](pruning_for_on_device_inference.ipynb).
 
 ## Overview
 
