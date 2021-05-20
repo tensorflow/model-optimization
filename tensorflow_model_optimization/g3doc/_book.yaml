@@ -31,7 +31,7 @@ upper_tabs:
         path: /model_optimization/guide/pruning/pruning_with_keras
       - title: Pruning comprehensive guide
         path: /model_optimization/guide/pruning/comprehensive_guide
-      - title: Pruning for on on-device inference with XNNPACK
+      - title: Pruning for on-device inference with XNNPACK
         path: /model_optimization/guide/pruning/pruning_for_on_device_inference
 
       - heading: Quantization
