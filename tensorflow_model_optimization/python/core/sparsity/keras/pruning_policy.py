@@ -165,10 +165,12 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
                    layers.ReLU, layers.LeakyReLU, layers.ELU, layers.Dropout)):
       return True
     elif isinstance(layer, layers.DepthwiseConv2D):
-      # 3x3 stride-1 convolution (no dilation, padding 1 on each side).
-      # 3x3 stride-2 convolution (no dilation, padding 1 on each side).
-      # 5x5 stride-1 convolution (no dilation, padding 2 on each side).
-      # 5x5 stride-2 convolution (no dilation, padding 2 on each side).
+      # 3x3 convolution with `SAME` padding (no dilation, stride-1).
+      # 3x3 convolution with `VALID` padding (no dilation, stride-1 or stride-2,
+      #   preceding `ZeroPadding2D` layer with padding 1 on each side.
+      # 5x5 convolution with `SAME` padding (no dilation, stride-1)
+      # 5x5 convolution with `VALID` padding (no dilation, stride-1 or stride-2,
+      #   preceding `ZeroPadding2D` layer with padding 2 on each side.
       padding = layer.padding.lower()
       producers = self._get_producers(layer)
       zero_padding = (
@@ -180,7 +182,8 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
           padding == 'same')
 
       supported_case_2 = (
-          layer.kernel_size == (3, 3) and layer.strides == (2, 2) and
+          layer.kernel_size == (3, 3) and
+          (layer.strides == (1, 1) or layer.strides == (2, 2)) and
           padding == 'valid' and zero_padding and
           zero_padding.padding == ((1, 1), (1, 1)))
 
@@ -189,7 +192,8 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
           padding == 'same')
 
       supported_case_4 = (
-          layer.kernel_size == (5, 5) and layer.strides == (2, 2) and
+          layer.kernel_size == (5, 5) and
+          (layer.strides == (1, 1) or layer.strides == (2, 2)) and
           padding == 'valid' and zero_padding and
           zero_padding.padding == ((2, 2), (2, 2)))
 
