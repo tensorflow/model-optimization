@@ -28,7 +28,7 @@ py_strict_library(
         # python/framework:for_generated_wrappers tensorflow dep2,
         # python/keras:activations tensorflow dep2,
         # python/keras:backend tensorflow dep2,
-        # python/keras:initializers tensorflow dep2,
+        # python/keras/initializers tensorflow dep2,
         # python/keras/layers tensorflow dep2,
         # python/keras/layers:convolutional tensorflow dep2,
         # python/keras/layers/normalization:batch_normalization_v1 tensorflow dep2,
