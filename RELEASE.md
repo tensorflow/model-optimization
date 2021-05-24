@@ -38,7 +38,7 @@ Keras clustering API:
 progress for TensorBoard.
 * Added ClusterableLayer API to support clustering of a keras custom layer.
 In addition, now clustering can be done for bias of the layer.
-* Introduced two new experimental quantization scheme for Quantization Aware Training
+* Introduced two new experimental quantization schemes for Quantization Aware Training
 for collaborative model optimization:
     - Prune Preserve QAT: pruned model can be QAT trained with preserved sparsity;
     - Cluster Preserve QAT: clustered model can be QAT trained with preserved clustering;
