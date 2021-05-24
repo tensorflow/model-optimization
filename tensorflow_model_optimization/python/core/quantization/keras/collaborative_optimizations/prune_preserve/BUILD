@@ -29,6 +29,7 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/prune_preserve:prune_preserve_utils",
     ],
 )
 
@@ -58,5 +59,17 @@ py_strict_library(
     deps = [
         ":prune_preserve_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
+    ],
+)
+
+py_strict_library(
+    name = "prune_preserve_utils",
+    srcs = [
+        "prune_preserve_utils.py",
+    ],
+    srcs_version = "PY3",
+    visibility = ["//visibility:private"],
+    deps = [
+        # tensorflow dep1,
     ],
 )

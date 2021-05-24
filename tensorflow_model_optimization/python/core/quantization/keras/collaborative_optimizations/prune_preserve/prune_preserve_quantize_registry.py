@@ -22,6 +22,8 @@ from tensorflow_model_optimization.python.core.quantization.keras.default_8bit i
     default_8bit_quantize_registry,)
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
     default_8bit_quantizers,)
+from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
+    prune_preserve_utils,)
 
 layers = tf.keras.layers
 
@@ -292,7 +294,8 @@ class PrunePreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       quantized tensor.
     """
 
-    prune_preserve_inputs = tf.multiply(inputs, weights['sparsity_mask'])
+    prune_preserve_inputs = prune_preserve_utils.apply_sparsity_mask_to_weights_gradient(
+        inputs, weights['sparsity_mask'])
 
     return quant_ops.LastValueQuantize(
         prune_preserve_inputs,
