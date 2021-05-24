@@ -57,6 +57,9 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
       if not weights
   ]
 
+  # Layers to which sparsity 2x4 can be applied
+  _PRUNABLE_LAYERS_SPARSITY_2x4 = [tf.keras.layers.Conv2D, tf.keras.layers.Dense]
+
   @staticmethod
   def _batch(dims, batch_size):
     """Adds provided batch_size to existing dims.
@@ -328,6 +331,70 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     test_utils.assert_model_sparsity(self, 0.5, model)
 
     self._check_strip_pruning_matches_original(model, 0.5)
+
+  @parameterized.parameters(_PRUNABLE_LAYERS_SPARSITY_2x4)
+  def testSparsityPruning2x4_SupportedLayers(self, layer_type):
+    """ Check that we prune supported layers with sparsity 2x4. """
+    self.params.update({'sparsity_2x4': True})
+
+    model = keras.Sequential()
+    args, input_shape = ([16, (5, 7)], (8, 8, 1)) \
+      if layer_type == tf.keras.layers.Conv2D else ([16], (8,))
+    model.add(prune.prune_low_magnitude(
+        layer_type(*args), input_shape=input_shape, **self.params))
+
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
+    test_utils.assert_model_sparsity(self, 0.0, model)
+    model.fit(
+        np.random.randn(*self._batch(model.input.get_shape().as_list(), 32)),
+        np.random.randn(*self._batch(model.output.get_shape().as_list(), 32)),
+        callbacks=[pruning_callbacks.UpdatePruningStep()])
+
+    test_utils.assert_model_sparsity(self, 0.5, model)
+
+    self._check_strip_pruning_matches_original(model, 0.5)
+
+  @parameterized.parameters(_PRUNABLE_LAYERS_SPARSITY_2x4)
+  def testSparsityPruning2x4_InvalidLayers(self, layer_type):
+    """ Checks that for layers that can be pruned with sparsity 2x4,
+    if their dimensions (channels for Conv2D and width for Dense)
+    are not divisible by 4, then we fallback to the default
+    unstructured pruning.
+    """
+    self.params.update({'sparsity_2x4': True})
+
+    model = keras.Sequential()
+    args, input_shape = ([6, (2, 2)], (4, 6, 1)) \
+      if layer_type == tf.keras.layers.Conv2D else ([6], (6,))
+    model.add(prune.prune_low_magnitude(
+        layer_type(*args), input_shape=input_shape, **self.params))
+
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    # This internal flag controls which type of sparsity is used.
+    # In our case it should be reset to false.
+    self.assertFalse(model.layers[0].pruning_obj._sparsity_2x4)
+
+  def testSparsityPruning2x4_NonSupportedLayers(self):
+    """ Check that if we ask for sparsity 2x4 for the layer that
+    is not supported than we fallback to the default unstructured
+    pruning.
+    """
+    self.params.update({'sparsity_2x4': True})
+
+    model = keras.Sequential()
+    layer_type = tf.keras.layers.SeparableConv1D
+    args, input_shape = ([4, 3], (3, 6))
+    model.add(prune.prune_low_magnitude(
+        layer_type(*args), input_shape=input_shape, **self.params))
+
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    # This internal flag controls which type of sparsity is used.
+    # In our case it should be reset to false.
+    self.assertFalse(model.layers[0].pruning_obj._sparsity_2x4)
 
   @parameterized.parameters(prune_registry.PruneRegistry._RNN_LAYERS -
                             {keras.layers.RNN})

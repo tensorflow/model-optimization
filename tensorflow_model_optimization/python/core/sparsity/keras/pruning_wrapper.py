@@ -102,6 +102,7 @@ class PruneLowMagnitude(Wrapper):
                pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
                block_size=(1, 1),
                block_pooling_type='AVG',
+               sparsity_2x4=False,
                **kwargs):
     """Create a pruning wrapper for a keras layer.
 
@@ -115,11 +116,17 @@ class PruneLowMagnitude(Wrapper):
         sparse pattern in rank-2 weight tensors.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
+      sparsity_2x4: (optional) Boolean that indicates whether sparsity 2x4
+        should be applied. In this case, we do pruning of 50% so that two out of
+        four elements in the weight tensor that have the lowest value are
+        set to zero.
+
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
     self.pruning_schedule = pruning_schedule
     self.block_size = block_size
     self.block_pooling_type = block_pooling_type
+    self.sparsity_2x4 = sparsity_2x4
 
     # An instance of the Pruning class. This class contains the logic to prune
     # the weights of this layer.
@@ -196,6 +203,13 @@ class PruneLowMagnitude(Wrapper):
 
     self.prunable_weights = self.layer.get_prunable_weights()
 
+    # Sparsity 2x4 can be applied only to Conv2D and Dense layers.
+    # Fallback to the default unstructured pruning.
+    if (self.sparsity_2x4 \
+      and not isinstance(self.layer, tf.keras.layers.Conv2D) \
+      and not isinstance(self.layer, tf.keras.layers.Dense)):
+      self.sparsity_2x4 = False
+
     # For each of the prunable weights, add mask and threshold variables
     for weight in self.prunable_weights:
       mask = self.add_variable(
@@ -235,6 +249,7 @@ class PruneLowMagnitude(Wrapper):
         pruning_vars=self.pruning_vars,
         pruning_schedule=self.pruning_schedule,
         block_size=self.block_size,
+        sparsity_2x4 = self.sparsity_2x4,
         block_pooling_type=self.block_pooling_type)
 
   def call(self, inputs, training=None, **kwargs):

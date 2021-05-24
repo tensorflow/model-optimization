@@ -19,6 +19,7 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
+import logging
 
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
@@ -28,7 +29,7 @@ class Pruning(object):
   """Implementation of magnitude-based weight pruning."""
 
   def __init__(self, training_step_fn, pruning_vars, pruning_schedule,
-               block_size, block_pooling_type):
+               block_size, sparsity_2x4, block_pooling_type):
     """The logic for magnitude-based pruning weight tensors.
 
     Args:
@@ -38,6 +39,9 @@ class Pruning(object):
         throughout training.
       block_size: The dimensions (height, weight) for the block sparse pattern
         in rank-2 weight tensors.
+      sparsity_2x4: Boolean that indicates whether we should do sparsity_2x4.
+        We check whether we can do pruning with 2x4 sparsity. If not, then
+        we fallback to the default unstructured pruning for 50%.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
     """
@@ -45,7 +49,12 @@ class Pruning(object):
     self._pruning_schedule = pruning_schedule
     self._block_size = list(block_size)
     self._block_pooling_type = block_pooling_type
+    self._sparsity_2x4 = sparsity_2x4
     self._validate_block()
+
+    if self._sparsity_2x4:
+      # Check whether we can apply sparsity 2x4
+      self._sparsity_2x4 = self._check_if_applicable_sparsity_2x4()
 
     # Training step
     self._step_fn = training_step_fn
@@ -58,6 +67,26 @@ class Pruning(object):
         if weight.get_shape().ndims != 2:
           raise ValueError('Block Sparsity can only be used for layers which '
                            'have 2-dimensional weights.')
+
+  def _check_if_applicable_sparsity_2x4(self):
+    """ This function checks that the sparsity 2x4 could be applied to this layer.
+
+    The sparsity 2x4 is applied to Conv2D layer and Dense. We assume that
+    the number of channels is divisible by four in case of Conv2D or the width is
+    divisible by four for Dense. If the condition is not satisfied, we fallback
+    to the unstructured pruning.
+
+    Returns:
+      Booleans that indicates whether sparsity 2x4 is applicable.
+    """
+    for weight, _, _ in self._pruning_vars:
+      if (weight.get_shape()[-1] % 4) != 0 :
+        logging.warning('This type of sparsity can be applied only to layers '
+                  'with the last dimension divisible by four. This layer '
+                  'does not satisfy this condition, unstructured pruning will '
+                  'be used instead.')
+        return False
+    return True
 
   def _update_mask(self, weights):
     """Updates the mask for a given weight tensor.
@@ -99,9 +128,31 @@ class Pruning(object):
           tf.math.greater_equal(abs_weights, current_threshold), weights.dtype)
     return current_threshold, new_mask
 
+  def _update_mask_sparsity_2x4(self, weights):
+    """Updates the 2x4 sparsity mask for a given weight tensor.
+
+    This function creates a mask for the given weight tensor so
+    that two elements with the lowest absolute values in the block
+    of four elements are set to be zero. We don't return any threshold.
+
+    Args:
+      weights: The weight tensor that needs to be masked.
+
+    Returns:
+      new_mask: A numpy array of the same size and shape as weights containing
+        0 or 1 to indicate which of the values in weights should be set to zero.
+        If the returned value is None, the requested mask cannot be created.
+    """
+    window_shape = (1, 4)
+    k = 2
+    mask = pruning_utils.generate_m_to_n_mask(weights, window_shape, k)
+    return mask
+
   def _maybe_update_block_mask(self, weights):
     """Performs block-granular masking of the weights.
 
+    If sparsity_2x4 is selected, then we return the relevant pruning mask,
+    that nullify two out of four elements in the block.
     Block pruning occurs only if the block_height or block_width is > 1 and
     if the weight tensor, when squeezed, has ndims = 2. Otherwise, elementwise
     pruning occurs.
@@ -110,7 +161,8 @@ class Pruning(object):
 
     Returns:
       new_threshold: The new value of the threshold based on weights, and
-        sparsity at the current global_step
+        sparsity at the current global_step. In case of sparsity 2x4,
+        the returned threshold is an arbitrary number.
       new_mask: A numpy array of the same size and shape as weights containing
         0 or 1 to indicate which of the values in weights falls below
         the threshold
@@ -118,6 +170,14 @@ class Pruning(object):
     Raises:
       ValueError: if block pooling function is not AVG or MAX
     """
+    if self._sparsity_2x4:
+      mask =  self._update_mask_sparsity_2x4(weights)
+      if mask is not None:
+        # We need to return some number for threshold.
+        return 999.0, mask
+      # Fallback to default pruning if failed to created the 2x4 pruning mask.
+      self._sparsity_2x4 = False
+
     if self._block_size == [1, 1]:
       return self._update_mask(weights)
 
