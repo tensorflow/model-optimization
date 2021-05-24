@@ -216,12 +216,6 @@ class ClusterWeights(Wrapper):
     for weight_name, original_weight in self.original_clusterable_weights.items(
     ):
 
-      # Update pulling indices (cluster associations)
-      pulling_indices = (
-          self.clustering_algorithms[weight_name].get_pulling_indices(
-              original_weight))
-      self.pulling_indices[weight_name].assign(pulling_indices)
-
       if self.preserve_sparsity:
         # Set the smallest centroid to zero to force sparsity
         # and avoid extra cluster from forming
@@ -239,6 +233,12 @@ class ClusterWeights(Wrapper):
         # where they were originally zero to begin with.
         original_weight = tf.math.multiply(original_weight,
                                               self.sparsity_masks[weight_name])
+
+      # Update pulling indices (cluster associations)
+      pulling_indices = (
+          self.clustering_algorithms[weight_name].get_pulling_indices(
+              original_weight))
+      self.pulling_indices[weight_name].assign(pulling_indices)
 
       clustered_weights = (
         self.clustering_algorithms[weight_name].get_clustered_weight(
