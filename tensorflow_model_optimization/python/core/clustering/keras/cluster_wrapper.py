@@ -107,6 +107,9 @@ class ClusterWeights(Wrapper):
 
     # Stores the pairs of weight names and their respective sparsity masks
     self.sparsity_masks = {}
+    self.zero_idx = {}
+
+    # Stores the pairs of weight names and the zero centroids
 
     # Map weight names to original clusterable weights variables
     # Those weights will still be updated during backpropagation
@@ -199,10 +202,32 @@ class ClusterWeights(Wrapper):
                 pulling_indices, original_weight))
         self.sparsity_masks[weight_name] = (
             tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32))
+        # If the model is pruned (which we suppose), this is approximately zero
+        self.zero_idx[weight_name] = tf.argmin(
+            tf.abs(self.cluster_centroids[weight_name]), axis=-1)
 
   def update_clustered_weights_associations(self):
     for weight_name, original_weight in self.original_clusterable_weights.items(
     ):
+
+      if self.preserve_sparsity:
+        # Set the smallest centroid to zero to force sparsity
+        # and avoid extra cluster from forming
+        zero_idx_mask = (
+            tf.cast(tf.math.not_equal(
+              self.cluster_centroids[weight_name],
+              self.cluster_centroids[weight_name][self.zero_idx[weight_name]]),
+              dtype=tf.float32)
+            )
+        self.cluster_centroids[weight_name].assign(
+                          tf.math.multiply(self.cluster_centroids[weight_name],
+                          zero_idx_mask))
+        # During training, the original zero weights can drift slightly.
+        # We want to prevent this by forcing them to stay zero at the places
+        # where they were originally zero to begin with.
+        original_weight = tf.math.multiply(original_weight,
+                                          self.sparsity_masks[weight_name])
+
       # Update pulling indices (cluster associations)
       pulling_indices = (
           self.clustering_algorithms[weight_name].get_pulling_indices(
@@ -213,15 +238,6 @@ class ClusterWeights(Wrapper):
       clustered_weights = (
           self.clustering_algorithms[weight_name].get_clustered_weight(
               pulling_indices, original_weight))
-
-      if self.preserve_sparsity:
-        # Re-discover the sparsity masks to avoid drifting
-        self.sparsity_masks[weight_name] = (
-            tf.cast(tf.math.not_equal(clustered_weights, 0), dtype=tf.float32)
-        )
-        # Apply the sparsity mask to the clustered weights
-        clustered_weights = tf.math.multiply(clustered_weights,
-                                             self.sparsity_masks[weight_name])
 
       # Replace the weights with their clustered counterparts
       setattr(self.layer, weight_name, clustered_weights)

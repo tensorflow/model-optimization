@@ -199,7 +199,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         stripped_model_after_tuning, 0, 'kernel')
     # Check after sparsity-aware clustering, despite zero centroid can drift,
     # the final number of unique weights remains the same
-    self.assertEqual(nr_of_unique_weights_before, nr_of_unique_weights_after)
+    self.assertLessEqual(nr_of_unique_weights_after, nr_of_unique_weights_before)
     # Check that the null weights stayed the same before and after tuning.
     # There might be new weights that become zeros but sparsity-aware
     # clustering preserves the original null weights in the original positions
