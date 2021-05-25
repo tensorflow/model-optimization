@@ -301,6 +301,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
           'pointwise_regularizer': 'l2',
           'bias_regularizer': 'l2',
           'activity_regularizer': 'l2'}),
+      ('use_bias', {'use_bias': False}),
       ('constraint', {
           'depthwise_constraint': tf.keras.constraints.max_norm(2.),
           'pointwise_constraint': tf.keras.constraints.min_max_norm(0., 2.),

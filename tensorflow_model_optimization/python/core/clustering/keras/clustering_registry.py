@@ -69,38 +69,11 @@ class ClusteringRegistry(object):
       layers.LayerNormalization: [],
   }
 
-  _RNN_CELLS_WEIGHTS_MAP = {
-      # NOTE: RNN cells are added via compat.v1 and compat.v2 to support legacy
-      # TensorFlow 2.X behavior where the v2 RNN uses the v1 RNNCell instead of
-      # the v2 RNNCell.
-      tf.compat.v1.keras.layers.GRUCell: ['kernel', 'recurrent_kernel'],
-      tf.compat.v2.keras.layers.GRUCell: ['kernel', 'recurrent_kernel'],
-      tf.compat.v1.keras.layers.LSTMCell: ['kernel', 'recurrent_kernel'],
-      tf.compat.v2.keras.layers.LSTMCell: ['kernel', 'recurrent_kernel'],
-      tf.compat.v1.keras.experimental.PeepholeLSTMCell: [
-          'kernel', 'recurrent_kernel'
-      ],
-      tf.compat.v2.keras.experimental.PeepholeLSTMCell: [
-          'kernel', 'recurrent_kernel'
-      ],
-      tf.compat.v1.keras.layers.SimpleRNNCell: ['kernel', 'recurrent_kernel'],
-      tf.compat.v2.keras.layers.SimpleRNNCell: ['kernel', 'recurrent_kernel'],
-  }
-
-  _RNN_LAYERS = {
+  _SUPPORTED_RNN_LAYERS = frozenset([
       layers.GRU,
       layers.LSTM,
-      layers.RNN,
       layers.SimpleRNN,
-  }
-
-  _RNN_CELLS_STR = ', '.join(str(_RNN_CELLS_WEIGHTS_MAP.keys()))
-
-  _RNN_CELL_ERROR_MSG = (
-      'RNN Layer {} contains cell type {} which is either not supported or does'
-      'not inherit ClusterableLayer. The cell must be one of {}, or implement '
-      'ClusterableLayer.'
-  )
+  ])
 
   @classmethod
   def supports(cls, layer):
@@ -115,30 +88,16 @@ class ClusteringRegistry(object):
     """
     # Automatically enable layers with zero trainable weights.
     # Example: Reshape, AveragePooling2D, Maximum/Minimum, etc.
-    if not layer.trainable_weights:
+    if not layer.trainable_weights and not isinstance(layer, layers.RNN):
       return True
 
     if layer.__class__ in cls._LAYERS_WEIGHTS_MAP:
       return True
 
-    if layer.__class__ in cls._RNN_LAYERS:
-      for cell in cls._get_rnn_cells(layer):
-        if (cell.__class__ not in cls._RNN_CELLS_WEIGHTS_MAP
-            and not isinstance(cell, clusterable_layer.ClusterableLayer)):
-          return False
+    if layer.__class__ in cls._SUPPORTED_RNN_LAYERS:
       return True
 
     return False
-
-  @staticmethod
-  def _get_rnn_cells(rnn_layer):
-    if isinstance(rnn_layer.cell, layers.StackedRNNCells):
-      return rnn_layer.cell.cells
-    return [rnn_layer.cell]
-
-  @classmethod
-  def _is_rnn_layer(cls, layer):
-    return layer.__class__ in cls._RNN_LAYERS
 
   @classmethod
   def _weight_names(cls, layer):
@@ -157,7 +116,6 @@ class ClusteringRegistry(object):
 
     Returns:
       The modified layer object.
-
     """
 
     if not cls.supports(layer):
@@ -168,23 +126,17 @@ class ClusteringRegistry(object):
               for weight_name in cls._weight_names(layer)]
 
     def get_clusterable_weights_rnn():  # pylint: disable=missing-docstring
-      def get_clusterable_weights_rnn_cell(cell):
-        if cell.__class__ in cls._RNN_CELLS_WEIGHTS_MAP:
-          return [(weight, getattr(cell, weight))
-                  for weight in cls._RNN_CELLS_WEIGHTS_MAP[cell.__class__]]
+      if isinstance(layer.cell, clusterable_layer.ClusterableLayer):
+        raise ValueError(
+            'ClusterableLayer is not yet supported for RNNs based layer.')
 
-        if isinstance(cell, clusterable_layer.ClusterableLayer):
-          return cell.get_clusterable_weights()
-
-        raise ValueError(cls._RNN_CELL_ERROR_MSG.format(
-            layer.__class__, cell.__class__, cls._RNN_CELLS_WEIGHTS_MAP.keys()))
-
-      clusterable_weights = []
-      for rnn_cell in cls._get_rnn_cells(layer):
-        clusterable_weights.extend(get_clusterable_weights_rnn_cell(rnn_cell))
+      clusterable_weights = [
+          ('kernel', layer.cell.kernel),
+          ('recurrent_kernel', layer.cell.recurrent_kernel),
+      ]
       return clusterable_weights
 
-    if cls._is_rnn_layer(layer):
+    if layer.__class__ in cls._SUPPORTED_RNN_LAYERS:
       layer.get_clusterable_weights = get_clusterable_weights_rnn
     else:
       layer.get_clusterable_weights = get_clusterable_weights
