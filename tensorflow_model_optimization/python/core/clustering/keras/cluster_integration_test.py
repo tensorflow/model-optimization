@@ -344,5 +344,160 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         callbacks=[CheckWeightsCallback()])
 
 
+class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
+  """Integration tests for clustering RNN layers."""
+
+  def setUp(self):
+    super(ClusterRNNIntegrationTest, self).setUp()
+    self.max_features = 10
+    self.maxlen = 2
+    self.batch_size = 32
+    self.x_train = np.random.random((64, self.maxlen))
+    self.y_train = np.random.randint(0, 2, (64,))
+
+    self.params_clustering = {
+        "number_of_clusters": 16,
+        "cluster_centroids_init": CentroidInitialization.KMEANS_PLUS_PLUS,
+    }
+
+  def _train(self, model):
+    model.compile(loss="binary_crossentropy", optimizer="adam",
+                  metrics=["accuracy"])
+    model.fit(
+        self.x_train,
+        self.y_train,
+        batch_size=self.batch_size,
+        epochs=1,
+    )
+
+  def _clusterTrainStrip(self, model):
+    clustered_model = cluster.cluster_weights(
+        model,
+        **self.params_clustering,
+    )
+    self._train(clustered_model)
+    stripped_model = cluster.strip_clustering(clustered_model)
+
+    return stripped_model
+
+  def __assertNbUniqueWeights(self, weight, expected_unique_weights):
+    nr_unique_weights = len(np.unique(weight.numpy().flatten()))
+    assert nr_unique_weights == expected_unique_weights
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterSimpleRNN(self):
+    model = keras.models.Sequential()
+    model.add(keras.layers.Embedding(self.max_features, 16,
+                                     input_length=self.maxlen))
+    model.add(keras.layers.SimpleRNN(16, return_sequences=True))
+    model.add(keras.layers.SimpleRNN(16))
+    model.add(keras.layers.Dense(1))
+    model.add(keras.layers.Activation("sigmoid"))
+
+    stripped_model = self._clusterTrainStrip(model)
+
+    self.__assertNbUniqueWeights(
+        weight=stripped_model.layers[1].cell.kernel,
+        expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+    self.__assertNbUniqueWeights(
+        weight=stripped_model.layers[1].cell.recurrent_kernel,
+        expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+
+    self._train(stripped_model)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterLSTM(self):
+    model = keras.models.Sequential()
+    model.add(keras.layers.Embedding(self.max_features, 16,
+                                     input_length=self.maxlen))
+    model.add(keras.layers.LSTM(16, return_sequences=True))
+    model.add(keras.layers.LSTM(16))
+    model.add(keras.layers.Dense(1))
+    model.add(keras.layers.Activation("sigmoid"))
+
+    stripped_model = self._clusterTrainStrip(model)
+
+    self.__assertNbUniqueWeights(
+        weight=stripped_model.layers[1].cell.kernel,
+        expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+    self.__assertNbUniqueWeights(
+        weight=stripped_model.layers[1].cell.recurrent_kernel,
+        expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+
+    self._train(stripped_model)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterGRU(self):
+    model = keras.models.Sequential()
+    model.add(keras.layers.Embedding(self.max_features, 16,
+                                     input_length=self.maxlen))
+    model.add(keras.layers.GRU(16, return_sequences=True))
+    model.add(keras.layers.GRU(16))
+    model.add(keras.layers.Dense(1))
+    model.add(keras.layers.Activation("sigmoid"))
+
+    stripped_model = self._clusterTrainStrip(model)
+
+    self.__assertNbUniqueWeights(
+        weight=stripped_model.layers[1].cell.kernel,
+        expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+    self.__assertNbUniqueWeights(
+        weight=stripped_model.layers[1].cell.recurrent_kernel,
+        expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+
+    self._train(stripped_model)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterPeepholeLSTM(self):
+    model = keras.models.Sequential()
+    model.add(keras.layers.Embedding(self.max_features, 16,
+                                     input_length=self.maxlen))
+    model.add(keras.layers.RNN(tf.keras.experimental.PeepholeLSTMCell(16)))
+    model.add(keras.layers.Dense(1))
+    model.add(keras.layers.Activation("sigmoid"))
+
+    # PeepholeLSTM not supported yet.
+    with self.assertRaises(ValueError):
+      self._clusterTrainStrip(model)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterBidirectional(self):
+    model = keras.models.Sequential()
+    model.add(keras.layers.Embedding(self.max_features, 16,
+                                     input_length=self.maxlen))
+    model.add(keras.layers.Bidirectional(keras.layers.SimpleRNN(16)))
+    model.add(keras.layers.Dense(1))
+    model.add(keras.layers.Activation("sigmoid"))
+
+    # Bidirectional not supported yet.
+    with self.assertRaises(ValueError):
+      self._clusterTrainStrip(model)
+
+  @keras_parameterized.run_all_keras_modes
+  def testClusterStackedRNNCells(self):
+    model = keras.models.Sequential()
+    model.add(keras.layers.Embedding(self.max_features, 16,
+                                     input_length=self.maxlen))
+    model.add(
+        tf.keras.layers.RNN(
+            tf.keras.layers.StackedRNNCells(
+                [keras.layers.SimpleRNNCell(16) for _ in range(2)]
+            )
+        )
+    )
+    model.add(keras.layers.Dense(1))
+    model.add(keras.layers.Activation("sigmoid"))
+
+    # StackedRNNCells not supported yet.
+    with self.assertRaises(ValueError):
+      self._clusterTrainStrip(model)
+
+
 if __name__ == "__main__":
   test.main()
