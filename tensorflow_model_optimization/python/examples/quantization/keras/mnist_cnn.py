@@ -75,7 +75,7 @@ model = tf.keras.Sequential([
 model = quantize.quantize_apply(model)
 
 # Dump graph to /tmp for verification on tensorboard.
-graph_def = tf.get_default_graph().as_graph_def()
+graph_def = tf.compat.v1.get_default_graph().as_graph_def()
 with open('/tmp/mnist_model.pbtxt', 'w') as f:
   f.write(str(graph_def))
 
