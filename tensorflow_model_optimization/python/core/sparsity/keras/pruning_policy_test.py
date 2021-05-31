@@ -278,6 +278,29 @@ class PruningPolicyTest(tf.test.TestCase):
     )
     self.assertEqual(self._count_pruned_layers(pruned_model), 6)
 
+  def testPruneFunctionalModelAfterCloneForLatencyOnXNNPackPolicy(self):
+    i = keras.Input(shape=(8, 8, 3))
+    x = layers.ZeroPadding2D(padding=1)(i)
+    x = layers.Conv2D(
+        filters=16,
+        kernel_size=(3, 3),
+        strides=(2, 2),
+        padding='valid',
+    )(
+        x)
+    x = layers.Conv2D(filters=16, kernel_size=[1, 1])(x)
+    o = layers.GlobalAveragePooling2D(keepdims=True)(x)
+    original_model = keras.Model(inputs=[i], outputs=[o])
+
+    cloned_model = tf.keras.models.clone_model(
+        original_model, clone_function=lambda l: l)
+    pruned_model = prune.prune_low_magnitude(
+        cloned_model,
+        pruning_policy=pruning_policy.PruneForLatencyOnXNNPack(),
+        **self.params,
+    )
+    self.assertEqual(self._count_pruned_layers(pruned_model), 1)
+
 
 if __name__ == '__main__':
   tf.test.main()

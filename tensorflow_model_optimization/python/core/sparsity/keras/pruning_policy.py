@@ -94,12 +94,12 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
     return isinstance(layer, layers.Conv2D) and layer.kernel_size == (1, 1)
 
   def _get_producers(self, layer):
-    producers = []
+    producers = set()
     for node in layer._inbound_nodes:
       if isinstance(node.inbound_layers, list):
-        producers.extend(node.inbound_layers)
+        producers.update(node.inbound_layers)
       else:
-        producers.append(node.inbound_layers)
+        producers.add(node.inbound_layers)
     return producers
 
   def _get_consumers(self, layer):
@@ -133,7 +133,7 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
   def _start_layer_stop_fn(self, layer):
     """Determines whether the layer starts a subgraph of sparse inference."""
     if isinstance(layer, layers.Conv2D):
-      producers = self._get_producers(layer)
+      producers = list(self._get_producers(layer))
       return (hasattr(layer, 'kernel') and
               layer.kernel.shape[:3] == (3, 3, 3) and
               layer.strides == (2, 2) and layer.padding.lower() == 'valid' and
@@ -165,12 +165,14 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
                    layers.ReLU, layers.LeakyReLU, layers.ELU, layers.Dropout)):
       return True
     elif isinstance(layer, layers.DepthwiseConv2D):
-      # 3x3 stride-1 convolution (no dilation, padding 1 on each side).
-      # 3x3 stride-2 convolution (no dilation, padding 1 on each side).
-      # 5x5 stride-1 convolution (no dilation, padding 2 on each side).
-      # 5x5 stride-2 convolution (no dilation, padding 2 on each side).
+      # 3x3 convolution with `SAME` padding (no dilation, stride-1).
+      # 3x3 convolution with `VALID` padding (no dilation, stride-1 or stride-2,
+      #   preceding `ZeroPadding2D` layer with padding 1 on each side.
+      # 5x5 convolution with `SAME` padding (no dilation, stride-1)
+      # 5x5 convolution with `VALID` padding (no dilation, stride-1 or stride-2,
+      #   preceding `ZeroPadding2D` layer with padding 2 on each side.
       padding = layer.padding.lower()
-      producers = self._get_producers(layer)
+      producers = list(self._get_producers(layer))
       zero_padding = (
           producers[0] if len(producers) == 1 and
           isinstance(producers[0], layers.ZeroPadding2D) else None)
@@ -180,7 +182,8 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
           padding == 'same')
 
       supported_case_2 = (
-          layer.kernel_size == (3, 3) and layer.strides == (2, 2) and
+          layer.kernel_size == (3, 3) and
+          (layer.strides == (1, 1) or layer.strides == (2, 2)) and
           padding == 'valid' and zero_padding and
           zero_padding.padding == ((1, 1), (1, 1)))
 
@@ -189,7 +192,8 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
           padding == 'same')
 
       supported_case_4 = (
-          layer.kernel_size == (5, 5) and layer.strides == (2, 2) and
+          layer.kernel_size == (5, 5) and
+          (layer.strides == (1, 1) or layer.strides == (2, 2)) and
           padding == 'valid' and zero_padding and
           zero_padding.padding == ((2, 2), (2, 2)))
 

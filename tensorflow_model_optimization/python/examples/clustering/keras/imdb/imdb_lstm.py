@@ -23,7 +23,9 @@ from __future__ import print_function
 import tensorflow.keras as keras
 import tensorflow.keras.preprocessing.sequence as sequence
 
-from tensorflow_model_optimization.python.core.clustering.keras import cluster, cluster_config
+from tensorflow_model_optimization.python.core.clustering.keras import cluster
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
+
 
 max_features = 20000
 maxlen = 100  # cut texts after this number of words
@@ -52,9 +54,10 @@ model.add(keras.layers.Dense(1))
 model.add(keras.layers.Activation("sigmoid"))
 
 model = cluster.cluster_weights(
-  model,
-  number_of_clusters=16,
-  cluster_centroids_init=cluster_config.CentroidInitialization.KMEANS_PLUS_PLUS,
+    model,
+    number_of_clusters=16,
+    cluster_centroids_init=cluster_config.CentroidInitialization
+    .KMEANS_PLUS_PLUS,
 )
 
 model.compile(loss="binary_crossentropy",
