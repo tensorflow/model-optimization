@@ -136,7 +136,7 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
 
     return quantizer_fn
 
-  def call(self, inputs, training=None):
+  def call(self, inputs, training=None, **kwargs):
     if training is None:
       training = tf.keras.backend.learning_phase()
 
@@ -165,9 +165,9 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
 
     args = tf_inspect.getfullargspec(self.layer.call).args
     if 'training' in args:
-      outputs = self.layer.call(inputs, training=training)
+      outputs = self.layer.call(inputs, training=training, **kwargs)
     else:
-      outputs = self.layer.call(inputs)
+      outputs = self.layer.call(inputs, **kwargs)
 
     if not self._output_quantizers:
       return outputs
