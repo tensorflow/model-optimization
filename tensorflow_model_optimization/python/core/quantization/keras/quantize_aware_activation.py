@@ -77,7 +77,7 @@ class QuantizeAwareActivation(object):
   # on inclusion. Verify in TFLite before enabling.
 
   # These activations should be quantized prior to the activation being applied.
-  _PRE_QUANT_ACTIVATIONS = frozenset({'softmax', 'sigmoid'})
+  _PRE_QUANT_ACTIVATIONS = frozenset({'softmax', 'sigmoid', 'tanh'})
 
   # These activations should be quantized after the activation has been applied.
   _POST_QUANT_ACTIVATIONS = frozenset({'linear', 'relu'})

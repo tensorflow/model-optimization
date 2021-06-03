@@ -399,8 +399,10 @@ def quantize_apply(
       return cls(**config)
 
   def _quantize(layer):  # pylint: disable=missing-docstring
-    if (layer.name not in layer_quantize_map and
-        layer.name not in requires_output_quantize):
+    if ((layer.name not in layer_quantize_map and
+         layer.name not in requires_output_quantize) or
+        (isinstance(layer, quantize_wrapper.QuantizeWrapper))):
+      # It supports for custom QuantizeWrapper.
       return layer
 
     if layer.name in requires_output_quantize:
