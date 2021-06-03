@@ -217,6 +217,9 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
       return activations.serialize(layer.activation) in ('relu', 'relu6',
                                                          'leaky_relu', 'elu',
                                                          'sigmoid')
+    elif layer.__class__.__name__ == 'TFOpLambda':
+      return layer.function in (tf.identity, tf.__operators__.add, tf.math.add,
+                                tf.math.subtract, tf.math.multiply)
     return False
 
   def ensure_model_supports_pruning(self, model):

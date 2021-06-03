@@ -19,18 +19,8 @@ from __future__ import division
 from __future__ import print_function
 
 import tensorflow as tf
-
-from tensorflow.python.framework import dtypes
-from tensorflow.python.keras import activations
-from tensorflow.python.keras import backend as K
-from tensorflow.python.keras import initializers
-from tensorflow.python.keras.layers import convolutional
-from tensorflow.python.keras.layers import serialization
 from tensorflow.python.keras.utils import conv_utils
-from tensorflow.python.ops import array_ops
 from tensorflow.python.ops import math_ops
-from tensorflow.python.ops import nn
-from tensorflow.python.ops import nn_ops
 from tensorflow_model_optimization.python.core.keras import utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
@@ -51,19 +41,19 @@ class _ConvBatchNormMixin(object):
 
     self.optimizer_step = self.add_weight(
         'optimizer_step',
-        initializer=initializers.Constant(-1),
-        dtype=dtypes.int32,
+        initializer=tf.compat.v1.keras.initializers.constant(-1),
+        dtype=tf.int32,
         trainable=False)
 
     # TODO(alanchiao): re-explore if we can handle this with
     # QuantizeAwareActivation.
     self._activation_min_var = self.add_variable(  # pylint: disable=protected-access
         'activation_min',
-        initializer=initializers.Constant(-6.0),
+        initializer=tf.compat.v1.keras.initializers.constant(-6.0),
         trainable=False)
     self._activation_max_var = self.add_variable(  # pylint: disable=protected-access
         'activation_max',
-        initializer=initializers.Constant(6.0),
+        initializer=tf.compat.v1.keras.initializers.constant(6.0),
         trainable=False)
 
   def _apply_weight_quantizer(self, training, folded_conv_kernel):
@@ -112,10 +102,10 @@ class _ConvBatchNormMixin(object):
     config.pop('use_bias')
     is_advanced_activation = 'class_name' in config['post_activation']
     if is_advanced_activation:
-      config['post_activation'] = serialization.deserialize(
+      config['post_activation'] = tf.keras.layers.deserialize(
           config['post_activation'])
     else:
-      config['post_activation'] = activations.deserialize(
+      config['post_activation'] = tf.keras.activations.deserialize(
           config['post_activation'])
 
     return cls_initializer(**config)
@@ -138,7 +128,8 @@ class _ConvBatchNormMixin(object):
       serialized_activation = keras.utils.serialize_keras_object(
           self.post_activation)
     else:
-      serialized_activation = activations.serialize(self.post_activation)
+      serialized_activation = tf.keras.activations.serialize(
+          self.post_activation)
     config = {
         'is_quantized': self.is_quantized,
         'post_activation': serialized_activation
@@ -149,7 +140,7 @@ class _ConvBatchNormMixin(object):
         list(config.items()))
 
 
-class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
+class _ConvBatchNorm2D(_ConvBatchNormMixin, tf.keras.layers.Convolution2D):
   """Layer for emulating the folding of batch normalization into Conv during serving.
 
   Implements the emulation, as described in https://arxiv.org/abs/1712.05877.
@@ -255,7 +246,7 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
     )
 
     # Named as post_activation to not conflict with Layer self.activation.
-    self.post_activation = activations.get(post_activation)
+    self.post_activation = tf.keras.activations.get(post_activation)
 
     self.is_quantized = is_quantized
     if self.is_quantized:
@@ -276,7 +267,7 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
 
   def call(self, inputs, training=None):
     if training is None:
-      training = K.learning_phase()
+      training = tf.keras.backend.learning_phase()
 
     conv_out = super(_ConvBatchNorm2D, self).call(inputs)
 
@@ -284,12 +275,12 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
     # but this avoids duplicating code (e.g. moving_average).
     self.batchnorm.call(conv_out)
 
-    folded_conv_kernel_multiplier = self.batchnorm.gamma * math_ops.rsqrt(
+    folded_conv_kernel_multiplier = self.batchnorm.gamma * tf.math.rsqrt(
         self.batchnorm.moving_variance + self.batchnorm.epsilon)
     folded_conv_kernel = math_ops.mul(
         folded_conv_kernel_multiplier, self.kernel, name='folded_conv_kernel')
 
-    folded_conv_bias = math_ops.subtract(
+    folded_conv_bias = tf.math.subtract(
         self.batchnorm.beta,
         self.batchnorm.moving_mean * folded_conv_kernel_multiplier,
         name='folded_conv_bias')
@@ -313,7 +304,7 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
     if not isinstance(op_padding, (list, tuple)):
       op_padding = op_padding.upper()
 
-    folded_conv_out = nn_ops.conv2d(
+    folded_conv_out = tf.compat.v1.nn.conv2d(
         inputs,
         folded_conv_kernel,
         strides=self.strides,
@@ -328,13 +319,13 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
     if self.data_format == 'channels_first':
       if self.rank == 1:
         # nn.bias_add does not accept a 1D input tensor.
-        bias = array_ops.reshape(folded_conv_bias, (1, self.filters, 1))
+        bias = tf.reshape(folded_conv_bias, (1, self.filters, 1))
         folded_conv_out += bias
       else:
-        outputs = nn.bias_add(
+        outputs = tf.nn.bias_add(
             folded_conv_out, folded_conv_bias, data_format='NCHW')
     else:
-      outputs = nn.bias_add(
+      outputs = tf.nn.bias_add(
           folded_conv_out, folded_conv_bias, data_format='NHWC')
 
     if self.post_activation is not None:
@@ -353,7 +344,7 @@ class _ConvBatchNorm2D(_ConvBatchNormMixin, convolutional.Conv2D):
 
 
 class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
-                                convolutional.DepthwiseConv2D):
+                                tf.keras.layers.DepthwiseConv2D):
   """Layer for emulating the folding of batch normalization into DepthwiseConv during serving.
 
   See ConvBatchNorm2D for detailed comments.
@@ -439,7 +430,7 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
         virtual_batch_size=virtual_batch_size,
         adjustment=adjustment,
     )
-    self.post_activation = activations.get(post_activation)
+    self.post_activation = tf.keras.activations.get(post_activation)
 
     self.is_quantized = is_quantized
     if self.is_quantized:
@@ -460,16 +451,16 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
 
   def call(self, inputs, training=None):
     if training is None:
-      training = K.learning_phase()
+      training = tf.keras.backend.learning_phase()
 
     conv_out = super(_DepthwiseConvBatchNorm2D, self).call(inputs)
 
     self.batchnorm.call(conv_out)
 
-    folded_conv_kernel_multiplier = self.batchnorm.gamma * math_ops.rsqrt(
+    folded_conv_kernel_multiplier = self.batchnorm.gamma * tf.math.rsqrt(
         self.batchnorm.moving_variance + self.batchnorm.epsilon)
 
-    folded_conv_bias = math_ops.subtract(
+    folded_conv_bias = tf.math.subtract(
         self.batchnorm.beta,
         self.batchnorm.moving_mean * folded_conv_kernel_multiplier,
         name='folded_conv_bias')
@@ -478,8 +469,8 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
         self.depthwise_kernel.get_shape().as_list()[2],
         self.depthwise_kernel.get_shape().as_list()[3]
     ]
-    folded_conv_kernel_multiplier = array_ops.reshape(
-        folded_conv_kernel_multiplier, depthwise_weights_shape)
+    folded_conv_kernel_multiplier = tf.reshape(folded_conv_kernel_multiplier,
+                                               depthwise_weights_shape)
 
     folded_conv_kernel = math_ops.mul(
         folded_conv_kernel_multiplier,
@@ -495,7 +486,7 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
     # backend.conv2d is.
     #
     # From DepthwiseConv2D layer call() function.
-    folded_conv_out = K.depthwise_conv2d(
+    folded_conv_out = tf.keras.backend.depthwise_conv2d(
         inputs,
         folded_conv_kernel,
         strides=self.strides,
@@ -504,7 +495,7 @@ class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
         data_format=self.data_format,
     )
 
-    outputs = K.bias_add(
+    outputs = tf.keras.backend.bias_add(
         folded_conv_out, folded_conv_bias, data_format=self.data_format)
 
     if self.post_activation is not None:
