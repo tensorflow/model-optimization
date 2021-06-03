@@ -68,14 +68,35 @@ class ModelTransformer(object):
            and not isinstance(model, keras.Sequential) \
            and model._is_graph_network    # pylint: disable=protected-access
 
+  def _inbound_node_generator(self, layer):
+    for inbound_node in layer['inbound_nodes']:
+      if len(inbound_node) > 0 and isinstance(inbound_node[0], str):
+        # TODO(tfmot): The case for the SlicingOpLambda.
+        yield [inbound_node]
+      else:
+        yield inbound_node
+
+  def _get_inbound_layer_names(self, layer):
+    """Return all the inbound connection layer names for the layer."""
+    inbound_layer_names = []
+    for inbound_node in self._inbound_node_generator(layer):
+      for connection_info in inbound_node:
+        # input argument case.
+        inbound_layer_names.append(connection_info[0])
+        # **kwarg argument case.
+        inbound_layer_names += [
+            value[0] for value in connection_info[3].items()]
+
+    return inbound_layer_names
+
   def _get_consuming_layers(self, check_layer):
     """Returns all the layers which are out nodes from the layer."""
     consuming_layers = []
+    check_layer_name = check_layer['config']['name']
     for layer in self._config['layers']:
-      for inbound_node in layer['inbound_nodes']:
-        for connection_info in inbound_node:
-          if connection_info[0] == check_layer['config']['name']:
-            consuming_layers.append(layer)
+      if check_layer_name in self._get_inbound_layer_names(layer):
+        consuming_layers.append(layer)
+
     return consuming_layers
 
   def _get_output_consumers(self, check_layer):
@@ -292,11 +313,22 @@ class ModelTransformer(object):
     # replaced layer should equal the original layer.
 
     consuming_layers = self._get_consuming_layers(match_layer_node.layer)
+    match_name = match_layer_node.layer['config']['name']
+    replacement_name = replacement_layer_node.layer['config']['name']
+
+    def _replace_layer_name_for_connection_info(
+        connection_info, match_name, replacement_name):
+      if connection_info[0] == match_name:
+        connection_info[0] = replacement_name
+      for key in connection_info[3]:
+        if connection_info[3][key][0] == match_name:
+          connection_info[3][key][0] = replacement_name
+
     for consumer in consuming_layers:
-      for inbound_node in consumer['inbound_nodes']:
+      for inbound_node in self._inbound_node_generator(consumer):
         for connection_info in inbound_node:
-          if connection_info[0] == match_layer_node.layer['config']['name']:
-            connection_info[0] = replacement_layer_node.layer['config']['name']
+          _replace_layer_name_for_connection_info(
+              connection_info, match_name, replacement_name)
 
     output_consumers = self._get_output_consumers(match_layer_node.layer)
     for output_consumer in output_consumers:
