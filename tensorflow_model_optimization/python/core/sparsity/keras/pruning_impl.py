@@ -77,14 +77,10 @@ class Pruning(object):
     to the unstructured pruning.
 
     Returns:
-      Booleans that indicates whether sparsity 2x4 is applicable.
+      Boolean that indicates whether sparsity 2x4 is applicable.
     """
     for weight, _, _ in self._pruning_vars:
-      if (weight.get_shape()[-1] % 4) != 0 :
-        logging.warning('This type of sparsity can be applied only to layers '
-                  'with the last dimension divisible by four. This layer '
-                  'does not satisfy this condition, unstructured pruning will '
-                  'be used instead.')
+      if not pruning_utils.check_if_applicable_sparsity_2x4(weight):
         return False
     return True
 

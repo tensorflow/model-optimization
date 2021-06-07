@@ -96,5 +96,19 @@ class GenerateMxNMaskTest(tf.test.TestCase, parameterized.TestCase):
     mask = pruning_utils.generate_m_to_n_mask(weight, window_shape, k)
     self.assertAllEqual(mask, expected)
 
+class IsPruned2x4Test(tf.test.TestCase, parameterized.TestCase):
+  @parameterized.parameters(
+    ([[1, 2, 3, 4]], False),
+    ([[1, 2, 0, 4], [0, 0, 1, 2]], False),
+    ([[1, 2, 3, 4, 5, 6]], False),
+    ([[1, 2, 0, 0]], True),
+    ([[1, 2, 0, 0], [0, 0, 0, 1], [0, 2, 1, 0]], True),
+    ([[0, 0, 0, 0]], True),
+    ([], True)
+  )
+  def testIsPruned2x4Test(self, weight, expected):
+    answer = pruning_utils.is_pruned_2x4(weight)
+    self.assertEqual(answer, expected)
+
 if __name__ == "__main__":
   tf.test.main()

@@ -159,17 +159,32 @@ def factorized_pool(input_tensor,
 
   return tf.squeeze(tf.transpose(width_pooling, perm=[0, 1, 3, 2]))
 
+def check_if_applicable_sparsity_2x4(weight):
+  """ This function checks that the sparsity 2x4 could be applied to weight.
+
+  The sparsity 2x4 is applied to Conv2D layer and Dense. We assume that
+  the number of channels is divisible by four in case of Conv2D or the width is
+  divisible by four for Dense. If the condition is not satisfied, we fallback
+  to the unstructured pruning.
+
+  Returns:
+    Boolean that indicates whether sparsity 2x4 is applicable.
+  """
+  if (tf.convert_to_tensor(weight).get_shape()[-1] % 4) != 0 :
+    return False
+  return True
+
 
 def generate_m_to_n_mask(weights, window_shape, k):
   """Generates mask for the given weights with the given window_shape.
-    In case of sparsity 2x4, the window_shape is expected to be 1x4 and k=2.
-    We don't apply any padding, because we assume that the given weights
-    don't require it for the given window shape. We do check on this before
-    this function. We set zeros to 2 out of 4 elements with
-    the smallest absolute value using top_k function.
+    For example, in case of sparsity 2x4, the window_shape is expected
+    to be 1x4 and k=2. We don't apply any padding, because we assume
+    that the given weights don't require it for the given window shape.
+    We do check on this before this function. We set zeros to 2 out of
+    4 elements with the smallest absolute value using top_k function.
 
     Args:
-      input_tensor: Input tensor.
+      weights: Input weights tensor.
       window_shape: Pooling window shape.
       k: How many elements should be set to zero.
 
@@ -187,12 +202,12 @@ def generate_m_to_n_mask(weights, window_shape, k):
   # Sanity check: height or width should be bigger than window_shape
   if (abs_weights_shape[0] < window_shape[0] or \
     abs_weights_shape[1] < window_shape[1]):
-    logging.warning('We cannot apply sparsity 2x4, '
+    logging.warning('We cannot apply sparsity MxN, '
                   'because weights size is too small.')
     return None
 
   if (not hasattr(abs_weights, 'numpy')):
-    logging.warning('We cannot apply sparsity 2x4, '
+    logging.warning('We cannot apply sparsity MxN, '
                   'weights do not have any values.')
     return None
 
@@ -200,10 +215,10 @@ def generate_m_to_n_mask(weights, window_shape, k):
   # Note that it works only on inner-most dimension.
   flatten_weights = abs_weights.numpy().reshape(-1)
 
-  logging.info('We are applying 2x4 sparsity for {} parameters'\
-    .format(tf.size(weights)))
+  logging.info('We are applying {}x{} sparsity for {} parameters'\
+    .format(k, window_shape[1], tf.size(weights)))
 
-  number_of_blocks = len(flatten_weights) // window_shape[1]
+  number_of_blocks = len(flatten_weights) // (window_shape[0] * window_shape[1])
   reshaped_weights_into_blocks = tf.reshape(flatten_weights,
     [number_of_blocks, window_shape[0], window_shape[1]])
 
@@ -227,3 +242,17 @@ def generate_m_to_n_mask(weights, window_shape, k):
   top_k_mask_result = tf.reshape(top_k_mask_4d, tf.shape(abs_weights))
 
   return top_k_mask_result
+
+def is_pruned_2x4(weights):
+  """Returns true if weights are pruned with sparsity 2x4,
+  otherwise false.
+
+  Args:
+      weights: Input weights tensor.
+  """
+  weights = tf.abs(weights)
+  flatten_weights = weights.numpy().reshape(-1)
+  for i in range(0, len(flatten_weights), 4):
+    if np.count_nonzero(flatten_weights[i:i+4]) > 2:
+      return False
+  return True

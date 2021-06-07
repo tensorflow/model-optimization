@@ -353,8 +353,10 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
 
     test_utils.assert_model_sparsity(self, 0.5, model)
+    test_utils.assert_model_sparsity_2x4(self, model)
 
     self._check_strip_pruning_matches_original(model, 0.5)
+
 
   @parameterized.parameters(_PRUNABLE_LAYERS_SPARSITY_2x4)
   def testSparsityPruning2x4_InvalidLayers(self, layer_type):
