@@ -79,7 +79,8 @@ def _cluster_model(model, number_of_clusters, preserve_sparsity=False):
   }
 
   # Cluster model
-  clustered_model = experimental_cluster.cluster_weights(model, **clustering_params)
+  clustered_model = experimental_cluster.cluster_weights(model,
+                                                         **clustering_params)
 
   # Use smaller learning rate for fine-tuning
   # clustered model
@@ -110,6 +111,7 @@ def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
 
   return nr_of_unique_weights
 
+
 def _deepcopy_model(model):
   model_copy = keras.models.clone_model(model)
   model_copy.set_weights(model.get_weights())
@@ -119,11 +121,11 @@ def _deepcopy_model(model):
 class FunctionalTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):
+    super(FunctionalTest, self).setUp()
     model = _build_model()
     _train_model(model)
     self.model = model
     self.dataset = _get_dataset()
-
 
   @parameterized.parameters(
       (False),
@@ -147,7 +149,8 @@ class FunctionalTest(tf.test.TestCase, parameterized.TestCase):
     self.assertGreater(results_original[1], 0.8)
 
     model_copy = _deepcopy_model(model)
-    clustered_model = _cluster_model(model_copy, NUMBER_OF_CLUSTERS, preserve_sparisty)
+    clustered_model = _cluster_model(model_copy, NUMBER_OF_CLUSTERS,
+                                     preserve_sparisty)
 
     results = clustered_model.evaluate(x_test, y_test)
 

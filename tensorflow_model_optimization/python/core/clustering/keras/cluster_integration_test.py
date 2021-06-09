@@ -157,7 +157,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     weight = getattr(layer, weight_name)
     weights_as_list = weight.numpy().flatten()
     nr_of_unique_weights = len(set(weights_as_list))
-
     return nr_of_unique_weights
 
   @keras_parameterized.run_all_keras_modes
@@ -184,17 +183,17 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
   @keras_parameterized.run_all_keras_modes
   def testSparsityIsPreservedDuringTraining(self):
-    # Set a specific random seed to ensure that we get some null weights to
-    # test sparsity preservation with.
-    tf.random.set_seed(1)
+    """Set a specific random seed.
 
+       Ensures that we get some null weights to test sparsity preservation with.
+    """
+    tf.random.set_seed(1)
     # Verifies that training a clustered model with null weights in it
     # does not destroy the sparsity of the weights.
     original_model = keras.Sequential([
         layers.Dense(5, input_shape=(5,)),
         layers.Flatten(),
     ])
-
     # Reset the kernel weights to reflect potential zero drifting of
     # the cluster centroids
     first_layer_weights = original_model.layers[0].get_weights()
@@ -202,36 +201,30 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     first_layer_weights[0][:][3] = [-0.13, -0.08, -0.05, 0.005, 0.13]
     first_layer_weights[0][:][4] = [-0.13, -0.08, -0.05, 0.005, 0.13]
     original_model.layers[0].set_weights(first_layer_weights)
-
     clustering_params = {
         "number_of_clusters": 6,
         "cluster_centroids_init": CentroidInitialization.LINEAR,
         "preserve_sparsity": True
     }
-
     clustered_model = experimental_cluster.cluster_weights(
         original_model, **clustering_params)
-
     stripped_model_before_tuning = cluster.strip_clustering(clustered_model)
     nr_of_unique_weights_before = self._get_number_of_unique_weights(
-      stripped_model_before_tuning, 0, 'kernel')
-
+        stripped_model_before_tuning, 0, "kernel")
     clustered_model.compile(
         loss=keras.losses.categorical_crossentropy,
         optimizer="adam",
         metrics=["accuracy"],
     )
     clustered_model.fit(x=self.dataset_generator(), steps_per_epoch=100)
-
     stripped_model_after_tuning = cluster.strip_clustering(clustered_model)
     weights_after_tuning = stripped_model_after_tuning.layers[0].kernel
     nr_of_unique_weights_after = self._get_number_of_unique_weights(
-        stripped_model_after_tuning, 0, 'kernel')
-
-    # Check after sparsity-aware clustering
+        stripped_model_after_tuning, 0, "kernel")
+    # Check after sparsity-aware clustering, despite zero centroid can drift,
     # the final number of unique weights remains the same
-    self.assertLessEqual(nr_of_unique_weights_after, nr_of_unique_weights_before)
-
+    self.assertLessEqual(nr_of_unique_weights_after,
+                         nr_of_unique_weights_before)
     # Check that the null weights stayed the same before and after tuning.
     # There might be new weights that become zeros but sparsity-aware
     # clustering preserves the original null weights in the original positions
@@ -239,10 +232,10 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     self.assertTrue(
         np.array_equal(first_layer_weights[0][:][0:2],
                        weights_after_tuning[:][0:2]))
-
     # Check that the number of unique weights matches the number of clusters.
     self.assertLessEqual(
-        nr_of_unique_weights_after, self.params["number_of_clusters"])
+        nr_of_unique_weights_after,
+        clustering_params["number_of_clusters"])
 
   @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndSequential(self):
@@ -279,6 +272,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
+  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndFunctional(self):
     """Test End to End clustering - functional model."""
     inputs = keras.layers.Input(shape=(5,))
@@ -421,6 +415,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
+  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndDeepLayer2(self):
     """Test End to End clustering for the model with 2 deep layers."""
     internal_model = tf.keras.Sequential(

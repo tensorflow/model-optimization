@@ -201,8 +201,8 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/keras:test_utils",
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
 )
 
@@ -228,6 +228,7 @@ py_strict_test(
     deps = [
         ":cluster",
         ":cluster_config",
+        # absl/testing:parameterized dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental",
     ],
