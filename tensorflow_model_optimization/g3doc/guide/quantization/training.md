@@ -37,8 +37,10 @@ cases. The code currently supports a
 ### Experiment with quantization and associated hardware
 
 Users can configure the quantization parameters (e.g. number of bits) and to
-some degree, the underlying algorithms. With these changes from the API
-defaults, there is no supported path to deployment.
+some degree, the underlying algorithms. Note that with these changes from the
+API defaults, there is currently no supported path for deployment to a backend.
+For instance, TFLite conversion and kernel implementations only support 8-bit
+quantization.
 
 APIs specific to this configuration are experimental and not subject to backward
 compatibility.
