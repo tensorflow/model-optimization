@@ -220,19 +220,20 @@ class ClusterWeights(Wrapper):
         # Set the smallest centroid to zero to force sparsity
         # and avoid extra cluster from forming
         zero_idx_mask = (
-            tf.cast(tf.math.not_equal(
-              self.cluster_centroids[weight_name],
-              self.cluster_centroids[weight_name][self.zero_idx[weight_name]]),
-              dtype=tf.float32)
-        )
+            tf.cast(
+                tf.math.not_equal(
+                    self.cluster_centroids[weight_name],
+                    self.cluster_centroids[weight_name][
+                        self.zero_idx[weight_name]]),
+                dtype=tf.float32))
         self.cluster_centroids[weight_name].assign(
-                          tf.math.multiply(self.cluster_centroids[weight_name],
-                          zero_idx_mask))
+            tf.math.multiply(self.cluster_centroids[weight_name],
+                             zero_idx_mask))
         # During training, the original zero weights can drift slightly.
         # We want to prevent this by forcing them to stay zero at the places
         # where they were originally zero to begin with.
         original_weight = tf.math.multiply(original_weight,
-                                              self.sparsity_masks[weight_name])
+                                           self.sparsity_masks[weight_name])
 
       # Update pulling indices (cluster associations)
       pulling_indices = (
@@ -240,6 +241,7 @@ class ClusterWeights(Wrapper):
               original_weight))
       self.pulling_indices[weight_name].assign(pulling_indices)
 
+      # Update clustered weights
       clustered_weights = (
         self.clustering_algorithms[weight_name].get_clustered_weight(
             pulling_indices, original_weight))

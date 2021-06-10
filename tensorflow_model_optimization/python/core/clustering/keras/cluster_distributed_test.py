@@ -81,7 +81,7 @@ class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
     weights_as_list = stripped_model.layers[0].kernel.numpy().reshape(
         -1,).tolist()
     unique_weights = set(weights_as_list)
-    self.assertLessEqual(len(unique_weights), clustering["number_of_clusters"])
+    self.assertLessEqual(len(unique_weights), clustering['number_of_clusters'])
 
   @parameterized.parameters(
       _distribution_strategies()
