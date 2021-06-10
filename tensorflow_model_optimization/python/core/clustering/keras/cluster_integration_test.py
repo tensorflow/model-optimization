@@ -639,9 +639,7 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     model.add(keras.layers.Dense(1))
     model.add(keras.layers.Activation("sigmoid"))
 
-    # StackedRNNCells not supported yet.
-    with self.assertRaises(ValueError):
-      self._clusterTrainStrip(model)
+    self._clusterTrainStrip(model)
 
 
 if __name__ == "__main__":

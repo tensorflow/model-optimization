@@ -312,7 +312,7 @@ class ClusterRegistryTest(test.TestCase):
     l.build((10, 1))
     self.assertFalse(ClusterRegistry.supports(l))
 
-  def testDoesnNotSupportsKerasRNNLayerClusterableCell(self):
+  def testDoesNotSupportsKerasRNNLayerClusterableCell(self):
     """
     Verifies that ClusterRegistry does not supports a custom clusterable RNN cell.
     """
@@ -410,23 +410,25 @@ class ClusterRegistryTest(test.TestCase):
                         ('recurrent_kernel', layer.cell.recurrent_kernel)]
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
-  def testMakeClusterableDoesNotWorksOnKerasRNNLayerWithRNNCellsParams(self):
+  def testMakeClusterableWorksOnKerasRNNLayerWithRNNCellsParams(self):
     """
-    Verifies that make_clusterable() does not works as expected on a built-in
+    Verifies that make_clusterable() works as expected on a built-in
     RNN layer with built-in RNN cells.
     """
     cell1 = layers.LSTMCell(10)
     cell2 = layers.GRUCell(5)
-    layer = layers.RNN([cell1, cell2])
+    cell_list = tf.keras.layers.StackedRNNCells(
+          [cell1, cell2]
+        )
+    layer = layers.RNN(cell_list)
     with self.assertRaises(AttributeError):
       layer.get_clusterable_weights()
 
-    with self.assertRaises(ValueError):
-      ClusterRegistry.make_clusterable(layer)
+    ClusterRegistry.make_clusterable(layer)
 
-  def testMakeClusterableDoesNotWorksOnKerasRNNLayerWithClusterableCell(self):
+  def testMakeClusterableWorksOnKerasRNNLayerWithClusterableCell(self):
     """
-    Verifies that make_clusterable() does not works as expected on a built-in
+    Verifies that make_clusterable() works as expected on a built-in
     RNN layer with a custom clusterable RNN cell.
     """
     cell1 = layers.LSTMCell(10)
@@ -436,20 +438,20 @@ class ClusterRegistryTest(test.TestCase):
     with self.assertRaises(AttributeError):
       layer.get_clusterable_weights()
 
-    with self.assertRaises(ValueError):
-      ClusterRegistry.make_clusterable(layer)
+    ClusterRegistry.make_clusterable(layer)
 
   def testMakeClusterableRaisesErrorOnRNNLayersUnsupportedCell(self):
     """Verifies that make_clusterable() raises an exception.
-
     When invoked with a built-in RNN layer that contains a non-clusterable
     custom RNN cell.
     """
-    l = ClusterRegistryTest.MinimalRNNCell(5)
-    # we need to build weights
-    l.build(input_shape=(10, 1))
+    cell1 = layers.LSTMCell(10)
+    cell2 = ClusterRegistryTest.MinimalRNNCell(5)
+    layer = layers.RNN([cell1, cell2])
+    layer.build(input_shape=(10, 1))
+
     with self.assertRaises(ValueError):
-      ClusterRegistry.make_clusterable(layers.RNN([layers.LSTMCell(10), l]))
+      ClusterRegistry.make_clusterable(layer)
 
 
 if __name__ == '__main__':

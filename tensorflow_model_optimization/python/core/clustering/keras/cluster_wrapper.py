@@ -157,10 +157,15 @@ class ClusterWeights(Wrapper):
       # Store the original weight in this wrapper
       # The child reference will be overridden in
       # update_clustered_weights_associations
+      # The actual weight_name here for the clustering wrapper is not
+      # necessarily the same as the original one from the layer wrapped.
+      # For example for cells in StackedRNNCell, the names become
+      # 'kernel/0', 'recurrent_kernel/0', 'kernel/1', 'recurrent_kernel/1'
       original_weight = self.get_weight_from_layer(weight_name)
       self.original_clusterable_weights[weight_name] = original_weight
+      # Track the variable
       setattr(self, 'original_weight_' + weight_name,
-              original_weight)  # Track the variable
+              original_weight)
       # Store the position in layer.weights of original_weight to restore during
       # stripping
       position_original_weight = next(
@@ -181,9 +186,16 @@ class ClusterWeights(Wrapper):
           initializer=tf.keras.initializers.Constant(value=cluster_centroids))
 
       # Init the weight clustering algorithm
+      if isinstance(self.layer, tf.keras.layers.RNN):
+        if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+          weight_name_no_index = weight_name.split('/')[0]
+        else:
+          weight_name_no_index = weight_name
+      else:
+        weight_name_no_index = weight_name
       self.clustering_algorithms[weight_name] = (
           clustering_registry.ClusteringLookupRegistry().get_clustering_impl(
-              self.layer, weight_name)
+              self.layer, weight_name_no_index)
           (
               clusters_centroids=self.cluster_centroids[weight_name],
               cluster_gradient_aggregation=self.cluster_gradient_aggregation,
@@ -191,7 +203,8 @@ class ClusterWeights(Wrapper):
 
       # Init the pulling_indices (weights associations)
       pulling_indices = (
-          self.clustering_algorithms[weight_name].get_pulling_indices(weight))
+          self.clustering_algorithms[weight_name].get_pulling_indices(
+              weight))
       self.pulling_indices[weight_name] = self.add_weight(
           '{}{}'.format('pulling_indices_', weight_name),
           shape=pulling_indices.shape,
@@ -243,11 +256,14 @@ class ClusterWeights(Wrapper):
 
       # Update clustered weights
       clustered_weights = (
-        self.clustering_algorithms[weight_name].get_clustered_weight(
-            pulling_indices, original_weight))
+          self.clustering_algorithms[weight_name].get_clustered_weight(
+              pulling_indices, original_weight))
 
       # Replace the weights with their clustered counterparts
-      self.set_weight_to_layer(weight_name, clustered_weights)
+      # Remove weight_name index so the wrapper layer weight_name can match
+      # the original one
+      self.set_weight_to_layer(weight_name,
+                               clustered_weights)
 
   def call(self, inputs, training=None, **kwargs):
     # Update cluster associations in order to set the latest weights
@@ -355,7 +371,17 @@ class ClusterWeightsRNN(ClusterWeights):
   """This wrapper augments a keras RNN layer so that the weights can be clustered."""
 
   def get_weight_from_layer(self, weight_name):
-    return getattr(self.layer.cell, weight_name)
+    if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+      weight_name_no_index = weight_name.split('/')[0]
+      i = int(weight_name.split('/')[1])
+      return getattr(self.layer.cell.cells[i], weight_name_no_index)
+    else:
+      return getattr(self.layer.cell, weight_name)
 
   def set_weight_to_layer(self, weight_name, new_weight):
-    setattr(self.layer.cell, weight_name, new_weight)
+    if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+      weight_name_no_index = weight_name.split('/')[0]
+      i = int(weight_name.split('/')[1])
+      return setattr(self.layer.cell.cells[i], weight_name_no_index, new_weight)
+    else:
+      return setattr(self.layer.cell, weight_name, new_weight)

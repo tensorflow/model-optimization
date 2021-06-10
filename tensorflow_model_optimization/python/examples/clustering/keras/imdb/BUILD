@@ -50,3 +50,17 @@ py_binary(
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
     ],
 )
+
+py_binary(
+    name = "imdb_stacked_rnn",
+    srcs = [
+        "imdb_stacked_rnn.py",
+    ],
+    python_version = "PY3",
+    deps = [
+        # numpy dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
+    ],
+)
