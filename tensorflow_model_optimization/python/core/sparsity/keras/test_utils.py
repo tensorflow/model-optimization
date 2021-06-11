@@ -100,7 +100,7 @@ def model_type_keys():
 def list_to_named_parameters(param_name, options):
   """Convert list of options for parameter to input to @parameterized.named_parameters.
 
-  Arguments:
+  Args:
     param_name: name of parameter
     options: list of options for parameter
 
