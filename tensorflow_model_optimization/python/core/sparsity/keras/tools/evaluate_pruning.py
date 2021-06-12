@@ -19,7 +19,7 @@ output a converted TFLite model for both pruned and unpruned versions.
 
 This tool is intented to produce sparsified models for evaluating the
 performance benefits (model size, inference time, …) of pruning. Since the
-sparsity is applied in one shot, without retrainig, the accuracy of the
+sparsity is applied in one shot, without retraining, the accuracy of the
 resulting model will be severly degraded.
 """
 
