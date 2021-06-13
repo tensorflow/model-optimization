@@ -35,8 +35,11 @@ class ClusterPreserveQuantizeRegistryTest(tf.test.TestCase,
 
   def setUp(self):
     super(ClusterPreserveQuantizeRegistryTest, self).setUp()
+    # Test CQAT by default
     self.cluster_preserve_quantize_registry = (
-        cluster_preserve_quantize_registry.ClusterPreserveQuantizeRegistry())
+        cluster_preserve_quantize_registry.ClusterPreserveQuantizeRegistry(
+            False)
+        )
     # layers which are supported
     # initial and build a Conv2D layer
     self.layer_conv2d = layers.Conv2D(10, (2, 2))
@@ -54,7 +57,7 @@ class ClusterPreserveQuantizeRegistryTest(tf.test.TestCase,
     self.layer_custom.build()
 
   class CustomLayer(layers.Layer):
-    # a simple custom layer with training weights
+    """A simple custom layer with training weights."""
 
     def build(self, input_shape=(2, 2)):
       self.add_weight(shape=input_shape,
@@ -62,6 +65,7 @@ class ClusterPreserveQuantizeRegistryTest(tf.test.TestCase,
                       trainable=True)
 
   class CustomQuantizeConfig(QuantizeConfig):
+    """A dummy concrete class for testing unregistered configs."""
 
     def get_weights_and_quantizers(self, layer):
       return []
@@ -96,23 +100,24 @@ class ClusterPreserveQuantizeRegistryTest(tf.test.TestCase,
         self.cluster_preserve_quantize_registry.supports(self.layer_custom))
 
   def testApplyClusterPreserveWithQuantizeConfig(self):
-    self.cluster_preserve_quantize_registry.apply_cluster_preserve_quantize_config(
-        self.layer_conv2d,
-        default_8bit_quantize_registry.Default8BitConvQuantizeConfig(
-            ['kernel'], ['activation'], False))
+    (self.cluster_preserve_quantize_registry
+     .apply_cluster_preserve_quantize_config(
+         self.layer_conv2d,
+         default_8bit_quantize_registry.Default8BitConvQuantizeConfig(
+             ['kernel'], ['activation'], False)))
 
   def testRaisesErrorUnsupportedQuantizeConfigWithLayer(self):
     with self.assertRaises(
         ValueError, msg='Unregistered QuantizeConfigs should raise error.'):
-      self.cluster_preserve_quantize_registry.\
-          apply_cluster_preserve_quantize_config(
-              self.layer_conv2d, self.CustomQuantizeConfig)
+      (self.cluster_preserve_quantize_registry.
+       apply_cluster_preserve_quantize_config(
+           self.layer_conv2d, self.CustomQuantizeConfig))
 
     with self.assertRaises(ValueError,
                            msg='Unregistered layers should raise error.'):
-      self.cluster_preserve_quantize_registry.\
-          apply_cluster_preserve_quantize_config(
-              self.layer_custom, self.CustomQuantizeConfig)
+      (self.cluster_preserve_quantize_registry.
+       apply_cluster_preserve_quantize_config(
+           self.layer_custom, self.CustomQuantizeConfig))
 
 
 class ClusterPreserveDefault8bitQuantizeRegistryTest(tf.test.TestCase):
@@ -122,17 +127,19 @@ class ClusterPreserveDefault8bitQuantizeRegistryTest(tf.test.TestCase):
     self.default_8bit_quantize_registry = (
         default_8bit_quantize_registry.Default8BitQuantizeRegistry())
     self.cluster_registry = clustering_registry.ClusteringRegistry()
+    # Test CQAT by default
     self.cluster_preserve_quantize_registry = (
-        cluster_preserve_quantize_registry.ClusterPreserveQuantizeRegistry())
+        cluster_preserve_quantize_registry.ClusterPreserveQuantizeRegistry(
+            False))
 
   def testSupportsClusterDefault8bitQuantizeKerasLayers(self):
     # ClusterPreserveQuantize supported layer, must be suppoted
     # by both Cluster and Quantize
-    cqat_layers_config_map = \
-      self.cluster_preserve_quantize_registry._LAYERS_CONFIG_MAP
+    cqat_layers_config_map = (
+        self.cluster_preserve_quantize_registry._LAYERS_CONFIG_MAP)
     for cqat_support_layer in cqat_layers_config_map:
-      if cqat_layers_config_map[cqat_support_layer].weight_attrs and \
-        cqat_layers_config_map[cqat_support_layer].quantize_config_attrs:
+      if cqat_layers_config_map[cqat_support_layer].weight_attrs and (
+          cqat_layers_config_map[cqat_support_layer].quantize_config_attrs):
         self.assertIn(
             cqat_support_layer, self.cluster_registry._LAYERS_WEIGHTS_MAP,
             msg='Clusteirng doesn\'t support {}'.format(cqat_support_layer))

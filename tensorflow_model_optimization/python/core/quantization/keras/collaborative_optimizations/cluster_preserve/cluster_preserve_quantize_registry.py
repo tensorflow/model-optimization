@@ -14,6 +14,7 @@
 # ==============================================================================
 """Registry responsible for built-in keras classes."""
 
+import logging
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
@@ -22,8 +23,16 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
-K = tf.keras.backend
 layers = tf.keras.layers
+K = tf.keras.backend
+
+CLUSTER_CENTROIDS = 'cluster_centroids_tf'
+PULLING_INDICES = 'pulling_indices_tf'
+ORIGINAL_WEIGHTS = 'ori_weights_vars_tf'
+WEIGHT_NAME = 'weight_name'
+CLUSTERING_IMPL = 'clst_impl'
+CENTROIDS_MASK = 'centroids_mask'
+SPARSITY_MASK = 'sparsity_mask'
 
 
 def get_unique(t):
@@ -69,7 +78,7 @@ class _ClusterPreserveInfo(object):
 
 
 class ClusterPreserveQuantizeRegistry(object):
-  """ClusterPreserveQuantizeRegistry for built-in keras layers."""
+  """ClusterPreserveQuantizeRegistry is for built-in keras layers."""
   # The keys represent built-in keras layers; the first values represent the
   # the variables within the layers which hold the kernel weights, second
   # values represent the class name of quantization configuration for layers.
@@ -118,12 +127,12 @@ class ClusterPreserveQuantizeRegistry(object):
       layers.DepthwiseConv2D,
   })
 
-  def __init__(self):
+  def __init__(self, preserve_sparsity):
     self._config_quantizer_map = {
         'Default8BitQuantizeConfig':
-        ClusterPreserveDefault8BitWeightsQuantizer(),
+        ClusterPreserveDefault8BitWeightsQuantizer(preserve_sparsity),
         'Default8BitConvQuantizeConfig':
-        ClusterPreserveDefault8BitConvWeightsQuantizer(),
+        ClusterPreserveDefault8BitConvWeightsQuantizer(preserve_sparsity),
     }
 
   @classmethod
@@ -132,7 +141,6 @@ class ClusterPreserveQuantizeRegistry(object):
 
     Args:
       layer: The layer to check for trainable weights.
-
     Returns:
       True/False whether the layer has trainable weights.
     """
@@ -140,11 +148,10 @@ class ClusterPreserveQuantizeRegistry(object):
 
   @classmethod
   def _disable_cluster_preserve(cls, layer):
-    """Returns whether disable this layer for preserving clusters.
+    """Returns whether to disable this layer for preserving clusters.
 
     Args:
       layer: The layer to check for disabling.
-
     Returns:
       True/False whether disabling this layer for preserving clusters.
     """
@@ -156,7 +163,6 @@ class ClusterPreserveQuantizeRegistry(object):
 
     Args:
       layer: The layer to check for support.
-
     Returns:
       True/False whether the layer type is supported.
     """
@@ -178,34 +184,6 @@ class ClusterPreserveQuantizeRegistry(object):
 
     return cls._LAYERS_CONFIG_MAP[layer.__class__].weight_attrs
 
-  @classmethod
-  def get_cluster_preservable_weights(cls, layer):
-    """Get cluster preservable weights from keras layer.
-
-    Args:
-      layer: instance of keras layer
-
-    Returns:
-      List of cluster preservable weights
-    """
-    return [getattr(layer, weight) for weight in cls._weight_names(layer)]
-
-  @classmethod
-  def get_suppport_quantize_config_names(cls, layer):
-    """Get class name of supported quantize config for layer.
-
-    Args:
-      layer: instance of keras layer
-
-    Returns:
-      List of supported quantize config class name.
-    """
-    # layers without trainable weights don't need quantize_config for cqat
-    if cls._no_trainable_weights(layer):
-      return []
-
-    return cls._LAYERS_CONFIG_MAP[layer.__class__].quantize_config_attrs
-
   def apply_cluster_preserve_quantize_config(self, layer, quantize_config):
     """Applies cluster-preserve weight quantizer.
 
@@ -213,7 +191,6 @@ class ClusterPreserveQuantizeRegistry(object):
       layer: The layer to check for support.
       quantize_config: quantization config for supporting cluster preservation
       on clustered weights
-
     Returns:
       The quantize_config with addon cluster preserve weight_quantizer.
     """
@@ -243,12 +220,16 @@ class Default8bitClusterPreserveQuantizeRegistry(
     ClusterPreserveQuantizeRegistry):
   """Default 8 bit ClusterPreserveQuantizeRegistry."""
 
+  def __init__(self, preserve_sparsity):
+    super(Default8bitClusterPreserveQuantizeRegistry, self).__init__(
+        preserve_sparsity)
+    self.preserve_sparsity = preserve_sparsity
+
   def get_quantize_config(self, layer):
-    """Returns the quantization config with addon cluster preserve weight_quantizer for the given layer.
+    """Returns the quantization config with weight_quantizer for a given layer.
 
     Args:
       layer: input layer to return quantize config for.
-
     Returns:
       Returns the quantization config for cluster preserve weight_quantizer.
     """
@@ -265,7 +246,8 @@ class Default8bitClusterPreserveQuantizeRegistry(
 class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
   """Quantize weights while preserving clusters."""
 
-  def __init__(self, num_bits, per_axis, symmetric, narrow_range):
+  def __init__(
+      self, num_bits, per_axis, symmetric, narrow_range, preserve_sparsity):
     """ClusterPreserveDefaultWeightsQuantizer.
 
     Args:
@@ -277,6 +259,8 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       narrow_range: In case of 8 bits, narrow_range nudges the quantized range
         to be [-127, 127] instead of [-128, 127]. This ensures symmetric
         range has 0 as the centre.
+      preserve_sparsity: Whether to apply prune-cluster-preserving quantization
+        aware training.
     """
     super(ClusterPreserveDefaultWeightsQuantizer, self).__init__(
         num_bits=num_bits,
@@ -284,9 +268,13 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         symmetric=symmetric,
         narrow_range=narrow_range,
     )
+    self.preserve_sparsity = preserve_sparsity
 
   def _build_clusters(self, name, layer):
-    """Extract the cluster centroids and cluster indices from the pretrained clustered model.
+    """Extracts the cluster centroids and cluster indices.
+
+    Extracts cluster centroids and cluster indices from the pretrained
+    clustered model when the input layer is clustered.
 
     Args:
       name: Name of weights in layer.
@@ -297,68 +285,81 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       the pretrained flag for marking the first training
       epoch, and weight name.
     """
+    result = {}
     weights = getattr(layer.layer, name)
+    if self.preserve_sparsity and not tf.reduce_any(weights == 0):
+      self.preserve_sparsity = False
+      logging.warning(
+          'Input layer does not contain zero weights, so apply CQAT instead.')
+    centroids_mask = None
     centroids, lookup = get_unique(weights)
+    num_centroids = tf.size(centroids)
 
-    # Prepare trainable variables for the Keras graph
-    clst_centroids_tf = layer.add_weight(
-        'cluster_centroids_tf',
-        shape=centroids.shape,
-        initializer=tf.keras.initializers.Constant(
-            value=K.batch_get_value([centroids])[0]),
-        dtype=centroids.dtype,
-        trainable=True)
+    if self.preserve_sparsity:
+      sparsity_mask = tf.math.divide_no_nan(weights, weights)
+      zero_idx = tf.argmin(tf.abs(centroids), axis=-1)
+      centroids_mask = 1.0 - tf.one_hot(zero_idx, num_centroids)
+      result = {SPARSITY_MASK: sparsity_mask}
 
-    ori_weights_tf = layer.add_weight(
-        'ori_weights_vars_tf',
-        shape=weights.shape,
-        initializer=tf.keras.initializers.Constant(
-            value=K.batch_get_value([weights])[0]),
-        dtype=weights.dtype,
-        trainable=True)
+    # Prepare clustering variables for the Keras graph when clusters
+    # exist, assuming we do not use number_of_clusters larger than 1024
+    if num_centroids > 1024:
+      return result
+    else:
+      clst_centroids_tf = layer.add_weight(
+          CLUSTER_CENTROIDS,
+          shape=centroids.shape,
+          initializer=tf.keras.initializers.Constant(
+              value=K.batch_get_value([centroids])[0]),
+          dtype=centroids.dtype,
+          trainable=True)
 
-    # Get clustering implementation according to layer type
-    clustering_impl_cls = (
-        clustering_registry.ClusteringLookupRegistry().get_clustering_impl(
-            layer.layer, name))
-    clustering_impl = clustering_impl_cls(clst_centroids_tf)
+      ori_weights_tf = layer.add_weight(
+          ORIGINAL_WEIGHTS,
+          shape=weights.shape,
+          initializer=tf.keras.initializers.Constant(
+              value=K.batch_get_value([weights])[0]),
+          dtype=weights.dtype,
+          trainable=True)
 
-    pulling_indices = tf.dtypes.cast(
-        clustering_impl.get_pulling_indices(ori_weights_tf),
-        lookup.dtype
-    )
+      # Get clustering implementation according to layer type
+      clustering_impl_cls = clustering_registry.ClusteringLookupRegistry(
+          ).get_clustering_impl(layer.layer, name)
+      clustering_impl = clustering_impl_cls(clst_centroids_tf)
 
-    pulling_indices_tf = layer.add_weight(
-        'pulling_indices_tf',
-        shape=lookup.shape,
-        initializer=tf.keras.initializers.Constant(
-            value=K.batch_get_value([pulling_indices])[0]),
-        dtype=lookup.dtype,
-        trainable=False)
+      pulling_indices = tf.dtypes.cast(
+          clustering_impl.get_pulling_indices(ori_weights_tf),
+          lookup.dtype
+      )
 
-    for v in layer.weights:
-      if 'kernel' in v.name:
-        kernel = v
+      pulling_indices_tf = layer.add_weight(
+          PULLING_INDICES,
+          shape=lookup.shape,
+          initializer=tf.keras.initializers.Constant(
+              value=K.batch_get_value([pulling_indices])[0]),
+          dtype=lookup.dtype,
+          trainable=False)
 
-    result = {
-        'cluster_centroids_tf': clst_centroids_tf,
-        'pulling_indices_tf': pulling_indices_tf,
-        'ori_weights_vars_tf': ori_weights_tf,
-        'weight_name': name,
-        'clst_impl': clustering_impl,
-        'set_kernel_weight': kernel,
-    }
-
-    return result
+      result_clst = {
+          CLUSTER_CENTROIDS: clst_centroids_tf,
+          PULLING_INDICES: pulling_indices_tf,
+          ORIGINAL_WEIGHTS: ori_weights_tf,
+          WEIGHT_NAME: name,
+          CLUSTERING_IMPL: clustering_impl,
+          CENTROIDS_MASK: centroids_mask,
+      }
+      result.update(result_clst)
+      return result
 
   def build(self, tensor_shape, name, layer):
-    """Extract centroids and indices to preserve weights clusters.
+    """Build (P)CQAT wrapper.
+
+    When preserve_sparsity is true and the input is clustered.
 
     Args:
       tensor_shape: Shape of weights which needs to be quantized.
       name: Name of weights in layer.
       layer: Quantization wrapped keras layer.
-
     Returns:
       Dictionary of centroids, indices and
       quantization params, the dictionary will be passed
@@ -366,6 +367,9 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     """
     # To get all the initial values from pretrained clustered model
     result = self._build_clusters(name, layer)
+    # Result can have clustering nodes, then this is CQAT
+    # Result can have both clustering nodes and sparsity mask, then
+    # this will be PCQAT
     result.update(
         super(ClusterPreserveDefaultWeightsQuantizer,
               self).build(tensor_shape, name, layer))
@@ -382,27 +386,41 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
         quantize the tensor (layer's weights). This contains the weights
         created in the `build` function.
       **kwargs: Additional variables which may be passed to the quantizer.
-
     Returns:
       quantized tensor.
     """
-    # update associations
     if training:
-      weights['pulling_indices_tf'].assign(
-          tf.dtypes.cast(weights['clst_impl']
-                         .get_pulling_indices(weights['ori_weights_vars_tf']),
-                         weights['pulling_indices_tf'].dtype)
-      )
+      if CLUSTER_CENTROIDS in weights:
+        if self.preserve_sparsity:
+          weights[ORIGINAL_WEIGHTS].assign(
+              tf.multiply(weights[ORIGINAL_WEIGHTS],
+                          weights[SPARSITY_MASK]))
+          weights[CLUSTERING_IMPL].cluster_centroids.assign(
+              weights[CLUSTERING_IMPL].
+              cluster_centroids * weights[CENTROIDS_MASK]
+          )
+          weights[CLUSTER_CENTROIDS].assign(
+              weights[CLUSTERING_IMPL].cluster_centroids
+          )
+        # Insert clustering variables
+        weights[PULLING_INDICES].assign(tf.dtypes.cast(
+            weights[CLUSTERING_IMPL].get_pulling_indices(
+                weights[ORIGINAL_WEIGHTS]),
+            weights[PULLING_INDICES].dtype
+        ))
 
-      clustered_inputs = weights['clst_impl'].get_clustered_weight(
-          weights['pulling_indices_tf'], weights['ori_weights_vars_tf']
-      )
-      weights['set_kernel_weight'].assign(clustered_inputs)
+        output = weights[CLUSTERING_IMPL].get_clustered_weight(
+            weights[PULLING_INDICES], weights[ORIGINAL_WEIGHTS])
+        inputs.assign(output)
+      else:
+        if self.preserve_sparsity:
+          inputs = tf.multiply(inputs, weights[SPARSITY_MASK])
+        output = inputs
     else:
-      clustered_inputs = inputs
+      output = inputs
 
     return quant_ops.LastValueQuantize(
-        clustered_inputs,
+        output,
         weights['min_var'],
         weights['max_var'],
         is_training=training,
@@ -417,12 +435,14 @@ class ClusterPreserveDefault8BitWeightsQuantizer(
     ClusterPreserveDefaultWeightsQuantizer):
   """ClusterPreserveWeightsQuantizer for default 8bit weights."""
 
-  def __init__(self):
+  def __init__(self, preserve_sparsity):
     super(ClusterPreserveDefault8BitWeightsQuantizer,
           self).__init__(num_bits=8,
                          per_axis=False,
                          symmetric=True,
-                         narrow_range=True)
+                         narrow_range=True,
+                         preserve_sparsity=preserve_sparsity)
+    self.preserve_sparsity = preserve_sparsity
 
 
 class ClusterPreserveDefault8BitConvWeightsQuantizer(
@@ -430,8 +450,9 @@ class ClusterPreserveDefault8BitConvWeightsQuantizer(
     default_8bit_quantizers.Default8BitConvWeightsQuantizer):
   """ClusterPreserveWeightsQuantizer for default 8bit Conv2D weights."""
 
-  def __init__(self):  # pylint:disable=super-init-not-called
+  def __init__(self, preserve_sparsity):  # pylint: disable=super-init-not-called
     default_8bit_quantizers.Default8BitConvWeightsQuantizer.__init__(self)
+    self.preserve_sparsity = preserve_sparsity
 
   def build(self, tensor_shape, name, layer):
     result = ClusterPreserveDefaultWeightsQuantizer._build_clusters(
