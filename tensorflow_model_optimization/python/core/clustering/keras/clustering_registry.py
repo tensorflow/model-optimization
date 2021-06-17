@@ -24,7 +24,7 @@ ClusteringAlgorithm = clustering_algorithm.ClusteringAlgorithm
 
 
 class ClusteringLookupRegistry(object):
-  """Clustering registry to return implementation for a layer."""
+  """Clustering registry to return the implementation for a layer."""
 
   @classmethod
   def get_clustering_impl(cls, layer, weight_name):
@@ -70,14 +70,25 @@ class ClusteringRegistry(object):
       tf.keras.layers.LayerNormalization: [],
   }
 
+  _SUPPORTED_RNN_CELLS = {
+      # Sometimes v2 RNN will wrap some v1 RNN cells and we need
+      # to consider this
+      tf.compat.v1.keras.layers.GRUCell,
+      tf.compat.v2.keras.layers.GRUCell,
+      tf.compat.v1.keras.layers.LSTMCell,
+      tf.compat.v2.keras.layers.LSTMCell,
+      tf.compat.v1.keras.layers.SimpleRNNCell,
+      tf.compat.v2.keras.layers.SimpleRNNCell,
+      tf.compat.v1.keras.layers.StackedRNNCells,
+      tf.compat.v2.keras.layers.StackedRNNCells,
+      tf.keras.experimental.PeepholeLSTMCell,
+  }
+
   _SUPPORTED_RNN_LAYERS = {
       tf.keras.layers.GRU,
-      tf.keras.layers.GRUCell,
       tf.keras.layers.LSTM,
-      tf.keras.layers.LSTMCell,
       tf.keras.layers.SimpleRNN,
-      tf.keras.layers.SimpleRNNCell,
-      tf.keras.layers.StackedRNNCells,
+      tf.keras.layers.RNN,
   }
 
   @classmethod
@@ -100,14 +111,27 @@ class ClusteringRegistry(object):
     if layer.__class__ in cls._LAYERS_WEIGHTS_MAP:
       return True
 
-    if hasattr(layer, 'cell'):
-      if layer.cell.__class__ in cls._SUPPORTED_RNN_LAYERS:
-        return True
+    if layer.__class__ in cls._SUPPORTED_RNN_CELLS:
+      return True
 
     if layer.__class__ in cls._SUPPORTED_RNN_LAYERS:
+      for cell in cls._get_rnn_cells(layer):
+        if (cell.__class__ not in cls._SUPPORTED_RNN_CELLS
+            or isinstance(cell, clusterable_layer.ClusterableLayer)):
+          return False
       return True
 
     return False
+
+  def _get_rnn_cells(rnn_layer):
+    if isinstance(rnn_layer.cell, tf.keras.layers.StackedRNNCells):
+      return rnn_layer.cell.cells
+    # The case when RNN contains multiple cells
+    if isinstance(rnn_layer.cell, (list, tuple)):
+      return rnn_layer.cell
+    # The case when RNN contains a single cell
+    else:
+      return [rnn_layer.cell]
 
   @classmethod
   def _weight_names(cls, layer):
@@ -136,34 +160,37 @@ class ClusteringRegistry(object):
               for weight_name in cls._weight_names(layer)]
 
     def get_clusterable_weights_rnn():  # pylint: disable=missing-docstring
-      if isinstance(layer.cell, clusterable_layer.ClusterableLayer):
-        raise ValueError(
-            "ClusterableLayer is not yet supported for RNNs based layer.")
-      else:
-        clusterable_weights = [
-          ('kernel', layer.cell.kernel),
-          ('recurrent_kernel', layer.cell.recurrent_kernel),
-        ]
-        return clusterable_weights
+      def get_clusterable_weights_rnn_cell(cell, i):
+        # Cell weights will be a list of tuples in RNN or
+        # when are wrapped by the StackedRNNCell layer
+        # The weight names will have indices attached only
+        # for the registry
+        if cell.__class__ in cls._SUPPORTED_RNN_CELLS:
+          cell_weights = []
+          cell_weights.append(('kernel/' + str(i), cell.kernel))
+          cell_weights.append(('recurrent_kernel/' + str(i),
+                               cell.recurrent_kernel))
+          return cell_weights
 
-    def get_clusterable_weights_rnn_cells():
-      if isinstance(layer.cell, tf.keras.layers.StackedRNNCells):
-        clusterable_weights = []
-        clusterable_weights.append(['kernel/' + str(i),
-                                    layer.cell.cells[i].kernel])
-        clusterable_weights.append(['recurrent_kernel/' + str(i),
-                                    layer.cell.cells[i].recurrent_kernel])
-        return clusterable_weights
+        if isinstance(cell, clusterable_layer.ClusterableLayer):
+          raise ValueError(
+              'ClusterableLayer is not yet supported for RNNs based layer.')
+
+        raise ValueError('Layer cell ' + str(cell.__class__) +
+                         ' is not supported.')
+
+      clusterable_weights = []
+      for rnn_cell in cls._get_rnn_cells(layer):
+        if len(cls._get_rnn_cells(layer)) > 1:
+          cell_index = cls._get_rnn_cells(layer).index(rnn_cell)
+          clusterable_weights.extend(get_clusterable_weights_rnn_cell(
+              rnn_cell, cell_index))
+        else:
+          clusterable_weights = get_clusterable_weights_rnn_cell(rnn_cell, 0)
+      return clusterable_weights
 
     if layer.__class__ in cls._SUPPORTED_RNN_LAYERS:
       layer.get_clusterable_weights = get_clusterable_weights_rnn
-    elif hasattr(layer, 'cell') and layer.cell.__class__ in cls._SUPPORTED_RNN_LAYERS:
-      for i in range(0, len(layer.cell.cells)):
-        if not cls.supports(layer.cell.cells[i]):
-          raise ValueError(
-              'Layer cell ' + str(
-                  layer.cell.cells[i].__class__) + ' is not supported.')
-      layer.get_clusterable_weights = get_clusterable_weights_rnn_cells
     else:
       layer.get_clusterable_weights = get_clusterable_weights
 

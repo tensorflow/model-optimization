@@ -51,15 +51,30 @@ py_binary(
     ],
 )
 
-py_binary(
-    name = "imdb_stacked_rnn",
+py_strict_library(
+    name = "imdb_utils",
     srcs = [
-        "imdb_stacked_rnn.py",
+        "imdb_utils.py",
+    ],
+    srcs_version = "PY3",
+    deps = [
+        # numpy dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
+    ],
+)
+
+py_binary(
+    name = "imdb_multiple_cells",
+    srcs = [
+        "imdb_multiple_cells.py",
     ],
     python_version = "PY3",
     deps = [
         # numpy dep1,
         # tensorflow dep1,
+        ":imdb_utils",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
     ],

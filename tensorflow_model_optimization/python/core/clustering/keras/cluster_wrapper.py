@@ -30,7 +30,7 @@ GradientAggregation = cluster_config.GradientAggregation
 
 
 class ClusterWeights(Wrapper):
-  """This wrapper augments a keras layer so that the weight tensor(s) can be clustered.
+  """This wrapper augments a layer so the weight tensor(s) can be clustered.
 
   This wrapper implements nearest neighbor clustering algorithm. This algorithm
   ensures that only a specified number of unique values are used in a weight
@@ -335,6 +335,7 @@ class ClusterWeights(Wrapper):
   def set_weights(self, weights):
     self.layer.set_weights(weights)
 
+
 class WrapperSubclassedModel(keras.Model):
   """This wrapper wraps a keras subclassed model so that the weight tensor(s)
   in keras layers that are defined in this model can be clustered.
@@ -347,7 +348,7 @@ class WrapperSubclassedModel(keras.Model):
       not model._is_graph_network
     if not is_subclassed_model:
       raise ValueError(
-          "The provided model should be subclassed. The provided: {}".format(
+          'The provided model should be subclassed. The provided: {}'.format(
               model.__class__
           )
       )
@@ -356,8 +357,8 @@ class WrapperSubclassedModel(keras.Model):
   def build(self, input_shape):
     for layer in self.model.layers:
       if isinstance(layer, ClusterWeights):
-        layer.build(input_shape = input_shape)
-    return self.model.build(input_shape = input_shape)
+        layer.build(input_shape=input_shape)
+    return self.model.build(input_shape=input_shape)
 
   def call(self, inputs):
     for layer in self.model.layers:
@@ -367,20 +368,26 @@ class WrapperSubclassedModel(keras.Model):
 
 
 class ClusterWeightsRNN(ClusterWeights):
-  """This wrapper augments a keras RNN layer so that the weights can be clustered."""
+  """This wrapper augments a RNN layer so that the weights can be clustered.
+
+  The weight_name of a single cell in RNN layers is marked with an index in
+  registry. In the wrapper layer, the index needs to be removed for matching
+  the attribute of the cell layer."""
+  def get_weight_name_without_index(self, weight_name):
+    weight_name_no_index = weight_name.split('/')[0]
+    i = int(weight_name.split('/')[1])
+    return weight_name_no_index, i
 
   def get_weight_from_layer(self, weight_name):
+    weight_name_no_index, i = self.get_weight_name_without_index(weight_name)
     if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
-      weight_name_no_index = weight_name.split('/')[0]
-      i = int(weight_name.split('/')[1])
       return getattr(self.layer.cell.cells[i], weight_name_no_index)
     else:
-      return getattr(self.layer.cell, weight_name)
+      return getattr(self.layer.cell, weight_name_no_index)
 
   def set_weight_to_layer(self, weight_name, new_weight):
+    weight_name_no_index, i = self.get_weight_name_without_index(weight_name)
     if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
-      weight_name_no_index = weight_name.split('/')[0]
-      i = int(weight_name.split('/')[1])
       return setattr(self.layer.cell.cells[i], weight_name_no_index, new_weight)
     else:
-      return setattr(self.layer.cell, weight_name, new_weight)
+      return setattr(self.layer.cell, weight_name_no_index, new_weight)

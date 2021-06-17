@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Train a StackedRNN on the IMDB sentiment classification task.
+"""End-to-end tests for StackedRNNCells and PeepholeLSTMCell.
 
 The dataset is actually too small for LSTM to be of any advantage
 compared to simpler, much faster methods such as TF-IDF+LogReg.
@@ -24,57 +24,39 @@ import tensorflow.keras as keras
 import tensorflow.keras.preprocessing.sequence as sequence
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
+from imdb_utils import prepare_dataset, cluster_train_eval_strip
 
 
 max_features = 20000
 maxlen = 100  # cut texts after this number of words
 batch_size = 32
 
-print("Loading data...")
-(x_train,
- y_train), (x_test,
-            y_test) = keras.datasets.imdb.load_data(num_words=max_features)
-print(len(x_train), "train sequences")
-print(len(x_test), "test sequences")
+x_train, y_train, x_test, y_test = prepare_dataset()
 
-print("Pad sequences (samples x time)")
-x_train = sequence.pad_sequences(x_train, maxlen=maxlen)
-x_test = sequence.pad_sequences(x_test, maxlen=maxlen)
-print("x_train shape:", x_train.shape)
-print("x_test shape:", x_test.shape)
-
-print("Build model...")
+print("Build a model with the StackedRNNCells with PeepholeLSTMCell...")
 model = keras.models.Sequential()
 
 model.add(keras.layers.Embedding(max_features, 128, input_length=maxlen))
 model.add(
   keras.layers.RNN(
     keras.layers.StackedRNNCells(
-      [keras.layers.LSTMCell(128) for _ in range(2)]
-    )
-  )
-)
+        [keras.experimental.PeepholeLSTMCell(128) for _ in range(2)])))
 model.add(keras.layers.Dropout(0.5))
 model.add(keras.layers.Dense(1))
 model.add(keras.layers.Activation("sigmoid"))
 
-model = cluster.cluster_weights(
-    model,
-    number_of_clusters=16,
-    cluster_centroids_init=cluster_config.CentroidInitialization
-    .KMEANS_PLUS_PLUS,
-)
+cluster_train_eval_strip(model, x_train, y_train, x_test, y_test, batch_size)
 
-model.compile(loss="binary_crossentropy",
-              optimizer="adam",
-              metrics=["accuracy"])
+print("Build a model with the StackedRNNCells with LSTMCell...")
+model = keras.models.Sequential()
 
+model.add(keras.layers.Embedding(max_features, 128, input_length=maxlen))
+model.add(
+  keras.layers.RNN(
+    keras.layers.StackedRNNCells(
+        [keras.layers.LSTMCell(128) for _ in range(2)])))
+model.add(keras.layers.Dropout(0.5))
+model.add(keras.layers.Dense(1))
+model.add(keras.layers.Activation("sigmoid"))
 
-print("Train...")
-model.fit(x_train, y_train, batch_size=batch_size, epochs=1,
-          validation_data=(x_test, y_test))
-score, acc = model.evaluate(x_test, y_test,
-                            batch_size=batch_size)
-
-print("Test score:", score)
-print("Test accuracy:", acc)
+cluster_train_eval_strip(model, x_train, y_train, x_test, y_test, batch_size)

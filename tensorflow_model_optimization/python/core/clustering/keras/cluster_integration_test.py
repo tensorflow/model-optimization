@@ -608,9 +608,20 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     model.add(keras.layers.Dense(1))
     model.add(keras.layers.Activation("sigmoid"))
 
-    # PeepholeLSTM not supported yet.
-    with self.assertRaises(ValueError):
-      self._clusterTrainStrip(model)
+    self._clusterTrainStrip(model)
+
+    self.__assertNbUniqueWeights(
+      weight=model.layers[1].cell.kernel,
+      expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+    self.__assertNbUniqueWeights(
+      weight=model.layers[1].cell.recurrent_kernel,
+      expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+    self.__assertNbUniqueWeights(
+      weight=model.layers[0].embeddings,
+      expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
 
   @keras_parameterized.run_all_keras_modes
   def testClusterBidirectional(self):
@@ -639,6 +650,19 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     model.add(keras.layers.Activation("sigmoid"))
 
     self._clusterTrainStrip(model)
+
+    self.__assertNbUniqueWeights(
+      weight=model.layers[1].cell.cells[0].kernel,
+      expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+    self.__assertNbUniqueWeights(
+      weight=model.layers[1].cell.cells[0].recurrent_kernel,
+      expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
+    self.__assertNbUniqueWeights(
+      weight=model.layers[0].embeddings,
+      expected_unique_weights=self.params_clustering["number_of_clusters"],
+    )
 
 
 if __name__ == "__main__":
