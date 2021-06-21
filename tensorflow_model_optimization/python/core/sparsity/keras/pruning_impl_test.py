@@ -88,7 +88,8 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=extreme_sparsity,
         block_size=self.block_size,
-        block_pooling_type=self.block_pooling_type)
+        block_pooling_type=self.block_pooling_type,
+        sparsity_2x4=False)
 
     mask_before_pruning = K.get_value(mask)
     self.assertAllEqual(np.count_nonzero(mask_before_pruning), 100)
@@ -118,7 +119,8 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=self.constant_sparsity,
         block_size=self.block_size,
-        block_pooling_type=self.block_pooling_type)
+        block_pooling_type=self.block_pooling_type,
+        sparsity_2x4=False)
 
     mask_before_pruning = K.get_value(mask)
     self.assertAllEqual(np.count_nonzero(mask_before_pruning), 100)
@@ -137,7 +139,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         lambda: 0, None,
         # Sparsity math often returns values with small tolerances.
         lambda x: (True, 0.200000018),
-        (1, 1), None)
+        (1, 1), None, False)
 
     # input matrix is [ 1.0, 2.0, ..., 8.0, 9.0, 10.0 ]
     threshold, mask = p._update_mask(np.arange(1, 11))
@@ -163,7 +165,8 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=self.constant_sparsity,
         block_size=block_size,
-        block_pooling_type=block_pooling_type)
+        block_pooling_type=block_pooling_type,
+        sparsity_2x4=False)
 
     _, new_mask = p._maybe_update_block_mask(weight)
     # Check if the mask is the same size as the weights
@@ -227,7 +230,8 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=linear_sparsity,
         block_size=self.block_size,
-        block_pooling_type=self.block_pooling_type)
+        block_pooling_type=self.block_pooling_type,
+        sparsity_2x4=False)
 
     non_zero_count = []
     for _ in range(10):
@@ -246,6 +250,61 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     expected_non_zero_count = [100, 90, 90, 70, 70, 50, 50, 50, 50, 50]
     self.assertAllEqual(expected_non_zero_count, non_zero_count)
 
+  def _sparsity2x4Masking(self, weight, expected_mask):
+    mask = tf.Variable(
+        tf.ones(weight.get_shape(), dtype=weight.dtype),
+        name="mask",
+        dtype=weight.dtype)
+    threshold = tf.Variable(
+        tf.ones([], dtype=weight.dtype), name="threshold", dtype=weight.dtype)
+    self.initialize()
+
+    # Set up pruning
+    p = pruning_impl.Pruning(
+        pruning_vars=[(weight, mask, threshold)],
+        training_step_fn=self.training_step_fn,
+        pruning_schedule=self.constant_sparsity,
+        block_size=(1,1),
+        block_pooling_type="AVG",
+        sparsity_2x4=True)
+
+    _, new_mask = p._maybe_update_block_mask(weight)
+    # Check if the mask is the same size as the weights
+    self.assertAllEqual(new_mask.get_shape(), weight.get_shape())
+    mask_after_pruning = K.get_value(new_mask)
+    self.assertAllEqual(mask_after_pruning, expected_mask)
+
+  def testSparsity2x4Masking(self):
+    """ Simple case when we should set values with lowest values to 0."""
+    weight = tf.constant([[1, 2, 3, 4], [8, 5, 7, 6],
+                          [11, 9, 10, 11], [-12, -24, -14, 0]])
+    expected_mask = [[0.0, 0.0, 1.0, 1.0], [1.0, 0.0, 1.0, 0.0],
+                     [1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]
+
+    self._sparsity2x4Masking(weight, expected_mask)
+
+  def testSparsity2x4Masking(self):
+    """ Check that we fallback when weight is not divisible by 4."""
+    weight = tf.constant([[-0.5, 0.5, 3, 0, 6, 7]])
+    expected_mask = [[0.0, 0.0, 1.0, 0.0, 1.0, 1.0]]
+
+    self._sparsity2x4Masking(weight, expected_mask)
+
+  def testSparsity2x4Masking(self):
+    """ Check that we fallback when weight dimensions are too small."""
+    weight = tf.constant([[1., 2., 3.]])
+    expected_mask = [[0.0, 1.0, 1.0]]
+
+    self._sparsity2x4Masking(weight, expected_mask)
+
+  def testSparsity2x4MaskingSeveralBlocks(self):
+    """ Check that we fallback when we have several blocks."""
+    weight = tf.constant([[0, 1, 3, 4, 8, 5, 7, 6],
+                          [11, 9, 10, 11, -12, -24, -14, 0]])
+    expected_mask = [[0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0],
+                     [1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]]
+
+    self._sparsity2x4Masking(weight, expected_mask)
 
 if __name__ == "__main__":
   test.main()

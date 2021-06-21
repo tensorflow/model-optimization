@@ -19,7 +19,7 @@ import numpy as np
 
 import tensorflow as tf
 
-from tensorflow_model_optimization.python.core.sparsity.keras import prune
+from tensorflow_model_optimization.python.core.sparsity.keras import prune, pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
 keras = tf.keras
@@ -180,3 +180,13 @@ def is_model_sparsity_not(sparsity, model):
         if sparsity != _get_sparsity(tf.keras.backend.get_value(weight)):
           return True
   return False
+
+
+def assert_model_sparsity_2x4(test_case, model):
+  for layer in model.layers:
+    if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+      for weight in layer.layer.get_prunable_weights():
+        if pruning_utils.check_if_applicable_sparsity_2x4(weight) and\
+          not pruning_utils.is_pruned_2x4(weight):
+          return False
+  return True
