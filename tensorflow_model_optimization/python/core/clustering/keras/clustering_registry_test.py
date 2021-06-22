@@ -114,8 +114,9 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
          [-0.305815876, 0.0865516588, 0.659202456, -0.355699599],
          [-0.348868281, -0.662001, 0.6171574, -0.296582848]])
 
-    clustering_algo = clustering_registry.DenseWeightsCA(
+    clustering_algo = clustering_registry.ClusteringAlgorithm(
         clustering_centroids, cluster_gradient_aggregation)
+
     self._check_gradients_clustered_weight(
         clustering_algo,
         weight,
@@ -126,25 +127,20 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.parameters(
       ([-1, 1], [[0, 0, 1], [1, 1, 1]], [[-1, -1, 1], [1, 1, 1]]),
       ([-1, 0, 1], [[1, 1, 1], [1, 1, 1]], [[0, 0, 0], [0, 0, 0]]),
-  )
-  def testDenseWeightsCA(self, clustering_centroids, pulling_indices,
-                         expected_output):
-    """Verifies that DenseWeightsCA works as expected."""
-    clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
-    clustering_algo = clustering_registry.DenseWeightsCA(
-        clustering_centroids, GradientAggregation.SUM)
-    self._check_pull_values(clustering_algo, pulling_indices, expected_output)
-
-  @parameterized.parameters(
       ([-1, 1], [0, 0, 0, 0, 1], [-1, -1, -1, -1, 1]),
       ([0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3], [0, 1, 2, 3, 0, 1, 2, 3]),
   )
-  def testBiasWeightsCA(self, clustering_centroids, pulling_indices,
-                        expected_output):
-    """Verifies that BiasWeightsCA works as expected."""
+  def testClusteringAlgorithmPullIndices(self,
+                                         clustering_centroids,
+                                         pulling_indices,
+                                         expected_output):
+    """Verifies get_pull_indices works for dense layer and bias layer."""
+
     clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
-    clustering_algo = clustering_registry.BiasWeightsCA(clustering_centroids,
-                                                        GradientAggregation.SUM)
+    clustering_algo = clustering_registry.ClusteringAlgorithm(
+        clustering_centroids, GradientAggregation.SUM
+    )
+
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
 
   @parameterized.parameters(
@@ -153,18 +149,18 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
       (GradientAggregation.AVG, [[0, 0, 0], [0, 0, 0], [0, 0, 0]], [1, 0]),
       (GradientAggregation.SUM, [[0, 0, 0], [0, 0, 0], [0, 0, 0]], [9, 0]),
   )
-  def testConvolutionalWeightsCAGrad(
-      self,
-      cluster_gradient_aggregation,
-      pulling_indices,
-      expected_grad_centroids,
-  ):
-    """Tests that the gradients of ConvolutionalWeightsCA work as expected."""
+  def testConvolutionalClusteringAlgorithmGrad(self,
+                                               cluster_gradient_aggregation,
+                                               pulling_indices,
+                                               expected_grad_centroids):
+    """Verifies that the gradients of convolutional layer work as expected."""
+
     clustering_centroids = tf.Variable([0.0, 3.0], dtype=tf.float32)
     weight = tf.constant([[0.1, 0.1, 0.1], [3.0, 3.0, 3.0], [0.2, 0.2, 0.2]])
 
-    clustering_algo = clustering_registry.ConvolutionalWeightsCA(
-        clustering_centroids, cluster_gradient_aggregation)
+    clustering_algo = clustering_registry.ClusteringAlgorithm(
+        clustering_centroids, cluster_gradient_aggregation
+    )
     self._check_gradients_clustered_weight(
         clustering_algo,
         weight,
@@ -180,10 +176,11 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
   )
   def testConvolutionalWeightsCA(self, clustering_centroids, pulling_indices,
                                  expected_output):
-    """Verifies that ConvolutionalWeightsCA works as expected."""
+    """Verifies that ClusteringAlgorithm works as expected."""
     clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
-    clustering_algo = clustering_registry.ConvolutionalWeightsCA(
-        clustering_centroids, GradientAggregation.SUM)
+    clustering_algo = clustering_registry.ClusteringAlgorithm(
+        clustering_centroids, GradientAggregation.SUM
+    )
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
 
 
@@ -196,44 +193,6 @@ class CustomLayer(layers.Layer):
 
   def call(self, inputs):
     return tf.matmul(inputs, self.weights)
-
-
-class ClusteringLookupRegistryTest(test.TestCase, parameterized.TestCase):
-  """Unit tests for the ClusteringLookupRegistry class."""
-
-  def testLookupHasEverythingFromRegistry(self):
-    """Verifies ClusteringLookup.
-
-    Every layer that has non-empty ClusteringRegistry records is also presented
-    in the ClusteringLookup.
-    """
-    for layer, clustering_record in ClusterRegistry._LAYERS_WEIGHTS_MAP.items():
-      if not clustering_record:
-        continue
-
-      self.assertIn(layer, ClusteringLookupRegistry._LAYERS_RESHAPE_MAP)
-
-      for cr in clustering_record:
-        self.assertIn(cr, ClusteringLookupRegistry._LAYERS_RESHAPE_MAP[layer])
-
-  def testGetClusteringImplFailsWithUnknonwClassUnknownWeight(self):
-    """Verifies that get_clustering_impl() should raise an error.
-
-    when invoked with an unsupported layer class and an unsupported weight
-    name.
-    """
-    with self.assertRaises(ValueError):
-      ClusteringLookupRegistry.get_clustering_impl(CustomLayer(),
-                                                   'no_such_weight')
-
-  def testGetClusteringImplFailsWithKnonwClassUnknownWeight(self):
-    """Verifies that get_clustering_impl() should raise an error.
-
-    when invoked with a supported layer class and an unsupported weight name.
-    """
-    with self.assertRaises(ValueError):
-      ClusteringLookupRegistry.get_clustering_impl(
-          layers.Dense(10), 'no_such_weight')
 
 
 class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
@@ -267,52 +226,6 @@ class KerasCustomLayerClusterableInvalid(keras.layers.Layer,
     with self.assertRaises(ValueError):
       ClusteringLookupRegistry.get_clustering_impl(
           KerasCustomLayerClusterableInvalid(), 'w')
-
-  @parameterized.parameters(
-      (layers.Conv2D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
-      (layers.Conv1D, 'kernel', clustering_registry.ConvolutionalWeightsCA),
-      (layers.Conv2D, 'bias', clustering_registry.BiasWeightsCA),
-      (layers.Conv1D, 'bias', clustering_registry.BiasWeightsCA),
-  )
-  def testReturnsResultsForKnownTypeKnownWeights(self, layer_type, weight,
-                                                 expected):
-    """get_clustering_impl returns the expected clustering lookup algorithm."""
-    # layer_type is a class, thus constructing an object here
-    self.assertIs(
-        ClusteringLookupRegistry.get_clustering_impl(layer_type(32, 3), weight),
-        expected)
-
-  def testRegisterNewImplWorks(self):
-    """Tests registering a custom clustering lookup algorithm."""
-
-    class NewKernelCA(clustering_registry.AbstractClusteringAlgorithm):
-
-      def get_pulling_indices(self, weight):
-        return 1, 2, 3
-
-    new_impl = {CustomLayer: {'new_kernel': NewKernelCA}}
-
-    ClusteringLookupRegistry.register_new_implementation(new_impl)
-    self.assertIs(
-        ClusteringLookupRegistry.get_clustering_impl(CustomLayer(),
-                                                     'new_kernel'), NewKernelCA)
-
-  def testFailsIfNotADictIsGivenAsInput(self):
-    """Registering a custom clustering lookup algorithm should fail.
-
-    If the input provided is not a dict.
-    """
-    with self.assertRaises(TypeError):
-      ClusteringLookupRegistry.register_new_implementation([1, 2, 3, 4])
-
-  def testFailsIfNotADictIsGivenAsConcreteImplementation(self):
-    """Registering a custom clustering lookup algorithm should fail.
-
-    If the input provided for the concrete implementation is not a dict.
-    """
-    with self.assertRaises(TypeError):
-      ClusteringLookupRegistry.register_new_implementation(
-          {ClusteringLookupRegistry: [('new_kernel', lambda x: x)]})
 
 
 class ClusterRegistryTest(test.TestCase):

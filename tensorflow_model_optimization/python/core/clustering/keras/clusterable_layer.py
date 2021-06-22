@@ -53,7 +53,7 @@ class ClusterableLayer:
     If the layer is derived from the built-in keras layer, the clustering
     algorithm for the base built-in keras layer is used.
 
-    The returned class should be derived from AbstractClusteringAlgorithm and
+    The returned class should be derived from ClusteringAlgorithm and
     implements the function get_pulling_indices.
     This function is used to provide a special lookup function for the custom
     weights.

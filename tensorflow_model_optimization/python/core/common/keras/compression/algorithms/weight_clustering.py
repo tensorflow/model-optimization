@@ -25,7 +25,7 @@ from tensorflow_model_optimization.python.core.clustering.keras.cluster_config i
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
 
 
-class ConvolutionalWeightsCA(clustering_registry.ConvolutionalWeightsCA):
+class ConvolutionalWeightsCA(clustering_registry.ClusteringAlgorithm):
 
   def __init__(self, clusters_centroids,
                cluster_gradient_aggregation=GradientAggregation.SUM):
@@ -33,7 +33,7 @@ class ConvolutionalWeightsCA(clustering_registry.ConvolutionalWeightsCA):
     self.cluster_gradient_aggregation = cluster_gradient_aggregation
 
 
-class DenseWeightsCA(clustering_registry.DenseWeightsCA):
+class DenseWeightsCA(clustering_registry.ClusteringAlgorithm):
 
   def __init__(self, clusters_centroids,
                cluster_gradient_aggregation=GradientAggregation.SUM):
