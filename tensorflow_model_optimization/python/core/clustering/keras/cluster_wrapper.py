@@ -138,8 +138,7 @@ class ClusterWeights(Wrapper):
     # Save the input shape specified in the build
     self.build_input_shape = None
 
-  @staticmethod
-  def _make_layer_name(layer):
+  def _make_layer_name(self, layer):
     return '{}_{}'.format('cluster', layer.name)
 
   def get_weight_from_layer(self, weight_name):

@@ -45,8 +45,8 @@ DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 
 class FoldedBatchNormTestBase(tf.test.TestCase):
 
-  @staticmethod
-  def _get_asymmetric_quant_params(real_min, real_max, quant_min, quant_max):
+  def _get_asymmetric_quant_params(self, real_min, real_max, quant_min,
+                                   quant_max):
     # TODO(alanchiao): remove this once the converter for training-time
     # quantization supports producing a TFLite model with a float input/output.
 

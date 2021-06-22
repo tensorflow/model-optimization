@@ -116,8 +116,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     os.remove(keras_file)
     os.remove(tflite_file)
 
-  @staticmethod
-  def _verify_tflite(tflite_file, x_test):
+  def _verify_tflite(self, tflite_file, x_test):
     interpreter = tf.lite.Interpreter(model_path=tflite_file)
     interpreter.allocate_tensors()
     input_index = interpreter.get_input_details()[0]["index"]
@@ -128,8 +127,8 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     interpreter.invoke()
     interpreter.get_tensor(output_index)
 
-  @staticmethod
-  def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
+  def _get_number_of_unique_weights(self, stripped_model, layer_nr,
+                                    weight_name):
     layer = stripped_model.layers[layer_nr]
     weight = getattr(layer, weight_name)
     weights_as_list = weight.numpy().flatten()

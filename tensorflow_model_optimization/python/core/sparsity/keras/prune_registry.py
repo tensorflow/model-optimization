@@ -151,8 +151,8 @@ class PruneRegistry(object):
 
     return False
 
-  @staticmethod
-  def _get_rnn_cells(rnn_layer):
+  @classmethod
+  def _get_rnn_cells(cls, rnn_layer):
     if isinstance(rnn_layer.cell, layers.StackedRNNCells):
       return rnn_layer.cell.cells
     else:

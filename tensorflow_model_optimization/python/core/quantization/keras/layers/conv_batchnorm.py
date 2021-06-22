@@ -93,8 +93,8 @@ class _ConvBatchNormMixin(object):
     return utils.smart_cond(
         training, make_quantizer_fn(True), make_quantizer_fn(False))
 
-  @staticmethod
-  def _from_config(cls_initializer, config):
+  @classmethod
+  def _from_config(cls, cls_initializer, config):
     """All shared from_config logic for fused layers."""
     config = config.copy()
     # use_bias is not an argument of this class, as explained by

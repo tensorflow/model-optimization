@@ -151,8 +151,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
     self.assertEqual(original_layer, wrapped_layer.layer)
 
-  @staticmethod
-  def _count_clustered_layers(model):
+  def _count_clustered_layers(self, model):
     count = 0
     for layer in model.layers:
       if isinstance(layer, cluster_wrapper.ClusterWeights):

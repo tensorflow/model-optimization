@@ -77,8 +77,7 @@ class PruningPolicyTest(tf.test.TestCase):
         'block_pooling_type': 'AVG'
     }
 
-  @staticmethod
-  def _count_pruned_layers(model):
+  def _count_pruned_layers(self, model):
     count = 0
     for layer in model.submodules:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):

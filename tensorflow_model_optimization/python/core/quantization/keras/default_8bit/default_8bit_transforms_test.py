@@ -151,8 +151,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     for i in range(len(transformed_weights)):
       self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
 
-  @staticmethod
-  def _get_model(layer_type, activation_type):
+  def _get_model(self, layer_type, activation_type):
     activation = None
     if activation_type == 'relu':
       activation = keras.layers.ReLU(6.0)
@@ -166,8 +165,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       return DepthwiseConv2DModel.get_nonfolded_batchnorm_model(
           model_type='functional', post_bn_activation=activation)
 
-  @staticmethod
-  def _get_input_shape(layer_type):
+  def _get_input_shape(self, layer_type):
     if layer_type == 'Conv2D':
       return Conv2DModel.get_batched_input_shape()
     elif layer_type == 'DepthwiseConv2D':

@@ -113,8 +113,7 @@ class PruneTest(test.TestCase, parameterized.TestCase):
     self.assertEqual(
         self.params['block_pooling_type'], wrapped_layer.block_pooling_type)
 
-  @staticmethod
-  def _count_pruned_layers(model):
+  def _count_pruned_layers(self, model):
     count = 0
     for layer in model.submodules:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
