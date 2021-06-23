@@ -58,8 +58,7 @@ class PruningPolicyTest(tf.test.TestCase):
   )
 
   INVALID_TO_PRUNE_STOP_LAYER_ERROR = (
-      'Could not find a `GlobalAveragePooling2D` layer with `keepdims = True` '
-      'in all output branches')
+      'Could not find a `GlobalAveragePooling2D` layer in all output branches')
 
   INVALID_TO_PRUNE_MIDDLE_LAYER_ERROR = (
       'Layer {} is not supported for the '
@@ -93,7 +92,7 @@ class PruningPolicyTest(tf.test.TestCase):
         padding='same',
     )(i)
     x = layers.Conv2D(filters=16, kernel_size=[1, 1])(x)
-    o = CompatGlobalAveragePooling2D(keepdims=True)(x)
+    o = layers.GlobalAveragePooling2D()(x)
     model = keras.Model(inputs=[i], outputs=[o])
     with self.assertRaises(ValueError) as e:
       _ = prune.prune_low_magnitude(
@@ -113,7 +112,7 @@ class PruningPolicyTest(tf.test.TestCase):
         padding='valid',
     )(x)
     x = layers.Conv2D(filters=16, kernel_size=[1, 1])(x)
-    o = CompatGlobalAveragePooling2D()(x)
+    o = layers.AveragePooling2D()(x)
     model = keras.Model(inputs=[i], outputs=[o])
     with self.assertRaises(ValueError) as e:
       _ = prune.prune_low_magnitude(
@@ -134,7 +133,7 @@ class PruningPolicyTest(tf.test.TestCase):
     )(x)
     x = layers.Conv2D(filters=16, kernel_size=[1, 1])(x)
     x = layers.MaxPooling2D(pool_size=(2, 2), strides=(2, 2))(x)
-    o = CompatGlobalAveragePooling2D(keepdims=True)(x)
+    o = layers.GlobalAveragePooling2D()(x)
     model = keras.Model(inputs=[i], outputs=[o])
     with self.assertRaises(ValueError) as e:
       _ = prune.prune_low_magnitude(
@@ -159,7 +158,7 @@ class PruningPolicyTest(tf.test.TestCase):
         ),
         layers.DepthwiseConv2D(kernel_size=(3, 3), padding='same'),
         layers.Conv2D(filters=8, kernel_size=[1, 1]),
-        CompatGlobalAveragePooling2D(keepdims=True),
+        layers.GlobalAveragePooling2D(),
     ])
     with self.assertRaises(ValueError) as e:
       _ = prune.prune_low_magnitude(
@@ -180,7 +179,7 @@ class PruningPolicyTest(tf.test.TestCase):
         ),
         layers.DepthwiseConv2D(kernel_size=(3, 3), padding='same'),
         layers.Conv2D(filters=8, kernel_size=[1, 1]),
-        CompatGlobalAveragePooling2D(keepdims=True),
+        layers.GlobalAveragePooling2D(),
     ])
     pruned_model = prune.prune_low_magnitude(
         model,
@@ -202,7 +201,7 @@ class PruningPolicyTest(tf.test.TestCase):
             layers.Conv2D(filters=8, kernel_size=[1, 1]),
             layers.Conv2D(filters=16, kernel_size=[1, 1]),
         ]),
-        CompatGlobalAveragePooling2D(keepdims=True),
+        layers.GlobalAveragePooling2D(),
     ])
     pruned_model = prune.prune_low_magnitude(
         original_model,
@@ -223,7 +222,7 @@ class PruningPolicyTest(tf.test.TestCase):
     conv_layer = layers.Conv2D(filters=16, kernel_size=[1, 1])
     x = conv_layer(x)
     x = conv_layer(x)
-    o = CompatGlobalAveragePooling2D(keepdims=True)(x)
+    o = layers.GlobalAveragePooling2D()(x)
     model = keras.Model(inputs=[i], outputs=[o])
     pruned_model = prune.prune_low_magnitude(
         model,
@@ -243,7 +242,7 @@ class PruningPolicyTest(tf.test.TestCase):
     )(x)
     x = layers.DepthwiseConv2D(kernel_size=(3, 3), padding='same')(x)
     x = layers.Activation('relu')(x)
-    o = CompatGlobalAveragePooling2D(keepdims=True)(x)
+    o = layers.GlobalAveragePooling2D()(x)
     model = keras.Model(inputs=[i], outputs=[o])
 
     pruned_model = prune.prune_low_magnitude(
@@ -310,10 +309,9 @@ class PruningPolicyTest(tf.test.TestCase):
         kernel_size=(3, 3),
         strides=(2, 2),
         padding='valid',
-    )(
-        x)
+    )(x)
     x = layers.Conv2D(filters=16, kernel_size=[1, 1])(x)
-    o = CompatGlobalAveragePooling2D(keepdims=True)(x)
+    o = layers.GlobalAveragePooling2D()(x)
     original_model = keras.Model(inputs=[i], outputs=[o])
 
     cloned_model = tf.keras.models.clone_model(
@@ -339,7 +337,7 @@ class PruningPolicyTest(tf.test.TestCase):
     x = x - residual
     x = x * residual
     x = tf.identity(x)
-    o = CompatGlobalAveragePooling2D(keepdims=True)(x)
+    o = layers.GlobalAveragePooling2D()(x)
     model = keras.Model(inputs=[i], outputs=[o])
 
     pruned_model = prune.prune_low_magnitude(
