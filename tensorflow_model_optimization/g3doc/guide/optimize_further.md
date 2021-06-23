@@ -17,3 +17,4 @@ Training time tools available for you to try:
 *   [Weight pruning](./pruning/)
 *   [Quantization](./quantization/training)
 *   [Weight clustering](./clustering/)
+*   [Collaborative optimization](./combine/collaborative_optimization)

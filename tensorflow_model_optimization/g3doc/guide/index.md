@@ -39,7 +39,10 @@ The area of model optimization can involve various techniques:
 Our toolkit supports
 [post-training quantization](./quantization/post_training.md),
 [quantization aware training](./quantization/training.md),
-[pruning](./pruning/index.md), and [clustering](./clustering/index.md).
+[pruning](./pruning/index.md), and [clustering](./clustering/index.md). The
+toolkit also provides experimental support for
+[collaborative optimization](./combine/collaborative_optimization.md) to combine
+various techniques.
 
 ### Quantization
 
@@ -56,3 +59,9 @@ network layers) have been pruned, introducing zeros to the parameter tensors.
 
 Clustered models are those where the original model's parameters are replaced
 with a smaller number of unique values.
+
+### Collaborative optimizaiton
+
+The toolkit provides experimental support for collaborative optimization. This
+enables you to benefit from combining several model compression techniques and
+simultaneously achieve improved accuracy through quantization aware training.

@@ -52,6 +52,16 @@ upper_tabs:
       - title: Weight clustering comprehensive guide
         path: /model_optimization/guide/clustering/clustering_comprehensive_guide
 
+      - heading: Collaborative optimization
+      - title: Overview
+        path: /model_optimization/guide/combine/collaborative_optimization
+      - title: Cluster preserving quantization
+        path: /model_optimization/guide/combine/cqat_example
+      - title: Sparsity preserving quantization
+        path: /model_optimization/guide/combine/pqat_example
+      - title: Sparsity preserving clustering
+        path: /model_optimization/guide/combine/sparse_clustering_example
+
     - name: API
       skip_translation: true
       contents:
