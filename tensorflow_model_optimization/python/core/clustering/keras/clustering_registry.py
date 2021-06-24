@@ -19,9 +19,12 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_algorithm
 
+layers = tf.keras.layers
 ClusteringAlgorithm = clustering_algorithm.ClusteringAlgorithm
 
+
 class ClusteringLookupRegistry(object):
+  """Clustering registry to return implementation for a layer."""
 
   @classmethod
   def get_clustering_impl(cls, layer, weight_name):
@@ -36,7 +39,7 @@ class ClusteringLookupRegistry(object):
 
     # Clusterable layer could provide own implementation of get_pulling_indices
     if (issubclass(layer.__class__, clusterable_layer.ClusterableLayer) and
-      layer.get_clusterable_algorithm is not None):
+        layer.get_clusterable_algorithm is not None):
       ans = layer.get_clusterable_algorithm(weight_name)
       if ans:
         return ans

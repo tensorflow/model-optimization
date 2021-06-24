@@ -37,8 +37,7 @@ class PruningSchedule(object):
   You can inherit this class to write your own custom pruning schedule.
   """
 
-  @staticmethod
-  def _should_prune_in_step(step, begin_step, end_step, frequency):
+  def _should_prune_in_step(self, step, begin_step, end_step, frequency):
     """Checks if pruning should be applied in the current training step.
 
     Pruning should only occur within the [`begin_step`, `end_step`] range every
@@ -64,8 +63,7 @@ class PruningSchedule(object):
 
     return tf.math.logical_and(is_in_pruning_range, is_pruning_turn)
 
-  @staticmethod
-  def _validate_step(begin_step, end_step, frequency, allow_negative_1):
+  def _validate_step(self, begin_step, end_step, frequency, allow_negative_1):
     """Checks whether the parameters for pruning schedule are valid.
 
     Args:
@@ -96,8 +94,7 @@ class PruningSchedule(object):
     if frequency <= 0:
       raise ValueError('frequency should be > 0')
 
-  @staticmethod
-  def _validate_sparsity(sparsity, variable_name):
+  def _validate_sparsity(self, sparsity, variable_name):
     if not 0.0 <= sparsity < 1.0:
       raise ValueError('{} must be in range [0,1)'.format(variable_name))
 

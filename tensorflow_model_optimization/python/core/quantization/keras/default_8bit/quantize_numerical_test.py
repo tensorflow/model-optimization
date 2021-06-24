@@ -30,8 +30,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import utils
 @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
 class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
 
-  @staticmethod
-  def _batch(dims, batch_size):
+  def _batch(self, dims, batch_size):
     if dims[0] is None:
       dims[0] = batch_size
     return dims
@@ -44,8 +43,7 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
 
     return x, y
 
-  @staticmethod
-  def _execute_tflite(tflite_file, x_test, y_test):
+  def _execute_tflite(self, tflite_file, x_test, y_test):
     interpreter = tf.lite.Interpreter(model_path=tflite_file)
     interpreter.allocate_tensors()
 

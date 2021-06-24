@@ -74,12 +74,10 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     metrics.MonitorBoolGauge('quantize_wrapper_usage').set(
         layer.__class__.__name__)
 
-  @staticmethod
-  def _make_layer_name(layer):
+  def _make_layer_name(self, layer):
     return '{}_{}'.format('quant', layer.name)
 
-  @staticmethod
-  def _weight_name(name):
+  def _weight_name(self, name):
     """Extracts the weight name from the full TensorFlow variable name.
 
     For example, returns 'kernel' for 'dense_2/kernel:0'.

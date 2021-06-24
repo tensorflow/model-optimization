@@ -151,8 +151,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     for i in range(len(transformed_weights)):
       self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
 
-  @staticmethod
-  def _get_model(layer_type, activation_type):
+  def _get_model(self, layer_type, activation_type):
     activation = None
     if activation_type == 'relu':
       activation = keras.layers.ReLU(6.0)
@@ -166,8 +165,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       return DepthwiseConv2DModel.get_nonfolded_batchnorm_model(
           model_type='functional', post_bn_activation=activation)
 
-  @staticmethod
-  def _get_input_shape(layer_type):
+  def _get_input_shape(self, layer_type):
     if layer_type == 'Conv2D':
       return Conv2DModel.get_batched_input_shape()
     elif layer_type == 'DepthwiseConv2D':
@@ -290,9 +288,8 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(
       ('padding_valid', {'padding': 'valid'}),
       ('padding_same', {'padding': 'same'}),
-      # TODO(b/186666265): tighten the tolerance to 1e-5.
       ('padding_same_dilation_2',
-       {'padding': 'same', 'dilation_rate': 2}, 0.19),
+       {'padding': 'same', 'dilation_rate': 2}),
       ('strides', {'strides': 2}),
       ('dilation_rate', {'dilation_rate': 2}),
       ('depth_multiplier', {'depth_multiplier': 2}),
@@ -307,7 +304,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
           'pointwise_constraint': tf.keras.constraints.min_max_norm(0., 2.),
           'bias_constraint': tf.keras.constraints.unit_norm()})
   )
-  def testSeparableConvQuantize_(self, kwargs, tolerance=1e-5):
+  def testSeparableConvQuantize_(self, kwargs):
     kwargs['filters'] = 2
     kwargs['kernel_size'] = 3
     num_samples = 2
@@ -338,17 +335,20 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
     # Ensure model is equivalent, and training results are the same.
     sepconv_model.compile(loss='categorical_crossentropy', optimizer='sgd')
-    sepconv_model.fit(x, y, epochs=100)
     transformed_model.compile(loss='categorical_crossentropy', optimizer='sgd')
-    transformed_model.fit(x, y, epochs=100)
 
-    # Over a long training cycle with constraints and regularizers, the model
-    # can build very minute differences.
-    self.assertAllClose(
-        sepconv_model.predict(x),
-        transformed_model.predict(x),
-        atol=tolerance,
-        rtol=tolerance)
+    epochs = 100
+    for _ in range(epochs):
+      sepconv_model.fit(x, y, epochs=1, verbose=2)
+      transformed_model.fit(x, y, epochs=1, verbose=2)
+      self.assertAllClose(
+          sepconv_model.get_weights(),
+          transformed_model.get_weights())
+      # To prevent accumulated numerical errors.
+      transformed_model.set_weights(sepconv_model.get_weights())
+      self.assertAllClose(
+          sepconv_model.predict(x),
+          transformed_model.predict(x))
 
   # TODO(pulkitb): Add individual tests for the following transforms.
   # Conv2DReshapeBatchNormQuantize, Conv2DReshapeBatchNormReLUQuantize

@@ -62,14 +62,12 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
       'InceptionV3': (75, 75, 3)
   }
 
-  @staticmethod
-  def _batch(dims, batch_size):
+  def _batch(self, dims, batch_size):
     if dims[0] is None:
       dims[0] = batch_size
     return dims
 
-  @staticmethod
-  def _get_model(model_type):
+  def _get_model(self, model_type):
     model_fn = [
         y for x, y in inspect.getmembers(tf.keras.applications)
         if x == model_type
@@ -88,8 +86,7 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
 
     return x_train, y_train
 
-  @staticmethod
-  def _verify_tflite(tflite_file, x_test, y_test):
+  def _verify_tflite(self, tflite_file, x_test, y_test):
     interpreter = tf.lite.Interpreter(model_path=tflite_file)
     interpreter.allocate_tensors()
     input_index = interpreter.get_input_details()[0]['index']

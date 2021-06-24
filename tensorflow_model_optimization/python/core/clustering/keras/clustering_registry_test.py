@@ -116,8 +116,8 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
     )
 
     clustering_algo = clustering_registry.ClusteringAlgorithm(
-        clustering_centroids, cluster_gradient_aggregation
-    )
+        clustering_centroids, cluster_gradient_aggregation)
+
     self._check_gradients_clustered_weight(
         clustering_algo,
         weight,
@@ -135,10 +135,8 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
                                          clustering_centroids,
                                          pulling_indices,
                                          expected_output):
-    """
-    Verifies that get_pull_indices from ClusteringAlgorithm works as expected,
-    for tensor layout as for dense layer or bias layer.
-    """
+    """Verifies get_pull_indices works for dense layer and bias layer."""
+
     clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
     clustering_algo = clustering_registry.ClusteringAlgorithm(
         clustering_centroids, GradientAggregation.SUM
@@ -155,9 +153,9 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
   def testConvolutionalClusteringAlgorithmGrad(self,
                                                cluster_gradient_aggregation,
                                                pulling_indices,
-                                               expected_grad_centroids,
-  ):
+                                               expected_grad_centroids):
     """Verifies that the gradients of convolutional layer work as expected."""
+
     clustering_centroids = tf.Variable([0.0, 3.0], dtype=tf.float32)
     weight = tf.constant([[0.1, 0.1, 0.1], [3.0, 3.0, 3.0], [0.2, 0.2, 0.2]])
 

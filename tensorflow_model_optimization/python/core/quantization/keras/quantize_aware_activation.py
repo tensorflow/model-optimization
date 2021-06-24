@@ -115,8 +115,7 @@ class QuantizeAwareActivation(object):
       self._post_activation_vars = quantizer.build(None, 'post_activation',
                                                    quantize_wrapper)
 
-  @staticmethod
-  def _name(activation):
+  def _name(self, activation):
     if hasattr(activation, '__name__'):
       return activation.__name__
     return activation.__class__.__name__

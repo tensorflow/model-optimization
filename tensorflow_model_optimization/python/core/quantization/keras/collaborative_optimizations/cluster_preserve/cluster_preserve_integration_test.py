@@ -14,25 +14,25 @@
 # ==============================================================================
 """Integration tests for CQAT, PCQAT cases."""
 from absl.testing import parameterized
-
-import tensorflow as tf
 import numpy as np
+import tensorflow as tf
 
 from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
+from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
     default_8bit_cluster_preserve_quantize_scheme,)
-from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve.cluster_utils import (
     strip_clustering_cqat,)
 
-
 layers = tf.keras.layers
+
 
 @keras_parameterized.run_all_keras_modes
 class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
+
   def setUp(self):
     super(ClusterPreserveIntegrationTest, self).setUp()
     self.cluster_params = {
@@ -41,9 +41,9 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     }
 
   def compile_and_fit(self, model):
-    """ Here we compile and fit the model."""
+    """Here we compile and fit the model."""
     model.compile(
-        loss=tf.keras.losses.CategoricalCrossentropy(),
+        loss=tf.keras.losses.categorical_crossentropy,
         optimizer='adam',
         metrics=['accuracy'],
     )
@@ -52,8 +52,8 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20)
 
-  @staticmethod
-  def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
+  def _get_number_of_unique_weights(self, stripped_model, layer_nr,
+                                    weight_name):
     layer = stripped_model.layers[layer_nr]
     if isinstance(layer, quantize.quantize_wrapper.QuantizeWrapper):
       for weight_item in layer.trainable_weights:
@@ -65,8 +65,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     nr_of_unique_weights = len(set(weights_as_list))
     return nr_of_unique_weights
 
-  @staticmethod
-  def _get_sparsity(model):
+  def _get_sparsity(self, model):
     sparsity_list = []
     for layer in model.layers:
       for weights in layer.trainable_weights:
@@ -78,8 +77,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     return sparsity_list
 
-  @staticmethod
-  def _get_clustered_model(preserve_sparsity):
+  def _get_clustered_model(self, preserve_sparsity):
     """Cluster the (sparse) model and return clustered_model."""
     tf.random.set_seed(1)
     original_model = tf.keras.Sequential([
@@ -95,7 +93,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     # Start the sparsity-aware clustering
     clustering_params = {
-        'number_of_clusters': 6,
+        'number_of_clusters': 4,
         'cluster_centroids_init': cluster_config.CentroidInitialization.LINEAR,
         'preserve_sparsity': True
     }
@@ -126,8 +124,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     return sparsity_pcqat, num_of_unique_weights_pcqat
 
   def testEndToEndClusterPreserve(self):
-    """Verifies that we can run CQAT end to end,
-    when the whole model is quantized."""
+    """Runs CQAT end to end and whole model is quantized."""
     original_model = tf.keras.Sequential([
         layers.Dense(5, activation='softmax', input_shape=(10,))
     ])
@@ -157,115 +154,8 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllEqual(num_of_unique_weights_clustering,
                         num_of_unique_weights_cqat)
 
-  def testEndToEndClusterPreserveKernelInitializers(self):
-    """Verifies that we can run CQAT end to end,
-    when layer is Conv2D + Relu and with kernel_initializers."""
-    inputs = tf.keras.Input(shape=(2, 2, 1), name='inputTensor')
-    out = tf.keras.layers.Conv2D(
-        filters=1,
-        kernel_size=[2, 2],
-        dilation_rate=[1, 1],
-        padding='same',
-        bias_initializer=tf.keras.initializers.Constant(10),
-        kernel_initializer=tf.keras.initializers.Constant(
-            np.array([2, 1, 0, 6])),
-        activation=None)(inputs)
-    outputs = tf.keras.layers.ReLU()(out)
-    model = tf.keras.Model(inputs=inputs, outputs=outputs)
-    clustered_model = cluster.cluster_weights(model, **self.cluster_params)
-    clustered_model = cluster.strip_clustering(clustered_model)
-    num_of_unique_weights_clustering = self._get_number_of_unique_weights(
-        clustered_model, 1, 'kernel')
-
-    quant_aware_annotate_model = quantize.quantize_annotate_model(
-        clustered_model
-    )
-    quant_aware_model = quantize.quantize_apply(
-        quant_aware_annotate_model,
-        scheme=default_8bit_cluster_preserve_quantize_scheme
-        .Default8BitClusterPreserveQuantizeScheme())
-    stripped_cqat_model = strip_clustering_cqat(quant_aware_model)
-
-    # Check the unique weights of a certain layer of
-    # clustered_model and pcqat_model
-    num_of_unique_weights_cqat = self._get_number_of_unique_weights(
-        stripped_cqat_model, 2, 'kernel')
-    self.assertAllEqual(num_of_unique_weights_clustering,
-                        num_of_unique_weights_cqat)
-
-  def testEndToEndClusterPreserveBiasInitializers(self):
-    """Verifies that we can run CQAT end to end,
-    when layer is Conv2D + Relu and with bias_initializers."""
-    inputs = tf.keras.Input(shape=(2, 2, 1), name='inputTensor')
-    out = tf.keras.layers.Conv2D(
-        filters=2,
-        kernel_size=[2, 2],
-        dilation_rate=[1, 1],
-        padding='same',
-        bias_initializer=tf.keras.initializers.Constant(np.array([1, 2])),
-        kernel_initializer=None,
-        activation=None)(inputs)
-    outputs = tf.keras.layers.ReLU()(out)
-    model = tf.keras.Model(inputs=inputs, outputs=outputs)
-    clustered_model = cluster.cluster_weights(
-        model,
-        **self.cluster_params)
-    clustered_model = cluster.strip_clustering(clustered_model)
-    num_of_unique_weights_clustering = self._get_number_of_unique_weights(
-        clustered_model, 1, 'kernel')
-
-    quant_aware_annotate_model = quantize.quantize_annotate_model(
-        clustered_model
-    )
-    quant_aware_model = quantize.quantize_apply(
-        quant_aware_annotate_model,
-        scheme=default_8bit_cluster_preserve_quantize_scheme
-        .Default8BitClusterPreserveQuantizeScheme())
-    stripped_cqat_model = strip_clustering_cqat(quant_aware_model)
-
-    # Check the unique weights of a certain layer of
-    # clustered_model and pcqat_model
-    num_of_unique_weights_cqat = self._get_number_of_unique_weights(
-        stripped_cqat_model, 2, 'kernel')
-    self.assertAllEqual(num_of_unique_weights_clustering,
-                        num_of_unique_weights_cqat)
-
-  def testEndToEndClusterPreserveDepthwiseInitializers(self):
-    """Verifies that we can run CQAT end to end,
-    when layer is DepthwiseConv2D + depthwise_initializers."""
-    inputs = tf.keras.Input(shape=(3, 3, 3), name='inputTensor')
-    out = tf.keras.layers.DepthwiseConv2D(
-        kernel_size=[2, 2],
-        depthwise_initializer=tf.keras.initializers.Constant(
-            np.arange(1, 13)),
-        use_bias=True,
-        activation=None)(inputs)
-    outputs = tf.keras.layers.ReLU()(out)
-    model = tf.keras.Model(inputs=inputs, outputs=outputs)
-    clustered_model = cluster.cluster_weights(model, **self.cluster_params)
-    clustered_model = cluster.strip_clustering(clustered_model)
-    num_of_unique_weights_clustering = self._get_number_of_unique_weights(
-        clustered_model, 1, 'depthwise_kernel')
-
-    quant_aware_annotate_model = quantize.quantize_annotate_model(
-        clustered_model
-    )
-    quant_aware_model = quantize.quantize_apply(
-        quant_aware_annotate_model,
-        scheme=default_8bit_cluster_preserve_quantize_scheme
-        .Default8BitClusterPreserveQuantizeScheme())
-    stripped_cqat_model = strip_clustering_cqat(quant_aware_model)
-
-    # Check the unique weights of a certain layer of
-    # clustered_model and pcqat_model
-    num_of_unique_weights_cqat = self._get_number_of_unique_weights(
-        stripped_cqat_model, 2, 'depthwise_kernel')
-    self.assertAllEqual(num_of_unique_weights_clustering,
-                        num_of_unique_weights_cqat)
-
   def testEndToEndClusterPreservePerLayer(self):
-    """Verifies that we can run CQAT end to end,
-    when the model is quantized per layers."""
+    """Runs CQAT end to end and model is quantized per layers."""
     original_model = tf.keras.Sequential([
         layers.Dense(5, activation='relu', input_shape=(10,)),
         layers.Dense(5, activation='softmax', input_shape=(10,))
@@ -305,8 +195,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
                         num_of_unique_weights_cqat)
 
   def testEndToEndClusterPreserveOneLayer(self):
-    """Verifies that we can run CQAT end to end,
-    when the model is quantized only for a single layer."""
+    """Runs CQAT end to end and model is quantized only for a single layer."""
     original_model = tf.keras.Sequential([
         layers.Dense(5, activation='relu', input_shape=(10,)),
         layers.Dense(5, activation='softmax', input_shape=(10,), name='qat')
@@ -348,8 +237,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
                         num_of_unique_weights_cqat)
 
   def testEndToEndPruneClusterPreserveQAT(self):
-    """Verifies that we can run PCQAT end to end when we quantize the whole
-    model."""
+    """Runs PCQAT end to end when we quantize the whole model."""
     preserve_sparsity = True
     clustered_model = self._get_clustered_model(preserve_sparsity)
     # Save the kernel weights
@@ -396,8 +284,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllEqual(nr_of_unique_weights_after, unique_weights_pcqat)
 
   def testPassingNonPrunedModelToPCQAT(self):
-    """Verifies that we can run PCQAT as CQAT if the
-    input model is not pruned."""
+    """Runs PCQAT as CQAT if the input model is not pruned."""
     preserve_sparsity = False
     clustered_model = self._get_clustered_model(preserve_sparsity)
 
@@ -428,8 +315,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters((0.), (2.))
   def testPassingModelWithUniformWeightsToPCQAT(self, uniform_weights):
-    """Verifies that when the pruned_clustered_model has uniform weights, it
-    won't break PCQAT."""
+    """If pruned_clustered_model has uniform weights, it won't break PCQAT."""
     preserve_sparsity = True
     original_model = tf.keras.Sequential([
         layers.Dense(5, activation='softmax', input_shape=(10,)),
@@ -467,9 +353,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllEqual(nr_of_unique_weights_after, unique_weights_pcqat)
 
   def testTrainableWeightsBehaveCorrectlyDuringPCQAT(self):
-    """Verifies that during the training of PCQAT model the
-    zero centroid masks stay the same and trainable variables
-    are updating between epochs."""
+    """PCQAT zero centroid masks stay the same and trainable variables are updating between epochs."""
     preserve_sparsity = True
     clustered_model = self._get_clustered_model(preserve_sparsity)
     clustered_model = cluster.strip_clustering(clustered_model)

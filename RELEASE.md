@@ -32,14 +32,28 @@ Keras pruning API:
 
 # TensorFlow Model Optimization next release TBD
 
-Keras clustering API:
+# TensorFlow Model Optimization 0.6.0
 
+TFMOT 0.6.0 adds some additional features for Quantization Aware Training (QAT)
+and Pruning API. Adds support for overriding and subclassing default quantization
+schemes. Adds input quantizer for annotated quantized layers without annotated
+input layers. QAT now also has support for Conv2DTranspose and tanh layers.
+For Pruning API, added pruning policy for pruning registries targeting specific
+hardware.
+
+Keras quantization API:
+Tested against TensorFlow 2.4.2, 2.5.0 and nightly with Python 3.
+
+Keras pruning API:
+Tested against TensorFlow 2.4.2, 2.5.0 and nightly with Python 3.
+
+Keras clustering API:
 * Added *ClusteringSummaries* to create additional output for the clustering
 progress for TensorBoard.
 * Added ClusterableLayer API to support clustering of a keras custom layer.
 In addition, now clustering can be done for bias of the layer.
-* Introduced two new experimental quantization scheme for Quantization Aware Training
-for collaboratibe model optimization:
+* Introduced two new experimental quantization schemes for Quantization Aware Training
+for collaborative model optimization:
     - Prune Preserve QAT: pruned model can be QAT trained with preserved sparsity;
     - Cluster Preserve QAT: clustered model can be QAT trained with preserved clustering;
 * Added a new feature to clustering: average gradient aggregation, which can

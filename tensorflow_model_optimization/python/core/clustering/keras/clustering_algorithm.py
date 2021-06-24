@@ -22,6 +22,8 @@ from tensorflow_model_optimization.python.core.clustering.keras.cluster_config i
 
 
 @six.add_metaclass(abc.ABCMeta)
+
+
 class ClusteringAlgorithm(object):
   """Class to implement highly efficient vectorised look-ups.
 
@@ -78,8 +80,8 @@ class ClusteringAlgorithm(object):
     # We find the nearest cluster centroids and store them so that ops can build
     # their kernels upon it.
     pulling_indices = tf.argmin(
-        tf.abs(tf.expand_dims(weight, axis=-1) - self.cluster_centroids), axis=-1
-    )
+        tf.abs(tf.expand_dims(weight, axis=-1) - self.cluster_centroids),
+        axis=-1)
 
     return pulling_indices
 
