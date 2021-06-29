@@ -512,6 +512,13 @@ class ClusterRegistryTest(test.TestCase):
     with self.assertRaises(ValueError):
       ClusterRegistry.make_clusterable(layer)
 
+  def testSupportsMultiHeadAttentionLayer(self):
+    """
+    Verifies that ClusterRegistry supports a MultiHeadAttention layer.
+    """
+    layer = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=2)
+    self.assertTrue(ClusterRegistry.supports(layer))
+    ClusterRegistry.make_clusterable(layer)
 
 if __name__ == '__main__':
   test.main()

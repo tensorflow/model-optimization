@@ -14,6 +14,8 @@
 # ==============================================================================
 """Keras ClusterWeights wrapper API."""
 
+from operator import attrgetter
+
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
@@ -388,3 +390,32 @@ class ClusterWeightsRNN(ClusterWeights):
       return setattr(return_layer_cell, weight_name_no_index, new_weight)
     else:
       raise ValueError('No cells in the RNN layer to set weights for.')
+
+
+class ClusterWeightsMHA(ClusterWeights):
+  """This wrapper augments a keras MHA layer so that the weights can be clustered."""
+
+  def get_weight_from_layer(self, weight_name):
+    pre, _, post = weight_name.rpartition('.')
+    return getattr(getattr(self.layer, pre), post)
+
+  def set_weight_to_layer(self, weight_name, new_weight):
+    pre, _, post = weight_name.rpartition('.')
+    layer = attrgetter(pre)(self.layer)
+    setattr(layer, post, new_weight)
+
+  def strip_clustering(self):
+    """ The restore from config is not working for MHA layer, because
+    weights are not created when the build function is called. Therefore,
+    original weights have been replaced in the layer."""
+    for weight_name, original_weight in self.original_clusterable_weights.items():
+
+      # Get the clustered weights
+      clustered_weight = self.get_weight_from_layer(weight_name)
+
+      # Re-assign these weights to the original
+      original_weight.assign(clustered_weight)
+      setattr(self.layer, weight_name, original_weight)
+
+    return self.layer
+

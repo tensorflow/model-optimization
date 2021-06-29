@@ -534,5 +534,47 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         expected_unique_weights=self.params_clustering["number_of_clusters"],
     )
 
+class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
+  """Integration tests for clustering MHA layer."""
+
+  def setUp(self):
+    self.x_train = np.random.uniform(size=(500, 32, 32))
+    self.y_train = np.random.randint(low=0, high=1024, size=(500,))
+
+    self.nr_of_clusters = 16
+    self.params_clustering = {
+      "number_of_clusters": self.nr_of_clusters,
+      "cluster_centroids_init": CentroidInitialization.KMEANS_PLUS_PLUS,
+    }
+
+  def _get_model(self):
+    """Returns functional model with MHA layer."""
+    inp = tf.keras.layers.Input(shape=(32,32), batch_size=100)
+    x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16)(query=inp, value=inp)
+    out = tf.keras.layers.Flatten()(x)
+    model = tf.keras.Model(inputs=inp, outputs=out)
+    return model
+
+  @keras_parameterized.run_all_keras_modes
+  def testMHA(self):
+    model = self._get_model()
+
+    clustered_model = cluster.cluster_weights(model, **self.params_clustering)
+
+    clustered_model.compile(
+      optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')])
+    clustered_model.run_eagerly = True
+    clustered_model.fit(self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
+
+    stripped_model = cluster.strip_clustering(clustered_model)
+
+    layerMHA = stripped_model.layers[1]
+    for weight in layerMHA.weights:
+      if 'kernel' in weight.name:
+        nr_unique_weights = len(np.unique(weight.numpy()))
+        assert nr_unique_weights == self.nr_of_clusters
+
 if __name__ == "__main__":
   test.main()
