@@ -1,3 +1,6 @@
 *.h5
 bazel-*
 __pycache__
+mo/*
+*.tflite
+*.pyc

@@ -92,6 +92,10 @@ class ClusteringRegistry(object):
       tf.keras.layers.Bidirectional,
   }
 
+  _SUPPORTED_MHA_LAYERS = {
+      tf.keras.layers.MultiHeadAttention,
+  }
+
   @classmethod
   def supports(cls, layer):
     """Returns whether the registry supports this layer type.
@@ -120,6 +124,9 @@ class ClusteringRegistry(object):
         if (cell.__class__ not in cls._SUPPORTED_RNN_CELLS
             or isinstance(cell, clusterable_layer.ClusterableLayer)):
           return False
+      return True
+
+    if layer.__class__ in cls._SUPPORTED_MHA_LAYERS:
       return True
 
     return False
@@ -192,8 +199,16 @@ class ClusteringRegistry(object):
           clusterable_weights = get_clusterable_weights_rnn_cell(rnn_cell, 0)
       return clusterable_weights
 
+    def get_clusterable_weights_mha():  # pylint: disable=missing-docstring
+      return [('_query_dense.kernel', layer._query_dense.kernel),
+              ('_key_dense.kernel', layer._key_dense.kernel),
+              ('_value_dense.kernel', layer._value_dense.kernel),
+              ('_output_dense.kernel', layer._output_dense.kernel)]
+
     if layer.__class__ in cls._SUPPORTED_RNN_LAYERS:
       layer.get_clusterable_weights = get_clusterable_weights_rnn
+    elif layer.__class__ in cls._SUPPORTED_MHA_LAYERS:
+      layer.get_clusterable_weights = get_clusterable_weights_mha
     else:
       layer.get_clusterable_weights = get_clusterable_weights
 
