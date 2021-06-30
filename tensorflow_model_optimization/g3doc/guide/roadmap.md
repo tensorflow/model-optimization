@@ -1,37 +1,59 @@
-**Updated: Aug 7th, 2020**
+**Updated: June, 2021**
+
+TensorFlow’s Model Optimization Toolkit (MOT) has been used widely for
+converting/optimizing TensorFlow models to TensorFlow Lite models with smaller
+size, better performance and acceptable accuracy to run them on mobile and IoT
+devices. We are now working to extend MOT techniques and tooling beyond
+TensorFlow Lite to support TensorFlow SavedModel as well.
+
+The following represents a high level overview of our roadmap. You should be
+aware that this roadmap may change at any time and the order below does not
+reflect any type of priority. We strongly encourage you to comment on our
+roadmap and provide us feedback in the
+[discussion group](https://groups.google.com/a/tensorflow.org/g/tflite).
 
 ## Quantization
 
-*   Post training quantization for dynamic-range kernels --
-    [Launched](https://blog.tensorflow.org/2018/09/introducing-model-optimization-toolkit.html)
-*   Post training quantization for (8b) fixed-point kernels --
-    [Launched](https://blog.tensorflow.org/2019/06/tensorflow-integer-quantization.html)
-*   Quantization aware training for (8b) fixed-point kernels and experimentation
-    for <8b --
-    [Launched](https://blog.tensorflow.org/2020/04/quantization-aware-training-with-tensorflow-model-optimization-toolkit.html)
-*   [WIP] Post training quantization for (8b) fixed-point RNNs
-*   Quantization aware training for (8b) fixed-point RNNs
-*   [WIP] Quality and performance improvements to post training dynamic-range
-    quantization
+#### TensorFlow Lite
 
-## Pruning / Sparsity
+*   Selective post-training quantization to exclude certain layers from
+    quantization.
+*   Quantization debugger to inspect quantization error losses per layer.
+*   Applying quantization-aware training on more model coverage e.g. TensorFlow
+    Model Garden.
+*   Quality and performance improvements for post-training dynamic-range.
+    quantization.
 
-*   During-training magnitude-based weight pruning --
-    [Launched](https://blog.tensorflow.org/2019/05/tf-model-optimization-toolkit-pruning-API.html)
-*   Sparse model execution support in TensorFlow Lite --
-    [WIP](https://github.com/tensorflow/model-optimization/issues/173)
+#### TensorFlow
 
-## Weight clustering
+*   Post Training Quantization (bf16 * int8 dynamic range).
+*   Quantization Aware Training ((bf16 * int8 weight-only with fake quant).
+*   Selective post-training quantization to exclude certain layers from
+    quantization.
+*   Quantization debugger to inspect quantization error losses per layer.
 
-*   During-training weight clustering --
-    [Launched](https://blog.tensorflow.org/2020/08/tensorflow-model-optimization-toolkit-weight-clustering-api.html)
+## Sparsity
+
+#### TensorFlow Lite
+
+*   Sparse model execution support for more models.
+*   Target aware authoring for Sparsity.
+*   Extend sparse op set with performant x86 kernels.
+
+#### TensorFlow
+
+*   Sparity support in TensorFlow.
 
 ## Cascading compression techniques
 
-*   [WIP] Additional support for combining different compression techniques.
-    Today, users can only combine one during-training technique with
-    post-training quantization. The proposal is coming soon.
+*   Quantization + Tensor Compression + Sparsity: demonstrate all
+3 techniques working together.
 
 ## Compression
 
-*  [WIP] Tensor compression API
+*   Tensor compression API to help compression algorithm developers implement
+their own model compression algorithm (e.g. Weight Clustering) including
+providing a standard way to test/benchmark.
+
+
+
