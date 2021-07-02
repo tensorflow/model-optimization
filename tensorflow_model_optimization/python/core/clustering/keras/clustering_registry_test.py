@@ -452,6 +452,23 @@ class ClusterRegistryTest(test.TestCase):
                          layer.cell.cells[0].recurrent_kernel)]
     self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
 
+  def testMakeClusterableWorksOnKerasBidirectionalLayerWithLSTM(self):
+    """
+    Verifies that make_clusterable() works as expected on a Bidirectional
+    wrapper with a LSTM layer
+    """
+    layer = tf.keras.layers.Bidirectional(layers.LSTM(10))
+    with self.assertRaises(AttributeError):
+      layer.get_clusterable_weights()
+
+    ClusterRegistry.make_clusterable(layer)
+    keras.Sequential([layer]).build(input_shape=(2, 3, 4))
+
+    expected_weights = [('kernel/0', layer.forward_layer.cell.kernel),
+                        ('recurrent_kernel/0',
+                         layer.forward_layer.cell.recurrent_kernel)]
+    self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
+
   def testMakeClusterableWorksOnRNNLayerWithPeepholeLSTMCell(self):
     """
     Verifies that make_clusterable() works as expected on a built-in

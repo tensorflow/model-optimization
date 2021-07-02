@@ -378,16 +378,41 @@ class ClusterWeightsRNN(ClusterWeights):
     i = int(weight_name.split('/')[1])
     return weight_name_no_index, i
 
+  def get_return_layer_cell(self, index):
+    return_layer_cell =  (self.layer.forward_layer.cell if index == 0 else
+                          self.layer.backward_layer.cell)
+    return return_layer_cell
+
   def get_weight_from_layer(self, weight_name):
     weight_name_no_index, i = self.get_weight_name_without_index(weight_name)
-    if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
-      return getattr(self.layer.cell.cells[i], weight_name_no_index)
+    if hasattr(self.layer, 'cell'):
+      if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+        return getattr(self.layer.cell.cells[i], weight_name_no_index)
+      else:
+        return getattr(self.layer.cell, weight_name_no_index)
+    elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+      if i < 0 or i > 1:
+        raise ValueError(
+            'Unsupported number of cells in the layer to get weights from.')
+      return_layer_cell =  self.get_return_layer_cell(i)
+      return getattr(return_layer_cell, weight_name_no_index)
     else:
-      return getattr(self.layer.cell, weight_name_no_index)
+      raise ValueError('No cells in the RNN layer to get weights from.')
 
   def set_weight_to_layer(self, weight_name, new_weight):
     weight_name_no_index, i = self.get_weight_name_without_index(weight_name)
-    if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
-      return setattr(self.layer.cell.cells[i], weight_name_no_index, new_weight)
+    if hasattr(self.layer, 'cell'):
+      if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+        return setattr(self.layer.cell.cells[i],
+                       weight_name_no_index,
+                       new_weight)
+      else:
+        return setattr(self.layer.cell, weight_name_no_index, new_weight)
+    elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+      if i < 0 or i > 1:
+        raise ValueError(
+            'Unsupported number of cells in the layer to set weights for.')
+      return_layer_cell =  self.get_return_layer_cell(i)
+      return setattr(return_layer_cell, weight_name_no_index, new_weight)
     else:
-      return setattr(self.layer.cell, weight_name_no_index, new_weight)
+      raise ValueError('No cells in the RNN layer to set weights for.')

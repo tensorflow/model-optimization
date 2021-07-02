@@ -89,6 +89,7 @@ class ClusteringRegistry(object):
       tf.keras.layers.LSTM,
       tf.keras.layers.SimpleRNN,
       tf.keras.layers.RNN,
+      tf.keras.layers.Bidirectional,
   }
 
   @classmethod
@@ -124,6 +125,8 @@ class ClusteringRegistry(object):
     return False
 
   def _get_rnn_cells(rnn_layer):
+    if isinstance(rnn_layer, tf.keras.layers.Bidirectional):
+      return [rnn_layer.forward_layer.cell, rnn_layer.backward_layer.cell]
     if isinstance(rnn_layer.cell, tf.keras.layers.StackedRNNCells):
       return rnn_layer.cell.cells
     # The case when RNN contains multiple cells

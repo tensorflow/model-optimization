@@ -43,7 +43,7 @@ def prepare_dataset():
   return x_train, y_train, x_test, y_test
 
 def cluster_train_eval_strip(
-    model, x_train, y_train, x_test, y_test, batch_size):
+    model, x_train, y_train, x_test, y_test, batch_size, test_case):
   model = cluster.cluster_weights(
       model,
       number_of_clusters=16,
@@ -66,5 +66,10 @@ def cluster_train_eval_strip(
 
   print("Strip clustering wrapper...")
   model = cluster.strip_clustering(model)
-  layer_weight = getattr(model.layers[1].cell.cells[0], 'kernel')
+  if "Bidirectional" in test_case:
+    layer_weight = getattr(model.layers[1].forward_layer.cell, 'kernel')
+  elif "StackedRNNCells" in test_case:
+    layer_weight = getattr(model.layers[1].cell.cells[0], 'kernel')
+  else:
+    raise ValueError("Only Bidirectional and StackedRNNCells are tested now.")
   print("Number of clusters:", len(set(layer_weight.numpy().flatten())))
