@@ -485,11 +485,12 @@ class Default8BitActivationQuantizeConfig(QuantizeConfig):
                        'Default8BitActivationQuantizeConfig.'.format(
                            layer.activation))
 
-    if layer.activation.__name__ in ['relu']:
+    if layer.activation.__name__ in ['relu', 'swish']:
       # 'relu' should generally get fused into the previous layer.
       return [quantizers.MovingAverageQuantizer(
           num_bits=8, per_axis=False, symmetric=False, narrow_range=False)]
-    elif layer.activation.__name__ in ['linear', 'softmax', 'sigmoid', 'tanh']:
+    elif layer.activation.__name__ in [
+        'linear', 'softmax', 'sigmoid', 'tanh']:
       return []
 
     raise ValueError('Activation {} not supported by '
