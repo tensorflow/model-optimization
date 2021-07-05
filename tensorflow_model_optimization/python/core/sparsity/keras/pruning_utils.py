@@ -159,99 +159,153 @@ def factorized_pool(input_tensor,
 
   return tf.squeeze(tf.transpose(width_pooling, perm=[0, 1, 3, 2]))
 
-def check_if_applicable_sparsity_2x4(weight):
-  """ This function checks that the sparsity 2x4 could be applied to weight.
+def weights_rearrange(weights):
+  """Rearrange weights tensor,
+  so that m by n sparsity structure applied in last channel.
 
-  The sparsity 2x4 is applied to Conv2D layer and Dense. We assume that
-  the number of channels is divisible by four in case of Conv2D or the width is
-  divisible by four for Dense. If the condition is not satisfied, we fallback
-  to the unstructured pruning.
+  This is a 2x4 sparsity helper function.
+
+  m by n sparsity: every group of consecutive n values contains
+    at least m zeros on the last channel in TFLite data format.
+
+  * In case of Conv2D weights:
+      TF data format is [height, width, channel_in, channel_out],
+      TFLite data format is [channel_out, height, width, channel_in]
+    Rearranged Conv2D weights format: [channel_out x height x width, channel_in]
+
+  * In case of Dense weights:
+      TF data format is [channel_in, channel_out],
+      TFLite data format is [width, channel_in]
+    Rearranged Conv2D weights format: [width, channel_in]
+
+  Args:
+    weights: weights tensor. Must be rank 2 or 4.
 
   Returns:
-    Boolean that indicates whether sparsity 2x4 is applicable.
+    A rank 2 weight tensor.
+
+  Raises:
+    ValueError: if the input tensor is not rank 2 or 4.
   """
-  if (tf.convert_to_tensor(weight).get_shape()[-1] % 4) != 0 :
-    return False
-  return True
+  if weights.shape.rank == 2:
+    prepared_weights = tf.transpose(weights)
+  elif weights.shape.rank == 4:
+    perm_weights = tf.transpose(weights, perm=[3, 0, 1, 2])
+    prepared_weights = tf.reshape(
+        perm_weights, [tf.reduce_prod(perm_weights.shape[:-1]), -1]
+    )
+  else:
+    raise ValueError(f"weight tensor with shape: {weights.shape} is not supported.")
+
+  return prepared_weights
 
 
-def generate_m_to_n_mask(weights, window_shape, k):
-  """Generates mask for the given weights with the given window_shape.
-    For example, in case of sparsity 2x4, the window_shape is expected
-    to be 1x4 and k=2. We don't apply any padding, because we assume
-    that the given weights don't require it for the given window shape.
-    We do check on this before this function. We set zeros to 2 out of
-    4 elements with the smallest absolute value using top_k function.
+def m_by_n_sparsity_mask_prepare(mask, weights_shape):
+  """Reshape and permute sparsity mask, so that it match original
+  weights data format.
 
-    Args:
-      weights: Input weights tensor.
-      window_shape: Pooling window shape.
-      k: How many elements should be set to zero.
+  This is a 2x4 sparsity helper function.
 
-    Returns:
-      The generated mask for the given weights.
-      If the returned mask is None, we assume that something went wrong
-      and we fallback to the unstructured pruning.
+  Args:
+    mask: A 2-D tensor. Must be rank 2 or 4.
+    weights_shape: shape of weights
 
-    Raises:
-      Does not raise any error.
+  Returns:
+    A sparsity mask that matches weights data format.
+
+  Raises:
+    ValueError:
+      if the input tensor is not rank 2 or 4.
+    InvalidArgumentError:
+      if number of elements mismatch between mask and weights,
+      if shape of prepared mask mismatch shape of weights.
   """
+  tf.debugging.assert_equal(
+      tf.size(mask),
+      tf.reduce_prod(weights_shape),
+      message="number of elements mismatch between mask and weights.",
+    )
+
+  if mask.shape.rank != 2:
+    raise ValueError(f"rank of mask(rank:{mask.shape.rank}) should be 2.")
+
+  if weights_shape.rank == 2:
+    prepared_mask = tf.transpose(mask)
+  elif weights_shape.rank == 4:
+    reshaped_mask = tf.reshape(
+        mask,
+        [weights_shape[-1], weights_shape[0], weights_shape[1], weights_shape[2]],
+    )
+    prepared_mask = tf.transpose(reshaped_mask, perm=[1, 2, 3, 0])
+  else:
+    raise ValueError(f"weight tensor with shape: {weights_shape} is not supported.")
+
+  tf.debugging.assert_equal(
+      prepared_mask.shape,
+      weights_shape,
+      message="shape of prepared mask mismatch shape of weights."
+    )
+
+  return prepared_mask
+
+
+def generate_m_by_n_mask(weights, m_by_n: tuple = (2, 4)):
+  """Generate m-by-n sparsity mask.
+
+  This is a 2x4 sparsity helper function.
+
+  Args:
+    weights: a rank 2 tensor.
+    m_by_n: tuple(m, n), m zeros in every n consecutive values,
+            m must be smaller than n.
+
+  Returns:
+    A rank 2 m-by-n sparsity mask.
+
+  Raises:
+    InvalidArgumentError: if m not smaller than n.
+  """
+  num_non_zeros, block_size = tf.constant(m_by_n[0]), tf.constant(m_by_n[1])
+  tf.debugging.assert_less(
+      num_non_zeros,
+      block_size,
+      message="m must not smaller than n"
+    )
   abs_weights = tf.abs(weights)
-  abs_weights_shape = abs_weights.get_shape()
 
-  # Sanity check: height or width should be bigger than window_shape
-  if (abs_weights_shape[0] < window_shape[0] or \
-    abs_weights_shape[1] < window_shape[1]):
-    logging.warning('We cannot apply sparsity MxN, '
-                  'because weights size is too small.')
-    return None
+  # add zero-padding
+  pad_after = block_size - abs_weights.shape[-1] % block_size
+  abs_weights_pad = tf.pad(abs_weights, [[0, 0], [0, pad_after]], "CONSTANT")
 
-  if (not hasattr(abs_weights, 'numpy')):
-    logging.warning('We cannot apply sparsity MxN, '
-                  'weights do not have any values.')
-    return None
+  num_blocks = tf.size(abs_weights_pad) // block_size
+  reshaped_weights_into_blocks = tf.reshape(abs_weights_pad, [num_blocks, block_size])
+  _, top_k_indices = tf.math.top_k(
+      reshaped_weights_into_blocks, k=num_non_zeros, sorted=False
+  )
+  ind_i, _ = tf.meshgrid(tf.range(num_blocks), tf.range(num_non_zeros), indexing="ij")
+  ind_ij = tf.stack([ind_i, top_k_indices], axis=-1)
+  sparsity_mask_pad = tf.scatter_nd(
+      ind_ij, tf.ones([num_blocks, num_non_zeros]), [num_blocks, block_size]
+  )
+  reshaped_sparsity_mask_pad = tf.reshape(
+      sparsity_mask_pad, tf.shape(abs_weights_pad)
+  )
 
-  # Reshape weights into blocks, so we can apply top_k function.
-  # Note that it works only on inner-most dimension.
-  flatten_weights = abs_weights.numpy().reshape(-1)
+  # remove padding from mask
+  sparsity_mask = tf.slice(reshaped_sparsity_mask_pad, [0, 0], abs_weights.shape)
 
-  logging.info('We are applying {}x{} sparsity for {} parameters'\
-    .format(k, window_shape[1], tf.size(weights)))
+  return sparsity_mask
 
-  number_of_blocks = len(flatten_weights) // (window_shape[0] * window_shape[1])
-  reshaped_weights_into_blocks = tf.reshape(flatten_weights,
-    [number_of_blocks, window_shape[0], window_shape[1]])
-
-  # Apply top_k to find indices of elements that will be nullified.
-  _, top_k_indices = tf.math.top_k(reshaped_weights_into_blocks, k=k, sorted=False)
-
-  # Reconstruct full indices of the top_k_indices
-  shape_of_reshaped_weights = reshaped_weights_into_blocks.get_shape().as_list()
-
-  dim_00, dim_11, _ = tf.meshgrid(
-    tf.range(shape_of_reshaped_weights[0]), tf.range(shape_of_reshaped_weights[1]),
-    tf.range(k), indexing='ij')
-
-  updates = tf.ones([shape_of_reshaped_weights[0], shape_of_reshaped_weights[1], k],
-    dtype=tf.float32)
-  index = tf.stack([dim_00, dim_11, top_k_indices], axis=-1)
-  top_k_mask_4d = tf.scatter_nd(index, updates,
-    tf.shape(reshaped_weights_into_blocks))
-
-  # Convert back to the shape of weights
-  top_k_mask_result = tf.reshape(top_k_mask_4d, tf.shape(abs_weights))
-
-  return top_k_mask_result
 
 def is_pruned_2x4(weights):
-  """Returns true if weights are pruned with sparsity 2x4,
-  otherwise false.
+  """Returns true if weights are pruned with sparsity 2x4
+  in TFLite data format, otherwise false.
 
   Args:
       weights: Input weights tensor.
   """
-  weights = tf.abs(weights)
-  flatten_weights = weights.numpy().reshape(-1)
+  prepared_weights = weights_rearrange(weights)
+  flatten_weights = prepared_weights.numpy().reshape(-1)
   for i in range(0, len(flatten_weights), 4):
     if np.count_nonzero(flatten_weights[i:i+4]) > 2:
       return False

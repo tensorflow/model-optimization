@@ -52,10 +52,6 @@ class Pruning(object):
     self._sparsity_2x4 = sparsity_2x4
     self._validate_block()
 
-    if self._sparsity_2x4:
-      # Check whether we can apply sparsity 2x4
-      self._sparsity_2x4 = self._check_if_applicable_sparsity_2x4()
-
     # Training step
     self._step_fn = training_step_fn
 
@@ -67,22 +63,6 @@ class Pruning(object):
         if weight.get_shape().ndims != 2:
           raise ValueError('Block Sparsity can only be used for layers which '
                            'have 2-dimensional weights.')
-
-  def _check_if_applicable_sparsity_2x4(self):
-    """ This function checks that the sparsity 2x4 could be applied to this layer.
-
-    The sparsity 2x4 is applied to Conv2D layer and Dense. We assume that
-    the number of channels is divisible by four in case of Conv2D or the width is
-    divisible by four for Dense. If the condition is not satisfied, we fallback
-    to the unstructured pruning.
-
-    Returns:
-      Boolean that indicates whether sparsity 2x4 is applicable.
-    """
-    for weight, _, _ in self._pruning_vars:
-      if not pruning_utils.check_if_applicable_sparsity_2x4(weight):
-        return False
-    return True
 
   def _update_mask(self, weights):
     """Updates the mask for a given weight tensor.
@@ -136,13 +116,15 @@ class Pruning(object):
 
     Returns:
       new_mask: A numpy array of the same size and shape as weights containing
-        0 or 1 to indicate which of the values in weights should be set to zero.
-        If the returned value is None, the requested mask cannot be created.
+      0 or 1 to indicate which of the values in weights should be set to zero.
+      If the returned value is None, the requested mask cannot be created.
     """
-    window_shape = (1, 4)
-    k = 2
-    mask = pruning_utils.generate_m_to_n_mask(weights, window_shape, k)
-    return mask
+    m_by_n = (2, 4)
+    prepared_weights = pruning_utils.weights_rearrange(weights)
+    mask = pruning_utils.generate_m_by_n_mask(prepared_weights, m_by_n)
+    new_mask = pruning_utils.m_by_n_sparsity_mask_prepare(mask, weights.shape)
+
+    return new_mask
 
   def _maybe_update_block_mask(self, weights):
     """Performs block-granular masking of the weights.
