@@ -250,13 +250,9 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     expected_non_zero_count = [100, 90, 90, 70, 70, 50, 50, 50, 50, 50]
     self.assertAllEqual(expected_non_zero_count, non_zero_count)
 
-  def _sparsity2x4Masking(self, weight, expected_mask):
-    mask = tf.Variable(
-        tf.ones(weight.get_shape(), dtype=weight.dtype),
-        name="mask",
-        dtype=weight.dtype)
-    threshold = tf.Variable(
-        tf.ones([], dtype=weight.dtype), name="threshold", dtype=weight.dtype)
+  def _sparsity2x4Masking(self, weight):
+    mask = tf.Variable(tf.ones(weight.get_shape()), name="mask")
+    threshold = tf.Variable(1, name="threshold")
     self.initialize()
 
     # Set up pruning
@@ -264,47 +260,53 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         pruning_vars=[(weight, mask, threshold)],
         training_step_fn=self.training_step_fn,
         pruning_schedule=self.constant_sparsity,
-        block_size=(1,1),
+        block_size=(1, 1),
         block_pooling_type="AVG",
-        sparsity_2x4=True)
+        sparsity_2x4=True,
+    )
 
     _, new_mask = p._maybe_update_block_mask(weight)
-    # Check if the mask is the same size as the weights
-    self.assertAllEqual(new_mask.get_shape(), weight.get_shape())
-    mask_after_pruning = K.get_value(new_mask)
-    self.assertAllEqual(mask_after_pruning, expected_mask)
 
-  def testSparsity2x4Masking(self):
-    """ Simple case when we should set values with lowest values to 0."""
-    weight = tf.constant([[1, 2, 3, 4], [8, 5, 7, 6],
-                          [11, 9, 10, 11], [-12, -24, -14, 0]])
-    expected_mask = [[0.0, 0.0, 1.0, 1.0], [1.0, 0.0, 1.0, 0.0],
-                     [1.0, 0.0, 0.0, 1.0], [0.0, 1.0, 1.0, 0.0]]
+    return new_mask
 
-    self._sparsity2x4Masking(weight, expected_mask)
+  @parameterized.named_parameters(
+      {
+          "testcase_name": "_2d",
+          "weights": [[0.74, 0.68], [-0.89, -0.45], [-1.68, 1.24], [0.31, -0.6]],
+          "expected_mask": [[0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]],
+      },
+      {
+          "testcase_name": "_4d",
+          "weights": [[[[-0.36, -0.77], [-0.43, -0.18], [0.12, 1.36], [0.77, 0.96]]]],
+          "expected_mask": [[[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]]],
+      },
+      {
+          "testcase_name": "_2d_pad",
+          "weights": [[1.92, -0.21], [-0.19, 0.57], [1.1, -0.42]],
+          "expected_mask": [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]],
+      },
+      {
+          "testcase_name": "_4d_pad",
+          "weights": [[[[-0.37, 1.85], [0.82, 0.07], [1.17, 0.5]]]],
+          "expected_mask": [[[[0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]]],
+      },
+  )
+  def testSparsity2x4MaskingSimple(self, weights, expected_mask):
+    weights_ts = tf.Variable(weights)
+    expected_mask_ts = tf.constant(expected_mask)
 
-  def testSparsity2x4Masking(self):
-    """ Check that we fallback when weight is not divisible by 4."""
-    weight = tf.constant([[-0.5, 0.5, 3, 0, 6, 7]])
-    expected_mask = [[0.0, 0.0, 1.0, 0.0, 1.0, 1.0]]
+    mask = self._sparsity2x4Masking(weights_ts)
+    self.assertAllEqual(mask, expected_mask_ts)
 
-    self._sparsity2x4Masking(weight, expected_mask)
+  @parameterized.named_parameters(
+    {"testcase_name": "_1d", "weights_shape": [4]},
+    {"testcase_name": "_3d", "weights_shape": [4, 4, 4]},
+  )
+  def testSparsity2x4MaskingSimpleRaises(self, weights_shape):
+    weights_ts = tf.ones(weights_shape)
 
-  def testSparsity2x4Masking(self):
-    """ Check that we fallback when weight dimensions are too small."""
-    weight = tf.constant([[1., 2., 3.]])
-    expected_mask = [[0.0, 1.0, 1.0]]
-
-    self._sparsity2x4Masking(weight, expected_mask)
-
-  def testSparsity2x4MaskingSeveralBlocks(self):
-    """ Check that we fallback when we have several blocks."""
-    weight = tf.constant([[0, 1, 3, 4, 8, 5, 7, 6],
-                          [11, 9, 10, 11, -12, -24, -14, 0]])
-    expected_mask = [[0.0, 0.0, 1.0, 1.0, 1.0, 0.0, 1.0, 0.0],
-                     [1.0, 0.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0]]
-
-    self._sparsity2x4Masking(weight, expected_mask)
+    with self.assertRaises(ValueError):
+      self._sparsity2x4Masking(weights_ts)
 
 if __name__ == "__main__":
   test.main()

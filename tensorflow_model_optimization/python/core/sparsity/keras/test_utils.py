@@ -186,7 +186,4 @@ def assert_model_sparsity_2x4(test_case, model):
   for layer in model.layers:
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       for weight in layer.layer.get_prunable_weights():
-        if pruning_utils.check_if_applicable_sparsity_2x4(weight) and\
-          not pruning_utils.is_pruned_2x4(weight):
-          return False
-  return True
+        test_case.assertTrue(pruning_utils.is_pruned_2x4(weight))

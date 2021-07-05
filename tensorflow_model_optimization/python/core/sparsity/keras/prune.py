@@ -59,6 +59,7 @@ def prune_low_magnitude(to_prune,
                         block_size=(1, 1),
                         block_pooling_type='AVG',
                         pruning_policy=None,
+                        sparsity_2x4=False,
                         **kwargs):
   """Modify a tf.keras layer or model to be pruned during training.
 
@@ -137,6 +138,9 @@ def prune_low_magnitude(to_prune,
       pruning_policy: (optional) The object that controls to which layers
         `PruneLowMagnitude` wrapper will be applied. This API is experimental
         and is subject to change.
+      sparsity_2x4: (optional) Boolean that indicates whether sparsity 2x4
+        should be applied. In this case, two out of four elements in the
+        weight tensor that have the lowest value are set to zero.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_prune is not a keras layer.
 
@@ -185,7 +189,8 @@ def prune_low_magnitude(to_prune,
   params = {
       'pruning_schedule': pruning_schedule,
       'block_size': block_size,
-      'block_pooling_type': block_pooling_type
+      'block_pooling_type': block_pooling_type,
+      'sparsity_2x4': sparsity_2x4,
   }
 
   is_sequential_or_functional = isinstance(

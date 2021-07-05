@@ -117,9 +117,8 @@ class PruneLowMagnitude(Wrapper):
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
       sparsity_2x4: (optional) Boolean that indicates whether sparsity 2x4
-        should be applied. In this case, we do pruning of 50% so that two out of
-        four elements in the weight tensor that have the lowest value are
-        set to zero.
+        should be applied. In this case, two out of four elements in the
+        weight tensor that have the lowest value are set to zero.
 
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
