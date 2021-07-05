@@ -93,6 +93,7 @@ class PruneRegistry(object):
       layers.MaxPooling1D: [],
       layers.MaxPooling2D: [],
       layers.MaxPooling3D: [],
+      layers.experimental.preprocessing.Rescaling.__class__: [],
       TensorFlowOpLayer: [],
   }
 

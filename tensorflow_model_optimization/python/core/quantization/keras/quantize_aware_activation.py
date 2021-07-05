@@ -80,7 +80,7 @@ class QuantizeAwareActivation(object):
   _PRE_QUANT_ACTIVATIONS = frozenset({'softmax', 'sigmoid', 'tanh'})
 
   # These activations should be quantized after the activation has been applied.
-  _POST_QUANT_ACTIVATIONS = frozenset({'linear', 'relu'})
+  _POST_QUANT_ACTIVATIONS = frozenset({'linear', 'relu', 'swish'})
 
   # Don't take any quantize operations for these activations.
   _NO_QUANTIZE_ACTIVATIONS = frozenset({'NoOpActivation'})
