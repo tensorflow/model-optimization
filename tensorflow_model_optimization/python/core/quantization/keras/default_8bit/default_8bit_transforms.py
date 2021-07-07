@@ -173,7 +173,7 @@ class Conv2DBatchNormQuantize(transforms.Transform):
 
   def pattern(self):
     return LayerPattern(
-        'BatchNormalization',
+        'BatchNormalization|SyncBatchNormalization',
         inputs=[LayerPattern(
             'Conv2D|DepthwiseConv2D', config={'activation': 'linear'})])
 
@@ -206,7 +206,7 @@ class Conv2DReshapeBatchNormQuantize(Conv2DBatchNormQuantize):
 
   def pattern(self):
     return LayerPattern(
-        'BatchNormalization',
+        'BatchNormalization|SyncBatchNormalization',
         inputs=[LayerPattern(
             'Lambda', config={'name': 'sepconv1d_squeeze.*'},
             inputs=[LayerPattern(

@@ -45,12 +45,12 @@ def _get_initializer(random_init):
 
 
 class Conv2DModel(object):
-  """Construct and access Conv + BatchNorm + activation models."""
+  """Construct and access Conv + (Squeeze) + BatchNorm + activation models."""
 
   params = {
       'filters': 2,
-      'kernel_size': (2, 2),
-      'input_shape': (3, 3, 3),
+      'kernel_size': (1, 1),
+      'input_shape': (1, 3, 3),
       'batch_size': 1,
   }
 
@@ -82,16 +82,31 @@ class Conv2DModel(object):
   def get_nonfolded_batchnorm_model(cls,
                                     post_bn_activation=None,
                                     model_type='sequential',
-                                    random_init=False):
+                                    random_init=False,
+                                    squeeze_type=False,
+                                    normalization_type='BatchNormalization'):
     """Return nonfolded Conv2D + BN + optional activation model."""
+    if normalization_type == 'BatchNormalization':
+      normalization = keras.layers.BatchNormalization
+    elif normalization_type == 'SyncBatchNormalization':
+      normalization = keras.layers.experimental.SyncBatchNormalization
+
+    if squeeze_type == 'sepconv1d_squeeze':
+      squeeze_layer = tf.keras.layers.Lambda(
+          lambda x: tf.squeeze(x, [1]), name='sepconv1d_squeeze_1')
+    else:
+      squeeze_layer = None
+
     if model_type == 'sequential':
-      layers = [
+      layers = []
+      layers.append(
           keras.layers.Conv2D(
               kernel_initializer=_get_initializer(random_init),
               use_bias=False,
-              **cls.params),
-          keras.layers.BatchNormalization(axis=-1),
-      ]
+              **cls.params))
+      if squeeze_layer is not None:
+        layers.append(squeeze_layer)
+      layers.append(normalization(axis=-1))
       if post_bn_activation is not None:
         layers += post_bn_activation
       return tf.keras.Sequential(layers)
@@ -104,18 +119,20 @@ class Conv2DModel(object):
           kernel_initializer=_get_initializer(random_init),
           use_bias=False)(
               inp)
-      out = keras.layers.BatchNormalization(axis=-1)(x)
+      if squeeze_layer is not None:
+        x = squeeze_layer(x)
+      out = normalization(axis=-1)(x)
       if post_bn_activation is not None:
         out = post_bn_activation(out)
       return tf.keras.Model(inp, out)
 
 
 class DepthwiseConv2DModel(Conv2DModel):
-  """Construct and access DepthwiseConv + BatchNorm + activation models."""
+  """Construct and access DWConv + (Squeeze) + BatchNorm + activation models."""
 
   params = {
-      'kernel_size': (3, 3),
-      'input_shape': (10, 10, 3),
+      'kernel_size': (1, 1),
+      'input_shape': (1, 10, 3),
       'batch_size': 8,
   }
 
@@ -139,15 +156,30 @@ class DepthwiseConv2DModel(Conv2DModel):
   def get_nonfolded_batchnorm_model(cls,
                                     post_bn_activation=None,
                                     model_type='sequential',
-                                    random_init=False):
+                                    random_init=False,
+                                    squeeze_type=False,
+                                    normalization_type='BatchNormalization'):
+    if normalization_type == 'BatchNormalization':
+      normalization = keras.layers.BatchNormalization
+    elif normalization_type == 'SyncBatchNormalization':
+      normalization = keras.layers.experimental.SyncBatchNormalization
+
+    if squeeze_type == 'sepconv1d_squeeze':
+      squeeze_layer = tf.keras.layers.Lambda(
+          lambda x: tf.squeeze(x, [1]), name='sepconv1d_squeeze_1')
+    else:
+      squeeze_layer = None
+
     if model_type == 'sequential':
-      layers = [
+      layers = []
+      layers.append(
           keras.layers.DepthwiseConv2D(
               depthwise_initializer=_get_initializer(random_init),
               use_bias=False,
-              **cls.params),
-          keras.layers.BatchNormalization(axis=-1),
-      ]
+              **cls.params))
+      if squeeze_layer is not None:
+        layers.append(squeeze_layer)
+      layers.append(normalization(axis=-1))
       if post_bn_activation is not None:
         layers += post_bn_activation
       return tf.keras.Sequential(layers)
@@ -159,7 +191,9 @@ class DepthwiseConv2DModel(Conv2DModel):
           depthwise_initializer=_get_initializer(random_init),
           use_bias=False)(
               inp)
-      out = keras.layers.BatchNormalization(axis=-1)(x)
+      if squeeze_layer is not None:
+        x = squeeze_layer(x)
+      out = normalization(axis=-1)(x)
       if post_bn_activation is not None:
         out = post_bn_activation(out)
       return tf.keras.Model(inp, out)
