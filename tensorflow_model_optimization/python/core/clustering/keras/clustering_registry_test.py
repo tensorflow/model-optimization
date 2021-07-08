@@ -310,7 +310,7 @@ class ClusterRegistryTest(test.TestCase):
     l.build((10, 1))
     self.assertFalse(ClusterRegistry.supports(l))
 
-  def testSupportsKerasRNNLayerClusterableCell(self):
+  def testDoesNotSupportsKerasRNNLayerClusterableCell(self):
     """ClusterRegistry should not support a custom clusterable RNN cell."""
     self.assertFalse(
         ClusterRegistry.supports(
@@ -404,20 +404,87 @@ class ClusterRegistryTest(test.TestCase):
     ClusterRegistry.make_clusterable(layer)
     keras.Sequential([layer]).build(input_shape=(2, 3, 4))
 
-    expected_weights = [('kernel', layer.cell.kernel),
-                        ('recurrent_kernel', layer.cell.recurrent_kernel)]
+    expected_weights = [('kernel/0', layer.cell.kernel),
+                        ('recurrent_kernel/0', layer.cell.recurrent_kernel)]
     self.assertEqual(expected_weights, layer.get_clusterable_weights())
 
-  def testMakeClusterableDoesNotWorksOnKerasRNNLayerWithRNNCellsParams(self):
-    """A built-in RNN layer with built-in RNN cells is not clusterable."""
+  def testMakeClusterableWorksOnKerasRNNLayerWithRNNCellsParams(self):
+    """A built-in RNN layer with built-in RNN cells is clusterable."""
     cell1 = layers.LSTMCell(10)
     cell2 = layers.GRUCell(5)
-    layer = layers.RNN([cell1, cell2])
+    cell_list = tf.keras.layers.StackedRNNCells(
+          [cell1, cell2]
+        )
+    layer = layers.RNN(cell_list)
     with self.assertRaises(AttributeError):
       layer.get_clusterable_weights()
 
-    with self.assertRaises(ValueError):
-      ClusterRegistry.make_clusterable(layer)
+    ClusterRegistry.make_clusterable(layer)
+    keras.Sequential([layer]).build(input_shape=(2, 3, 4))
+
+    expected_weights = [('kernel/0', layer.cell.cells[0].kernel),
+                        ('recurrent_kernel/0',
+                         layer.cell.cells[0].recurrent_kernel)]
+    self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
+
+  def testMakeClusterableWorksOnKerasStackedRNNLayerWithPeepholeLSTMCell(self):
+    """
+    Verifies that make_clusterable() works as expected on a built-in
+    RNN layer with a PeepholeLSTMCell
+    """
+    cell1 = layers.LSTMCell(10)
+    cell2 = keras.experimental.PeepholeLSTMCell(10)
+    cell_list = tf.keras.layers.StackedRNNCells(
+          [cell1, cell2]
+        )
+    layer = layers.RNN(cell_list)
+    with self.assertRaises(AttributeError):
+      layer.get_clusterable_weights()
+
+    ClusterRegistry.make_clusterable(layer)
+    keras.Sequential([layer]).build(input_shape=(2, 3, 4))
+
+    expected_weights = [('kernel/0', layer.cell.cells[0].kernel),
+                        ('recurrent_kernel/0',
+                         layer.cell.cells[0].recurrent_kernel)]
+    self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
+
+  def testMakeClusterableWorksOnKerasBidirectionalLayerWithLSTM(self):
+    """
+    Verifies that make_clusterable() works as expected on a Bidirectional
+    wrapper with a LSTM layer
+    """
+    layer = tf.keras.layers.Bidirectional(layers.LSTM(10))
+    with self.assertRaises(AttributeError):
+      layer.get_clusterable_weights()
+
+    ClusterRegistry.make_clusterable(layer)
+    keras.Sequential([layer]).build(input_shape=(2, 3, 4))
+
+    expected_weights = [('kernel/0', layer.forward_layer.cell.kernel),
+                        ('recurrent_kernel/0',
+                         layer.forward_layer.cell.recurrent_kernel)]
+    self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
+
+  def testMakeClusterableWorksOnRNNLayerWithPeepholeLSTMCell(self):
+    """
+    Verifies that make_clusterable() works as expected on a built-in
+    RNN layer with a PeepholeLSTMCell
+    """
+    cell1 = layers.LSTMCell(10)
+    cell2 = keras.experimental.PeepholeLSTMCell(10)
+    layer = layers.RNN([cell1, cell2])
+
+    with self.assertRaises(AttributeError):
+      layer.get_clusterable_weights()
+
+    ClusterRegistry.make_clusterable(layer)
+    keras.Sequential([layer]).build(input_shape=(2, 3, 4))
+
+    expected_weights = [('kernel/0', layer.cell.cells[0].kernel),
+                        ('recurrent_kernel/0',
+                         layer.cell.cells[0].recurrent_kernel)]
+    self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
 
   def testMakeClusterableDoesNotWorksOnKerasRNNLayerWithClusterableCell(self):
     """A built-in RNN layer with custom clusterable RNN cell is not clusterable."""
@@ -437,11 +504,13 @@ class ClusterRegistryTest(test.TestCase):
     When invoked with a built-in RNN layer that contains a non-clusterable
     custom RNN cell.
     """
-    l = ClusterRegistryTest.MinimalRNNCell(5)
-    # we need to build weights
-    l.build(input_shape=(10, 1))
+    cell1 = layers.LSTMCell(10)
+    cell2 = ClusterRegistryTest.MinimalRNNCell(5)
+    layer = layers.RNN([cell1, cell2])
+    layer.build(input_shape=(10, 1))
+
     with self.assertRaises(ValueError):
-      ClusterRegistry.make_clusterable(layers.RNN([layers.LSTMCell(10), l]))
+      ClusterRegistry.make_clusterable(layer)
 
 
 if __name__ == '__main__':
