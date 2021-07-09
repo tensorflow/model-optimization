@@ -297,16 +297,39 @@ def generate_m_by_n_mask(weights, m_by_n: tuple = (2, 4)):
   return sparsity_mask
 
 
-def is_pruned_2x4(weights):
-  """Returns true if weights are pruned with sparsity 2x4
-  in TFLite data format, otherwise false.
+def is_pruned_2x4(weights, last_channel="C_OUT"):
+  """Check 2by4 sparsity pattern on Weight Tensor
+
+  This is a 2x4 sparsity helper function.
 
   Args:
-      weights: Input weights tensor.
+    weights: A tensor of layer weights.
+    last_channel: A string, 'C_OUT'(default) and 'C_IN' are supported.
+
+      Last channel of weights tensor.
+        Conv2D weights in TF: [H, W, C_IN, C_OUT];
+          TFLite: [C_OUT, H, W, C_IN]
+        DENSE weights in TF: [C_IN, C_OUT];
+          TFLite: [C_OUT, C_IN]
+
+  Returns:
+    A boolean value: True if weights are pruned with sparsity 2x4
+      on the last channel.
+
+  Raises:
+    ValueError: if unsupported last_channel.
   """
-  prepared_weights = weights_rearrange(weights)
-  flatten_weights = prepared_weights.numpy().reshape(-1)
-  for i in range(0, len(flatten_weights), 4):
-    if np.count_nonzero(flatten_weights[i:i+4]) > 2:
-      return False
+  if last_channel.endswith("C_IN"):
+    prepared_weights = tf.reshape(
+        weights, [tf.reduce_prod(weights.shape[:-1]), -1])
+  elif last_channel.endswith("C_OUT"):
+    prepared_weights = weights_rearrange(weights)
+  else:
+    raise ValueError("last_channel must be `C_IN` or `C_OUT`")
+
+  prepared_weights_np = prepared_weights.numpy()
+  for row in range(0, prepared_weights_np.shape[0]):
+    for col in range(0, prepared_weights_np.shape[1], 4):
+      if np.count_nonzero(prepared_weights_np[row, col:col+4]) > 2:
+        return False
   return True

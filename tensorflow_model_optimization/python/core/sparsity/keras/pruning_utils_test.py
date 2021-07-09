@@ -134,19 +134,23 @@ class GenerateMbyNMaskTest(tf.test.TestCase, parameterized.TestCase):
 
 class IsPruned2x4Test(tf.test.TestCase, parameterized.TestCase):
   @parameterized.parameters(
-    ([[1, 2, 0, 0]], True),
-    ([[1, 2, 3, 4]], False),
-    ([[0, 0, 0, 0]], True),
-    ([[1, 2, 0, 4], [0, 0, 1, 2]], False),
-    ([[1, 2, 0, 0], [0, 0, 0, 1], [0, 2, 1, 0]], True),
-    ([[1, 2, 3, 4, 5, 6]], False),
-    ([[1, 2, 0, 0, 5, 6]], True),
-    ([[1, 2, 0, 0, 5, 6, 7]], False),
-    ([[1, 2, 0, 0, 5, 6, 0]], True),
+    ([[1, 2, 0, 0]], "C_OUT", True),
+    ([[1, 2, 3, 4]], "C_OUT", False),
+    ([[0, 0, 0, 0]], "C_OUT", True),
+    ([[1, 2, 0, 4], [0, 0, 1, 2]], "C_OUT", False),
+    ([[1, 2, 0, 0], [0, 0, 0, 1], [0, 2, 1, 0]], "C_OUT", True),
+    ([[1, 2, 0, 0], [1, 0, 0, 1], [0, 2, 1, 0]], "C_IN", True),
+    ([[1, 2, 3, 4, 5, 6]], "C_OUT", False),
+    ([[1, 2, 0, 0, 5, 6]], "C_OUT", True),
+    ([[1, 2, 0, 0, 5, 6, 7]], "C_OUT", False),
+    ([[1, 2, 0, 0, 5, 6, 0]], "C_OUT", True),
   )
-  def testIsPruned2x4(self, weight, expected):
-    weight = tf.constant(weight)
-    answer = pruning_utils.is_pruned_2x4(weight)
+  def testIsPruned2x4(self, weight, last_channel, expected):
+    if last_channel == "C_OUT":
+      weight = tf.transpose(tf.constant(weight))
+    elif last_channel == "C_IN":
+      weight = tf.constant(weight)
+    answer = pruning_utils.is_pruned_2x4(weight, last_channel)
     self.assertEqual(answer, expected)
 
 

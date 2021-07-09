@@ -62,10 +62,9 @@ def calculate_sparsity(weights):
   return sparsity
 
 
-def print_info(name, shape, sparsity, type, applicable):
+def print_info(name, shape, sparsity, is_2by4):
   """Prints information for the layer."""
-  print("{}: shape: {}, sparsity: {}, 2x4: {}, applicable: {}".\
-    format(name, shape, sparsity, type, applicable))
+  print(f"{name}: shape: {shape}, sparsity: {sparsity}, 2x4: {is_2by4}.")
 
 
 def run(input_tflite_path):
@@ -83,12 +82,11 @@ def run(input_tflite_path):
     shape = detail["shape"]
     weights = interpreter.tensor(detail["index"])()
 
-    is_applicable_2x4 = pruning_utils.check_if_applicable_sparsity_2x4(weights)
-    is_pruned_2x4 = pruning_utils.is_pruned_2x4(weights) if is_applicable_2x4\
-      else False
-    sparsity = calculate_sparsity(weights)
+    weights_ts = tf.constant(weights)
+    is_pruned_2x4 = pruning_utils.is_pruned_2x4(weights_ts, "C_IN")
+    sparsity = calculate_sparsity(weights_ts)
 
-    print_info(name, shape, sparsity, is_pruned_2x4, is_applicable_2x4)
+    print_info(name, shape, sparsity, is_pruned_2x4)
 
 
 def main(argv):

@@ -334,15 +334,26 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
           "layer_type": tf.keras.layers.Conv2D,
           "layer_arg": [16, (5, 7)],
           "input_shape": (10, 10, 8),
+          "sparsity_ratio": 0.5,
       },
       {
           "testcase_name": "Dense",
           "layer_type": tf.keras.layers.Dense,
           "layer_arg": [16],
           "input_shape": [(8)],
+          "sparsity_ratio": 0.5,
+      },
+      {
+          "testcase_name": "Conv2D_not_multiple_4",
+          "layer_type": tf.keras.layers.Conv2D,
+          "layer_arg": [16, (5, 7)],
+          "input_shape": (10, 10, 7),
+          "sparsity_ratio": 0.428571,
       },
   )
-  def test2by4SparsityPruning_SupportedLayers(self, layer_type, layer_arg, input_shape):
+  def test2by4SparsityPruning_SupportedLayers(
+      self, layer_type, layer_arg, input_shape, sparsity_ratio
+  ):
     """ Check that we prune supported layers with 2x4 sparsity. """
     self.params.update({'sparsity_2x4': True})
 
@@ -360,7 +371,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
         callbacks=[pruning_callbacks.UpdatePruningStep()])
 
     test_utils.assert_model_sparsity_2x4(self, model)
-    self._check_strip_pruning_matches_original(model, 0.5)
+    self._check_strip_pruning_matches_original(model, sparsity_ratio)
 
   def testSparsityPruning2x4_NonSupportedLayers(self):
     """ Check layer that is not supported for 2x4 sparsity 2x4,
