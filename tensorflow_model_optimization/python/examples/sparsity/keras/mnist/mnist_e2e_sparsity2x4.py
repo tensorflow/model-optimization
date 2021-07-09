@@ -47,8 +47,7 @@ def check_model_sparsity_2x4(model):
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude) and\
       isinstance(layer, PRUNABLE_2x4_LAYERS):
       for weight in layer.layer.get_prunable_weights():
-        if pruning_utils.check_if_applicable_sparsity_2x4(weight) and\
-          not pruning_utils.is_pruned_2x4(weight):
+        if not pruning_utils.is_pruned_2x4(weight):
             return False
   return True
 
