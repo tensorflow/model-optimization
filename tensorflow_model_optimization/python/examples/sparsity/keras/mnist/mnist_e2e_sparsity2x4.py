@@ -145,6 +145,8 @@ def main(unused_argv):
 
   print('evaluate pruned model: ')
   print(keras_test_utils.eval_mnist_tflite(model_content=tflite_model))
+  # the accuracy of 2:4 pruning model is 0.9866
+  # the accuracy of unstructured model with 50% is 0.9863
 
 if __name__ == '__main__':
   absl_app.run(main)
