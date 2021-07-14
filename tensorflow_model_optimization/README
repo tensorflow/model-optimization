@@ -1,0 +1,6 @@
+Assuming we have the pylintrc file from the Python style guide from TensorFlow
+https://google.github.io/styleguide/pylintrc, and the pylint-ignore.md file
+generated for mlt/master with 5c67495c06eb797ac156197e5d31c1c5ff08ca2b, the
+steps for running pylint-ignore locally (in a conda/python environment):
+1. pip install pylint pylint-ignore
+2. pylint-ignore --rcfile=./pylintrc ./python
