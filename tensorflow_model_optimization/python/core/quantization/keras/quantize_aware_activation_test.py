@@ -103,14 +103,14 @@ class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
 
     model = keras.Sequential([layer])
 
-    x = np.array([[1.0, 2.0]])
+    x = np.array([[1.0, 3.0]])
     # expected_activation is determined using the float buckets when [-6, 6] is
     # quantized. Derived using `tf.fake_quant_with_min_max_vars`. For sigmoid,
     # quantization is applied twice.
     #
-    # FakeQuant([1.0, 2.0]) = [0.9882355, 1.9764705]
-    # Softmax([0.9882355, 1.9764705]) = [0.27126083, 0.72873914]
-    expected_activation = np.array([[0.27126083, 0.72873914]])
+    # FakeQuant([1.0, 3.0]) = [0.9882353, 3.0117648]
+    # Softmax([0.9882355, 1.9764705]) = [0.11675452 0.88324547]
+    expected_activation = np.array([[0.11675452, 0.88324547]])
 
     for weight in layer.weights:
       self.assertIn('pre_activation', weight.name)
