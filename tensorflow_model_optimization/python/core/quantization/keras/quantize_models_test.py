@@ -41,7 +41,7 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
       # 'DenseNet169',
       # 'DenseNet201',
       # 'InceptionResNetV2',
-      # 'InceptionV3',
+      'InceptionV3',
       'MobileNet',
       'MobileNetV2',
       # 'NASNetLarge',
