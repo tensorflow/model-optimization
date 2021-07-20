@@ -70,7 +70,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 26`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   23: class Default8BitClusterPreserveQuantizeScheme(
@@ -87,7 +87,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 219`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   216: class Default8bitClusterPreserveQuantizeRegistry(
@@ -104,7 +104,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 303`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -121,7 +121,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 320`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -138,7 +138,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 337`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -155,7 +155,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 354`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -172,7 +172,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 371`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -189,7 +189,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 508`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -206,7 +206,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 556`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -223,7 +223,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 749`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -240,7 +240,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: method already defined line 762`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118: class ClusterTest(test.TestCase, parameterized.TestCase):
@@ -259,7 +259,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Method should have "self" as first argument`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    49: class ClusteringRegistry(object):
@@ -278,7 +278,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Undefined variable 'sparsity_pcqat'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   156:   def _pcqat_training(self, sparsity_flag, quant_aware_annotate_model):
@@ -295,7 +295,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Undefined variable 'sparsity_pruning'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   156:   def _pcqat_training(self, sparsity_flag, quant_aware_annotate_model):
@@ -312,7 +312,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Undefined variable 'cqat_acc'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -329,7 +329,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Undefined variable 'cqat_model_stripped'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -346,7 +346,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Undefined variable 'cqat_model_stripped'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -365,7 +365,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Assigning result of a function call, where the function has no return`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -380,26 +380,11 @@ The recommended approach to using `pylint-ignore` is:
 
 # E1120: no-value-for-parameter
 
-## File python/core/internal/tensor_encoding/stages/stages_impl_test.py - Line 41 - E1120 (no-value-for-parameter)
-
-- `message: No value for argument 'dtype' in function call`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-```
-  39:   def default_input(self):
-  40:     """See base class."""
-> 41:     return tf.random.uniform([5])
-  42: 
-  43:   @property
-```
-
-
 ## File python/core/internal/tensor_encoding/stages/research/misc_test.py - Line 41 - E1120 (no-value-for-parameter)
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   39:   def default_input(self):
@@ -410,11 +395,26 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
+## File python/core/internal/tensor_encoding/stages/stages_impl_test.py - Line 41 - E1120 (no-value-for-parameter)
+
+- `message: No value for argument 'dtype' in function call`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  39:   def default_input(self):
+  40:     """See base class."""
+> 41:     return tf.random.uniform([5])
+  42: 
+  43:   @property
+```
+
+
 ## File python/core/internal/tensor_encoding/core/gather_encoder_test.py - Line 49 - E1120 (no-value-for-parameter)
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   47:   def test_basic_encode_decode(self):
@@ -429,7 +429,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   52:   def test_static_or_dynamic_shape(self):
@@ -446,7 +446,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   62:   def default_input(self):
@@ -461,7 +461,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   75:   def test_different_shapes(self, shape):
@@ -478,7 +478,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   92:   def test_all_below_threshold_works(self):
@@ -495,7 +495,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'axis' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    67:   def _update_mask(self, weights):
@@ -512,7 +512,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'DstT' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    63:   def _zero_centroid_initialization(self):
@@ -529,7 +529,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'values' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    63:   def _zero_centroid_initialization(self):
@@ -546,7 +546,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118:   def test_dynamic_input_shape(self):
@@ -563,7 +563,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'DstT' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   146:       def grad(d_override_clustered_weight):
@@ -580,7 +580,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   161:   def test_one_to_many_with_multiple_input_shapes(self, *shape):
@@ -595,7 +595,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'axis' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   164:   def decode(self,
@@ -610,7 +610,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'axis' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    88:   def get_clustered_weight(self, pulling_indices, original_weight):
@@ -627,7 +627,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'DstT' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   194:     bits += logb_scalar
@@ -642,7 +642,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   210:   def default_input(self):
@@ -657,7 +657,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'DstT' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   152:   def build(self, input_shape):
@@ -674,7 +674,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   222:   def test_state_aggregation_modes(self):
@@ -689,7 +689,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'constant_values' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   226:   def _pad(self, x):
@@ -706,7 +706,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'DstT' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   230:   def get_cdf_value(self, given_weight):
@@ -721,7 +721,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'DstT' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   229:   def update_clustered_weights_associations(self):
@@ -738,7 +738,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   268:   def default_input(self):
@@ -753,7 +753,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'constant_values' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   283:   def _pad(self, x):
@@ -770,7 +770,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'off_value' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   274:   def _build_clusters(self, name, layer):
@@ -787,7 +787,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'on_value' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   274:   def _build_clusters(self, name, layer):
@@ -804,7 +804,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   450:   def default_input(self):
@@ -819,7 +819,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'axis' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   1394: def get_tensor_with_random_shape(expected_num_elements=10,
@@ -836,7 +836,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: No value for argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   1394: def get_tensor_with_random_shape(expected_num_elements=10,
@@ -855,7 +855,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   39:   def default_input(self):
@@ -870,7 +870,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   39:   def default_input(self):
@@ -885,7 +885,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   72:   def test_illegal_inputs_dynamic_power_of_two(self):
@@ -900,7 +900,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   92:   def test_all_below_threshold_works(self):
@@ -917,7 +917,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   92:   def test_all_below_threshold_works(self):
@@ -934,7 +934,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   102:   def test_dynamic_input_shape(self):
@@ -949,7 +949,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    63:   def _zero_centroid_initialization(self):
@@ -966,7 +966,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   112:   def test_dynamic_input_shape_dim_one(self):
@@ -981,7 +981,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'axis' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    63:   def _zero_centroid_initialization(self):
@@ -998,7 +998,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118:   def default_input(self):
@@ -1013,7 +1013,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   118:   def default_input(self):
@@ -1028,7 +1028,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   134: 
@@ -1043,7 +1043,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   134: 
@@ -1058,7 +1058,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   146:       def grad(d_override_clustered_weight):
@@ -1075,7 +1075,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   170:   def get_params(self):
@@ -1090,7 +1090,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   174:   def get_params(self):
@@ -1107,7 +1107,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   175:   def _calculate_centroids_for_interval(self, weight_interval,
@@ -1124,7 +1124,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   175:   def _calculate_centroids_for_interval(self, weight_interval,
@@ -1141,7 +1141,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   182: 
@@ -1156,7 +1156,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   194:     bits += logb_scalar
@@ -1171,7 +1171,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   210:   def default_input(self):
@@ -1186,7 +1186,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   210:   def default_input(self):
@@ -1201,7 +1201,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   152:   def build(self, input_shape):
@@ -1218,7 +1218,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   230:   def get_cdf_value(self, given_weight):
@@ -1233,7 +1233,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   229:   def update_clustered_weights_associations(self):
@@ -1250,7 +1250,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   268:   def default_input(self):
@@ -1265,7 +1265,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   268:   def default_input(self):
@@ -1280,7 +1280,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'dtype' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   349:   def test_dynamic_input_shape(self):
@@ -1297,7 +1297,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   366:   def default_input(self):
@@ -1314,7 +1314,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   366:   def default_input(self):
@@ -1331,7 +1331,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   365:   def encode(self, x, encode_params):
@@ -1348,7 +1348,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   390:     def x_fn():
@@ -1363,7 +1363,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'minval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   390:     def x_fn():
@@ -1378,7 +1378,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unexpected keyword argument 'maxval' in function call`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   1085:   def get_params(self):
@@ -1397,7 +1397,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   232:   def test_decode_decorator_different_graphs(self):
@@ -1414,7 +1414,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   232:   def test_decode_decorator_different_graphs(self):
@@ -1431,7 +1431,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   343:     def _non_adaptive_one_to_many_encode_decode():
@@ -1448,7 +1448,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   445:     def _non_adaptive_many_to_one_encode_decode():
@@ -1465,7 +1465,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   445:     def _non_adaptive_many_to_one_encode_decode():
@@ -1482,7 +1482,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   642:   def assert_commutes_with_sum(self,
@@ -1501,7 +1501,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Assigning the same variable 'tensorspec' to itself`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   122:   def from_encoder(cls, encoder, tensorspec):
@@ -1520,7 +1520,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _TENSORS of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   27: 
@@ -1535,7 +1535,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _SUCCESS_LABEL of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   28:   def setUp(self):
@@ -1552,7 +1552,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _FAILURE_LABEL of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   28:   def setUp(self):
@@ -1569,7 +1569,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _TENSORS of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   31: 
@@ -1584,7 +1584,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _ConvBatchNorm2D of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   38: keras = tf.keras
@@ -1599,7 +1599,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _DepthwiseConvBatchNorm2D of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   39: 
@@ -1614,7 +1614,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _LAYERS_WEIGHTS_MAP of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   41: class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
@@ -1631,7 +1631,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _SUCCESS_LABEL of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   43:     def func(x):
@@ -1648,7 +1648,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _tf_style_initial_state of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   49:   def _test_initial_state_fn(self):
@@ -1663,7 +1663,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _LAYERS_WEIGHTS_MAP of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   41: class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
@@ -1680,7 +1680,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _tf_style_update_state of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   54:   def _test_update_state_fn(self):
@@ -1695,7 +1695,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _FAILURE_LABEL of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   52:     def func(x):
@@ -1712,7 +1712,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _tf_style_get_params of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   59:   def _test_get_params_fn(self):
@@ -1727,7 +1727,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _tf_style_adaptive_get_params of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   64:   def _test_adaptive_get_params_fn(self):
@@ -1742,7 +1742,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _is_graph_network of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   64:   def _is_functional_model(self, model):
@@ -1759,7 +1759,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _tf_style_encode of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   69:   def _test_encode_fn(self):
@@ -1774,7 +1774,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _is_graph_network of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   60: def _type_model(model):
@@ -1791,7 +1791,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _tf_style_decode of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   73:   def _test_decode_fn(self):
@@ -1808,7 +1808,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _CUSTOM_ACTIVATION_ERR_MSG of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   71:     def custom_quantize(x):
@@ -1825,7 +1825,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _is_graph_network of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   60: def _type_model(model):
@@ -1842,7 +1842,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _types_dict of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   77:   def testSerialization(self, quantizer_type):
@@ -1859,7 +1859,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _activation_min_var of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    76:   def _test_equal_tf_and_tflite_outputs(self,
@@ -1876,7 +1876,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _activation_max_var of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    76:   def _test_equal_tf_and_tflite_outputs(self,
@@ -1893,7 +1893,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _LAYERS_CONFIG_MAP of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   114:   def testSupports_Prune_Default8bitQuantize_KerasLayers(self):
@@ -1908,7 +1908,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _LAYERS_WEIGHTS_MAP of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   114:   def testSupports_Prune_Default8bitQuantize_KerasLayers(self):
@@ -1925,7 +1925,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _layer_quantize_map of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   114:   def testSupports_Prune_Default8bitQuantize_KerasLayers(self):
@@ -1942,7 +1942,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _is_graph_network of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    81: def quantize_model(to_quantize):
@@ -1959,7 +1959,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _LAYERS_CONFIG_MAP of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   132:   def testSupportsClusterDefault8bitQuantizeKerasLayers(self):
@@ -1976,7 +1976,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _LAYERS_WEIGHTS_MAP of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   132:   def testSupportsClusterDefault8bitQuantizeKerasLayers(self):
@@ -1993,7 +1993,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   140:   @parameterized.parameters([1, 2, 99, 100, 101, 12345])
@@ -2008,7 +2008,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _layer_quantize_map of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   132:   def testSupportsClusterDefault8bitQuantizeKerasLayers(self):
@@ -2025,7 +2025,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _update_mask of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   136:   def testConstructsMaskAndThresholdCorrectly(self):
@@ -2042,7 +2042,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   149: 
@@ -2057,7 +2057,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   150:   def test_deterministic_given_seed(self):
@@ -2072,7 +2072,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   156: 
@@ -2087,7 +2087,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   157:   def test_differs_given_different_seed(self):
@@ -2102,7 +2102,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   163: 
@@ -2117,7 +2117,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   172:   def test_tensor_num_elements_raises(self):
@@ -2132,7 +2132,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _types_dict of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   165:   def testSerializationQuantizeWrapper(self):
@@ -2149,7 +2149,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   177:   def test_negative_num_elements_raises(self):
@@ -2164,7 +2164,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   181:   def test_python_seed_raises(self):
@@ -2179,7 +2179,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _cmwc_random_sequence of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   185:   def test_tf_int32_seed_raises(self):
@@ -2194,7 +2194,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _is_graph_network of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   142: def quantize_annotate_model(to_annotate):
@@ -2211,7 +2211,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _tf_style_encode of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   195:   def test_encode_decorator_different_graphs(self):
@@ -2228,7 +2228,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _query_dense of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   201: 
@@ -2243,7 +2243,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _key_dense of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   202:     def get_clusterable_weights_mha():  # pylint: disable=missing-docstring
@@ -2258,7 +2258,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _value_dense of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   202:     def get_clusterable_weights_mha():  # pylint: disable=missing-docstring
@@ -2275,7 +2275,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _output_dense of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   202:     def get_clusterable_weights_mha():  # pylint: disable=missing-docstring
@@ -2292,7 +2292,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _tf_style_decode of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   232:   def test_decode_decorator_different_graphs(self):
@@ -2309,7 +2309,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _maybe_update_block_mask of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   253:   def _sparsity2x4Masking(self, weight):
@@ -2326,7 +2326,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _a of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   251:   def test_as_adaptive_encoding_stage(self):
@@ -2343,7 +2343,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _a of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   251:   def test_as_adaptive_encoding_stage(self):
@@ -2360,7 +2360,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _b of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   251:   def test_as_adaptive_encoding_stage(self):
@@ -2377,7 +2377,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _b of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   251:   def test_as_adaptive_encoding_stage(self):
@@ -2394,7 +2394,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _outbound_nodes of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   285:   def _assert_model_quantized(
@@ -2411,7 +2411,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _outbound_nodes of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   285:   def _assert_model_quantized(
@@ -2428,7 +2428,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _self_tracked_trackables of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   289:   def _wrap_list(layers):
@@ -2445,7 +2445,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _layers of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   289:   def _wrap_list(layers):
@@ -2462,7 +2462,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _is_graph_network of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   268: def quantize_apply(
@@ -2479,7 +2479,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _sparsity_2x4 of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   379:   def testSparsityPruning2x4_NonSupportedLayers(self):
@@ -2496,7 +2496,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _weight_vars of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   393:       def on_epoch_end(self, batch, logs=None):
@@ -2511,7 +2511,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _RNN_LAYERS of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    41: class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
@@ -2528,7 +2528,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _self_tracked_trackables of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   361:   def _strip_clustering_wrapper(layer):
@@ -2545,7 +2545,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _self_tracked_trackables of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   361:   def _strip_clustering_wrapper(layer):
@@ -2562,7 +2562,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _layers of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   361:   def _strip_clustering_wrapper(layer):
@@ -2579,7 +2579,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _layers of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   361:   def _strip_clustering_wrapper(layer):
@@ -2596,7 +2596,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _types_dict of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   449:   def testSerialization(self):
@@ -2613,7 +2613,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _input_layers of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   477:   def testQuantizesInputLayer_OutboundLayerIsQuantized(self):
@@ -2630,7 +2630,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _outbound_nodes of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   477:   def testQuantizesInputLayer_OutboundLayerIsQuantized(self):
@@ -2647,7 +2647,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _input_layers of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   512:   def testAddsQuantizeLayerAfterInputLayer(self):
@@ -2664,7 +2664,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _outbound_nodes of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   512:   def testAddsQuantizeLayerAfterInputLayer(self):
@@ -2681,7 +2681,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _wrapped_stage of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   704:   def test_add_child(self):
@@ -2698,7 +2698,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _wrapped_stage of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   704:   def test_add_child(self):
@@ -2715,7 +2715,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Access to a protected member _wrapped_stage of a client class`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   704:   def test_add_child(self):
@@ -2734,7 +2734,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Useless super delegation in method '__init__'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   32: class MyDenseLayer(keras.layers.Dense, clusterable_layer.ClusterableLayer):
@@ -2749,7 +2749,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Useless super delegation in method 'setUp'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   50: class ClusterDistributedTest(tf.test.TestCase, parameterized.TestCase):
@@ -2766,7 +2766,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Useless super delegation in method 'setUp'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   58: class ClusterPreserveDistributedTest(tf.test.TestCase, parameterized.TestCase):
@@ -2785,7 +2785,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Bad indentation. Found 8 spaces, expected 4`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   52: 
@@ -2800,7 +2800,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Bad indentation. Found 8 spaces, expected 6`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   115:   def _check_sparsity(model):
@@ -2817,7 +2817,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Bad indentation. Found 10 spaces, expected 8`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   115:   def _check_sparsity(model):
@@ -2834,7 +2834,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Bad indentation. Found 12 spaces, expected 10`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   115:   def _check_sparsity(model):
@@ -2851,7 +2851,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Bad indentation. Found 12 spaces, expected 10`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   115:   def _check_sparsity(model):
@@ -2868,7 +2868,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Bad indentation. Found 12 spaces, expected 10`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   115:   def _check_sparsity(model):
@@ -2885,7 +2885,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Bad indentation. Found 8 spaces, expected 6`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   361:   def _strip_clustering_wrapper(layer):
@@ -2904,7 +2904,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Reimport 'experimental' (imported line 17)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   18: from tensorflow_model_optimization.python.core.api import quantization
@@ -2917,7 +2917,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Reimport 'logging' (imported line 17)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   18: import tensorflow as tf
@@ -2932,7 +2932,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Reimport 'cluster' (imported line 30)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   30: from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
@@ -2947,7 +2947,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Reimport 'tensorflow_model_optimization' (imported line 22)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   156: 
@@ -2960,14 +2960,14 @@ The recommended approach to using `pylint-ignore` is:
 
 # W0611: unused-import
 
-## File python/core/clustering/keras/cluster_distributed_test.py - Line 17 - W0611 (unused-import)
+## File python/core/quantization/keras/collaborative_optimizations/cluster_preserve/cluster_preserve_distributed_test.py - Line 17 - W0611 (unused-import)
 
 - `message: Unused import unittest`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
-  15: """Distributed clustering test."""
+  15: """Distributed (P)CQAT test."""
   16: 
 > 17: import unittest
   18: import itertools
@@ -2975,14 +2975,14 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/quantization/keras/collaborative_optimizations/cluster_preserve/cluster_preserve_distributed_test.py - Line 17 - W0611 (unused-import)
+## File python/core/clustering/keras/cluster_distributed_test.py - Line 17 - W0611 (unused-import)
 
 - `message: Unused import unittest`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
-  15: """Distributed (P)CQAT test."""
+  15: """Distributed clustering test."""
   16: 
 > 17: import unittest
   18: import itertools
@@ -2994,7 +2994,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused backend imported from tensorflow.keras as K`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   18: import tensorflow as tf
@@ -3009,7 +3009,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused ClusteringRegistry imported from tensorflow_model_optimization.python.core.clustering.keras.clustering_registry`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   20: from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
@@ -3024,7 +3024,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused import logging`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   20: 
@@ -3039,7 +3039,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused tensorflow_model_optimization imported as tfmot`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   20: import numpy as np
@@ -3054,7 +3054,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused import logging`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   22: 
@@ -3069,7 +3069,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused cluster_wrapper imported from tensorflow_model_optimization.python.core.clustering.keras`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   24: from tensorflow_model_optimization.python.core.clustering.keras import cluster
@@ -3084,7 +3084,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused quant_ops imported from tensorflow_model_optimization.python.core.quantization.keras`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   24: from tensorflow_model_optimization.python.core.clustering.keras import cluster
@@ -3099,7 +3099,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused pruning_utils imported from tensorflow_model_optimization.python.core.sparsity.keras`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   30: from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
@@ -3114,7 +3114,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused cluster_utils imported from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   35: from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
@@ -3131,7 +3131,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused variable 'stripped_pcqat_model'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   156:   def _pcqat_training(self, sparsity_flag, quant_aware_annotate_model):
@@ -3148,7 +3148,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused variable 'clustered_model'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   217: def selective_pcqat_quantize_model(cluster_model_path, train_images, train_labels):
@@ -3165,7 +3165,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused variable 'pcqat_model'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -3182,7 +3182,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused variable 'cqat_details'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -3199,7 +3199,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused variable 'stripped_pcqat_model'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   350:     def _pcqat_training(sparsity_flag, quant_aware_annotate_model):
@@ -3218,7 +3218,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'logs'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   33: class UpdatePruningStep(callbacks.Callback):
@@ -3235,7 +3235,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'batch'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   33: class UpdatePruningStep(callbacks.Callback):
@@ -3252,7 +3252,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'logs'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   33: class UpdatePruningStep(callbacks.Callback):
@@ -3269,7 +3269,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'prefix'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    79: class PruningSummaries(callbacks.TensorBoard):
@@ -3286,7 +3286,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'input_shape'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    41: class QuantizeWrapper(tf.keras.layers.Wrapper):
@@ -3303,7 +3303,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'test_images'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   129:   return pruning_model
@@ -3318,7 +3318,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'test_labels'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   130: 
@@ -3333,7 +3333,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'sparsity_flag'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    36: class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -3350,7 +3350,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'mask'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   198:   def testRaisesErrorIfKerasSubclassedModel(self):
@@ -3365,7 +3365,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'training'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   198:   def testRaisesErrorIfKerasSubclassedModel(self):
@@ -3380,7 +3380,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'train_images'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   215:   return quant_aware_model
@@ -3395,7 +3395,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'train_labels'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   215:   return quant_aware_model
@@ -3410,7 +3410,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'training'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    34: class ClusterWeights(Wrapper):
@@ -3427,7 +3427,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'sparsity_flag'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   293:   def testEndToEndPruneClusterPreserveQAT(self):
@@ -3444,7 +3444,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'batch'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   377:     class CheckCentroidsAndTrainableVarsCallback(tf.keras.callbacks.Callback):
@@ -3459,7 +3459,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'logs'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   377:     class CheckCentroidsAndTrainableVarsCallback(tf.keras.callbacks.Callback):
@@ -3474,7 +3474,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'batch'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   377:     class CheckCentroidsAndTrainableVarsCallback(tf.keras.callbacks.Callback):
@@ -3491,7 +3491,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'logs'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   377:     class CheckCentroidsAndTrainableVarsCallback(tf.keras.callbacks.Callback):
@@ -3508,7 +3508,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'batch'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   472:     class CheckWeightsCallback(keras.callbacks.Callback):
@@ -3523,7 +3523,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'logs'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   472:     class CheckWeightsCallback(keras.callbacks.Callback):
@@ -3538,7 +3538,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'batch'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   472:     class CheckWeightsCallback(keras.callbacks.Callback):
@@ -3555,7 +3555,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'logs'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   472:     class CheckWeightsCallback(keras.callbacks.Callback):
@@ -3572,7 +3572,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'name'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   531:   class TFStyleEncodingStage(cls):
@@ -3589,7 +3589,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'name'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   589:   class TFStyleAdaptiveEncodingStage(cls):
@@ -3606,7 +3606,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'name'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   589:   class TFStyleAdaptiveEncodingStage(cls):
@@ -3623,7 +3623,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'name'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   589:   class TFStyleAdaptiveEncodingStage(cls):
@@ -3640,7 +3640,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'name'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   589:   class TFStyleAdaptiveEncodingStage(cls):
@@ -3657,7 +3657,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unused argument 'name'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   616:     def decode(self,
@@ -3676,7 +3676,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Redefining name 'cluster_model' from outer scope (line 131)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   131: def cluster_model(original_model, train_images, train_labels, test_images,
@@ -3693,7 +3693,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Redefining name 'tfmot' from outer scope (line 22)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   156: 
@@ -3710,7 +3710,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 53: left side has 3 label(s), right side has 5 value(s)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   131:   @keras_parameterized.run_all_keras_modes
@@ -3725,7 +3725,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   151:   def test_input_types(self, x_dtype, clip_value_min_dtype,
@@ -3742,7 +3742,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   146:   def test_larger_num_iters_improves_accuracy(self):
@@ -3759,7 +3759,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   157:   def test_empty_input_dynamic(self):
@@ -3776,7 +3776,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   192:   def test_input_types(self, x_dtype, eta_dtype, delta_dtype):
@@ -3793,7 +3793,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   269:   def test_encoding_differs_given_different_seed(self):
@@ -3810,7 +3810,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   296:   def test_input_types(self, x_dtype, min_max_dtype):
@@ -3827,7 +3827,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   349:   def test_dynamic_input_shape(self):
@@ -3846,7 +3846,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider explicitly re-raising using the 'from' keyword`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   61: def _check_block_size(flag_value):
@@ -3863,7 +3863,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider explicitly re-raising using the 'from' keyword`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   401:   def _quantize(layer):  # pylint: disable=missing-docstring
@@ -3882,7 +3882,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Positional arguments appear to be out of order`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   132:   def test_merge_dicts(self, dict1, dict2, expected_dict):
@@ -3901,7 +3901,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   29: from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
@@ -3916,7 +3916,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   31: # This variable is the only way to add cluster wrapper
@@ -3931,7 +3931,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   38:   def __init__(self):
@@ -3946,7 +3946,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   39: layers = tf.keras.layers
@@ -3961,7 +3961,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   38:   def __init__(self):
@@ -3978,7 +3978,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   41: CLUSTER_PATH = "./generated_mnist_models/cluster"
@@ -3993,7 +3993,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   49:   def __init__(self):
@@ -4008,7 +4008,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   49:   def __init__(self):
@@ -4025,7 +4025,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   49:   def __init__(self):
@@ -4042,7 +4042,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   47: def expand_tensor(tensor, block_size):
@@ -4059,7 +4059,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   47: def expand_tensor(tensor, block_size):
@@ -4076,7 +4076,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   92: def main(argv):
@@ -4091,7 +4091,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    97: 
@@ -4106,7 +4106,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    36: class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
@@ -4123,7 +4123,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    99:   def testClusterSimpleDenseModel(self, distribution, clustering_params):
@@ -4140,7 +4140,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   115:   def _check_sparsity(model):
@@ -4157,7 +4157,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   114: def factorized_pool(input_tensor,
@@ -4174,7 +4174,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   114: def factorized_pool(input_tensor,
@@ -4191,7 +4191,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   121:   def setUp(self):
@@ -4208,7 +4208,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   228: def print_unique_weights(model):
@@ -4225,7 +4225,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   228: def print_unique_weights(model):
@@ -4242,7 +4242,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   228: def print_unique_weights(model):
@@ -4259,7 +4259,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   244: 
@@ -4274,7 +4274,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   245: def evaluate_model(interpreter, test_images, test_labels):
@@ -4289,7 +4289,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   293:   def testEndToEndPruneClusterPreserveQAT(self):
@@ -4306,7 +4306,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   293:   def testEndToEndPruneClusterPreserveQAT(self):
@@ -4323,7 +4323,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4340,7 +4340,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4357,7 +4357,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4374,7 +4374,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4391,7 +4391,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4408,7 +4408,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4425,7 +4425,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4442,7 +4442,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4459,7 +4459,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4476,7 +4476,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4493,7 +4493,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4510,7 +4510,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter " is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def testPrunesSingleLayer_ReachesTargetSparsity(self, layer_type):
@@ -4527,7 +4527,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   483: 
@@ -4541,7 +4541,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   700:   def testMHA(self):
@@ -4558,7 +4558,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Quote delimiter ' is inconsistent with the rest of the file`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   700:   def testMHA(self):
@@ -4577,7 +4577,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   65:   def test_illegal_inputs_static_power_of_two(self, *dims):
@@ -4594,7 +4594,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   171: 
@@ -4609,7 +4609,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   176: 
@@ -4624,7 +4624,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   177:   def test_encode_unsupported_type_raises(self, dtype):
@@ -4639,7 +4639,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   184: 
@@ -4654,7 +4654,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   183:   def test_encode_unsupported_input_shape_raises(self):
@@ -4671,7 +4671,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   187:   def test_unknown_shape_raises(self):
@@ -4688,7 +4688,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   195:   def test_more_than_two_ndims_raises(self, dims):
@@ -4705,7 +4705,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   203:   def test_unknown_shape_raises(self):
@@ -4722,7 +4722,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   211:   def test_more_than_two_ndims_raises(self, dims):
@@ -4739,7 +4739,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   218:   @parameterized.parameters([0.0, 1.0, -1.0, 2.5])
@@ -4754,7 +4754,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   223:   @parameterized.parameters([0.0, -1.0])
@@ -4769,7 +4769,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   228:   @parameterized.parameters([0, -1, -10])
@@ -4784,7 +4784,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   231: 
@@ -4799,7 +4799,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   232: 
@@ -4814,7 +4814,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   233:   @parameterized.parameters([tf.int32, tf.int64])
@@ -4829,7 +4829,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   237: 
@@ -4844,7 +4844,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   243:   @parameterized.parameters([0, 1, 0.0, 1.0])
@@ -4859,7 +4859,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   247: 
@@ -4874,7 +4874,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   292:   @parameterized.parameters([tf.int32, tf.int64])
@@ -4889,7 +4889,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method getargspec()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   274:     def no_op():
@@ -4906,7 +4906,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   333:   @parameterized.parameters([0, 17, -1, 1.5])
@@ -4921,7 +4921,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   338:   @parameterized.parameters([1.0, ([1.0, 2.0, 3.0],)])
@@ -4936,7 +4936,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   344:   @parameterized.parameters([0, 17, -1, 1.5])
@@ -4951,7 +4951,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   344:   @parameterized.parameters([([1.0],), ([1.0, 2.0, 3.0],)])
@@ -4966,7 +4966,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   349:   @parameterized.parameters([([1.0, 1.0],), ([2.0, 1.0],)])
@@ -4981,7 +4981,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   353: 
@@ -4996,7 +4996,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   376:   def testEndToEndSubclassedModelAsDeepLayer(self):
@@ -5013,7 +5013,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   438:   def test_encode_unsupported_type_raises(self, dtype):
@@ -5028,7 +5028,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   443: 
@@ -5043,7 +5043,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated method assertRaisesRegexp()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   444:   def test_bad_input_bits_raises(self):
@@ -5062,7 +5062,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated decorator abc.abstractproperty()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   68: class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
@@ -5079,7 +5079,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Using deprecated decorator abc.abstractproperty()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   274: class AdaptiveEncodingStageInterface(object):
@@ -5098,7 +5098,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Method name "_assertLogsExist" doesn't conform to '(?x)^(?:(?P<exempt>_[a-z0-9_]+__|runTest|setUp|tearDown|setUpTestCase|tearDownTestCase|setupSelf|tearDownClass|setUpClass|(test|assert)_*[A-Z0-9][a-zA-Z0-9_]*|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9_]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$' pattern`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   34: class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
@@ -5115,7 +5115,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Method name "_assertWrappedLayer" doesn't conform to '(?x)^(?:(?P<exempt>_[a-z0-9_]+__|runTest|setUp|tearDown|setUpTestCase|tearDownTestCase|setupSelf|tearDownClass|setUpClass|(test|assert)_*[A-Z0-9][a-zA-Z0-9_]*|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9_]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$' pattern`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   80: class QuantizeAnnotateTest(tf.test.TestCase):
@@ -5130,7 +5130,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Method name "_assertWrappedModel" doesn't conform to '(?x)^(?:(?P<exempt>_[a-z0-9_]+__|runTest|setUp|tearDown|setUpTestCase|tearDownTestCase|setupSelf|tearDownClass|setUpClass|(test|assert)_*[A-Z0-9][a-zA-Z0-9_]*|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9_]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$' pattern`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   80: class QuantizeAnnotateTest(tf.test.TestCase):
@@ -5147,7 +5147,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Method name "_blockMasking" doesn't conform to '(?x)^(?:(?P<exempt>_[a-z0-9_]+__|runTest|setUp|tearDown|setUpTestCase|tearDownTestCase|setupSelf|tearDownClass|setUpClass|(test|assert)_*[A-Z0-9][a-zA-Z0-9_]*|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9_]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$' pattern`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    47: class PruningTest(test.TestCase, parameterized.TestCase):
@@ -5164,7 +5164,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Method name "_sparsity2x4Masking" doesn't conform to '(?x)^(?:(?P<exempt>_[a-z0-9_]+__|runTest|setUp|tearDown|setUpTestCase|tearDownTestCase|setupSelf|tearDownClass|setUpClass|(test|assert)_*[A-Z0-9][a-zA-Z0-9_]*|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9_]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$' pattern`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    47: class PruningTest(test.TestCase, parameterized.TestCase):
@@ -5181,7 +5181,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Method name "_clusterTrainStrip" doesn't conform to '(?x)^(?:(?P<exempt>_[a-z0-9_]+__|runTest|setUp|tearDown|setUpTestCase|tearDownTestCase|setupSelf|tearDownClass|setUpClass|(test|assert)_*[A-Z0-9][a-zA-Z0-9_]*|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9_]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$' pattern`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   499: class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -5198,7 +5198,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Method name "_assertNbUniqueWeights" doesn't conform to '(?x)^(?:(?P<exempt>_[a-z0-9_]+__|runTest|setUp|tearDown|setUpTestCase|tearDownTestCase|setupSelf|tearDownClass|setUpClass|(test|assert)_*[A-Z0-9][a-zA-Z0-9_]*|next)|(?P<camel_case>_{0,2}[A-Z][a-zA-Z0-9_]*)|(?P<snake_case>_{0,2}[a-z][a-z0-9_]*))$' pattern`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   499: class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -5215,7 +5215,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Variable name "layerMHA" doesn't conform to '^[a-z][a-z0-9_]*$' pattern`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   700:   def testMHA(self):
@@ -5230,102 +5230,102 @@ The recommended approach to using `pylint-ignore` is:
 
 # C0114: missing-module-docstring
 
-## File python/core/internal/tensor_encoding/core/gather_encoder_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
-## File python/core/internal/tensor_encoding/stages/research/quantization_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
 ## File python/core/internal/tensor_encoding/utils/py_utils_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 
 ## File python/core/internal/tensor_encoding/utils/tf_utils_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 
 ## File python/core/internal/tensor_encoding/core/simple_encoder_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
-## File python/core/internal/tensor_encoding/stages/research/clipping_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
-## File python/core/internal/tensor_encoding/stages/research/kashin_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
-## File python/core/quantization/keras/collaborative_optimizations/cluster_preserve/cluster_preserve_integration_test_yesterday.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
-## File python/core/internal/tensor_encoding/encoders/common_encoders_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
-## File python/core/internal/tensor_encoding/testing/test_utils_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
-## File python/core/internal/tensor_encoding/core/encoding_stage_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-
-## File python/core/internal/tensor_encoding/stages/stages_impl_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 
 ## File python/core/internal/tensor_encoding/stages/research/misc_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/encoders/common_encoders_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/core/encoding_stage_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/stages/research/quantization_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/quantization/keras/collaborative_optimizations/cluster_preserve/cluster_preserve_integration_test_yesterday.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/testing/test_utils_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/stages/research/clipping_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/core/gather_encoder_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
 
 
 ## File python/core/internal/tensor_encoding/core/core_encoder_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/stages/stages_impl_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/stages/research/kashin_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
 
 
 # C0115: missing-class-docstring
@@ -5334,7 +5334,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   32: class QuantizeAnnotateTest(tf.test.TestCase):
@@ -5349,7 +5349,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   27: class PruneRegistryTest(tf.test.TestCase):
@@ -5366,7 +5366,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   37: 
@@ -5381,7 +5381,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   41: 
@@ -5396,7 +5396,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   44: 
@@ -5411,7 +5411,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   41: class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
@@ -5428,7 +5428,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   32: class PrunePreserveQuantizeRegistryTest(tf.test.TestCase,
@@ -5445,7 +5445,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   60: 
@@ -5460,7 +5460,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   62: 
@@ -5475,7 +5475,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   456:   def testWeightsAreLearningDuringClustering(self):
@@ -5492,7 +5492,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Missing class docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    37: class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
@@ -5511,7 +5511,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider iterating with .items()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   114:   def testSupports_Prune_Default8bitQuantize_KerasLayers(self):
@@ -5528,7 +5528,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider iterating with .items()`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   132:   def testSupportsClusterDefault8bitQuantizeKerasLayers(self):
@@ -5547,7 +5547,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (106/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   13: # limitations under the License.
@@ -5562,7 +5562,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   13: # limitations under the License.
@@ -5576,7 +5576,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   14: # ==============================================================================
@@ -5591,7 +5591,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (93/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   14: # ==============================================================================
@@ -5606,7 +5606,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   20: def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
@@ -5621,7 +5621,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (89/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   26: from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
@@ -5636,7 +5636,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (95/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   27: @six.add_metaclass(abc.ABCMeta)
@@ -5651,7 +5651,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (93/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   39: keras = tf.keras
@@ -5666,7 +5666,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   40: 
@@ -5681,7 +5681,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (100/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   47: 
@@ -5696,7 +5696,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   48: 
@@ -5711,7 +5711,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (130/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   58:   )
@@ -5726,7 +5726,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   60: model = tf.keras.Sequential([
@@ -5741,7 +5741,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (139/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   62: 
@@ -5756,7 +5756,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   60: def _type_model(model):
@@ -5773,7 +5773,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (122/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   67: 
@@ -5788,7 +5788,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   72: class Default8BitQuantizeRegistry(
@@ -5803,7 +5803,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (97/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   76: 
@@ -5818,7 +5818,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (92/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   85: 
@@ -5833,7 +5833,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   86: 
@@ -5848,7 +5848,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (90/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   90:   )
@@ -5863,7 +5863,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (117/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   94: 
@@ -5878,7 +5878,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   94: 
@@ -5893,7 +5893,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   90: def compile_and_fit(model,
@@ -5910,7 +5910,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (84/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    93:   def testRaisesError_Unsupported_QuantizeConfigWithLayer(self):
@@ -5927,7 +5927,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (87/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    99: 
@@ -5942,7 +5942,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (118/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   102: 
@@ -5957,7 +5957,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (90/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   105:   )
@@ -5972,7 +5972,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (101/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   106:   def setUp(self):
@@ -5987,7 +5987,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (107/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   106:   def setUp(self):
@@ -6004,7 +6004,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (94/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   113: 
@@ -6019,7 +6019,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   114:   def testSupports_Prune_Default8bitQuantize_KerasLayers(self):
@@ -6034,7 +6034,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   111: def prune_model(original_model, train_images, train_labels):
@@ -6051,7 +6051,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (89/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   117:   def testCannotBeInitializedWithNumberOfClustersLessThanTwo(
@@ -6066,7 +6066,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (108/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   121:   )
@@ -6081,7 +6081,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    65: class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
@@ -6098,7 +6098,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (129/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   128:   def testCannotBeInitializedWithSparsityPreservationAndNumberOfClustersLessThanThree(
@@ -6113,7 +6113,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   135: 
@@ -6128,7 +6128,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (90/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   131: def cluster_model(original_model, train_images, train_labels, test_images,
@@ -6145,7 +6145,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (90/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   137: 
@@ -6160,7 +6160,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (88/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   131: def cluster_model(original_model, train_images, train_labels, test_images,
@@ -6177,7 +6177,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    34: class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
@@ -6194,7 +6194,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   142: 
@@ -6209,7 +6209,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   131:   def _eq_layers(self, d1, d2):
@@ -6226,7 +6226,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (104/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   145: 
@@ -6241,7 +6241,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (137/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   147: 
@@ -6256,7 +6256,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   161:   @keras_parameterized.run_all_keras_modes
@@ -6271,7 +6271,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (190/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   164:   def testValuesAreClusteredAfterStripping(self,
@@ -6288,7 +6288,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (98/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   169:   @keras_parameterized.run_all_keras_modes
@@ -6303,7 +6303,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (94/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   167: def assert_model_sparsity(test_case, sparsity, model, rtol=1e-6, atol=1e-6):
@@ -6320,7 +6320,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (84/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   171:   return q_aware_model
@@ -6335,7 +6335,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (95/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   171: 
@@ -6350,7 +6350,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (136/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   177:   @keras_parameterized.run_all_keras_modes
@@ -6365,7 +6365,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (96/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   187:   @keras_parameterized.run_all_keras_modes
@@ -6380,7 +6380,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (89/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   184:   def testMbyNSparsityMaskPrepare(self, mask_shape, weights_shape):
@@ -6397,7 +6397,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (90/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   193:   return quant_aware_model
@@ -6412,7 +6412,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (83/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   184:   def testMbyNSparsityMaskPrepare(self, mask_shape, weights_shape):
@@ -6425,28 +6425,11 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/sparsity/keras/pruning_utils_test.py - Line 198 - C0301 (line-too-long)
-
-- `message: Line too long (84/80)`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-```
-  179: class MbyNSparsityMaskPrepareTest(tf.test.TestCase, parameterized.TestCase):
-  ...
-  196:       {"mask_shape": [4, 4], "weights_shape": [2, 2, 4], "error_type": ValueError},
-  197:   )
-> 198:   def testMbyNSparsityMaskPrepareRaise(self, mask_shape, weights_shape, error_type):
-  199:     mask = tf.ones(shape=mask_shape, name="mask")
-  200:     shape = tf.TensorShape(weights_shape)
-```
-
-
 ## File python/core/sparsity/keras/pruning_utils.py - Line 198 - C0301 (line-too-long)
 
 - `message: Line too long (84/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   162: def weights_rearrange(weights):
@@ -6459,11 +6442,28 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
+## File python/core/sparsity/keras/pruning_utils_test.py - Line 198 - C0301 (line-too-long)
+
+- `message: Line too long (84/80)`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  179: class MbyNSparsityMaskPrepareTest(tf.test.TestCase, parameterized.TestCase):
+  ...
+  196:       {"mask_shape": [4, 4], "weights_shape": [2, 2, 4], "error_type": ValueError},
+  197:   )
+> 198:   def testMbyNSparsityMaskPrepareRaise(self, mask_shape, weights_shape, error_type):
+  199:     mask = tf.ones(shape=mask_shape, name="mask")
+  200:     shape = tf.TensorShape(weights_shape)
+```
+
+
 ## File python/core/clustering/keras/cluster_test.py - Line 199 - C0301 (line-too-long)
 
 - `message: Line too long (145/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   197:   @keras_parameterized.run_all_keras_modes
@@ -6478,7 +6478,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   188:   def testClusterWrappersAreStrippedInSubclassedModel(self):
@@ -6495,7 +6495,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (87/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   197:   def _add_quant_wrapper(layer):
@@ -6512,7 +6512,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (100/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   209: 
@@ -6527,7 +6527,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (83/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   215:   return quant_aware_model
@@ -6542,7 +6542,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (87/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   228: def print_unique_weights(model):
@@ -6559,7 +6559,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   228: def print_unique_weights(model):
@@ -6576,7 +6576,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   203: def m_by_n_sparsity_mask_prepare(mask, weights_shape):
@@ -6593,7 +6593,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (91/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   236: 
@@ -6608,7 +6608,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (84/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   203: def m_by_n_sparsity_mask_prepare(mask, weights_shape):
@@ -6625,7 +6625,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (93/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   214: def quantize_annotate_layer(to_annotate, quantize_config=None):
@@ -6642,7 +6642,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (87/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   259: 
@@ -6657,7 +6657,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   266:     def clusters_check(stripped_model):
@@ -6674,7 +6674,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   253:   def _sparsity2x4Masking(self, weight):
@@ -6691,7 +6691,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (118/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   278:   @keras_parameterized.run_all_keras_modes
@@ -6706,7 +6706,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   253:   def _sparsity2x4Masking(self, weight):
@@ -6723,7 +6723,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   252: def generate_m_by_n_mask(weights, m_by_n: tuple = (2, 4)):
@@ -6740,7 +6740,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    36: class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -6757,7 +6757,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   252: def generate_m_by_n_mask(weights, m_by_n: tuple = (2, 4)):
@@ -6774,7 +6774,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (97/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   291: 
@@ -6789,7 +6789,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   252: def generate_m_by_n_mask(weights, m_by_n: tuple = (2, 4)):
@@ -6806,7 +6806,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (84/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   294: 
@@ -6821,7 +6821,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (93/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   301: 
@@ -6836,7 +6836,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (81/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   293:   def testEndToEndPruneClusterPreserveQAT(self):
@@ -6853,7 +6853,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -6870,7 +6870,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   289:   def _wrap_list(layers):
@@ -6887,7 +6887,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   321: class PrunePreserveDefault8BitConvWeightsQuantizer(
@@ -6904,7 +6904,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (94/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   346: class _DepthwiseConvBatchNorm2D(_ConvBatchNormMixin,
@@ -6919,7 +6919,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (102/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   354: 
@@ -6934,7 +6934,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (91/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   318:   def testEndToEndSubclassedModelTwoLayers(self):
@@ -6951,7 +6951,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (91/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   318:   def testEndToEndSubclassedModelTwoLayers(self):
@@ -6968,7 +6968,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (87/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   358:   def setUp(self):
@@ -6985,7 +6985,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   375:   @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
@@ -7000,7 +7000,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -7017,7 +7017,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   376:   def testEndToEndSubclassedModelAsDeepLayer(self):
@@ -7034,7 +7034,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (91/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   361:   def _strip_clustering_wrapper(layer):
@@ -7051,7 +7051,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (98/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   407: 
@@ -7066,7 +7066,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (94/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   409: 
@@ -7081,7 +7081,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (87/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   412: 
@@ -7096,7 +7096,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   422: 
@@ -7111,7 +7111,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   353:   def __init__(
@@ -7128,7 +7128,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (82/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   435:   def strip_clustering(self):
@@ -7145,7 +7145,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (99/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   401:   def _quantize(layer):  # pylint: disable=missing-docstring
@@ -7162,7 +7162,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (101/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   401:   def _quantize(layer):  # pylint: disable=missing-docstring
@@ -7179,7 +7179,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (89/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   473: 
@@ -7194,7 +7194,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (124/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   507:   @keras_parameterized.run_all_keras_modes
@@ -7209,7 +7209,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (84/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   507:   def __init__(self, weight_attrs, activation_attrs, quantize_output):
@@ -7226,7 +7226,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (85/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   513: 
@@ -7241,7 +7241,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (93/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   518:   def __init__(self, weight_attrs, activation_attrs, quantize_output):
@@ -7258,7 +7258,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (101/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   525:   def testClusterSequentialModelSelectivelyWithSparsityPreservation(self):
@@ -7275,7 +7275,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (84/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   525:   def testClusterSequentialModelSelectivelyWithSparsityPreservation(self):
@@ -7292,7 +7292,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (87/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   525:   def testClusterSequentialModelSelectivelyWithSparsityPreservation(self):
@@ -7309,7 +7309,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   540:   @keras_parameterized.run_all_keras_modes
@@ -7324,7 +7324,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (124/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   555:   @keras_parameterized.run_all_keras_modes
@@ -7339,7 +7339,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (84/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   573:   def testClusterFunctionalModelSelectivelyWithSparsityPreservation(self):
@@ -7356,7 +7356,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (87/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   573:   def testClusterFunctionalModelSelectivelyWithSparsityPreservation(self):
@@ -7373,7 +7373,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (121/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   590:   @keras_parameterized.run_all_keras_modes
@@ -7388,7 +7388,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (159/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   604:   @keras_parameterized.run_all_keras_modes
@@ -7403,7 +7403,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (109/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   619: 
@@ -7418,7 +7418,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (119/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   631: 
@@ -7433,7 +7433,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (161/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   644:   @keras_parameterized.run_all_keras_modes
@@ -7448,7 +7448,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (86/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   650:   def testClusterStackedRNNCells(self):
@@ -7463,7 +7463,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (118/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   660: 
@@ -7478,7 +7478,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (95/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   672: 
@@ -7493,7 +7493,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (92/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   683:   @keras_parameterized.run_all_keras_modes
@@ -7508,7 +7508,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (89/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   691:   def _get_model(self):
@@ -7525,7 +7525,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (116/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   693: 
@@ -7540,7 +7540,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (88/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   700:   def testMHA(self):
@@ -7557,7 +7557,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (113/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   711:   @keras_parameterized.run_all_keras_modes
@@ -7572,7 +7572,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (93/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   729:   @keras_parameterized.run_all_keras_modes
@@ -7587,7 +7587,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (109/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   802:   @keras_parameterized.run_all_keras_modes
@@ -7602,7 +7602,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (107/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   829:   @keras_parameterized.run_all_keras_modes
@@ -7617,7 +7617,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (111/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   837:   @keras_parameterized.run_all_keras_modes
@@ -7632,7 +7632,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (111/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   851:   @keras_parameterized.run_all_keras_modes
@@ -7647,7 +7647,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (114/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   867:   @keras_parameterized.run_all_keras_modes
@@ -7662,7 +7662,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (171/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   882:   @keras_parameterized.run_all_keras_modes
@@ -7677,7 +7677,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (153/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   900:   @keras_parameterized.run_all_keras_modes
@@ -7692,7 +7692,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Line too long (153/80)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   915:   @keras_parameterized.run_all_keras_modes
@@ -7709,7 +7709,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   65:   def _get_clustered_model(clustering_params):
@@ -7726,7 +7726,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    36: class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -7743,7 +7743,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    36: class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -7760,7 +7760,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    99:   def testClusterSimpleDenseModel(self, distribution, clustering_params):
@@ -7777,7 +7777,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   156:   def _pcqat_training(self, sparsity_flag, quant_aware_annotate_model):
@@ -7794,7 +7794,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
    36: class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -7811,7 +7811,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   275: def main(unused_args):
@@ -7828,7 +7828,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   350:     def _pcqat_training(sparsity_flag, quant_aware_annotate_model):
@@ -7845,7 +7845,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Trailing whitespace`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   350:     def _pcqat_training(sparsity_flag, quant_aware_annotate_model):
@@ -7864,7 +7864,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Final newline missing`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   300: def is_pruned_2x4(weights, last_channel="C_OUT"):
@@ -7881,7 +7881,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Import "from numpy.random import seed" should be placed at the top of the module`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   44: 
@@ -7898,7 +7898,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Import outside toplevel (tensorflow_model_optimization)`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   156: 
@@ -7915,7 +7915,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Use 'from distutils import version' instead`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   15: """Pruning Policy tests."""
@@ -7932,7 +7932,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider merging these isinstance calls to isinstance(layer, (prune.pruning_wrapper.PruneLowMagnitude, quantize.quantize_wrapper.QuantizeWrapper))`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   78: def evaluate_and_show_sparsity(model, image_test, label_test):
@@ -7949,7 +7949,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider merging these isinstance calls to isinstance(layer, (quantize.quantize_wrapper.QuantizeWrapper, tf.keras.layers.Conv2D, tf.keras.layers.Dense))`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   126: def print_unique_weights(model):
@@ -7966,7 +7966,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider merging these isinstance calls to isinstance(outputs, (list, tuple))`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   137:   def call(self, inputs, training=None, **kwargs):
@@ -7983,7 +7983,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider merging these isinstance calls to isinstance(layer, (quantize.quantize_wrapper.QuantizeWrapper, tf.keras.layers.Conv2D, tf.keras.layers.Dense))`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   228: def print_unique_weights(model):
@@ -8000,7 +8000,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider merging these isinstance calls to isinstance(layer, (tf.keras.layers.Bidirectional, tf.keras.layers.RNN))`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   251:   def _add_clustering_wrapper(layer):
@@ -8019,7 +8019,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: The if statement can be replaced with 'return bool(test)'`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   313:   def commutes_with_sum(self):
@@ -8038,7 +8038,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Disallow trailing comma tuple`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   143:   def _train_model(self,
@@ -8055,7 +8055,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Disallow trailing comma tuple`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   177:   def testPrunesZeroSparsity_IsNoOp(self):
@@ -8074,7 +8074,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using a set comprehension`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   491:       def replacement(self, match_layer):
@@ -8091,7 +8091,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using a set comprehension`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   529:   def test_get_tensor_with_random_shape(self):
@@ -8110,7 +8110,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Unnecessary use of a comprehension, use list(CentroidInitialization) instead.`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   148:   def testIfLayerHasBatchShapeClusterWeightsMustHaveIt(self):
@@ -8129,7 +8129,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   25:   def __init__(self):
@@ -8146,7 +8146,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   27: 
@@ -8161,7 +8161,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   31: 
@@ -8172,26 +8172,11 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/sparsity/keras/pruning_wrapper_test.py - Line 35 - R1725 (super-with-arguments)
-
-- `message: Consider using Python 3 style super() without arguments`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-```
-  33: 
-  34:   def __init__(self, input_dim=16, output_dim=32):
-> 35:     super(CustomLayer, self).__init__()
-  36:     self.weight = self.add_weight(
-  37:         shape=(input_dim, output_dim),
-```
-
-
 ## File python/core/quantization/keras/quantize_layer_test.py - Line 35 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   33: 
@@ -8206,7 +8191,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   33:                                         parameterized.TestCase):
@@ -8217,11 +8202,26 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
+## File python/core/sparsity/keras/pruning_wrapper_test.py - Line 35 - R1725 (super-with-arguments)
+
+- `message: Consider using Python 3 style super() without arguments`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  33: 
+  34:   def __init__(self, input_dim=16, output_dim=32):
+> 35:     super(CustomLayer, self).__init__()
+  36:     self.weight = self.add_weight(
+  37:         shape=(input_dim, output_dim),
+```
+
+
 ## File python/core/sparsity/keras/pruning_policy_test.py - Line 36 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   33:   def __init__(self, *args, keepdims=False, **kwargs):
@@ -8238,7 +8238,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   34: 
@@ -8253,7 +8253,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   35: 
@@ -8268,7 +8268,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   35: 
@@ -8283,7 +8283,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   36: class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -8298,7 +8298,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   33:   def __init__(self, *args, keepdims=False, **kwargs):
@@ -8315,7 +8315,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   38:   def __init__(self):
@@ -8330,7 +8330,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   39: 
@@ -8345,7 +8345,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   40: 
@@ -8360,7 +8360,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   41:   def __init__(self):
@@ -8375,7 +8375,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   37:   def __init__(self, quantizer, **kwargs):
@@ -8392,7 +8392,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   42: 
@@ -8407,7 +8407,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   42: 
@@ -8422,7 +8422,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   43:   def call(self, inputs):
@@ -8433,26 +8433,11 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/clustering/keras/cluster_test.py - Line 45 - R1725 (super-with-arguments)
-
-- `message: Consider using Python 3 style super() without arguments`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-```
-  43:   def __init__(self):
-  44:     """A test subclass model with one dense layer."""
-> 45:     super(SubclassedModel, self).__init__(name='test_model')
-  46:     self.layer1 = keras.layers.Dense(10, activation='relu')
-  47:
-```
-
-
 ## File python/core/quantization/keras/quantize_wrapper_test.py - Line 45 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   43: 
@@ -8463,11 +8448,26 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
+## File python/core/clustering/keras/cluster_test.py - Line 45 - R1725 (super-with-arguments)
+
+- `message: Consider using Python 3 style super() without arguments`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  43:   def __init__(self):
+  44:     """A test subclass model with one dense layer."""
+> 45:     super(SubclassedModel, self).__init__(name='test_model')
+  46:     self.layer1 = keras.layers.Dense(10, activation='relu')
+  47:
+```
+
+
 ## File python/core/sparsity/keras/pruning_callbacks.py - Line 48 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   46: 
@@ -8482,7 +8482,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   48: 
@@ -8497,7 +8497,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   49:   def __init__(self):
@@ -8512,7 +8512,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   49:   def __init__(self):
@@ -8529,7 +8529,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   52: 
@@ -8544,7 +8544,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   47:   def __init__(self, layer, quantize_config=None, **kwargs):
@@ -8561,7 +8561,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   55:   def __call__(self, inputs, training, weights, **kwargs):
@@ -8576,7 +8576,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   57:   def __init__(self):
@@ -8591,7 +8591,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   60: 
@@ -8606,7 +8606,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   61: 
@@ -8621,7 +8621,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   63: 
@@ -8636,7 +8636,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   66: 
@@ -8651,7 +8651,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   44:   def __init__(self, layer, quantize_config, **kwargs):
@@ -8668,7 +8668,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   68: 
@@ -8683,7 +8683,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   69: 
@@ -8698,7 +8698,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   56:   def __init__(self,
@@ -8715,7 +8715,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   56:   def __init__(self,
@@ -8732,7 +8732,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   58:   def __init__(self, stage, children):
@@ -8749,7 +8749,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   76: 
@@ -8764,7 +8764,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   79: 
@@ -8779,7 +8779,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   86: 
@@ -8794,7 +8794,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   85:   def __init__(self, log_dir, update_freq='epoch', **kwargs):
@@ -8811,7 +8811,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   92: 
@@ -8826,7 +8826,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   100: 
@@ -8841,7 +8841,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   105: class PrunePreserveDefault8bitQuantizeRegistryTest(tf.test.TestCase):
@@ -8852,26 +8852,11 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/sparsity/keras/prune_integration_test.py - Line 111 - R1725 (super-with-arguments)
-
-- `message: Consider using Python 3 style super() without arguments`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
-
-```
-  109: 
-  110:   def setUp(self):
-> 111:     super(PruneIntegrationTest, self).setUp()
-  112:     self.params = {
-  113:         'pruning_schedule': pruning_schedule.ConstantSparsity(0.5, 0, -1, 1),
-```
-
-
 ## File python/core/sparsity/keras/pruning_callbacks.py - Line 111 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   109:   def on_epoch_begin(self, epoch, logs=None):
@@ -8882,11 +8867,26 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
+## File python/core/sparsity/keras/prune_integration_test.py - Line 111 - R1725 (super-with-arguments)
+
+- `message: Consider using Python 3 style super() without arguments`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  109: 
+  110:   def setUp(self):
+> 111:     super(PruneIntegrationTest, self).setUp()
+  112:     self.params = {
+  113:         'pruning_schedule': pruning_schedule.ConstantSparsity(0.5, 0, -1, 1),
+```
+
+
 ## File python/core/quantization/keras/default_8bit/default_8bit_quantize_registry_test.py - Line 117 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   114:       def __init__(self, units, **kwargs):
@@ -8903,7 +8903,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   120: 
@@ -8918,7 +8918,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   121: class ClusterPreserveDefault8bitQuantizeRegistryTest(tf.test.TestCase):
@@ -8933,7 +8933,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   122: 
@@ -8948,7 +8948,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   151: 
@@ -8963,7 +8963,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   100:   def __init__(self,
@@ -8980,7 +8980,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   100:   def __init__(self,
@@ -8997,7 +8997,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   185: 
@@ -9012,7 +9012,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   190: 
@@ -9027,7 +9027,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   197: 
@@ -9042,7 +9042,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   165:   def __init__(
@@ -9059,7 +9059,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   206: 
@@ -9074,7 +9074,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   223: 
@@ -9089,7 +9089,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   227:   def pattern(self):
@@ -9106,7 +9106,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   229:   def get_quantize_config(self, layer):
@@ -9123,7 +9123,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   259:   def build(self, input_shape):
@@ -9138,7 +9138,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   250:   def __init__(
@@ -9155,7 +9155,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   268:   def call(self, inputs, training=None):
@@ -9172,7 +9172,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   261:   def build(self, tensor_shape, name, layer):
@@ -9189,7 +9189,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   277: 
@@ -9204,7 +9204,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   306: 
@@ -9219,7 +9219,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   312: 
@@ -9234,7 +9234,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   336: 
@@ -9249,7 +9249,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   344:   """
@@ -9264,7 +9264,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   357: 
@@ -9279,7 +9279,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   355:   def build(self, tensor_shape, name, layer):
@@ -9296,7 +9296,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   353:   def __init__(
@@ -9313,7 +9313,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   437: 
@@ -9328,7 +9328,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   443:   def build(self, input_shape):
@@ -9343,7 +9343,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   452:   def call(self, inputs, training=None):
@@ -9360,7 +9360,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   477:   def __init__(self, stage):
@@ -9377,7 +9377,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   506: 
@@ -9392,7 +9392,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   506: 
@@ -9407,7 +9407,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   517: 
@@ -9422,7 +9422,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   540:     @_tf_style_get_params
@@ -9437,7 +9437,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   544:     @_tf_style_encode
@@ -9452,7 +9452,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   549:     def decode(self,
@@ -9469,7 +9469,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   598:     @_tf_style_initial_state
@@ -9484,7 +9484,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   602:     @_tf_style_update_state
@@ -9499,7 +9499,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   607:     @_tf_style_adaptive_get_params
@@ -9514,7 +9514,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   611:     @_tf_style_encode
@@ -9529,7 +9529,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using Python 3 style super() without arguments`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   616:     def decode(self,
@@ -9548,7 +9548,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using 'with' for resource-allocating operations`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   106: converter.quantized_input_stats = {input_arrays[0]: (0., 255.)}  # mean, std_dev
@@ -9561,7 +9561,7 @@ The recommended approach to using `pylint-ignore` is:
 
 - `message: Consider using 'with' for resource-allocating operations`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-14T17:03:17`
+- `date   : 2021-07-20T11:09:14`
 
 ```
   144: print('Write TFLite model.')
