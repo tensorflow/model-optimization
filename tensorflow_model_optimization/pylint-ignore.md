@@ -29,8 +29,9 @@ The recommended approach to using `pylint-ignore` is:
  - [E1111: assignment-from-no-return (1x)](#e1111-assignment-from-no-return)
  - [E1120: no-value-for-parameter (29x)](#e1120-no-value-for-parameter)
  - [E1123: unexpected-keyword-arg (34x)](#e1123-unexpected-keyword-arg)
- - [E1129: not-context-manager (6x)](#e1129-not-context-manager)
+ - [E1129: not-context-manager (8x)](#e1129-not-context-manager)
  - [W0127: self-assigning-variable (1x)](#w0127-self-assigning-variable)
+ - [W0143: comparison-with-callable (4x)](#w0143-comparison-with-callable)
  - [W0212: protected-access (74x)](#w0212-protected-access)
  - [W0235: useless-super-delegation (3x)](#w0235-useless-super-delegation)
  - [W0311: bad-indentation (7x)](#w0311-bad-indentation)
@@ -44,24 +45,19 @@ The recommended approach to using `pylint-ignore` is:
  - [W1114: arguments-out-of-order (1x)](#w1114-arguments-out-of-order)
  - [W1405: inconsistent-quotes (41x)](#w1405-inconsistent-quotes)
  - [W1505: deprecated-method (31x)](#w1505-deprecated-method)
- - [W1513: deprecated-decorator (2x)](#w1513-deprecated-decorator)
  - [C0103: invalid-name (8x)](#c0103-invalid-name)
  - [C0114: missing-module-docstring (14x)](#c0114-missing-module-docstring)
  - [C0115: missing-class-docstring (11x)](#c0115-missing-class-docstring)
- - [C0206: consider-using-dict-items (2x)](#c0206-consider-using-dict-items)
  - [C0301: line-too-long (137x)](#c0301-line-too-long)
  - [C0303: trailing-whitespace (9x)](#c0303-trailing-whitespace)
  - [C0304: missing-final-newline (1x)](#c0304-missing-final-newline)
  - [C0413: wrong-import-position (1x)](#c0413-wrong-import-position)
  - [C0415: import-outside-toplevel (1x)](#c0415-import-outside-toplevel)
- - [R0402: consider-using-from-import (1x)](#r0402-consider-using-from-import)
  - [R1701: consider-merging-isinstance (5x)](#r1701-consider-merging-isinstance)
  - [R1703: simplifiable-if-statement (1x)](#r1703-simplifiable-if-statement)
  - [R1707: trailing-comma-tuple (2x)](#r1707-trailing-comma-tuple)
  - [R1718: consider-using-set-comprehension (2x)](#r1718-consider-using-set-comprehension)
- - [R1721: unnecessary-comprehension (1x)](#r1721-unnecessary-comprehension)
  - [R1725: super-with-arguments (91x)](#r1725-super-with-arguments)
- - [R1732: consider-using-with (2x)](#r1732-consider-using-with)
 
 
 # E0102: function-redefined
@@ -380,21 +376,6 @@ The recommended approach to using `pylint-ignore` is:
 
 # E1120: no-value-for-parameter
 
-## File python/core/internal/tensor_encoding/stages/research/misc_test.py - Line 41 - E1120 (no-value-for-parameter)
-
-- `message: No value for argument 'dtype' in function call`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  39:   def default_input(self):
-  40:     """See base class."""
-> 41:     return tf.random.uniform([50], minval=-1.0, maxval=1.0)
-  42: 
-  43:   @property
-```
-
-
 ## File python/core/internal/tensor_encoding/stages/stages_impl_test.py - Line 41 - E1120 (no-value-for-parameter)
 
 - `message: No value for argument 'dtype' in function call`
@@ -405,6 +386,21 @@ The recommended approach to using `pylint-ignore` is:
   39:   def default_input(self):
   40:     """See base class."""
 > 41:     return tf.random.uniform([5])
+  42: 
+  43:   @property
+```
+
+
+## File python/core/internal/tensor_encoding/stages/research/misc_test.py - Line 41 - E1120 (no-value-for-parameter)
+
+- `message: No value for argument 'dtype' in function call`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  39:   def default_input(self):
+  40:     """See base class."""
+> 41:     return tf.random.uniform([50], minval=-1.0, maxval=1.0)
   42: 
   43:   @property
 ```
@@ -1393,6 +1389,38 @@ The recommended approach to using `pylint-ignore` is:
 
 # E1129: not-context-manager
 
+## File python/core/clustering/keras/clustering_callbacks.py - Line 80 - E1129 (not-context-manager)
+
+- `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-22T11:22:35`
+
+```
+  78: 
+  79:   def _write_summary(self):
+> 80:     with self.writer.as_default():
+  81:       for layer in self.model.layers:
+  82:         if not hasattr(layer, 'layer') or not hasattr(
+```
+
+
+## File python/core/sparsity/keras/pruning_callbacks.py - Line 103 - E1129 (not-context-manager)
+
+- `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-22T11:22:35`
+
+```
+   97:   def _log_pruning_metrics(self, logs, prefix, step):
+  ...
+  101:       self._write_custom_summaries(step, logs)
+  102:     else:
+> 103:       with self._file_writer.as_default():
+  104:         for name, value in logs.items():
+  105:           tf.summary.scalar(name, value, step=step)
+```
+
+
 ## File python/core/internal/tensor_encoding/core/encoding_stage_test.py - Line 240 - E1129 (not-context-manager)
 
 - `message: Context manager 'generator' doesn't implement __enter__ and __exit__.`
@@ -1511,6 +1539,68 @@ The recommended approach to using `pylint-ignore` is:
 > 150:     tensorspec = tensorspec
   151:     commuting_structure = encoder.commuting_structure
   152:     state_update_aggregation_modes = tf.nest.flatten(
+```
+
+
+# W0143: comparison-with-callable
+
+## File python/core/internal/tensor_encoding/utils/py_utils.py - Line 39 - W0143 (comparison-with-callable)
+
+- `message: Comparing against a callable, did you omit the parenthesis?`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-22T11:22:35`
+
+```
+  37:   def __ge__(self, other):
+  38:     if self.__class__ is other.__class__:
+> 39:       return self.value >= other.value
+  40:     return NotImplemented
+  41:
+```
+
+
+## File python/core/internal/tensor_encoding/utils/py_utils.py - Line 44 - W0143 (comparison-with-callable)
+
+- `message: Comparing against a callable, did you omit the parenthesis?`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-22T11:22:35`
+
+```
+  42:   def __gt__(self, other):
+  43:     if self.__class__ is other.__class__:
+> 44:       return self.value > other.value
+  45:     return NotImplemented
+  46:
+```
+
+
+## File python/core/internal/tensor_encoding/utils/py_utils.py - Line 49 - W0143 (comparison-with-callable)
+
+- `message: Comparing against a callable, did you omit the parenthesis?`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-22T11:22:35`
+
+```
+  47:   def __le__(self, other):
+  48:     if self.__class__ is other.__class__:
+> 49:       return self.value <= other.value
+  50:     return NotImplemented
+  51:
+```
+
+
+## File python/core/internal/tensor_encoding/utils/py_utils.py - Line 54 - W0143 (comparison-with-callable)
+
+- `message: Comparing against a callable, did you omit the parenthesis?`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-22T11:22:35`
+
+```
+  52:   def __lt__(self, other):
+  53:     if self.__class__ is other.__class__:
+> 54:       return self.value < other.value
+  55:     return NotImplemented
+  56:
 ```
 
 
@@ -3721,23 +3811,6 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/internal/tensor_encoding/stages/research/clipping_test.py - Line 159 - W0632 (unbalanced-tuple-unpacking)
-
-- `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  151:   def test_input_types(self, x_dtype, clip_value_min_dtype,
-  ...
-  157:     x = tf.constant([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=x_dtype)
-  158:     encode_params, decode_params = stage.get_params()
-> 159:     encoded_x, decoded_x = self.encode_decode_x(stage, x, encode_params,
-  160:                                                 decode_params)
-  161:     test_data = test_utils.TestData(x, encoded_x, decoded_x)
-```
-
-
 ## File python/core/internal/tensor_encoding/stages/research/kashin_test.py - Line 159 - W0632 (unbalanced-tuple-unpacking)
 
 - `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
@@ -3752,6 +3825,23 @@ The recommended approach to using `pylint-ignore` is:
 > 159:       encoded_x, decoded_x = self.encode_decode_x(stage, x, encode_params,
   160:                                                   decode_params)
   161:       test_data = test_utils.TestData(x, encoded_x, decoded_x)
+```
+
+
+## File python/core/internal/tensor_encoding/stages/research/clipping_test.py - Line 159 - W0632 (unbalanced-tuple-unpacking)
+
+- `message: Possible unbalanced tuple unpacking with sequence defined at line 285 of tensorflow_model_optimization.python.core.internal.tensor_encoding.testing.test_utils: left side has 2 label(s), right side has 3 value(s)`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  151:   def test_input_types(self, x_dtype, clip_value_min_dtype,
+  ...
+  157:     x = tf.constant([-2.0, -1.0, 0.0, 1.0, 2.0], dtype=x_dtype)
+  158:     encode_params, decode_params = stage.get_params()
+> 159:     encoded_x, decoded_x = self.encode_decode_x(stage, x, encode_params,
+  160:                                                 decode_params)
+  161:     test_data = test_utils.TestData(x, encoded_x, decoded_x)
 ```
 
 
@@ -4932,21 +5022,6 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/internal/tensor_encoding/stages/research/quantization_test.py - Line 346 - W1505 (deprecated-method)
-
-- `message: Using deprecated method assertRaisesRegexp()`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  344:   @parameterized.parameters([0, 17, -1, 1.5])
-  345:   def test_bits_out_of_range_raises(self, bits):
-> 346:     with self.assertRaisesRegexp(ValueError, 'integer between 1 and 16'):
-  347:       quantization.PerChannelPRNGUniformQuantizationEncodingStage(bits=bits)
-  348:
-```
-
-
 ## File python/core/internal/tensor_encoding/stages/stages_impl_test.py - Line 346 - W1505 (deprecated-method)
 
 - `message: Using deprecated method assertRaisesRegexp()`
@@ -4958,6 +5033,21 @@ The recommended approach to using `pylint-ignore` is:
   345:   def test_bad_min_max_python_shape_raises(self, bad_min_max):
 > 346:     with self.assertRaisesRegexp(ValueError, 'list with two elements'):
   347:       stages_impl.UniformQuantizationEncodingStage(min_max=bad_min_max)
+  348:
+```
+
+
+## File python/core/internal/tensor_encoding/stages/research/quantization_test.py - Line 346 - W1505 (deprecated-method)
+
+- `message: Using deprecated method assertRaisesRegexp()`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  344:   @parameterized.parameters([0, 17, -1, 1.5])
+  345:   def test_bits_out_of_range_raises(self, bits):
+> 346:     with self.assertRaisesRegexp(ValueError, 'integer between 1 and 16'):
+  347:       quantization.PerChannelPRNGUniformQuantizationEncodingStage(bits=bits)
   348:
 ```
 
@@ -5053,42 +5143,6 @@ The recommended approach to using `pylint-ignore` is:
 > 449:     with self.assertRaisesRegexp(ValueError, 'between 1 and 16'):
   450:       stages_impl.BitpackingEncodingStage(17)
   451:
-```
-
-
-# W1513: deprecated-decorator
-
-## File python/core/internal/tensor_encoding/testing/test_utils.py - Line 88 - W1513 (deprecated-decorator)
-
-- `message: Using deprecated decorator abc.abstractproperty()`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  68: class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
-  ...
-  86:   # Abstract methods
-  87:   # -----------------
-> 88:   @abc.abstractproperty
-  89:   def is_lossless(self):
-  90:     """Returns True if the encoding stage is lossless.
-```
-
-
-## File python/core/internal/tensor_encoding/core/encoding_stage.py - Line 354 - W1513 (deprecated-decorator)
-
-- `message: Using deprecated decorator abc.abstractproperty()`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  274: class AdaptiveEncodingStageInterface(object):
-  ...
-  352:     """
-  353: 
-> 354:   @abc.abstractproperty
-  355:   def state_update_aggregation_modes(self):
-  356:     """Aggregation mode of state update tensors.
 ```
 
 
@@ -5237,27 +5291,6 @@ The recommended approach to using `pylint-ignore` is:
 - `date   : 2021-07-20T11:09:14`
 
 
-## File python/core/internal/tensor_encoding/utils/tf_utils_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-
-## File python/core/internal/tensor_encoding/core/simple_encoder_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-
-## File python/core/internal/tensor_encoding/stages/research/misc_test.py - C0114 (missing-module-docstring)
-
-- `message: Missing module docstring`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-
 ## File python/core/internal/tensor_encoding/encoders/common_encoders_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
@@ -5272,28 +5305,28 @@ The recommended approach to using `pylint-ignore` is:
 - `date   : 2021-07-20T11:09:14`
 
 
-## File python/core/internal/tensor_encoding/stages/research/quantization_test.py - C0114 (missing-module-docstring)
+## File python/core/internal/tensor_encoding/stages/research/kashin_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
 - `date   : 2021-07-20T11:09:14`
 
 
-## File python/core/quantization/keras/collaborative_optimizations/cluster_preserve/cluster_preserve_integration_test_yesterday.py - C0114 (missing-module-docstring)
+## File python/core/internal/tensor_encoding/core/simple_encoder_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
 - `date   : 2021-07-20T11:09:14`
 
 
-## File python/core/internal/tensor_encoding/testing/test_utils_test.py - C0114 (missing-module-docstring)
+## File python/core/internal/tensor_encoding/stages/stages_impl_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
 - `date   : 2021-07-20T11:09:14`
 
 
-## File python/core/internal/tensor_encoding/stages/research/clipping_test.py - C0114 (missing-module-docstring)
+## File python/core/internal/tensor_encoding/stages/research/misc_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
@@ -5314,14 +5347,35 @@ The recommended approach to using `pylint-ignore` is:
 - `date   : 2021-07-20T11:09:14`
 
 
-## File python/core/internal/tensor_encoding/stages/stages_impl_test.py - C0114 (missing-module-docstring)
+## File python/core/internal/tensor_encoding/stages/research/quantization_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
 - `date   : 2021-07-20T11:09:14`
 
 
-## File python/core/internal/tensor_encoding/stages/research/kashin_test.py - C0114 (missing-module-docstring)
+## File python/core/quantization/keras/collaborative_optimizations/cluster_preserve/cluster_preserve_integration_test_yesterday.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/utils/tf_utils_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/testing/test_utils_test.py - C0114 (missing-module-docstring)
+
+- `message: Missing module docstring`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+
+## File python/core/internal/tensor_encoding/stages/research/clipping_test.py - C0114 (missing-module-docstring)
 
 - `message: Missing module docstring`
 - `author : Ruomei Yan <ruomei.yan@arm.com>`
@@ -5502,42 +5556,6 @@ The recommended approach to using `pylint-ignore` is:
 > 530:   class VerifyMatch(Transform):
   531: 
   532:     def __init__(self, pattern):
-```
-
-
-# C0206: consider-using-dict-items
-
-## File python/core/quantization/keras/collaborative_optimizations/prune_preserve/prune_preserve_quantize_registry_test.py - Line 117 - C0206 (consider-using-dict-items)
-
-- `message: Consider iterating with .items()`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  114:   def testSupports_Prune_Default8bitQuantize_KerasLayers(self):
-  ...
-  115:     """PrunePreserveQuantize supported layer, must be supported by both Prune and Quantize."""
-  116:     pqat_layers_config_map = self.prune_preserve_quantize_registry._LAYERS_CONFIG_MAP
-> 117:     for pqat_support_layer in pqat_layers_config_map:
-  118:       if (pqat_layers_config_map[pqat_support_layer].weight_attrs and
-  119:           pqat_layers_config_map[pqat_support_layer].quantize_config_attrs):
-```
-
-
-## File python/core/quantization/keras/collaborative_optimizations/cluster_preserve/cluster_preserve_quantize_registry_test.py - Line 137 - C0206 (consider-using-dict-items)
-
-- `message: Consider iterating with .items()`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  132:   def testSupportsClusterDefault8bitQuantizeKerasLayers(self):
-  ...
-  135:     cqat_layers_config_map = (
-  136:         self.cluster_preserve_quantize_registry._LAYERS_CONFIG_MAP)
-> 137:     for cqat_support_layer in cqat_layers_config_map:
-  138:       if cqat_layers_config_map[cqat_support_layer].weight_attrs and (
-  139:           cqat_layers_config_map[cqat_support_layer].quantize_config_attrs):
 ```
 
 
@@ -6425,23 +6443,6 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/sparsity/keras/pruning_utils.py - Line 198 - C0301 (line-too-long)
-
-- `message: Line too long (84/80)`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  162: def weights_rearrange(weights):
-  ...
-  196:     )
-  197:   else:
-> 198:     raise ValueError(f"weight tensor with shape: {weights.shape} is not supported.")
-  199: 
-  200:   return prepared_weights
-```
-
-
 ## File python/core/sparsity/keras/pruning_utils_test.py - Line 198 - C0301 (line-too-long)
 
 - `message: Line too long (84/80)`
@@ -6456,6 +6457,23 @@ The recommended approach to using `pylint-ignore` is:
 > 198:   def testMbyNSparsityMaskPrepareRaise(self, mask_shape, weights_shape, error_type):
   199:     mask = tf.ones(shape=mask_shape, name="mask")
   200:     shape = tf.TensorShape(weights_shape)
+```
+
+
+## File python/core/sparsity/keras/pruning_utils.py - Line 198 - C0301 (line-too-long)
+
+- `message: Line too long (84/80)`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  162: def weights_rearrange(weights):
+  ...
+  196:     )
+  197:   else:
+> 198:     raise ValueError(f"weight tensor with shape: {weights.shape} is not supported.")
+  199: 
+  200:   return prepared_weights
 ```
 
 
@@ -7909,23 +7927,6 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-# R0402: consider-using-from-import
-
-## File python/core/sparsity/keras/pruning_policy_test.py - Line 17 - R0402 (consider-using-from-import)
-
-- `message: Use 'from distutils import version' instead`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  15: """Pruning Policy tests."""
-  16: 
-> 17: import distutils.version as version
-  18: 
-  19: import tensorflow as tf
-```
-
-
 # R1701: consider-merging-isinstance
 
 ## File python/examples/quantization_with_sparsity/keras/mnist_cnn.py - Line 84 - R1701 (consider-merging-isinstance)
@@ -8104,25 +8105,6 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-# R1721: unnecessary-comprehension
-
-## File python/core/clustering/keras/cluster_wrapper_test.py - Line 161 - R1721 (unnecessary-comprehension)
-
-- `message: Unnecessary use of a comprehension, use list(CentroidInitialization) instead.`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  148:   def testIfLayerHasBatchShapeClusterWeightsMustHaveIt(self):
-  ...
-  159:       *itertools.product(
-  160:           range(2, 16, 4),
-> 161:           [type_centroid for type_centroid in CentroidInitialization]
-  162:       )
-  163:   )
-```
-
-
 # R1725: super-with-arguments
 
 ## File python/core/quantization/keras/default_8bit/default_8bit_quantizers.py - Line 28 - R1725 (super-with-arguments)
@@ -8172,21 +8154,6 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/quantization/keras/quantize_layer_test.py - Line 35 - R1725 (super-with-arguments)
-
-- `message: Consider using Python 3 style super() without arguments`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  33: 
-  34:   def setUp(self):
-> 35:     super(QuantizeLayerTest, self).setUp()
-  36:     self.quant_params = {
-  37:         'num_bits': 8,
-```
-
-
 ## File python/core/quantization/keras/collaborative_optimizations/prune_preserve/prune_preserve_quantize_registry_test.py - Line 35 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
@@ -8214,6 +8181,21 @@ The recommended approach to using `pylint-ignore` is:
 > 35:     super(CustomLayer, self).__init__()
   36:     self.weight = self.add_weight(
   37:         shape=(input_dim, output_dim),
+```
+
+
+## File python/core/quantization/keras/quantize_layer_test.py - Line 35 - R1725 (super-with-arguments)
+
+- `message: Consider using Python 3 style super() without arguments`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  33: 
+  34:   def setUp(self):
+> 35:     super(QuantizeLayerTest, self).setUp()
+  36:     self.quant_params = {
+  37:         'num_bits': 8,
 ```
 
 
@@ -8418,21 +8400,6 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
-## File python/core/sparsity/keras/pruning_policy_test.py - Line 45 - R1725 (super-with-arguments)
-
-- `message: Consider using Python 3 style super() without arguments`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  43:   def call(self, inputs):
-  44:     if not self._compat:
-> 45:       return super(CompatGlobalAveragePooling2D, self).call(inputs)
-  46: 
-  47:     if self.data_format == 'channels_last':
-```
-
-
 ## File python/core/quantization/keras/quantize_wrapper_test.py - Line 45 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
@@ -8460,6 +8427,21 @@ The recommended approach to using `pylint-ignore` is:
 > 45:     super(SubclassedModel, self).__init__(name='test_model')
   46:     self.layer1 = keras.layers.Dense(10, activation='relu')
   47:
+```
+
+
+## File python/core/sparsity/keras/pruning_policy_test.py - Line 45 - R1725 (super-with-arguments)
+
+- `message: Consider using Python 3 style super() without arguments`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  43:   def call(self, inputs):
+  44:     if not self._compat:
+> 45:       return super(CompatGlobalAveragePooling2D, self).call(inputs)
+  46: 
+  47:     if self.data_format == 'channels_last':
 ```
 
 
@@ -8647,6 +8629,21 @@ The recommended approach to using `pylint-ignore` is:
 ```
 
 
+## File python/core/sparsity/keras/prune_test.py - Line 70 - R1725 (super-with-arguments)
+
+- `message: Consider using Python 3 style super() without arguments`
+- `author : Ruomei Yan <ruomei.yan@arm.com>`
+- `date   : 2021-07-20T11:09:14`
+
+```
+  68: 
+  69:   def setUp(self):
+> 70:     super(PruneTest, self).setUp()
+  71: 
+  72:     # Layers passed in for Pruning can either be standard Keras layers provided
+```
+
+
 ## File python/core/quantization/keras/quantize_wrapper.py - Line 70 - R1725 (super-with-arguments)
 
 - `message: Consider using Python 3 style super() without arguments`
@@ -8661,21 +8658,6 @@ The recommended approach to using `pylint-ignore` is:
 > 70:     super(QuantizeWrapper, self).__init__(layer, **kwargs)
   71:     self.quantize_config = quantize_config
   72:
-```
-
-
-## File python/core/sparsity/keras/prune_test.py - Line 70 - R1725 (super-with-arguments)
-
-- `message: Consider using Python 3 style super() without arguments`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  68: 
-  69:   def setUp(self):
-> 70:     super(PruneTest, self).setUp()
-  71: 
-  72:     # Layers passed in for Pruning can either be standard Keras layers provided
 ```
 
 
@@ -9539,36 +9521,6 @@ The recommended approach to using `pylint-ignore` is:
 > 622:       return super(TFStyleAdaptiveEncodingStage,
   623:                    self).decode(encoded_tensors, decode_params, num_summands,
   624:                                 shape)
-```
-
-
-# R1732: consider-using-with
-
-## File python/examples/quantization/keras/mnist_cnn.py - Line 108 - R1732 (consider-using-with)
-
-- `message: Consider using 'with' for resource-allocating operations`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  106: converter.quantized_input_stats = {input_arrays[0]: (0., 255.)}  # mean, std_dev
-  107: tflite_model = converter.convert()
-> 108: open('/tmp/quantized_mnist.tflite', 'wb').write(tflite_model)
-```
-
-
-## File python/examples/quantization/keras/mnist_cnn_cont_quant.py - Line 146 - R1732 (consider-using-with)
-
-- `message: Consider using 'with' for resource-allocating operations`
-- `author : Ruomei Yan <ruomei.yan@arm.com>`
-- `date   : 2021-07-20T11:09:14`
-
-```
-  144: print('Write TFLite model.')
-  145: tflite_file = '/tmp/quantized_mnist.tflite'
-> 146: open(tflite_file, 'wb').write(tflite_model)
-  147: 
-  148: # Evaluate the fully quantized model.
 ```
 
 
