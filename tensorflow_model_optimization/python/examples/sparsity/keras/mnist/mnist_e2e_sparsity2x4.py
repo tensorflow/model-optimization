@@ -47,7 +47,7 @@ def check_model_sparsity_2x4(model):
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude) and\
       isinstance(layer.layer, PRUNABLE_2x4_LAYERS):
       for weight in layer.layer.get_prunable_weights():
-        if not pruning_utils.is_pruned_2x4(weight):
+        if not pruning_utils.is_pruned_m_by_n(weight):
             return False
   return True
 
@@ -127,7 +127,7 @@ def main(unused_argv):
   pruning_params = {
       'pruning_schedule':
           ConstantSparsity(0.5, begin_step=0, frequency=100),
-       'sparsity_2x4': True
+       'sparsity_m_by_n': (2, 4),
   }
 
   model = build_layerwise_model(input_shape, **pruning_params)

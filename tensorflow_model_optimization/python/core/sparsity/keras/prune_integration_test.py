@@ -330,32 +330,46 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
 
   @parameterized.named_parameters(
       {
-          "testcase_name": "Conv2D",
-          "layer_type": tf.keras.layers.Conv2D,
-          "layer_arg": [16, (5, 7)],
-          "input_shape": (10, 10, 8),
-          "sparsity_ratio": 0.5,
+          'testcase_name': 'Conv2D',
+          'layer_type': tf.keras.layers.Conv2D,
+          'layer_arg': [16, (5, 7)],
+          'input_shape': (10, 10, 8),
       },
       {
-          "testcase_name": "Dense",
-          "layer_type": tf.keras.layers.Dense,
-          "layer_arg": [16],
-          "input_shape": [(8)],
-          "sparsity_ratio": 0.5,
+          'testcase_name': 'Dense',
+          'layer_type': tf.keras.layers.Dense,
+          'layer_arg': [16],
+          'input_shape': [(8)],
       },
       {
-          "testcase_name": "Conv2D_not_multiple_4",
-          "layer_type": tf.keras.layers.Conv2D,
-          "layer_arg": [16, (5, 7)],
-          "input_shape": (10, 10, 7),
-          "sparsity_ratio": 0.428571,
+          'testcase_name': 'Conv2D_not_multiple_4',
+          'layer_type': tf.keras.layers.Conv2D,
+          'layer_arg': [16, (5, 7)],
+          'input_shape': (10, 10, 7),
+          'sparsity_ratio': 0.428571,
+      },
+      {
+          'testcase_name': 'Conv2D_1by2',
+          'layer_type': tf.keras.layers.Conv2D,
+          'layer_arg': [16, (5, 7)],
+          'input_shape': (10, 10, 8),
+          'm_by_n': (1, 2),
+      },
+      {
+          'testcase_name': 'Dense_1by2',
+          'layer_type': tf.keras.layers.Dense,
+          'layer_arg': [16],
+          'input_shape': [(8)],
+          'm_by_n': (1, 2),
       },
   )
-  def test2by4SparsityPruning_SupportedLayers(
-      self, layer_type, layer_arg, input_shape, sparsity_ratio
+  def testMbyNSparsityPruning_SupportedLayers(
+      self, layer_type, layer_arg, input_shape,
+      m_by_n=(2, 4),
+      sparsity_ratio=0.50
   ):
-    """ Check that we prune supported layers with 2x4 sparsity. """
-    self.params.update({'sparsity_2x4': True})
+    """ Check that we prune supported layers with m by n sparsity. """
+    self.params.update({'sparsity_m_by_n': m_by_n})
 
     model = keras.Sequential()
     model.add(prune.prune_low_magnitude(
@@ -370,14 +384,14 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
         np.random.randn(*self._batch(model.output.get_shape().as_list(), 32)),
         callbacks=[pruning_callbacks.UpdatePruningStep()])
 
-    test_utils.assert_model_sparsity_2x4(self, model)
+    test_utils.assert_model_sparsity_m_by_n(self, model, m_by_n)
     self._check_strip_pruning_matches_original(model, sparsity_ratio)
 
-  def testSparsityPruning2x4_NonSupportedLayers(self):
-    """ Check layer that is not supported for 2x4 sparsity 2x4,
+  def testSparsityPruningMbyN_NonSupportedLayers(self):
+    """ Check layer that is not supported for m by n sparsity,
     it fallback to the default unstructured pruning.
     """
-    self.params.update({'sparsity_2x4': True})
+    self.params.update({'sparsity_m_by_n': (2, 4)})
 
     model = keras.Sequential()
     layer_type = tf.keras.layers.SeparableConv1D
@@ -389,7 +403,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     # This internal flag controls which type of sparsity is used.
     # In our case it should be reset to false.
-    self.assertFalse(model.layers[0].pruning_obj._sparsity_2x4)
+    self.assertFalse(model.layers[0].pruning_obj._sparsity_m_by_n)
 
   @parameterized.parameters(prune_registry.PruneRegistry._RNN_LAYERS -
                             {keras.layers.RNN})

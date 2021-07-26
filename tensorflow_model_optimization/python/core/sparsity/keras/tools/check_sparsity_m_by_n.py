@@ -16,7 +16,7 @@
 
 This tool is used to display sparsity for each layer of the model and
 type of sparsity that has been used to prune them: unstructured or
-sparsity 2x4.
+sparsity m_by_n.
 """
 
 from __future__ import print_function
@@ -28,7 +28,14 @@ import numpy as np
 
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 
-_FILE_PATH = flags.DEFINE_string('model_tflite', "/tmp/mnist_2x4.tflite", 'TFLite model file')
+_FILE_PATH = flags.DEFINE_string(
+    "model_tflite", None,
+    "Path to TFLite model file"
+)
+_M_BY_N = flags.DEFINE_list(
+    "m_by_n", "2, 4",
+    "A list of 2 integers, 'm, n': m by n sparsity."
+)
 
 # Dont check layer if its name has one of word from this list.
 IGNORE_LIST = [
@@ -62,13 +69,11 @@ def calculate_sparsity(weights):
   return sparsity
 
 
-def print_info(name, shape, sparsity, is_2by4):
-  """Prints information for the layer."""
-  print(f"{name}: shape: {shape}, sparsity: {sparsity}, 2x4: {is_2by4}.")
-
-
-def run(input_tflite_path):
+def run(input_tflite_path, m_by_n_str):
   """Checks type of sparsity for each layer of the model."""
+
+  # convert first 2 value string to a tuple of 2 value
+  m_by_n = tuple(map(int, m_by_n_str[:2]))
 
   interpreter = tf.lite.Interpreter(model_path=input_tflite_path)
   interpreter.allocate_tensors()
@@ -83,18 +88,27 @@ def run(input_tflite_path):
     weights = interpreter.tensor(detail["index"])()
 
     weights_ts = tf.constant(weights)
-    is_pruned_2x4 = pruning_utils.is_pruned_2x4(weights_ts, "C_IN")
+    pruned_m_by_n = pruning_utils.is_pruned_m_by_n(
+      weights_ts,
+      m_by_n,
+      "C_IN"
+    )
     sparsity = calculate_sparsity(weights_ts)
 
-    print_info(name, shape, sparsity, is_pruned_2x4)
+    print(
+      f"{name}: shape: {shape}, sparsity: {sparsity}, "
+      f"{m_by_n[0]}_by_{m_by_n[1]} sparsity: {pruned_m_by_n}."
+    )
 
 
 def main(argv):
-  if len(argv) > 1:
-    raise app.UsageError('Too many command-line arguments.')
+  if len(argv) > 2:
+    raise app.UsageError("Too many command-line arguments.")
 
-  run(_FILE_PATH.value)
+  run(_FILE_PATH.value, _M_BY_N.value)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
+  flags.mark_flag_as_required(_FILE_PATH.name)
+
   app.run(main)

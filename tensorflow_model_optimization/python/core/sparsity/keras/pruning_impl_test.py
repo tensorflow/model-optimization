@@ -88,8 +88,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=extreme_sparsity,
         block_size=self.block_size,
-        block_pooling_type=self.block_pooling_type,
-        sparsity_2x4=False)
+        block_pooling_type=self.block_pooling_type)
 
     mask_before_pruning = K.get_value(mask)
     self.assertAllEqual(np.count_nonzero(mask_before_pruning), 100)
@@ -119,8 +118,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=self.constant_sparsity,
         block_size=self.block_size,
-        block_pooling_type=self.block_pooling_type,
-        sparsity_2x4=False)
+        block_pooling_type=self.block_pooling_type)
 
     mask_before_pruning = K.get_value(mask)
     self.assertAllEqual(np.count_nonzero(mask_before_pruning), 100)
@@ -165,8 +163,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=self.constant_sparsity,
         block_size=block_size,
-        block_pooling_type=block_pooling_type,
-        sparsity_2x4=False)
+        block_pooling_type=block_pooling_type)
 
     _, new_mask = p._maybe_update_block_mask(weight)
     # Check if the mask is the same size as the weights
@@ -230,8 +227,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=linear_sparsity,
         block_size=self.block_size,
-        block_pooling_type=self.block_pooling_type,
-        sparsity_2x4=False)
+        block_pooling_type=self.block_pooling_type)
 
     non_zero_count = []
     for _ in range(10):
@@ -250,7 +246,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     expected_non_zero_count = [100, 90, 90, 70, 70, 50, 50, 50, 50, 50]
     self.assertAllEqual(expected_non_zero_count, non_zero_count)
 
-  def _sparsity2x4Masking(self, weight):
+  def _sparsity_m_by_n_masking(self, weight, m_by_n=(2, 4)):
     mask = tf.Variable(tf.ones(weight.get_shape()), name="mask")
     threshold = tf.Variable(1, name="threshold")
     self.initialize()
@@ -262,7 +258,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         pruning_schedule=self.constant_sparsity,
         block_size=(1, 1),
         block_pooling_type="AVG",
-        sparsity_2x4=True,
+        sparsity_m_by_n=m_by_n,
     )
 
     _, new_mask = p._maybe_update_block_mask(weight)
@@ -271,42 +267,49 @@ class PruningTest(test.TestCase, parameterized.TestCase):
 
   @parameterized.named_parameters(
       {
-          "testcase_name": "_2d",
+          "testcase_name": "_2d_2by4",
           "weights": [[0.74, 0.68], [-0.89, -0.45], [-1.68, 1.24], [0.31, -0.6]],
           "expected_mask": [[0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]],
       },
       {
-          "testcase_name": "_4d",
+          "testcase_name": "_4d_2by4",
           "weights": [[[[-0.36, -0.77], [-0.43, -0.18], [0.12, 1.36], [0.77, 0.96]]]],
           "expected_mask": [[[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]]],
       },
       {
-          "testcase_name": "_2d_pad",
+          "testcase_name": "_4d_1by2",
+          "weights": [[[[-0.36, -0.77], [-0.43, -0.18], [0.12, 1.36], [0.77, 0.96]]]],
+          "expected_mask": [[[[0.0, 1.0], [1.0, 0.0], [0.0, 1.0], [1.0, 0.0]]]],
+          "m_by_n": (1, 2),
+      },
+      {
+          "testcase_name": "_2d_2by4_pad",
           "weights": [[1.92, -0.21], [-0.19, 0.57], [1.1, -0.42]],
           "expected_mask": [[1.0, 0.0], [0.0, 1.0], [1.0, 1.0]],
       },
       {
-          "testcase_name": "_4d_pad",
+          "testcase_name": "_4d_2by4_pad",
           "weights": [[[[-0.37, 1.85], [0.82, 0.07], [1.17, 0.5]]]],
           "expected_mask": [[[[0.0, 1.0], [1.0, 0.0], [1.0, 1.0]]]],
       },
   )
-  def testSparsity2x4MaskingSimple(self, weights, expected_mask):
+  def testSparsityMbyNMaskingSimple(self, weights, expected_mask,
+                                    m_by_n=(2, 4)):
     weights_ts = tf.Variable(weights)
     expected_mask_ts = tf.constant(expected_mask)
 
-    mask = self._sparsity2x4Masking(weights_ts)
+    mask = self._sparsity_m_by_n_masking(weights_ts, m_by_n)
     self.assertAllEqual(mask, expected_mask_ts)
 
   @parameterized.named_parameters(
     {"testcase_name": "_1d", "weights_shape": [4]},
     {"testcase_name": "_3d", "weights_shape": [4, 4, 4]},
   )
-  def testSparsity2x4MaskingSimpleRaises(self, weights_shape):
+  def testSparsityMbyNMaskingSimpleRaises(self, weights_shape):
     weights_ts = tf.ones(weights_shape)
 
     with self.assertRaises(ValueError):
-      self._sparsity2x4Masking(weights_ts)
+      self._sparsity_m_by_n_masking(weights_ts)
 
 if __name__ == "__main__":
   test.main()
