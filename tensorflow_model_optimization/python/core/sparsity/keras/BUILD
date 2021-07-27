@@ -62,6 +62,7 @@ py_strict_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        ":pruning_wrapper",
         # tensorflow dep1,
     ],
 )
