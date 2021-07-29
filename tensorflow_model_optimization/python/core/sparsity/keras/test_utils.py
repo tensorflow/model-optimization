@@ -19,7 +19,8 @@ import numpy as np
 
 import tensorflow as tf
 
-from tensorflow_model_optimization.python.core.sparsity.keras import prune, pruning_utils
+from tensorflow_model_optimization.python.core.sparsity.keras import prune
+from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
 keras = tf.keras
