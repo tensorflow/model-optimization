@@ -20,11 +20,10 @@ compared to simpler, much faster methods such as TF-IDF+LogReg.
 
 from __future__ import print_function
 
-import tensorflow.keras as keras
-import tensorflow.keras.preprocessing.sequence as sequence
-from tensorflow_model_optimization.python.core.clustering.keras import cluster
-from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
-from imdb_utils import prepare_dataset, cluster_train_eval_strip
+import tensorflow as tf
+
+from tensorflow_model_optimization.python.examples.clustering.keras.imdb.imdb_utils import cluster_train_eval_strip
+from tensorflow_model_optimization.python.examples.clustering.keras.imdb.imdb_utils import prepare_dataset
 
 
 max_features = 20000
@@ -34,45 +33,45 @@ batch_size = 32
 x_train, y_train, x_test, y_test = prepare_dataset()
 
 print("Build a model with the StackedRNNCells with PeepholeLSTMCell...")
-model = keras.models.Sequential()
+model = tf.keras.models.Sequential()
 
-model.add(keras.layers.Embedding(max_features, 128, input_length=maxlen))
+model.add(tf.keras.layers.Embedding(max_features, 128, input_length=maxlen))
 model.add(
-    keras.layers.RNN(
-        keras.layers.StackedRNNCells(
-            [keras.experimental.PeepholeLSTMCell(128) for _ in range(2)])))
-model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(1))
-model.add(keras.layers.Activation("sigmoid"))
+    tf.keras.layers.RNN(
+        tf.keras.layers.StackedRNNCells(
+            [tf.keras.experimental.PeepholeLSTMCell(128) for _ in range(2)])))
+model.add(tf.keras.layers.Dropout(0.5))
+model.add(tf.keras.layers.Dense(1))
+model.add(tf.keras.layers.Activation("sigmoid"))
 
 test_case = "StackedRNNCells_PeepholeLSTMCell"
 cluster_train_eval_strip(
-    model,x_train, y_train, x_test, y_test, batch_size, test_case)
+    model, x_train, y_train, x_test, y_test, batch_size, test_case)
 
 print("Build a model with the StackedRNNCells with LSTMCell...")
-model = keras.models.Sequential()
+model = tf.keras.models.Sequential()
 
-model.add(keras.layers.Embedding(max_features, 128, input_length=maxlen))
+model.add(tf.keras.layers.Embedding(max_features, 128, input_length=maxlen))
 model.add(
-    keras.layers.RNN(
-        keras.layers.StackedRNNCells(
-            [keras.layers.LSTMCell(128) for _ in range(2)])))
-model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(1))
-model.add(keras.layers.Activation("sigmoid"))
+    tf.keras.layers.RNN(
+        tf.keras.layers.StackedRNNCells(
+            [tf.keras.layers.LSTMCell(128) for _ in range(2)])))
+model.add(tf.keras.layers.Dropout(0.5))
+model.add(tf.keras.layers.Dense(1))
+model.add(tf.keras.layers.Activation("sigmoid"))
 
 test_case = "StackedRNNCells_LSTMCell"
 cluster_train_eval_strip(
     model, x_train, y_train, x_test, y_test, batch_size, test_case)
 
 print("Build a model with the Bidirectional wrapper with LSTM layer...")
-model = keras.models.Sequential()
+model = tf.keras.models.Sequential()
 
-model.add(keras.layers.Embedding(max_features, 128, input_length=maxlen))
-model.add(keras.layers.Bidirectional(keras.layers.LSTM(128)))
-model.add(keras.layers.Dropout(0.5))
-model.add(keras.layers.Dense(1))
-model.add(keras.layers.Activation("sigmoid"))
+model.add(tf.keras.layers.Embedding(max_features, 128, input_length=maxlen))
+model.add(tf.keras.layers.Bidirectional(tf.keras.layers.LSTM(128)))
+model.add(tf.keras.layers.Dropout(0.5))
+model.add(tf.keras.layers.Dense(1))
+model.add(tf.keras.layers.Activation("sigmoid"))
 
 test_case = "Bidirectional_LSTM"
 cluster_train_eval_strip(

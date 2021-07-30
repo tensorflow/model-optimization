@@ -18,6 +18,8 @@
 import abc
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
+
 layers = tf.keras.layers
 activations = tf.keras.activations
 
@@ -220,6 +222,8 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
     elif layer.__class__.__name__ == 'TFOpLambda':
       return layer.function in (tf.identity, tf.__operators__.add, tf.math.add,
                                 tf.math.subtract, tf.math.multiply)
+    elif isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+      return self._check_layer_support(layer.layer)
     return False
 
   def ensure_model_supports_pruning(self, model):

@@ -70,7 +70,7 @@ class ClusteringRegistry(object):
       tf.keras.layers.LayerNormalization: [],
   }
 
-  _SUPPORTED_RNN_CELLS = {
+  _SUPPORTED_RNN_CELLS = frozenset({
       # Sometimes v2 RNN will wrap some v1 RNN cells and we need
       # to consider this
       tf.compat.v1.keras.layers.GRUCell,
@@ -82,19 +82,20 @@ class ClusteringRegistry(object):
       tf.compat.v1.keras.layers.StackedRNNCells,
       tf.compat.v2.keras.layers.StackedRNNCells,
       tf.keras.experimental.PeepholeLSTMCell,
-  }
+  })
 
-  _SUPPORTED_RNN_LAYERS = {
-      tf.keras.layers.GRU,
-      tf.keras.layers.LSTM,
-      tf.keras.layers.SimpleRNN,
-      tf.keras.layers.RNN,
-      tf.keras.layers.Bidirectional,
-  }
+  _SUPPORTED_RNN_LAYERS = frozenset([
+      layers.GRU,
+      layers.LSTM,
+      layers.SimpleRNN,
+      layers.RNN,
+      layers.Bidirectional,
+  ])
 
   _SUPPORTED_MHA_LAYERS = {
       tf.keras.layers.MultiHeadAttention,
   }
+
 
   @classmethod
   def supports(cls, layer):
@@ -131,7 +132,9 @@ class ClusteringRegistry(object):
 
     return False
 
-  def _get_rnn_cells(rnn_layer):
+  def _get_rnn_cells(rnn_layer):  # pylint: disable=no-self-argument
+    """Get rnn cells from layer."""
+
     if isinstance(rnn_layer, tf.keras.layers.Bidirectional):
       return [rnn_layer.forward_layer.cell, rnn_layer.backward_layer.cell]
     if isinstance(rnn_layer.cell, tf.keras.layers.StackedRNNCells):
@@ -176,11 +179,8 @@ class ClusteringRegistry(object):
         # The weight names will have indices attached only
         # for the registry
         if cell.__class__ in cls._SUPPORTED_RNN_CELLS:
-          cell_weights = []
-          cell_weights.append(('kernel/' + str(i), cell.kernel))
-          cell_weights.append(('recurrent_kernel/' + str(i),
-                               cell.recurrent_kernel))
-          return cell_weights
+          return [('kernel/' + str(i), cell.kernel),
+                  ('recurrent_kernel/' + str(i), cell.recurrent_kernel)]
 
         if isinstance(cell, clusterable_layer.ClusterableLayer):
           raise ValueError(

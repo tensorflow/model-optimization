@@ -19,20 +19,24 @@ compared to simpler, much faster methods such as TF-IDF+LogReg.
 """
 from __future__ import print_function
 
-import tensorflow.keras as keras
-import tensorflow.keras.preprocessing.sequence as sequence
+import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 
 
+sequence = tf.keras.preprocessing.sequence
+
+
 def prepare_dataset():
+  """Prepare the dataset."""
+
   max_features = 20000
   maxlen = 100  # cut texts after this number of words
 
   print("Loading data...")
   (x_train,
-  y_train), (x_test,
-             y_test) = keras.datasets.imdb.load_data(num_words=max_features)
+   y_train), (x_test,
+              y_test) = tf.keras.datasets.imdb.load_data(num_words=max_features)
   print(len(x_train), "train sequences")
   print(len(x_test), "test sequences")
 
@@ -42,8 +46,10 @@ def prepare_dataset():
 
   return x_train, y_train, x_test, y_test
 
+
 def cluster_train_eval_strip(
     model, x_train, y_train, x_test, y_test, batch_size, test_case):
+  """Train, evaluate and strip clustering."""
   model = cluster.cluster_weights(
       model,
       number_of_clusters=16,
@@ -53,7 +59,6 @@ def cluster_train_eval_strip(
   model.compile(loss="binary_crossentropy",
                 optimizer="adam",
                 metrics=["accuracy"])
-
 
   print("Train...")
   model.fit(x_train, y_train, batch_size=batch_size, epochs=1,
@@ -67,9 +72,9 @@ def cluster_train_eval_strip(
   print("Strip clustering wrapper...")
   model = cluster.strip_clustering(model)
   if "Bidirectional" in test_case:
-    layer_weight = getattr(model.layers[1].forward_layer.cell, 'kernel')
+    layer_weight = getattr(model.layers[1].forward_layer.cell, "kernel")
   elif "StackedRNNCells" in test_case:
-    layer_weight = getattr(model.layers[1].cell.cells[0], 'kernel')
+    layer_weight = getattr(model.layers[1].cell.cells[0], "kernel")
   else:
     raise ValueError("Only Bidirectional and StackedRNNCells are tested now.")
   print("Number of clusters:", len(set(layer_weight.numpy().flatten())))

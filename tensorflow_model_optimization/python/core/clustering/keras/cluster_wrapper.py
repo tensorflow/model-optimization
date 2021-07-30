@@ -192,6 +192,8 @@ class ClusterWeights(Wrapper):
           weight_name_no_index = weight_name.split('/')[0]
         else:
           weight_name_no_index = weight_name
+      elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+        weight_name_no_index = weight_name.split('/')[0]
       else:
         weight_name_no_index = weight_name
       self.clustering_algorithms[weight_name] = (
@@ -374,15 +376,16 @@ class ClusterWeightsRNN(ClusterWeights):
 
   The weight_name of a single cell in RNN layers is marked with an index in
   registry. In the wrapper layer, the index needs to be removed for matching
-  the attribute of the cell layer."""
+  the attribute of the cell layer.
+  """
+
   def get_weight_name_without_index(self, weight_name):
-    weight_name_no_index = weight_name.split('/')[0]
-    i = int(weight_name.split('/')[1])
-    return weight_name_no_index, i
+    weight_name_with_index = weight_name.split('/')
+    return weight_name_with_index[0], int(weight_name_with_index[1])
 
   def get_return_layer_cell(self, index):
-    return_layer_cell =  (self.layer.forward_layer.cell if index == 0 else
-                          self.layer.backward_layer.cell)
+    return_layer_cell = (self.layer.forward_layer.cell if index == 0 else
+                         self.layer.backward_layer.cell)
     return return_layer_cell
 
   def get_weight_from_layer(self, weight_name):
@@ -396,7 +399,7 @@ class ClusterWeightsRNN(ClusterWeights):
       if i < 0 or i > 1:
         raise ValueError(
             'Unsupported number of cells in the layer to get weights from.')
-      return_layer_cell =  self.get_return_layer_cell(i)
+      return_layer_cell = self.get_return_layer_cell(i)
       return getattr(return_layer_cell, weight_name_no_index)
     else:
       raise ValueError('No cells in the RNN layer to get weights from.')
@@ -414,11 +417,10 @@ class ClusterWeightsRNN(ClusterWeights):
       if i < 0 or i > 1:
         raise ValueError(
             'Unsupported number of cells in the layer to set weights for.')
-      return_layer_cell =  self.get_return_layer_cell(i)
+      return_layer_cell = self.get_return_layer_cell(i)
       return setattr(return_layer_cell, weight_name_no_index, new_weight)
     else:
       raise ValueError('No cells in the RNN layer to set weights for.')
-
 
 class ClusterWeightsMHA(ClusterWeights):
   """This wrapper augments a keras MHA layer so that the weights can be clustered."""

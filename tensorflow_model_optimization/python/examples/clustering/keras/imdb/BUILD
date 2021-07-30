@@ -1,3 +1,5 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+
 package(
     default_visibility = ["//visibility:public"],
 )
@@ -58,7 +60,6 @@ py_strict_library(
     ],
     srcs_version = "PY3",
     deps = [
-        # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
@@ -72,9 +73,8 @@ py_binary(
     ],
     python_version = "PY3",
     deps = [
-        # numpy dep1,
-        # tensorflow dep1,
         ":imdb_utils",
+        # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
     ],
