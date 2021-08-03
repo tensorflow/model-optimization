@@ -160,7 +160,7 @@ def factorized_pool(input_tensor,
   return tf.squeeze(tf.transpose(width_pooling, perm=[0, 1, 3, 2]))
 
 
-def normalise_tuple(value, name):
+def convert_to_tuple_of_two_int(value, name):
   """Transforms iterable of 2 integers into an tuple of 2 integers.
 
   Args:
