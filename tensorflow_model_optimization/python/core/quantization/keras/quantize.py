@@ -68,6 +68,7 @@ def quantize_scope(*args):
       'NoOpActivation': quantize_aware_activation.NoOpActivation,
       'QuantizeWrapper': quantize_wrapper.QuantizeWrapper,
       'QuantizeLayer': quantize_layer.QuantizeLayer,
+      'OutputOnlyConfig': quantize_annotate_mod.OutputOnlyConfig,
       # TODO(tf-mot): add way for different quantization schemes to modify this.
       '_DepthwiseConvBatchNorm2D': conv_batchnorm._DepthwiseConvBatchNorm2D,  # pylint: disable=protected-access
       '_ConvBatchNorm2D': conv_batchnorm._ConvBatchNorm2D  # pylint: disable=protected-access
@@ -369,35 +370,6 @@ def quantize_apply(
 
     return unwrapped_model, layer_quantize_map, requires_output_quantize
 
-  class OutputOnlyConfig(quantize_config_mod.QuantizeConfig):
-    """QuantizeConfig that only quantizes output."""
-
-    def __init__(self, quantize_config):
-      self.quantize_config = quantize_config
-
-    def get_weights_and_quantizers(self, layer):
-      return []
-
-    def set_quantize_weights(self, layer, quantize_weights):
-      pass
-
-    def get_activations_and_quantizers(self, layer):
-      return self.quantize_config.get_activations_and_quantizers(layer)
-
-    def set_quantize_activations(self, layer, quantize_activations):
-      return self.quantize_config.set_quantize_activations(
-          layer, quantize_activations)
-
-    def get_output_quantizers(self, layer):
-      return self.quantize_config.get_output_quantizers(layer)
-
-    def get_config(self):
-      return {'quantize_config': self.quantize_config}
-
-    @classmethod
-    def from_config(cls, config):
-      return cls(**config)
-
   def _quantize(layer):  # pylint: disable=missing-docstring
     if ((layer.name not in layer_quantize_map and
          layer.name not in requires_output_quantize) or
@@ -411,7 +383,7 @@ def quantize_apply(
       full_quantize_config = quantize_registry.get_quantize_config(layer)
       if not full_quantize_config:
         return layer
-      quantize_config = OutputOnlyConfig(full_quantize_config)
+      quantize_config = quantize_annotate_mod.OutputOnlyConfig(full_quantize_config)
     else:
       quantize_config = layer_quantize_map[layer.name].get('quantize_config')
       if not quantize_config and quantize_registry.supports(layer):

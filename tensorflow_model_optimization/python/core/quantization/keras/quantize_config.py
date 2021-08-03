@@ -185,3 +185,33 @@ class QuantizeConfig(object):
   def get_config(self):
     """Returns the config used to serialize `QuantizeConfig`."""
     raise NotImplementedError('QuantizeConfig should implement get_config().')
+
+
+class OutputOnlyConfig(QuantizeConfig):
+  """QuantizeConfig that only quantizes output."""
+
+  def __init__(self, quantize_config):
+    self.quantize_config = quantize_config
+
+  def get_weights_and_quantizers(self, layer):
+    return []
+
+  def set_quantize_weights(self, layer, quantize_weights):
+    pass
+
+  def get_activations_and_quantizers(self, layer):
+    return self.quantize_config.get_activations_and_quantizers(layer)
+
+  def set_quantize_activations(self, layer, quantize_activations):
+    return self.quantize_config.set_quantize_activations(
+        layer, quantize_activations)
+
+  def get_output_quantizers(self, layer):
+    return self.quantize_config.get_output_quantizers(layer)
+
+  def get_config(self):
+    return {'quantize_config': self.quantize_config}
+
+  @classmethod
+  def from_config(cls, config):
+    return cls(**config)
