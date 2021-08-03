@@ -33,7 +33,7 @@ from tensorflow_model_optimization.python.core.sparsity.keras import prunable_la
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
-from tensorflow_model_optimization.python.core.sparsity.keras.pruning_utils import normalise_tuple
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_utils import convert_to_tuple_of_two_int
 
 keras = tf.keras
 K = keras.backend
@@ -129,7 +129,8 @@ class PruneLowMagnitude(Wrapper):
     self.block_size = block_size
     self.block_pooling_type = block_pooling_type
     if sparsity_m_by_n:
-      self.sparsity_m_by_n = normalise_tuple(sparsity_m_by_n, 'sparsity_m_by_n')
+      self.sparsity_m_by_n = convert_to_tuple_of_two_int(
+        sparsity_m_by_n, 'sparsity_m_by_n')
     else:
       self.sparsity_m_by_n = None
 
