@@ -141,8 +141,7 @@ def prune_low_magnitude(to_prune,
       sparsity_m_by_n: default None, otherwise a tuple of 2 integers, indicates
         pruning with m_by_n sparsity, e.g., (2, 4): 2 zeros out of 4 consecutive
         elements. It check whether we can do pruning with m_by_n sparsity.
-        If not, then it fallback to the unstructured pruning that scheduled with
-        pruning_schedule.
+        If this type of sparsity is not applicable, then an error is thrown.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_prune is not a keras layer.
 
