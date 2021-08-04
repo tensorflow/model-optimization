@@ -44,8 +44,6 @@ class Pruning(object):
       sparsity_m_by_n: default None, otherwise a tuple of 2 integers, indicates
         pruning with m_by_n sparsity, e.g., (2, 4): 2 zeros out of 4 consecutive
         elements. It check whether we can do pruning with m_by_n sparsity.
-        If not, then it fallback to the unstructured pruning that scheduled with
-        pruning_schedule.
     """
     self._pruning_vars = pruning_vars
     self._pruning_schedule = pruning_schedule
@@ -121,7 +119,7 @@ class Pruning(object):
     Returns:
       new_mask: A numpy array of the same size and shape as weights containing
       0 or 1 to indicate which of the values in weights should be set to zero.
-      If the returned value is None, the requested mask cannot be created.
+      It throws an error if the requested mask cannot be created.
     """
     prepared_weights = pruning_utils.weights_rearrange(weights)
     mask = pruning_utils.generate_m_by_n_mask(prepared_weights, m_by_n)
@@ -134,6 +132,7 @@ class Pruning(object):
 
     If sparsity_m_by_n is selected, then we return the relevant pruning mask,
     that nullify two out of four elements in the block.
+
     Block pruning occurs only if the block_height or block_width is > 1 and
     if the weight tensor, when squeezed, has ndims = 2. Otherwise, elementwise
     pruning occurs.
@@ -153,11 +152,8 @@ class Pruning(object):
     """
     if self._sparsity_m_by_n:
       mask =  self._update_mask_sparsity_m_by_n(weights, self._sparsity_m_by_n)
-      if mask is not None:
-        # We need to return some number for threshold.
-        return 999.0, mask
-      # Fallback to default pruning if failed to creat the m_by_n pruning mask
-      self._sparsity_m_by_n = None
+      # We need to return some numbers for threshold.
+      return 999.0, mask
 
     if self._block_size == [1, 1]:
       return self._update_mask(weights)

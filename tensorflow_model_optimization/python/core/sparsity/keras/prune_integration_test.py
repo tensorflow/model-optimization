@@ -391,22 +391,16 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     self._check_strip_pruning_matches_original(model, sparsity_ratio)
 
   def testSparsityPruningMbyN_NonSupportedLayers(self):
-    """ Check layer that is not supported for m by n sparsity,
-    it fallback to the default unstructured pruning.
-    """
+    """ Check layer that is not supported for m by n sparsity."""
     self.params.update({'sparsity_m_by_n': (2, 4)})
 
     model = keras.Sequential()
     layer_type = tf.keras.layers.SeparableConv1D
     args, input_shape = ([4, 3], (3, 6))
-    model.add(prune.prune_low_magnitude(
-        layer_type(*args), input_shape=input_shape, **self.params))
 
-    model.compile(
-        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
-    # This internal flag controls which type of sparsity is used.
-    # In our case it should be reset to false.
-    self.assertFalse(model.layers[0].pruning_obj._sparsity_m_by_n)
+    with self.assertRaises(ValueError):
+      model.add(prune.prune_low_magnitude(
+        layer_type(*args), input_shape=input_shape, **self.params))
 
   @parameterized.parameters(prune_registry.PruneRegistry._RNN_LAYERS -
                             {keras.layers.RNN})
