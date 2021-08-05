@@ -147,8 +147,12 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         # expected matrix is [ 0.0, 0.0, 1.0, 1.0 ... 1.0 ]
         np.concatenate((np.zeros(2), np.ones(8))), K.get_value(mask))
 
-  def _blockMasking(self, block_size, block_pooling_type, weight,
-                    expected_mask):
+  def _blockMasking(self,
+                    block_size,
+                    block_pooling_type,
+                    weight,
+                    expected_mask,
+                    block_pruning_method="INTER"):
     mask = tf.Variable(
         tf.ones(weight.get_shape(), dtype=weight.dtype),
         name="mask",
@@ -163,7 +167,8 @@ class PruningTest(test.TestCase, parameterized.TestCase):
         training_step_fn=self.training_step_fn,
         pruning_schedule=self.constant_sparsity,
         block_size=block_size,
-        block_pooling_type=block_pooling_type)
+        block_pooling_type=block_pooling_type,
+        block_pruning_method=block_pruning_method)
 
     _, new_mask = p._maybe_update_block_mask(weight)
     # Check if the mask is the same size as the weights
@@ -204,6 +209,30 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     # Block masking should only be used with 2 Dimensional weights.
     with self.assertRaises(ValueError):
       self._blockMasking(block_size, block_pooling_type, weight, expected_mask)
+
+  def testBlockMaskingIntraBlockPruningSymmetric(self):
+    block_size = (2, 2)
+    block_pooling_type = "AVG"
+    block_pruning_method = "INTRA"
+    weight = tf.constant([[0.2, 0.0, 0.2, 0.0], [0.3, -0.1, 0.0, -0.2],
+                          [0.3, 0.0, 0.4, 0.0], [0.0, -0.3, -0.4, -0.2]])
+    expected_mask = [[1., 0.0, 1., 0.0], [1., 0.0, 0.0, 1.],
+                     [1., 0.0, 1., 0.0], [0.0, 1.0, 1., 0.0]]
+
+    self._blockMasking(block_size, block_pooling_type, weight, expected_mask,
+                       block_pruning_method)
+
+  def testBlockMaskingIntraBlockPruningAsymmetric(self):
+    block_size = (1, 4)
+    block_pooling_type = "AVG"
+    block_pruning_method = "INTRA"
+    weight = tf.constant([[0.1, 0.0, 0.2, 0.0], [0.0, -0.1, 0.0, -0.2],
+                          [0.3, 0.0, 0.4, 0.0], [0.0, -0.3, 0.0, -0.4]])
+    expected_mask = [[1., 0.0, 1., 0.0], [0.0, 1., 0.0, 1.],
+                     [1., 0.0, 1., 0.0], [0.0, 1., 0.0, 1.]]
+
+    self._blockMasking(block_size, block_pooling_type, weight, expected_mask,
+                       block_pruning_method)
 
   def testConditionalMaskUpdate(self):
     weight = tf.Variable(np.linspace(1.0, 100.0, 100), name="weights")

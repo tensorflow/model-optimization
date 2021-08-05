@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import math
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
@@ -27,8 +28,13 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_uti
 class Pruning(object):
   """Implementation of magnitude-based weight pruning."""
 
-  def __init__(self, training_step_fn, pruning_vars, pruning_schedule,
-               block_size, block_pooling_type):
+  def __init__(self,
+               training_step_fn,
+               pruning_vars,
+               pruning_schedule,
+               block_size,
+               block_pooling_type,
+               block_pruning_method='INTER'):
     """The logic for magnitude-based pruning weight tensors.
 
     Args:
@@ -40,20 +46,28 @@ class Pruning(object):
         in rank-2 weight tensors.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
+      block_pruning_method: (optional) The block sparsity pruning method to use.
+        'INTER' means pruning at the 'block_size' granularity (default). 'INTRA'
+        means pruning within the 'block_size', i.e. k-in-N sparsity.
+        As an example, this paper https://arxiv.org/abs/2104.08378 proposes
+        2-in-4 sparsity.
+        This option is only effective when 'block_size' is greater than (1, 1).
+        Must be 'INTER' or 'INTRA'.
     """
     self._pruning_vars = pruning_vars
     self._pruning_schedule = pruning_schedule
     self._block_size = list(block_size)
     self._block_pooling_type = block_pooling_type
+    self._block_pruning_method = block_pruning_method
     self._validate_block()
 
     # Training step
     self._step_fn = training_step_fn
 
-    self._validate_block()
-
   def _validate_block(self):
     if self._block_size != [1, 1]:
+      if self._block_pruning_method not in ('INTER', 'INTRA'):
+        raise ValueError("Block pruning method must be 'INTER' or 'INTRA'")
       for weight, _, _ in self._pruning_vars:
         if weight.get_shape().ndims != 2:
           raise ValueError('Block Sparsity can only be used for layers which '
@@ -93,11 +107,72 @@ class Pruning(object):
       values, _ = tf.math.top_k(
           tf.reshape(abs_weights, [-1]), k=tf.size(abs_weights))
       # Grab the (k-1)th value
-
       current_threshold = tf.gather(values, k - 1)
       new_mask = tf.dtypes.cast(
           tf.math.greater_equal(abs_weights, current_threshold), weights.dtype)
     return current_threshold, new_mask
+
+  def _intra_block_prune_update_mask(self, weights):
+    """Update rule wherein all the blocks have the same sparsity level."""
+
+    sparsity = self._pruning_schedule(self._step_fn())[1]
+    with tf.name_scope('pruning_ops'):
+      # Pad Rank-2 weights to an integer multiple of self._block_size.
+      # This simplifies the weight reshape and intra block pruning code below.
+      pad_h = int(math.ceil(weights.shape[0] / self._block_size[0])
+                 ) * self._block_size[0] - weights.shape[0]
+      pad_w = int(math.ceil(weights.shape[1] / self._block_size[1])
+                 ) * self._block_size[1] - weights.shape[1]
+      padding = tf.constant([[0, pad_h], [0, pad_w]])
+      padded_weights = tf.pad(weights, padding)
+
+      # Reshape / transpose the weight so that each self._block_size of weights
+      # are place in one row of a rank-2 tensor. In the transformed shape, the
+      # self._block_size elements are transformed such that they are in the
+      # inner most dimension of a transformed rank-4 tensor.
+      # Pruning is based on the magnitude of the weights.
+      abs_padded_weights = tf.math.abs(padded_weights)
+      transformed_shape = [
+          abs_padded_weights.shape[0] // self._block_size[0],
+          self._block_size[0],
+          abs_padded_weights.shape[1] // self._block_size[1],
+          self._block_size[1]
+      ]
+      reshaped_padded_weights = tf.reshape(abs_padded_weights,
+                                           transformed_shape)
+      reshaped_padded_weights = tf.transpose(
+          reshaped_padded_weights, perm=[0, 2, 1, 3])
+
+      # Reshape the rank-4 transformed tensor to rank-2 such that each block of
+      # weights can be sorted and pruned independently.
+      reshaped_padded_weights = tf.reshape(reshaped_padded_weights, [
+          abs_padded_weights.shape[0] * abs_padded_weights.shape[1] //
+          (self._block_size[0] * self._block_size[1]),
+          self._block_size[0] * self._block_size[1]
+      ])
+
+      # Sort each row of the rank-2 weight tensor and generate mask
+      row_sorted_weights = tf.sort(reshaped_padded_weights, axis=1)
+      col_index = tf.cast(reshaped_padded_weights.shape[1] * sparsity, tf.int32)
+      thresholds = tf.slice(
+          row_sorted_weights,
+          begin=[0, col_index],
+          size=[reshaped_padded_weights.shape[0], 1])
+      averaged_thresholds = tf.reduce_mean(thresholds)
+      expanded_thresholds = tf.repeat(
+          thresholds, repeats=reshaped_padded_weights.shape[1], axis=1)
+      mask = tf.dtypes.cast(
+          tf.math.greater_equal(reshaped_padded_weights, expanded_thresholds),
+          weights.dtype)
+
+      # Reshape / tranpose mask tensor back to the orignal weights shape
+      mask = tf.reshape(mask, transformed_shape)
+      mask = tf.transpose(mask, perm=[0, 2, 1, 3])
+      mask = tf.reshape(mask,
+                        [padded_weights.shape[0], padded_weights.shape[1]])
+      mask = tf.slice(mask, begin=[0, 0], size=weights.shape)
+
+    return (averaged_thresholds, mask)
 
   def _maybe_update_block_mask(self, weights):
     """Performs block-granular masking of the weights.
@@ -121,9 +196,11 @@ class Pruning(object):
     if self._block_size == [1, 1]:
       return self._update_mask(weights)
 
+    if self._block_pruning_method == 'INTRA':
+      return self._intra_block_prune_update_mask(weights)
+
     # TODO(pulkitb): Check if squeeze operations should now be removed since
     # we are only accepting 2-D weights.
-
     squeezed_weights = tf.squeeze(weights)
     abs_weights = tf.math.abs(squeezed_weights)
     pooled_weights = pruning_utils.factorized_pool(

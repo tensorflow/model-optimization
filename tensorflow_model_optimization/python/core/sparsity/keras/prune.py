@@ -58,6 +58,7 @@ def prune_low_magnitude(to_prune,
                         pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
                         block_size=(1, 1),
                         block_pooling_type='AVG',
+                        block_pruning_method='INTER',
                         pruning_policy=None,
                         **kwargs):
   """Modify a tf.keras layer or model to be pruned during training.
@@ -134,6 +135,13 @@ def prune_low_magnitude(to_prune,
         sparse pattern in rank-2 weight tensors.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
+      block_pruning_method: (optional) The block sparsity pruning method to use.
+        'INTER' means pruning at the 'block_size' granularity (default). 'INTRA'
+        means pruning within the 'block_size', i.e. k-in-N sparsity.
+        As an example, this paper https://arxiv.org/abs/2104.08378 proposes
+        2-in-4 sparsity.
+        This option is only effective when 'block_size' is greater than (1, 1).
+        Must be 'INTER' or 'INTRA'.
       pruning_policy: (optional) The object that controls to which layers
         `PruneLowMagnitude` wrapper will be applied. This API is experimental
         and is subject to change.
@@ -185,7 +193,8 @@ def prune_low_magnitude(to_prune,
   params = {
       'pruning_schedule': pruning_schedule,
       'block_size': block_size,
-      'block_pooling_type': block_pooling_type
+      'block_pooling_type': block_pooling_type,
+      'block_pruning_method': block_pruning_method,
   }
 
   is_sequential_or_functional = isinstance(

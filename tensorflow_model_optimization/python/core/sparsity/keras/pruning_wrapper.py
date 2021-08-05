@@ -102,6 +102,7 @@ class PruneLowMagnitude(Wrapper):
                pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
                block_size=(1, 1),
                block_pooling_type='AVG',
+               block_pruning_method='INTER',
                **kwargs):
     """Create a pruning wrapper for a keras layer.
 
@@ -115,11 +116,17 @@ class PruneLowMagnitude(Wrapper):
         sparse pattern in rank-2 weight tensors.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
+      block_pruning_method: (optional) The block sparsity pruning method to use.
+        'INTER' means pruning at the 'block_size' ganularity (default). 'INTRA'
+        means pruning within the 'block_size' (e.g. Nvidia 2-in-4 sparsity).
+        This option is only effective when 'block_size' is greater than (1, 1).
+        Must be 'INTER' or 'INTRA'.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
     self.pruning_schedule = pruning_schedule
     self.block_size = block_size
     self.block_pooling_type = block_pooling_type
+    self.block_pruning_method = block_pruning_method
 
     # An instance of the Pruning class. This class contains the logic to prune
     # the weights of this layer.
@@ -235,7 +242,8 @@ class PruneLowMagnitude(Wrapper):
         pruning_vars=self.pruning_vars,
         pruning_schedule=self.pruning_schedule,
         block_size=self.block_size,
-        block_pooling_type=self.block_pooling_type)
+        block_pooling_type=self.block_pooling_type,
+        block_pruning_method=self.block_pruning_method)
 
   def call(self, inputs, training=None, **kwargs):
     if training is None:
