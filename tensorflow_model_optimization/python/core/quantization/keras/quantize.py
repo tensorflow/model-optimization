@@ -68,7 +68,7 @@ def quantize_scope(*args):
       'NoOpActivation': quantize_aware_activation.NoOpActivation,
       'QuantizeWrapper': quantize_wrapper.QuantizeWrapper,
       'QuantizeLayer': quantize_layer.QuantizeLayer,
-      'OutputOnlyConfig': quantize_annotate_mod.OutputOnlyConfig,
+      'OutputOnlyConfig': quantize_config_mod.OutputOnlyConfig,
       # TODO(tf-mot): add way for different quantization schemes to modify this.
       '_DepthwiseConvBatchNorm2D': conv_batchnorm._DepthwiseConvBatchNorm2D,  # pylint: disable=protected-access
       '_ConvBatchNorm2D': conv_batchnorm._ConvBatchNorm2D  # pylint: disable=protected-access
@@ -383,7 +383,7 @@ def quantize_apply(
       full_quantize_config = quantize_registry.get_quantize_config(layer)
       if not full_quantize_config:
         return layer
-      quantize_config = quantize_annotate_mod.OutputOnlyConfig(full_quantize_config)
+      quantize_config = quantize_config_mod.OutputOnlyConfig(full_quantize_config)
     else:
       quantize_config = layer_quantize_map[layer.name].get('quantize_config')
       if not quantize_config and quantize_registry.supports(layer):
