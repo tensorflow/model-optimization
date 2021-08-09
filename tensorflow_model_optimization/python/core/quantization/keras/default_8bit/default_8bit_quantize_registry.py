@@ -536,5 +536,7 @@ def _types_dict():
       'NoOpQuantizeConfig':
           default_8bit_quantize_configs.NoOpQuantizeConfig,
       'Default8BitOutputQuantizeConfig':
-          default_8bit_quantize_configs.Default8BitOutputQuantizeConfig
+          default_8bit_quantize_configs.Default8BitOutputQuantizeConfig,
+      'Default8BitConvTransposeQuantizeConfig':
+          Default8BitConvTransposeQuantizeConfig,
   }
