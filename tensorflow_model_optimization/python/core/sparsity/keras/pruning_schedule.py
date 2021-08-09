@@ -108,7 +108,9 @@ class PruningSchedule(object):
       step: Current step in graph execution.
 
     Returns:
-      Sparsity (%) that should be applied to the weights for the step.
+      a tuple of boolean and float tensors.
+      boolean value checks pruning should be applied in current step,
+      float Sparsity (%) that should be applied to the weights for the step.
     """
     raise NotImplementedError(
         'PruningSchedule implementation must override __call__')
@@ -255,5 +257,125 @@ class PolynomialDecay(PruningSchedule):
             'begin_step': self.begin_step,
             'end_step': self.end_step,
             'frequency': self.frequency
+        }
+    }
+
+
+class ConstantMbyNSparsity(PruningSchedule):
+  """M_by_N Sparsity Pruning Schedule with 100% coverage of sparsity mask
+  throughout training.
+  """
+
+  def __init__(self, prune_step=0):
+    """Initializes a M_by_N Pruning schedule with fully coverage.
+
+    m_by_n sparsity masks calculate and apply on weights at prune_step,
+    they will not be updated after, but keep applying on the weights
+    during the training process.
+    The m_by_n sparsity coverage ratio remain constant as 100%.
+
+    Args:
+      prune_step: Step at which apply m_by_n sparsity pruning.
+    """
+    self.prune_step = prune_step
+
+    if prune_step < 0:
+      raise ValueError('prune_step should be >= 0')
+
+  def _should_prune_in_step(self, step, prune_step):
+      return tf.math.equal(step, prune_step)
+
+  def __call__(self, step):
+    return (self._should_prune_in_step(step, self.prune_step),
+            tf.constant(1.0, dtype=tf.float32))
+
+  def get_config(self):
+    return {
+        'class_name': self.__class__.__name__,
+        'config': {
+            'prune_step': self.prune_step
+        }
+    }
+
+
+class PolynomialDecayMbyNSparsity(PruningSchedule):
+  """M_by_N Sparsity Pruning Schedule with polynomial decay of
+  coverage ratio.
+  """
+
+  def __init__(
+      self,
+      initial_coverage_ratio,
+      begin_step,
+      end_step,
+      power=3.0,
+      frequency=100
+  ):
+    """Initializes a M_by_N Pruning schedule with polynomial decay of coverage
+    ratio.
+
+      Coverage ratio grows rapidly in the beginning from
+      initial_coverage_ratio, then plateaus slowly to 100% coverage.
+
+      The function applied a polynomial decay function.
+      This schedule applies a polynomial decay function to m_by_n sparsity
+      coverage ratio in the interval [`begin_step`, `end_step`],
+      given a provided `initial_coverage_ratio`, to reach an 100% coverage
+      ratio at the `end_step`.
+
+      Args:
+        initial_coverage_ratio: coverage ratio of m_by_n sparsity at which
+          the pruning begins.
+        begin_step: Step at which to begin m_by_n sparsity pruning.
+        end_step: Step at which to end m_by_n sparsity pruning, reach an 100%
+          coverage ratio.
+        power: The power of the polynomial, defaults to 3.0.
+        frequency: Only apply pruning every `frequency` steps, defaults to 100.
+    """
+    self.initial_coverage_ratio = initial_coverage_ratio
+    self.power = power
+
+    self.begin_step = begin_step
+    self.end_step = end_step
+    self.frequency = frequency
+
+    self._has_build_polynomial_decay = False
+
+    self._validate_step(self.begin_step, self.end_step, self.frequency, False)
+    self._validate_sparsity(initial_coverage_ratio, 'initial_coverage_ratio')
+
+  def _build_polynomial_decay(self):
+    self._has_build_polynomial_decay = True
+    self._coverage_ratio_polynomial_decay = (
+        tf.keras.optimizers.schedules.PolynomialDecay(
+            self.initial_coverage_ratio,
+            self.end_step - self.begin_step,  # decay steps
+            1.0,  # final_coverage_ratio
+            power=self.power,
+            cycle=False,
+            name='MbyNCoverageRatioPolynomialDecay',
+        )
+    )
+
+  def __call__(self, step):
+    if not self._has_build_polynomial_decay:
+      self._build_polynomial_decay()
+
+    return (
+      self._should_prune_in_step(step, self.begin_step, self.end_step,
+                                 self.frequency),
+      self._coverage_ratio_polynomial_decay(step - self.begin_step),
+    )
+
+  def get_config(self):
+
+    return {
+        'class_name': self.__class__.__name__,
+        'config': {
+            'initial_coverage_ratio': self.initial_coverage_ratio,
+            'power': self.power,
+            'begin_step': self.begin_step,
+            'end_step': self.end_step,
+            'frequency': self.frequency,
         }
     }

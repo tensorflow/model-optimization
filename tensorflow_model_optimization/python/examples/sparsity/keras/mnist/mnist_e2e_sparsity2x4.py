@@ -29,7 +29,7 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_sch
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-ConstantSparsity = pruning_schedule.ConstantSparsity
+PolynomialDecayMbyNSparsity = pruning_schedule.PolynomialDecayMbyNSparsity
 keras = tf.keras
 l = keras.layers
 
@@ -120,8 +120,9 @@ def main(unused_argv):
   # Train a model with sparsity 2x4.
   ##############################################################################
   pruning_params = {
-      'pruning_schedule': ConstantSparsity(0.5, begin_step=0, frequency=100),
-      'sparsity_m_by_n': (2, 4),
+      'pruning_schedule':
+          PolynomialDecayMbyNSparsity(0.25, begin_step=200, end_step=300, frequency=10),
+       'sparsity_m_by_n': (2, 4),
   }
 
   model = build_layerwise_model(input_shape, **pruning_params)
@@ -138,7 +139,7 @@ def main(unused_argv):
 
   print('evaluate pruned model: ')
   print(keras_test_utils.eval_mnist_tflite(model_content=tflite_model))
-  # the accuracy of 2:4 pruning model is 0.9866
+  # the accuracy of 2:4 pruning model is 0.9873
   # the accuracy of unstructured model with 50% is 0.9863
 
 

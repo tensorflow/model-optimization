@@ -116,6 +116,11 @@ class Pruning(object):
     that n elements with the lowest absolute values in the block
     of m elements are set to be zero. We don't return any threshold.
 
+    If coverage ratio provided with the pruning schedule is less than 1.0,
+    a partially sparsity mask will be calculated and add up to m_by_n
+    sparsity mask, so that coverage ratio of m_by_n sparsity pattern
+    on mask is (coverage_ratio * 100%).
+
     Args:
       weights: The weight tensor that needs to be masked.
       m_by_n: tuple of two integers, indicating m zeros out of n consecutive
@@ -126,17 +131,40 @@ class Pruning(object):
       0 or 1 to indicate which of the values in weights should be set to zero.
       It throws an error if the requested mask cannot be created.
     """
-    prepared_weights = pruning_utils.weights_rearrange(weights)
-    mask = pruning_utils.generate_m_by_n_mask(prepared_weights, m_by_n)
-    new_mask = pruning_utils.m_by_n_sparsity_mask_prepare(mask, weights.shape)
+    coverage_ratio = self._pruning_schedule(self._step_fn())[1]
+    with tf.name_scope('m_by_n_sparsity_pruning_ops'):
+      prepared_weights = pruning_utils.weights_rearrange(weights)
 
-    return new_mask
+      mask = pruning_utils.generate_m_by_n_mask(prepared_weights, m_by_n)
+      new_mask = pruning_utils.m_by_n_sparsity_mask_prepare(mask, weights.shape)
+
+      def update_mask_sparsity_m_by_n_with_coverage_ratio():
+        partial_covered_mask = pruning_utils.generate_partial_sparsity_mask(
+            prepared_weights, m_by_n[1], coverage_ratio)
+        new_partial_covered_mask = pruning_utils.m_by_n_sparsity_mask_prepare(
+            partial_covered_mask, weights.shape)
+
+        m_by_n_mask = tf.clip_by_value(
+            new_mask + new_partial_covered_mask,
+            clip_value_min=0.0,
+            clip_value_max=1.0
+        )
+
+        return m_by_n_mask
+
+      m_by_n_mask = tf.cond(
+          tf.math.less(coverage_ratio, 1.0),
+          update_mask_sparsity_m_by_n_with_coverage_ratio,
+          lambda: new_mask,
+      )
+
+    return m_by_n_mask
 
   def _maybe_update_block_mask(self, weights):
     """Performs block-granular masking of the weights.
 
     If sparsity_m_by_n is selected, then we return the relevant pruning mask,
-    that nullify two out of four elements in the block.
+    that nullify m out of n consecutive elements in the block.
 
     Block pruning occurs only if the block_height or block_width is > 1 and
     if the weight tensor, when squeezed, has ndims = 2. Otherwise, elementwise
