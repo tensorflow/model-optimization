@@ -249,7 +249,12 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     expected_non_zero_count = [100, 90, 90, 70, 70, 50, 50, 50, 50, 50]
     self.assertAllEqual(expected_non_zero_count, non_zero_count)
 
-  def _sparsity_m_by_n_masking(self, weight, m_by_n=(2, 4)):
+  def _sparsity_m_by_n_masking(
+      self,
+      weight,
+      m_by_n=(2, 4),
+      pruning_schedule=pruning_schedule.ConstantMbyNSparsity(prune_step=1),
+  ):
     mask = tf.Variable(tf.ones(weight.get_shape()), name="mask")
     threshold = tf.Variable(1, name="threshold")
     self.initialize()
@@ -258,7 +263,7 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     p = pruning_impl.Pruning(
         pruning_vars=[(weight, mask, threshold)],
         training_step_fn=self.training_step_fn,
-        pruning_schedule=self.constant_sparsity,
+        pruning_schedule=pruning_schedule,
         block_size=(1, 1),
         block_pooling_type="AVG",
         sparsity_m_by_n=m_by_n,
@@ -323,6 +328,65 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     with self.assertRaises(ValueError):
       self._sparsity_m_by_n_masking(weights_ts)
 
+  def testSparsityMbyNMaskingUpdateWithPolynomialDecay(self):
+    weights = tf.reshape(tf.linspace(1.0, 16.0, 16), [4,4])
+    mask = tf.Variable(tf.ones(weights.get_shape()))
+    self.initialize()
+
+    polynomial_schedule = pruning_schedule.PolynomialDecayMbyNSparsity(
+      0.0, 1, 10, frequency=1,
+    )
+    p = pruning_impl.Pruning(
+        pruning_vars=[(weights, mask, tf.Variable(1))],
+        training_step_fn=self.training_step_fn,
+        pruning_schedule=polynomial_schedule,
+        block_size=(1, 1),
+        block_pooling_type="AVG",
+        sparsity_m_by_n=(2, 4),
+    )
+
+    case_list = [
+        {
+            "step": 1, # coverate ratio 0.0
+            "expected": [
+                [1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0],
+            ],
+        },
+        {
+            "step": 3, # coverate ratio 0.530
+            "expected": [
+                [0.0, 0.0, 1.0, 1.0],
+                [0.0, 0.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0],
+            ],
+        },
+        {
+            "step": 5, # coverate ratio 0.829
+            "expected": [
+                [0.0, 0.0, 0.0, 1.0],
+                [0.0, 0.0, 0.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0],
+            ],
+        },
+        {
+            "step": 9, # coverate ratio 0.999
+            "expected": [
+                [0.0, 0.0, 0.0, 0.0],
+                [0.0, 0.0, 0.0, 0.0],
+                [1.0, 1.0, 1.0, 1.0],
+                [1.0, 1.0, 1.0, 1.0],
+            ],
+        },
+    ]
+    for case in case_list:
+      self.global_step.assign(case["step"])
+      _, new_mask = p._maybe_update_block_mask(weights)
+      self.assertAllEqual(new_mask, case["expected"])
 
 if __name__ == "__main__":
   test.main()

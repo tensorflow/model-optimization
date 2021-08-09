@@ -23,6 +23,12 @@ from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
 
+@keras_parameterized.run_all_keras_modes
+@parameterized.parameters(
+    'constant_sparsity',
+    'polynomial_decay',
+    'polynomial_decay_m_by_n',
+)
 class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
   """Test to verify PruningSchedule behavior for step parameters.
 
@@ -46,15 +52,11 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
     elif schedule_type == 'polynomial_decay':
       return pruning_schedule.PolynomialDecay(
           0.2, 0.8, begin_step, end_step, 3, frequency)
+    elif schedule_type == 'polynomial_decay_m_by_n':
+      return pruning_schedule.PolynomialDecayMbyNSparsity(
+        0.25, begin_step, end_step, 1, frequency,
+      )
 
-  @parameterized.named_parameters(
-      {
-          'testcase_name': 'ConstantSparsity',
-          'schedule_type': 'constant_sparsity'
-      }, {
-          'testcase_name': 'PolynomialDecay',
-          'schedule_type': 'polynomial_decay'
-      })
   def testBeginStepGreaterThanEqualsZero(self, schedule_type):
     with self.assertRaises(ValueError):
       self._construct_pruning_schedule(schedule_type, -1, 1000)
@@ -65,14 +67,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
     self._construct_pruning_schedule(schedule_type, 1, 1000)
     self._construct_pruning_schedule(schedule_type, 100, 1000)
 
-  @parameterized.named_parameters(
-      {
-          'testcase_name': 'ConstantSparsity',
-          'schedule_type': 'constant_sparsity'
-      }, {
-          'testcase_name': 'PolynomialDecay',
-          'schedule_type': 'polynomial_decay'
-      })
   def testEndStepGreaterThanEqualsZero(self, schedule_type):
     with self.assertRaises(ValueError):
       self._construct_pruning_schedule(schedule_type, 10, -5)
@@ -81,14 +75,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
     self._construct_pruning_schedule(schedule_type, 0, 1)
     self._construct_pruning_schedule(schedule_type, 0, 100)
 
-  @parameterized.named_parameters(
-      {
-          'testcase_name': 'ConstantSparsity',
-          'schedule_type': 'constant_sparsity'
-      }, {
-          'testcase_name': 'PolynomialDecay',
-          'schedule_type': 'polynomial_decay'
-      })
   def testEndStepGreaterThanEqualsBeginStep(self, schedule_type):
     with self.assertRaises(ValueError):
       self._construct_pruning_schedule(schedule_type, 10, 5)
@@ -96,14 +82,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
     self._construct_pruning_schedule(schedule_type, 10, 10)
     self._construct_pruning_schedule(schedule_type, 10, 20)
 
-  @parameterized.named_parameters(
-      {
-          'testcase_name': 'ConstantSparsity',
-          'schedule_type': 'constant_sparsity'
-      }, {
-          'testcase_name': 'PolynomialDecay',
-          'schedule_type': 'polynomial_decay'
-      })
   def testFrequencyIsPositive(self, schedule_type):
     with self.assertRaises(ValueError):
       self._construct_pruning_schedule(schedule_type, 10, 1000, 0)
@@ -135,14 +113,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
     schedule_construct_fn(0.5)
     schedule_construct_fn(0.99)
 
-  @parameterized.named_parameters(
-      {
-          'testcase_name': 'ConstantSparsity',
-          'schedule_type': 'constant_sparsity'
-      }, {
-          'testcase_name': 'PolynomialDecay',
-          'schedule_type': 'polynomial_decay'
-      })
   def testSparsityValueIsValid(self, schedule_type):
     if schedule_type == 'constant_sparsity':
       # pylint: disable=unnecessary-lambda
@@ -155,15 +125,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
 
   # Tests to ensure begin_step, end_step, frequency are used correctly.
 
-  @keras_parameterized.run_all_keras_modes
-  @parameterized.named_parameters(
-      {
-          'testcase_name': 'ConstantSparsity',
-          'schedule_type': 'constant_sparsity'
-      }, {
-          'testcase_name': 'PolynomialDecay',
-          'schedule_type': 'polynomial_decay'
-      })
   def testPrunesOnlyInBeginEndStepRange(self, schedule_type):
     sparsity = self._construct_pruning_schedule(schedule_type, 100, 200, 1)
 
@@ -189,15 +150,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
     self.assertFalse(self.evaluate(sparsity(step_201))[0])
     self.assertFalse(self.evaluate(sparsity(step_210))[0])
 
-  @keras_parameterized.run_all_keras_modes
-  @parameterized.named_parameters(
-      {
-          'testcase_name': 'ConstantSparsity',
-          'schedule_type': 'constant_sparsity'
-      }, {
-          'testcase_name': 'PolynomialDecay',
-          'schedule_type': 'polynomial_decay'
-      })
   def testOnlyPrunesAtValidFrequencySteps(self, schedule_type):
     sparsity = self._construct_pruning_schedule(schedule_type, 100, 200, 10)
 
@@ -293,6 +245,63 @@ class PolynomialDecayTest(tf.test.TestCase, parameterized.TestCase):
 
     self.assertEqual(sparsity.__dict__, sparsity_deserialized.__dict__)
 
+
+@keras_parameterized.run_all_keras_modes
+class ConstantMbyNSparsityTest(tf.test.TestCase, parameterized.TestCase):
+
+  def testSerializeDeserialize(self):
+    coverage_ratio = pruning_schedule.ConstantMbyNSparsity()
+
+    config = coverage_ratio.get_config()
+    coverage_ratio_deserialized = tf.keras.utils.deserialize_keras_object(
+        config,
+        custom_objects={
+            'ConstantMbyNSparsity': pruning_schedule.ConstantMbyNSparsity,
+        })
+
+    self.assertEqual(
+      coverage_ratio.__dict__, coverage_ratio_deserialized.__dict__)
+
+
+@keras_parameterized.run_all_keras_modes
+class PolynomialDecayMbyNSparsityTest(
+  tf.test.TestCase, parameterized.TestCase):
+
+  def testRaisesErrorIfEndStepIsNegative(self):
+    with self.assertRaises(ValueError):
+      pruning_schedule.PolynomialDecayMbyNSparsity(0.4, 10, -1)
+
+  def testPolynomialDecay_Correctly(self):
+    coverage_ratio = pruning_schedule.PolynomialDecayMbyNSparsity(
+      0.25, 100, 200, 3)
+
+    step_100 = tf.Variable(100)
+    step_102 = tf.Variable(102)
+    step_105 = tf.Variable(105)
+    step_150 = tf.Variable(150)
+    step_200 = tf.Variable(200)
+    compat.initialize_variables(self)
+
+    self.assertAllClose(0.25, self.evaluate(coverage_ratio(step_100))[1])
+    self.assertAllClose(0.294106, self.evaluate(coverage_ratio(step_102))[1])
+    self.assertAllClose(0.35696882, self.evaluate(coverage_ratio(step_105))[1])
+    self.assertAllClose(0.90625, self.evaluate(coverage_ratio(step_150))[1])
+    self.assertAllClose(1.0, self.evaluate(coverage_ratio(step_200))[1])
+
+  def testSerializeDeserialize(self):
+    coverage_ratio = pruning_schedule.PolynomialDecayMbyNSparsity(
+      0.2, 10, 20, 1, 10)
+
+    config = coverage_ratio.get_config()
+    coverage_ratio_deserialized = tf.keras.utils.deserialize_keras_object(
+        config,
+        custom_objects={
+            'PolynomialDecayMbyNSparsity':
+              pruning_schedule.PolynomialDecayMbyNSparsity,
+        })
+
+    self.assertEqual(
+      coverage_ratio.__dict__, coverage_ratio_deserialized.__dict__)
 
 if __name__ == '__main__':
   tf.test.main()

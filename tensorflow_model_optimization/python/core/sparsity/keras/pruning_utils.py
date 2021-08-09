@@ -205,8 +205,8 @@ def weights_rearrange(weights):
 
   * In case of Dense weights:
       TF data format is [channel_in, channel_out],
-      TFLite data format is [width, channel_in]
-    Rearranged Conv2D weights format: [width, channel_in]
+      TFLite data format is [channel_out, channel_in]
+    Rearranged Conv2D weights format: [channel_out, channel_in]
 
   Args:
     weights: weights tensor. Must be rank 2 or 4.
@@ -306,7 +306,12 @@ def generate_m_by_n_mask(weights, m_by_n=(2, 4)):
   abs_weights = tf.abs(weights)
 
   # add zero-padding
-  pad_after = block_size - abs_weights.shape[-1] % block_size
+  pad_after = (
+      tf.cast(
+          tf.math.ceil(abs_weights.shape[-1] / block_size),
+          tf.int32
+      ) * block_size - abs_weights.shape[-1]
+  )
   abs_weights_pad = tf.pad(abs_weights, [[0, 0], [0, pad_after]], "CONSTANT")
 
   num_blocks = tf.size(abs_weights_pad) // block_size
@@ -375,3 +380,94 @@ def is_pruned_m_by_n(weights, m_by_n=(2, 4), last_channel: str = "C_OUT"):
           num_non_zeros):
         return False
   return True
+
+def generate_partial_sparsity_mask(weights,
+                                   n: int = 4,
+                                   ratio: float = 0.5):
+  """Generate a sparsity mask with block of n consecutive values.
+
+  This is a m_by_n sparsity helper function. The generated mask used to combine
+  with m_by_n sparsity mask, so that mask is partially covered with m_by_n
+  sparsity pattern.
+
+  Args:
+    weights: a rank 2 tensor.
+    n: a postive integer value, number of consecutive values.
+    ratio: a float value between [0.0, 1.0], coverage ratio.
+
+  Returns:
+    A rank 2 sparsity mask.
+
+  Raises:
+    InvalidArgumentError:
+      if n is less than 0.
+      if ratio is outside [0.0, 1.0]
+  """
+  tf.debugging.assert_greater(
+    n, 0, message=f"Argument 'n' received {n}, n must be greater than 0.")
+  tf.debugging.assert_greater_equal(
+    ratio,
+    0.0,
+    message=(
+      f"Argument 'ratio' received {ratio}, "
+      f"'ratio' must be within [0.0, 1.0]."
+    )
+  )
+  tf.debugging.assert_less_equal(
+    ratio,
+    1.0,
+    message=(
+      f"Argument 'ratio' received {ratio}, "
+      f"'ratio' must be within [0.0, 1.0]."
+    )
+  )
+
+  abs_weights = tf.abs(weights)
+  block_shape = (1, n)
+  n = tf.constant(n)
+
+  # add zero padding
+  pad_after = (
+      tf.cast(
+          tf.math.ceil(abs_weights.shape[-1] / n),
+          tf.int32
+      ) * n - abs_weights.shape[-1]
+  )
+  abs_weights_pad = tf.pad(abs_weights, [[0, 0], [0, pad_after]], "CONSTANT")
+
+  h, w = abs_weights_pad.get_shape()
+  weights_aligned = tf.reshape(abs_weights_pad, [1, h, w, 1])
+  pooled_weights = tf.nn.pool(
+      weights_aligned,
+      window_shape=block_shape,
+      pooling_type="MAX",
+      strides=block_shape,
+  )
+
+  k = tf.cast(
+      tf.math.maximum(
+          0.0,
+          tf.math.round(
+              tf.cast(
+                  tf.size(pooled_weights),
+                  tf.float32,
+              ) * (1 - ratio)
+          ),
+      ),
+      tf.int32,
+  )
+
+  _, index = tf.math.top_k(
+      tf.reshape(pooled_weights, [-1]), k=k, sorted=True
+  )
+
+  raw_mask = tf.scatter_nd(
+      tf.reshape(index, [k, 1]), tf.ones(k), [tf.size(pooled_weights)]
+  )
+  raw_expand_mask = tf.repeat(raw_mask, repeats=n)
+  expand_mask = tf.reshape(raw_expand_mask, abs_weights_pad.shape)
+
+  # remove padding
+  mask = tf.slice(expand_mask, [0, 0], abs_weights.shape)
+
+  return mask

@@ -373,7 +373,6 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
           'm_by_n': (2, 4),
       },
   )
-
   def testMbyNSparsityPruning_SupportedLayers(self,
                                               layer_type,
                                               layer_arg,
@@ -382,6 +381,8 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
                                               sparsity_ratio=0.50):
     """Check that we prune supported layers with m by n sparsity."""
     self.params.update({'sparsity_m_by_n': m_by_n})
+    self.params.update(
+      {'pruning_schedule': pruning_schedule.ConstantMbyNSparsity(prune_step=1)})
 
     model = keras.Sequential()
     model.add(
