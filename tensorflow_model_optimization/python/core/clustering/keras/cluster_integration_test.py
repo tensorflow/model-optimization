@@ -716,7 +716,6 @@ class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
       optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
       loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')])
-    clustered_model.run_eagerly = True
     clustered_model.fit(self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
 
     stripped_model = cluster.strip_clustering(clustered_model)
