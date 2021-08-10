@@ -310,6 +310,9 @@ def strip_clustering(model):
           layer, input_tensors=None, clone_function=_strip_clustering_wrapper)
 
     elif isinstance(layer, cluster_wrapper.ClusterWeightsMHA):
+        # Update cluster associations in order to get the latest weights
+        layer.update_clustered_weights_associations()
+
         # In case of MHA layer, use the overloaded implementation
         return layer.strip_clustering()
 
