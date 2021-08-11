@@ -20,6 +20,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
+from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
 keras = tf.keras
@@ -169,7 +170,11 @@ def assert_model_sparsity(test_case, sparsity, model, rtol=1e-6, atol=1e-6):
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       for weight in layer.layer.get_prunable_weights():
         test_case.assertAllClose(
-            sparsity, _get_sparsity(tf.keras.backend.get_value(weight)), rtol=rtol, atol=atol)
+            sparsity,
+            _get_sparsity(tf.keras.backend.get_value(weight)),
+            rtol=rtol,
+            atol=atol
+        )
 
 
 # Check if model does not have target sparsity.
@@ -180,3 +185,12 @@ def is_model_sparsity_not(sparsity, model):
         if sparsity != _get_sparsity(tf.keras.backend.get_value(weight)):
           return True
   return False
+
+
+def assert_model_sparsity_m_by_n(test_case, model, m_by_n: tuple = (2, 4)):
+  for layer in model.layers:
+    if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+      for weight in layer.layer.get_prunable_weights():
+        test_case.assertTrue(
+            pruning_utils.is_pruned_m_by_n(weight, m_by_n=m_by_n)
+        )

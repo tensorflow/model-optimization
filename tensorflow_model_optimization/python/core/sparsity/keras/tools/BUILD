@@ -1,3 +1,4 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_binary")
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
 
 package(default_visibility = [
@@ -43,5 +44,19 @@ py_binary(
         ":sparsity_tooling",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
+    ],
+)
+
+pytype_strict_binary(
+    name = "check_sparsity_m_by_n",
+    srcs = ["check_sparsity_m_by_n.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        # absl:app dep1,
+        # absl/flags dep1,
+        # numpy dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
     ],
 )

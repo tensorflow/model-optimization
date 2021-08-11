@@ -331,6 +331,77 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
 
     self._check_strip_pruning_matches_original(model, 0.5)
 
+  @parameterized.named_parameters(
+      {
+          'testcase_name': 'Conv2D',
+          'layer_type': tf.keras.layers.Conv2D,
+          'layer_arg': [16, (5, 7)],
+          'input_shape': (10, 10, 8),
+      },
+      {
+          'testcase_name': 'Dense',
+          'layer_type': tf.keras.layers.Dense,
+          'layer_arg': [16],
+          'input_shape': [(8)],
+      },
+      {
+          'testcase_name': 'Conv2D_not_multiple_4',
+          'layer_type': tf.keras.layers.Conv2D,
+          'layer_arg': [16, (5, 7)],
+          'input_shape': (10, 10, 7),
+          'sparsity_ratio': 0.428571,
+      },
+      {
+          'testcase_name': 'Conv2D_1by2',
+          'layer_type': tf.keras.layers.Conv2D,
+          'layer_arg': [16, (5, 7)],
+          'input_shape': (10, 10, 8),
+          'm_by_n': (1, 2),
+      },
+      {
+          'testcase_name': 'Dense_1by2',
+          'layer_type': tf.keras.layers.Dense,
+          'layer_arg': [16],
+          'input_shape': [(8)],
+          'm_by_n': (1, 2),
+      },
+  )
+  def testMbyNSparsityPruning_SupportedLayers(
+      self, layer_type, layer_arg, input_shape,
+      m_by_n=(2, 4),
+      sparsity_ratio=0.50
+  ):
+    """ Check that we prune supported layers with m by n sparsity. """
+    self.params.update({'sparsity_m_by_n': m_by_n})
+
+    model = keras.Sequential()
+    model.add(prune.prune_low_magnitude(
+        layer_type(*layer_arg), input_shape=input_shape, **self.params))
+
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
+    test_utils.assert_model_sparsity(self, 0.0, model)
+    model.fit(
+        np.random.randn(*self._batch(model.input.get_shape().as_list(), 32)),
+        np.random.randn(*self._batch(model.output.get_shape().as_list(), 32)),
+        callbacks=[pruning_callbacks.UpdatePruningStep()])
+
+    test_utils.assert_model_sparsity_m_by_n(self, model, m_by_n)
+    self._check_strip_pruning_matches_original(model, sparsity_ratio)
+
+  def testSparsityPruningMbyN_NonSupportedLayers(self):
+    """ Check layer that is not supported for m by n sparsity."""
+    self.params.update({'sparsity_m_by_n': (2, 4)})
+
+    model = keras.Sequential()
+    layer_type = tf.keras.layers.SeparableConv1D
+    args, input_shape = ([4, 3], (3, 6))
+
+    with self.assertRaises(ValueError):
+      model.add(prune.prune_low_magnitude(
+        layer_type(*args), input_shape=input_shape, **self.params))
+
   @parameterized.parameters(prune_registry.PruneRegistry._RNN_LAYERS -
                             {keras.layers.RNN})
   def testRNNLayersSingleCell_ReachesTargetSparsity(self, layer_type):

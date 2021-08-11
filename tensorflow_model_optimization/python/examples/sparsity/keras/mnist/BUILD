@@ -1,3 +1,4 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_binary")
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
 
 package(
@@ -62,5 +63,22 @@ py_strict_binary(
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
+    ],
+)
+
+pytype_strict_binary(
+    name = "mnist_e2e_sparsity2x4",
+    srcs = ["mnist_e2e_sparsity2x4.py"],
+    python_version = "PY3",
+    srcs_version = "PY3",
+    deps = [
+        # absl:app dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:test_utils",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_wrapper",
     ],
 )

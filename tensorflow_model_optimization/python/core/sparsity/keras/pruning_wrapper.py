@@ -33,6 +33,7 @@ from tensorflow_model_optimization.python.core.sparsity.keras import prunable_la
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_utils import convert_to_tuple_of_two_int
 
 keras = tf.keras
 K = keras.backend
@@ -102,6 +103,7 @@ class PruneLowMagnitude(Wrapper):
                pruning_schedule=pruning_sched.ConstantSparsity(0.5, 0),
                block_size=(1, 1),
                block_pooling_type='AVG',
+               sparsity_m_by_n=None,
                **kwargs):
     """Create a pruning wrapper for a keras layer.
 
@@ -115,11 +117,27 @@ class PruneLowMagnitude(Wrapper):
         sparse pattern in rank-2 weight tensors.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
+      sparsity_m_by_n: default None, otherwise a tuple of 2 integers, indicates
+        pruning with m_by_n sparsity, e.g., (2, 4): 2 zeros out of 4 consecutive
+        elements. It check whether we can do pruning with m_by_n sparsity.
+
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
     self.pruning_schedule = pruning_schedule
     self.block_size = block_size
     self.block_pooling_type = block_pooling_type
+    self.sparsity_m_by_n = None
+
+    if sparsity_m_by_n:
+      # Sparsity m_by_n can be applied only to Conv2D and Dense layers.
+      if (not isinstance(layer, tf.keras.layers.Conv2D) \
+          and not isinstance(layer, tf.keras.layers.Dense)):
+        raise ValueError('Structural sparsity M by N is applicable only '
+                         'to `Conv2D` and `Dense` layers. You passed: '
+                         '{input}'.format(input=layer.__class__))
+
+      self.sparsity_m_by_n = convert_to_tuple_of_two_int(
+        sparsity_m_by_n, 'sparsity_m_by_n')
 
     # An instance of the Pruning class. This class contains the logic to prune
     # the weights of this layer.
@@ -235,6 +253,7 @@ class PruneLowMagnitude(Wrapper):
         pruning_vars=self.pruning_vars,
         pruning_schedule=self.pruning_schedule,
         block_size=self.block_size,
+        sparsity_m_by_n = self.sparsity_m_by_n,
         block_pooling_type=self.block_pooling_type)
 
   def call(self, inputs, training=None, **kwargs):

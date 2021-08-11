@@ -21,6 +21,7 @@ from __future__ import division
 from __future__ import print_function
 
 # import g3
+import logging
 import numpy as np
 import tensorflow as tf
 
@@ -157,3 +158,232 @@ def factorized_pool(input_tensor,
         padding=padding)
 
   return tf.squeeze(tf.transpose(width_pooling, perm=[0, 1, 3, 2]))
+
+
+def convert_to_tuple_of_two_int(value, name):
+  """Transforms iterable of 2 integers into an tuple of 2 integers.
+
+  Args:
+    value: A iterable of 2 ints.
+    name: The name of the argument being validated, e.g., sparsity_m_by_n.
+
+  Returns:
+    A tuple of 2 integers.
+
+  Raises:
+    ValueError: If something else than an iterable of ints was passed.
+  """
+  try:
+    value_tuple = tuple(value)
+  except TypeError:
+    raise ValueError(
+      f"The {name} argument must be a tuple/list of 2 integers."
+      f"received: {str(value)}."
+    ) from None
+  if len(value_tuple) != 2:
+    raise ValueError(
+      f"The {name} argument must be a tuple/list of 2 integers."
+      f"received: {str(value)}."
+    )
+  for single_value in value_tuple:
+    if not isinstance(single_value, int):
+      raise ValueError(
+        f"The {name} argument must be a tuple/list of 2 integers."
+        f"received: {str(value)} including element {str(single_value)} "
+        f"of type {str(type(single_value))}."
+      )
+
+  return value_tuple
+
+
+def weights_rearrange(weights):
+  """Rearrange weights tensor,
+  so that m by n sparsity structure applied in last channel.
+
+  This is a m_by_n sparsity helper function.
+
+  m by n sparsity: every group of consecutive n values contains
+    at least m zeros on the last channel in TFLite data format.
+
+  * In case of Conv2D weights:
+      TF data format is [height, width, channel_in, channel_out],
+      TFLite data format is [channel_out, height, width, channel_in]
+    Rearranged Conv2D weights format: [channel_out x height x width, channel_in]
+
+  * In case of Dense weights:
+      TF data format is [channel_in, channel_out],
+      TFLite data format is [width, channel_in]
+    Rearranged Conv2D weights format: [width, channel_in]
+
+  Args:
+    weights: weights tensor. Must be rank 2 or 4.
+
+  Returns:
+    A rank 2 weight tensor.
+
+  Raises:
+    ValueError: if the input tensor is not rank 2 or 4.
+  """
+  if weights.shape.rank == 2:
+    prepared_weights = tf.transpose(weights)
+  elif weights.shape.rank == 4:
+    perm_weights = tf.transpose(weights, perm=[3, 0, 1, 2])
+    prepared_weights = tf.reshape(
+        perm_weights, [tf.reduce_prod(perm_weights.shape[:-1]), -1]
+    )
+  else:
+    raise ValueError(f"weight tensor with shape: {weights.shape} is not supported.")
+
+  return prepared_weights
+
+
+def m_by_n_sparsity_mask_prepare(mask, weights_shape):
+  """Reshape and permute sparsity mask, so that it match original
+  weights data format.
+
+  This is a m_by_n sparsity helper function.
+
+  Args:
+    mask: A 2-D tensor. Must be rank 2 or 4.
+    weights_shape: shape of weights
+
+  Returns:
+    A sparsity mask that matches weights data format.
+
+  Raises:
+    ValueError:
+      if the input tensor is not rank 2 or 4.
+    InvalidArgumentError:
+      if number of elements mismatch between mask and weights,
+      if shape of prepared mask mismatch shape of weights.
+  """
+  tf.debugging.assert_equal(
+      tf.size(mask),
+      tf.reduce_prod(weights_shape),
+      message="number of elements mismatch between mask and weights.",
+    )
+
+  if mask.shape.rank != 2:
+    raise ValueError(f"rank of mask(rank:{mask.shape.rank}) should be 2.")
+
+  if weights_shape.rank == 2:
+    prepared_mask = tf.transpose(mask)
+  elif weights_shape.rank == 4:
+    reshaped_mask = tf.reshape(
+        mask,
+        [weights_shape[-1], weights_shape[0], weights_shape[1], weights_shape[2]],
+    )
+    prepared_mask = tf.transpose(reshaped_mask, perm=[1, 2, 3, 0])
+  else:
+    raise ValueError(f"weight tensor with shape: {weights_shape} is not supported.")
+
+  tf.debugging.assert_equal(
+      prepared_mask.shape,
+      weights_shape,
+      message="shape of prepared mask mismatch shape of weights."
+    )
+
+  return prepared_mask
+
+
+def generate_m_by_n_mask(weights, m_by_n: tuple = (2, 4)):
+  """Generate m-by-n sparsity mask.
+
+  This is a m_by_n sparsity helper function.
+
+  Args:
+    weights: a rank 2 tensor.
+    m_by_n: a tuple of 2 integers (m, n), indicates m zeros in every
+      n consecutive values, m must be smaller than n. Default to (2, 4).
+
+  Returns:
+    A rank 2 m-by-n sparsity mask.
+
+  Raises:
+    InvalidArgumentError: if m not smaller than n.
+  """
+  num_zeros, block_size = tf.constant(m_by_n[0]), tf.constant(m_by_n[1])
+  tf.debugging.assert_less(
+      num_zeros,
+      block_size,
+      message=f"Argument m_by_n received {m_by_n}, m be must smaller than n."
+    )
+  num_non_zeros = block_size - num_zeros
+  abs_weights = tf.abs(weights)
+
+  # add zero-padding
+  pad_after = block_size - abs_weights.shape[-1] % block_size
+  abs_weights_pad = tf.pad(abs_weights, [[0, 0], [0, pad_after]], "CONSTANT")
+
+  num_blocks = tf.size(abs_weights_pad) // block_size
+  reshaped_weights_into_blocks = tf.reshape(abs_weights_pad, [num_blocks, block_size])
+  _, top_k_indices = tf.math.top_k(
+      reshaped_weights_into_blocks, k=num_non_zeros, sorted=False
+  )
+  ind_i, _ = tf.meshgrid(tf.range(num_blocks), tf.range(num_non_zeros), indexing="ij")
+  ind_ij = tf.stack([ind_i, top_k_indices], axis=-1)
+  sparsity_mask_pad = tf.scatter_nd(
+      ind_ij, tf.ones([num_blocks, num_non_zeros]), [num_blocks, block_size]
+  )
+  reshaped_sparsity_mask_pad = tf.reshape(
+      sparsity_mask_pad, tf.shape(abs_weights_pad)
+  )
+
+  # remove padding from mask
+  sparsity_mask = tf.slice(reshaped_sparsity_mask_pad, [0, 0], abs_weights.shape)
+
+  return sparsity_mask
+
+
+def is_pruned_m_by_n(weights,
+                     m_by_n: tuple = (2, 4),
+                     last_channel: str="C_OUT"):
+  """Check m by n sparsity pattern on Weight Tensor
+
+  This is a m_by_n sparsity helper function.
+
+  Args:
+    weights: A tensor of layer weights.
+    m_by_n: a tuple of 2 integers (m, n), indicates m zeros in every
+      n consecutive values, m must be smaller than n. Default to (2, 4).
+    last_channel: A string, 'C_OUT'(default) and 'C_IN' are supported.
+
+      Last channel of weights tensor.
+        Conv2D weights in TF: [H, W, C_IN, C_OUT];
+          TFLite: [C_OUT, H, W, C_IN]
+        DENSE weights in TF: [C_IN, C_OUT];
+          TFLite: [C_OUT, C_IN]
+
+  Returns:
+    A boolean value: True if weights are pruned with sparsity m_by_n
+      on the last channel.
+
+  Raises:
+    ValueError:
+      if unsupported last_channel.
+      if m is larger than n.
+
+  """
+  num_zeros, num_elem = m_by_n
+  if num_zeros > num_elem:
+    raise ValueError(
+      f"number of zeros can't be more than number elements. "
+      f"received: {num_zeros} zeros in {num_elem} elements."
+    )
+  num_non_zeros = num_elem - num_zeros
+
+  if last_channel.endswith("C_IN"):
+    prepared_weights = tf.reshape(
+        weights, [tf.reduce_prod(weights.shape[:-1]), -1])
+  elif last_channel.endswith("C_OUT"):
+    prepared_weights = weights_rearrange(weights)
+  else:
+    raise ValueError("last_channel must be `C_IN` or `C_OUT`")
+
+  prepared_weights_np = prepared_weights.numpy()
+  for row in range(0, prepared_weights_np.shape[0]):
+    for col in range(0, prepared_weights_np.shape[1], num_elem):
+      if (np.count_nonzero(prepared_weights_np[row, col:col+num_elem])
+        > num_non_zeros):
+        return False
+  return True

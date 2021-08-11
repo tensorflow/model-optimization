@@ -103,6 +103,7 @@ py_strict_library(
         ":prune_registry",
         ":pruning_impl",
         ":pruning_schedule",
+        ":pruning_utils",
         # numpy dep1,
         # tensorflow dep1,
         # python/keras/utils:generic_utils tensorflow dep2,
@@ -186,12 +187,10 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         ":prune",
+        ":pruning_utils",
         ":pruning_wrapper",
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
-        # python/keras:backend tensorflow dep2,
-        # python/keras/saving tensorflow dep2,
     ],
 )
 

@@ -28,7 +28,7 @@ class Pruning(object):
   """Implementation of magnitude-based weight pruning."""
 
   def __init__(self, training_step_fn, pruning_vars, pruning_schedule,
-               block_size, block_pooling_type):
+               block_size, block_pooling_type, sparsity_m_by_n=None):
     """The logic for magnitude-based pruning weight tensors.
 
     Args:
@@ -40,11 +40,15 @@ class Pruning(object):
         in rank-2 weight tensors.
       block_pooling_type: (optional) The function to use to pool weights in the
         block. Must be 'AVG' or 'MAX'.
+      sparsity_m_by_n: default None, otherwise a tuple of 2 integers, indicates
+        pruning with m_by_n sparsity, e.g., (2, 4): 2 zeros out of 4 consecutive
+        elements. It check whether we can do pruning with m_by_n sparsity.
     """
     self._pruning_vars = pruning_vars
     self._pruning_schedule = pruning_schedule
     self._block_size = list(block_size)
     self._block_pooling_type = block_pooling_type
+    self._sparsity_m_by_n = sparsity_m_by_n
     self._validate_block()
 
     # Training step
@@ -99,8 +103,34 @@ class Pruning(object):
           tf.math.greater_equal(abs_weights, current_threshold), weights.dtype)
     return current_threshold, new_mask
 
+  def _update_mask_sparsity_m_by_n(self, weights, m_by_n=(2, 4)):
+    """Updates the m by n sparsity mask for a given weight tensor.
+
+    This function creates a mask for the given weight tensor so
+    that n elements with the lowest absolute values in the block
+    of m elements are set to be zero. We don't return any threshold.
+
+    Args:
+      weights: The weight tensor that needs to be masked.
+      m_by_n: tuple of two integers, indicating m zeros out of
+        n consecutive elements, default as 2 by 4 sparsity.
+
+    Returns:
+      new_mask: A numpy array of the same size and shape as weights containing
+      0 or 1 to indicate which of the values in weights should be set to zero.
+      It throws an error if the requested mask cannot be created.
+    """
+    prepared_weights = pruning_utils.weights_rearrange(weights)
+    mask = pruning_utils.generate_m_by_n_mask(prepared_weights, m_by_n)
+    new_mask = pruning_utils.m_by_n_sparsity_mask_prepare(mask, weights.shape)
+
+    return new_mask
+
   def _maybe_update_block_mask(self, weights):
     """Performs block-granular masking of the weights.
+
+    If sparsity_m_by_n is selected, then we return the relevant pruning mask,
+    that nullify two out of four elements in the block.
 
     Block pruning occurs only if the block_height or block_width is > 1 and
     if the weight tensor, when squeezed, has ndims = 2. Otherwise, elementwise
@@ -110,7 +140,8 @@ class Pruning(object):
 
     Returns:
       new_threshold: The new value of the threshold based on weights, and
-        sparsity at the current global_step
+        sparsity at the current global_step. In case of sparsity m_by_n,
+        the returned threshold is an arbitrary number.
       new_mask: A numpy array of the same size and shape as weights containing
         0 or 1 to indicate which of the values in weights falls below
         the threshold
@@ -118,6 +149,11 @@ class Pruning(object):
     Raises:
       ValueError: if block pooling function is not AVG or MAX
     """
+    if self._sparsity_m_by_n:
+      mask =  self._update_mask_sparsity_m_by_n(weights, self._sparsity_m_by_n)
+      # We need to return some numbers for threshold.
+      return 999.0, mask
+
     if self._block_size == [1, 1]:
       return self._update_mask(weights)
 
