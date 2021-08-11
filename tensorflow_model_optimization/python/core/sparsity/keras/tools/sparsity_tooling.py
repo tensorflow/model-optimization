@@ -25,6 +25,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
@@ -65,6 +66,7 @@ def _apply_pruning(prunable_object):
     layer.pruning_obj.weight_mask_op()  # weight = weight * mask
 
 
+@metrics.MonitorBoolGauge('prune_for_benchmark_usage')
 def prune_for_benchmark(keras_model,
                         target_sparsity,
                         block_size=(1, 1)):
