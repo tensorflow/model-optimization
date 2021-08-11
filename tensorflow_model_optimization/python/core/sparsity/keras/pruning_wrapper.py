@@ -354,7 +354,12 @@ class PruneLowMagnitude(Wrapper):
 
 def collect_prunable_layers(model):
   """Recursively collect the prunable layers in the model."""
-  return [
-      layer for layer in model.submodules
-      if isinstance(layer, PruneLowMagnitude)
-  ]
+  prunable_layers = []
+  for layer in model.layers:
+    # A keras model may have other models as layers.
+    if isinstance(layer, tf.keras.Model):
+      prunable_layers += collect_prunable_layers(layer)
+    if isinstance(layer, PruneLowMagnitude):
+      prunable_layers.append(layer)
+
+  return prunable_layers

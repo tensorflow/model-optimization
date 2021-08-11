@@ -78,7 +78,9 @@ class PruningPolicyTest(tf.test.TestCase):
 
   def _count_pruned_layers(self, model):
     count = 0
-    for layer in model.submodules:
+    for layer in model.layers:
+      if isinstance(layer, keras.Model):
+        count += self._count_pruned_layers(layer)
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         count += 1
     return count

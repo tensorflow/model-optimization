@@ -142,6 +142,20 @@ class PruningWrapperTest(tf.test.TestCase):
     _ = layer(inputs)
     pruning_wrapper.PruneLowMagnitude(layer, block_pooling_type='MAX')
 
+  def testCollectPrunableLayers(self):
+    lstm_layer = keras.layers.RNN(
+        layers.LSTMCell(4, dropout=0.5, recurrent_dropout=0.5),
+        input_shape=(None, 4))
+    self.model.add(Prune(lstm_layer))
+    self.model.add(Prune(layers.BatchNormalization()))
+    self.model.add(Prune(layers.Flatten()))
+    self.model.add(Prune(layers.Dense(10)))
+    self.model.add(Prune(layers.Dropout(0.5)))
+
+    self.model.build(input_shape=(1, 4))
+
+    self.assertLen(pruning_wrapper.collect_prunable_layers(self.model), 5)
+
 
 if __name__ == '__main__':
   tf.test.main()
