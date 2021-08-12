@@ -14,6 +14,7 @@ py_strict_library(
         "experimental/combine/__init__.py",
         "quantization/__init__.py",
         "quantization/keras/__init__.py",
+        "quantization/keras/collaborative_optimizations/__init__.py",
         "quantization/keras/default_8bit/__init__.py",
         "quantization/keras/default_8bit/default_8bit_transforms/__init__.py",
         "quantization/keras/graph_transformations/__init__.py",

@@ -90,9 +90,9 @@ class MyClusterableLayerInvalid(keras.layers.Dense,
   pass
 
 
-class TestCustomerableWeightsCA(clustering_registry.AbstractClusteringAlgorithm
+class TestCustomerableWeightsCA(clustering_registry.ClusteringAlgorithm
                                ):
-  """Dummy class derived from AbstractClusteringAlgorithm."""
+  """Dummy class derived from ClusteringAlgorithm."""
 
   def get_pulling_indices(self, weight):
     return [1, 2, 3]
@@ -125,15 +125,12 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.custom_clusterable_layer = CustomClusterableLayer(10)
     self.custom_non_clusterable_layer = CustomNonClusterableLayer(10)
     self.keras_depthwiseconv2d_layer = layers.DepthwiseConv2D((3, 3), (1, 1))
-    self.clusterable_layer = MyClusterableLayer(10)
+    self.keras_dense_layer = layers.Dense(10)
+    self.keras_conv1d_layer = layers.Conv1D(filters=3, kernel_size=(5))
+    self.keras_conv2d_layer = layers.Conv2D(filters=3, kernel_size=(4, 5))
+    self.keras_conv3d_layer = layers.Conv3D(filters=2, kernel_size=(3, 4, 5))
     self.keras_custom_layer = KerasCustomLayer()
     self.clusterable_layer = MyClusterableLayer(10)
-
-    clustering_registry.ClusteringLookupRegistry.register_new_implementation({
-        CustomClusterableLayer: {
-            'kernel': clustering_registry.DenseWeightsCA
-        }
-    })
 
     self.model = keras.Sequential()
     self.params = {
@@ -154,8 +151,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.assertIsInstance(wrapped_layer, cluster_wrapper.ClusterWeights)
     self.assertEqual(original_layer, wrapped_layer.layer)
 
-  @staticmethod
-  def _count_clustered_layers(model):
+  def _count_clustered_layers(self, model):
     count = 0
     for layer in model.layers:
       if isinstance(layer, cluster_wrapper.ClusterWeights):
@@ -199,6 +195,59 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self._validate_clustered_layer(self.keras_depthwiseconv2d_layer,
                                    wrapped_layer)
     self.assertEqual([], wrapped_layer.layer.get_clusterable_weights())
+
+  @keras_parameterized.run_all_keras_modes
+  def testDenseLayer(self):
+    """Verifies that we can cluster a Dense layer."""
+    input_shape = (4, 28, 1)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_dense_layer,
+        input_shape=input_shape
+        )
+
+    self._validate_clustered_layer(self.keras_dense_layer,
+                                   wrapped_layer)
+    self.assertEqual([1, 10],
+                     wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
+
+  @keras_parameterized.run_all_keras_modes
+  def testConv1DLayer(self):
+    """Verifies that we can cluster a Conv1D layer."""
+    input_shape = (4, 28, 1)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_conv1d_layer,
+        input_shape=input_shape)
+
+    self._validate_clustered_layer(self.keras_conv1d_layer,
+                                   wrapped_layer)
+    self.assertEqual([5, 1, 3],
+                     wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
+
+  @keras_parameterized.run_all_keras_modes
+  def testConv2DLayer(self):
+    """Verifies that we can cluster a Conv2D layer."""
+    input_shape = (4, 28, 28, 1)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_conv2d_layer,
+        input_shape=input_shape)
+
+    self._validate_clustered_layer(self.keras_conv2d_layer,
+                                   wrapped_layer)
+    self.assertEqual([4, 5, 1, 3],
+                     wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
+
+  @keras_parameterized.run_all_keras_modes
+  def testConv3DLayer(self):
+    """Verifies that we can cluster a Conv3D layer."""
+    input_shape = (4, 28, 28, 28, 1)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_conv3d_layer,
+        input_shape=input_shape)
+
+    self._validate_clustered_layer(self.keras_conv3d_layer,
+                                   wrapped_layer)
+    self.assertEqual([3, 4, 5, 1, 2],
+                     wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
 
   def testClusterKerasUnsupportedLayer(self):
     """Verifies that attempting to cluster an unsupported layer raises an exception."""

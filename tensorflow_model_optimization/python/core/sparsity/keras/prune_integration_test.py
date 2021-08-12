@@ -30,7 +30,6 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_sch
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 from tensorflow_model_optimization.python.core.sparsity.keras import test_utils
 
-
 keras = tf.keras
 layers = keras.layers
 
@@ -46,15 +45,14 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
   _PRUNABLE_LAYERS = [
       layer for layer, weights in
       prune_registry.PruneRegistry._LAYERS_WEIGHTS_MAP.items()
-        if (weights and layer != tf.keras.layers.Conv3DTranspose
-                    and layer != tf.keras.layers.Conv2DTranspose)
+      if (weights and layer != tf.keras.layers.Conv3DTranspose and
+          layer != tf.keras.layers.Conv2DTranspose)
   ]
 
   # Fetch all the non-prunable layers from the registry.
   _NON_PRUNABLE_LAYERS = [
       layer for layer, weights in
-      prune_registry.PruneRegistry._LAYERS_WEIGHTS_MAP.items()
-      if not weights
+      prune_registry.PruneRegistry._LAYERS_WEIGHTS_MAP.items() if not weights
   ]
 
   def _batch(self, dims, batch_size):
@@ -73,8 +71,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
       dims[0] = batch_size
     return dims
 
-  @staticmethod
-  def _get_params_for_layer(layer_type):
+  def _get_params_for_layer(self, layer_type):
     """Returns the arguments required to construct a layer.
 
     For a given `layer_type`, return ( [params], (input_shape) )
@@ -123,8 +120,10 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
   # TODO(b/185968817): this should not be verified in all the unit tests.
   # As long as there are a few unit tests for strip_pruning,
   # these checks are redundant.
-  def _check_strip_pruning_matches_original(
-      self, model, sparsity, input_data=None):
+  def _check_strip_pruning_matches_original(self,
+                                            model,
+                                            sparsity,
+                                            input_data=None):
     test_utils.assert_model_sparsity(self, sparsity, model)
     stripped_model = prune.strip_pruning(model)
 
@@ -136,14 +135,17 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     stripped_model_result = stripped_model.predict(input_data)
     np.testing.assert_almost_equal(model_result, stripped_model_result)
 
-  @staticmethod
-  def _is_pruned(model):
+  def _is_pruned(self, model):
     for layer in model.layers:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         return True
 
-  @staticmethod
-  def _train_model(model, epochs=1, x_train=None, y_train=None, callbacks=None):
+  def _train_model(self,
+                   model,
+                   epochs=1,
+                   x_train=None,
+                   y_train=None,
+                   callbacks=None):
     if x_train is None:
       x_train = np.random.rand(20, 10),
     if y_train is None:
@@ -158,7 +160,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
 
     if callbacks is None:
       callbacks = []
-      if PruneIntegrationTest._is_pruned(model):
+      if self._is_pruned(model):
         callbacks = [pruning_callbacks.UpdatePruningStep()]
 
     model.fit(
@@ -203,8 +205,8 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     for layer in model.layers:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         for weight in layer.layer.get_prunable_weights():
-          self.assertEqual(
-              1, np.count_nonzero(tf.keras.backend.get_value(weight)))
+          self.assertEqual(1,
+                           np.count_nonzero(tf.keras.backend.get_value(weight)))
 
   ###################################################################
   # Tests for training with pruning with pretrained models or weights.
@@ -313,8 +315,9 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     args, input_shape = self._get_params_for_layer(layer_type)
     if args is None:
       return  # Test for layer not supported yet.
-    model.add(prune.prune_low_magnitude(
-        layer_type(*args), input_shape=input_shape, **self.params))
+    model.add(
+        prune.prune_low_magnitude(
+            layer_type(*args), input_shape=input_shape, **self.params))
 
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])

@@ -18,6 +18,8 @@
 import abc
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
+
 layers = tf.keras.layers
 activations = tf.keras.activations
 
@@ -144,7 +146,7 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
 
   def _end_layer_stop_fn(self, layer):
     """Determines whether the layer ends a subgraph of sparse inference."""
-    return isinstance(layer, layers.GlobalAveragePooling2D) and layer.keepdims
+    return isinstance(layer, layers.GlobalAveragePooling2D)
 
   def _check_layer_support(self, layer):
     """Returns whether the layer is supported or not.
@@ -220,6 +222,8 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
     elif layer.__class__.__name__ == 'TFOpLambda':
       return layer.function in (tf.identity, tf.__operators__.add, tf.math.add,
                                 tf.math.subtract, tf.math.multiply)
+    elif isinstance(layer, pruning_wrapper.PruneLowMagnitude):
+      return self._check_layer_support(layer.layer)
     return False
 
   def ensure_model_supports_pruning(self, model):
@@ -249,7 +253,7 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
                         'preceding `ZeroPadding2D` with `padding == 1` in all '
                         'input branches of the model'))
 
-    # Search for the end layer (GlobalAveragePooling with `keepdims = True`)
+    # Search for the end layer (GlobalAveragePooling)
     # for every output branch (backward).
     output_layers = set(inp._keras_history.layer for inp in model.outputs)
     end_layers = self._lookup_layers(
@@ -258,8 +262,8 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
         self._get_producers,
     )
     if not end_layers:
-      raise ValueError(('Could not find a `GlobalAveragePooling2D` layer with '
-                        '`keepdims = True` in all output branches'))
+      raise ValueError(('Could not find a `GlobalAveragePooling2D` layer in '
+                        'all output branches'))
 
     # Ensure that all layers between the start and the end layers are supported
     # for pruning.

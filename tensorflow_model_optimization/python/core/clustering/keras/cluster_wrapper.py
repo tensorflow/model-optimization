@@ -30,7 +30,7 @@ GradientAggregation = cluster_config.GradientAggregation
 
 
 class ClusterWeights(Wrapper):
-  """This wrapper augments a keras layer so that the weight tensor(s) can be clustered.
+  """This wrapper augments a layer so the weight tensor(s) can be clustered.
 
   This wrapper implements nearest neighbor clustering algorithm. This algorithm
   ensures that only a specified number of unique values are used in a weight
@@ -138,8 +138,7 @@ class ClusterWeights(Wrapper):
     # Save the input shape specified in the build
     self.build_input_shape = None
 
-  @staticmethod
-  def _make_layer_name(layer):
+  def _make_layer_name(self, layer):
     return '{}_{}'.format('cluster', layer.name)
 
   def get_weight_from_layer(self, weight_name):
@@ -157,10 +156,15 @@ class ClusterWeights(Wrapper):
       # Store the original weight in this wrapper
       # The child reference will be overridden in
       # update_clustered_weights_associations
+      # The actual weight_name here for the clustering wrapper is not
+      # necessarily the same as the original one from the layer wrapped.
+      # For example for cells in StackedRNNCell, the names become
+      # 'kernel/0', 'recurrent_kernel/0', 'kernel/1', 'recurrent_kernel/1'
       original_weight = self.get_weight_from_layer(weight_name)
       self.original_clusterable_weights[weight_name] = original_weight
+      # Track the variable
       setattr(self, 'original_weight_' + weight_name,
-              original_weight)  # Track the variable
+              original_weight)
       # Store the position in layer.weights of original_weight to restore during
       # stripping
       position_original_weight = next(
@@ -181,9 +185,18 @@ class ClusterWeights(Wrapper):
           initializer=tf.keras.initializers.Constant(value=cluster_centroids))
 
       # Init the weight clustering algorithm
+      if isinstance(self.layer, tf.keras.layers.RNN):
+        if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+          weight_name_no_index = weight_name.split('/')[0]
+        else:
+          weight_name_no_index = weight_name
+      elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+        weight_name_no_index = weight_name.split('/')[0]
+      else:
+        weight_name_no_index = weight_name
       self.clustering_algorithms[weight_name] = (
           clustering_registry.ClusteringLookupRegistry().get_clustering_impl(
-              self.layer, weight_name)
+              self.layer, weight_name_no_index)
           (
               clusters_centroids=self.cluster_centroids[weight_name],
               cluster_gradient_aggregation=self.cluster_gradient_aggregation,
@@ -191,7 +204,8 @@ class ClusterWeights(Wrapper):
 
       # Init the pulling_indices (weights associations)
       pulling_indices = (
-          self.clustering_algorithms[weight_name].get_pulling_indices(weight))
+          self.clustering_algorithms[weight_name].get_pulling_indices(
+              weight))
       self.pulling_indices[weight_name] = self.add_weight(
           '{}{}'.format('pulling_indices_', weight_name),
           shape=pulling_indices.shape,
@@ -247,7 +261,10 @@ class ClusterWeights(Wrapper):
               pulling_indices, original_weight))
 
       # Replace the weights with their clustered counterparts
-      self.set_weight_to_layer(weight_name, clustered_weights)
+      # Remove weight_name index so the wrapper layer weight_name can match
+      # the original one
+      self.set_weight_to_layer(weight_name,
+                               clustered_weights)
 
   def call(self, inputs, training=None, **kwargs):
     # Update cluster associations in order to set the latest weights
@@ -322,10 +339,52 @@ class ClusterWeights(Wrapper):
 
 
 class ClusterWeightsRNN(ClusterWeights):
-  """This wrapper augments a keras RNN layer so that the weights can be clustered."""
+  """This wrapper augments a RNN layer so that the weights can be clustered.
+
+  The weight_name of a single cell in RNN layers is marked with an index in
+  registry. In the wrapper layer, the index needs to be removed for matching
+  the attribute of the cell layer.
+  """
+
+  def get_weight_name_without_index(self, weight_name):
+    weight_name_with_index = weight_name.split('/')
+    return weight_name_with_index[0], int(weight_name_with_index[1])
+
+  def get_return_layer_cell(self, index):
+    return_layer_cell = (self.layer.forward_layer.cell if index == 0 else
+                         self.layer.backward_layer.cell)
+    return return_layer_cell
 
   def get_weight_from_layer(self, weight_name):
-    return getattr(self.layer.cell, weight_name)
+    weight_name_no_index, i = self.get_weight_name_without_index(weight_name)
+    if hasattr(self.layer, 'cell'):
+      if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+        return getattr(self.layer.cell.cells[i], weight_name_no_index)
+      else:
+        return getattr(self.layer.cell, weight_name_no_index)
+    elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+      if i < 0 or i > 1:
+        raise ValueError(
+            'Unsupported number of cells in the layer to get weights from.')
+      return_layer_cell = self.get_return_layer_cell(i)
+      return getattr(return_layer_cell, weight_name_no_index)
+    else:
+      raise ValueError('No cells in the RNN layer to get weights from.')
 
   def set_weight_to_layer(self, weight_name, new_weight):
-    setattr(self.layer.cell, weight_name, new_weight)
+    weight_name_no_index, i = self.get_weight_name_without_index(weight_name)
+    if hasattr(self.layer, 'cell'):
+      if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+        return setattr(self.layer.cell.cells[i],
+                       weight_name_no_index,
+                       new_weight)
+      else:
+        return setattr(self.layer.cell, weight_name_no_index, new_weight)
+    elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+      if i < 0 or i > 1:
+        raise ValueError(
+            'Unsupported number of cells in the layer to set weights for.')
+      return_layer_cell = self.get_return_layer_cell(i)
+      return setattr(return_layer_cell, weight_name_no_index, new_weight)
+    else:
+      raise ValueError('No cells in the RNN layer to set weights for.')

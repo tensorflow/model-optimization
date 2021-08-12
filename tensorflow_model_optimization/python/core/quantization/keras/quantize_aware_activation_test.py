@@ -90,11 +90,13 @@ class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
     # Derived using `tf.fake_quant_with_min_max_vars`
     expected_activation = np.array(
         [0.0, 0.0, 0.0, 0.04705906, 0.09411764, 3.011765,
-         5.9764705]).reshape(7, 1)
+         5.9764705])
 
     for weight in layer.weights:
       self.assertIn('post_activation', weight.name)
-    self.assertAllClose(expected_activation, model.predict(x))
+    self.assertAllClose(
+        expected_activation.reshape(7),
+        model.predict(x).reshape(7))
 
   def testAppliesQuantizationPreActivation(self):
     layer = self.TestLayer()

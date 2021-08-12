@@ -33,9 +33,11 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
 
   # Argument Validation tests
 
-  @staticmethod
-  def _construct_pruning_schedule(
-      schedule_type, begin_step, end_step, frequency=10):
+  def _construct_pruning_schedule(self,
+                                  schedule_type,
+                                  begin_step,
+                                  end_step,
+                                  frequency=10):
     # Uses default values for sparsity. We're only testing begin_step, end_step
     # and frequency here.
     if schedule_type == 'constant_sparsity':

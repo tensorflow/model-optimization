@@ -151,8 +151,12 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     for i in range(len(transformed_weights)):
       self.assertAllEqual(transformed_weights[i], model.get_weights()[i])
 
-  @staticmethod
-  def _get_model(layer_type, activation_type):
+  def _get_model(
+      self,
+      layer_type,
+      squeeze_type,
+      normalization_type,
+      activation_type):
     activation = None
     if activation_type == 'relu':
       activation = keras.layers.ReLU(6.0)
@@ -161,70 +165,169 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
     if layer_type == 'Conv2D':
       return Conv2DModel.get_nonfolded_batchnorm_model(
-          model_type='functional', post_bn_activation=activation)
+          model_type='functional',
+          post_bn_activation=activation,
+          squeeze_type=squeeze_type,
+          normalization_type=normalization_type)
     elif layer_type == 'DepthwiseConv2D':
       return DepthwiseConv2DModel.get_nonfolded_batchnorm_model(
-          model_type='functional', post_bn_activation=activation)
+          model_type='functional',
+          post_bn_activation=activation,
+          squeeze_type=squeeze_type,
+          normalization_type=normalization_type)
 
-  @staticmethod
-  def _get_input_shape(layer_type):
+  def _get_input_shape(self, layer_type):
     if layer_type == 'Conv2D':
       return Conv2DModel.get_batched_input_shape()
     elif layer_type == 'DepthwiseConv2D':
       return DepthwiseConv2DModel.get_batched_input_shape()
 
-  @parameterized.parameters('Conv2D', 'DepthwiseConv2D')
-  def testConv2DBatchNormQuantize(self, layer_type):
-    model = self._get_model(layer_type, False)
+  def _test_conv_squeeze_bn_activation_transform(
+      self,
+      layer_type,
+      squeeze_type,
+      normalization_type,
+      activation_type,
+      transform_class,
+      conv_activation_class,
+      normalization_quantize_config_class):
+    model = self._get_model(layer_type,
+                            squeeze_type,
+                            normalization_type,
+                            activation_type)
     input_shape = self._get_input_shape(layer_type)
 
     transformed_model, updated_metadata = ModelTransformer(
         model,
-        [default_8bit_transforms.Conv2DBatchNormQuantize()],
+        [transform_class()],
     ).transform()
 
     conv_layer = transformed_model.layers[1]
-    bn_layer = transformed_model.layers[2]
+    if squeeze_type == 'sepconv1d_squeeze':
+      bn_layer = transformed_model.layers[3]
+    else:
+      bn_layer = transformed_model.layers[2]
 
     self.assertIsInstance(
-        conv_layer.activation, quantize_aware_activation.NoOpActivation)
+        conv_layer.activation, conv_activation_class)
     self.assertIsInstance(
         updated_metadata.get(bn_layer.name).get('quantize_config'),
-        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
+        normalization_quantize_config_class)
 
     inputs = np.random.standard_normal(input_shape)
     self.assertAllClose(
         transformed_model.predict(inputs), model.predict(inputs))
 
   @parameterized.parameters(
-      ('Conv2D', 'relu', Conv2DBatchNormReLUQuantize),
-      ('Conv2D', 'act_relu', Conv2DBatchNormActivationQuantize),
-      ('DepthwiseConv2D', 'relu', Conv2DBatchNormReLUQuantize),
-      ('DepthwiseConv2D', 'act_relu',
-       Conv2DBatchNormActivationQuantize),
+      ('Conv2D', 'BatchNormalization'),
+      ('Conv2D', 'SyncBatchNormalization'),
+      ('DepthwiseConv2D', 'BatchNormalization'),
+      ('DepthwiseConv2D', 'SyncBatchNormalization'),
   )
-  def testConv2DBatchNormReLUQuantize(
-      self, layer_type, activation_type, transform_type):
-    model = self._get_model(layer_type, activation_type)
-    input_shape = self._get_input_shape(layer_type)
+  def testConv2DBatchNormQuantize(self, layer_type, normalization_type):
+    self._test_conv_squeeze_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type=None,
+        normalization_type=normalization_type,
+        activation_type=None,
+        transform_class=default_8bit_transforms.Conv2DBatchNormQuantize,
+        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
 
-    transformed_model, updated_metadata = ModelTransformer(
-        model,
-        [transform_type()],
-    ).transform()
-
-    conv_layer = transformed_model.layers[1]
-    bn_layer = transformed_model.layers[2]
-
-    self.assertIsInstance(
-        conv_layer.activation, quantize_aware_activation.NoOpActivation)
-    self.assertIsInstance(
-        updated_metadata.get(bn_layer.name).get('quantize_config'),
+  @parameterized.parameters(
+      ('Conv2D', 'BatchNormalization'),
+      ('Conv2D', 'SyncBatchNormalization'),
+      ('DepthwiseConv2D', 'BatchNormalization'),
+      ('DepthwiseConv2D', 'SyncBatchNormalization'),
+  )
+  def testConv2DBatchNormReLUQuantize(self, layer_type, normalization_type):
+    self._test_conv_squeeze_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type=None,
+        normalization_type=normalization_type,
+        activation_type='relu',
+        transform_class=
+        default_8bit_transforms.Conv2DBatchNormReLUQuantize,
+        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=
         default_8bit_quantize_configs.NoOpQuantizeConfig)
 
-    inputs = np.random.standard_normal(input_shape)
-    self.assertAllClose(
-        transformed_model.predict(inputs), model.predict(inputs))
+  @parameterized.parameters(
+      ('Conv2D', 'BatchNormalization'),
+      ('Conv2D', 'SyncBatchNormalization'),
+      ('DepthwiseConv2D', 'BatchNormalization'),
+      ('DepthwiseConv2D', 'SyncBatchNormalization'),
+  )
+  def testConv2DBatchNormActivationQuantize(
+      self, layer_type, normalization_type):
+    self._test_conv_squeeze_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type=None,
+        normalization_type=normalization_type,
+        activation_type='act_relu',
+        transform_class=
+        default_8bit_transforms.Conv2DBatchNormActivationQuantize,
+        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=
+        default_8bit_quantize_configs.NoOpQuantizeConfig)
+
+  @parameterized.parameters(
+      ('Conv2D', 'BatchNormalization'),
+      ('Conv2D', 'SyncBatchNormalization'),
+      ('DepthwiseConv2D', 'BatchNormalization'),
+      ('DepthwiseConv2D', 'SyncBatchNormalization'),
+  )
+  def testConv2DReshapeBatchNormQuantize(
+      self, layer_type, normalization_type):
+    self._test_conv_squeeze_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type='sepconv1d_squeeze',
+        normalization_type=normalization_type,
+        activation_type=False,
+        transform_class=
+        default_8bit_transforms.Conv2DReshapeBatchNormQuantize,
+        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
+
+  @parameterized.parameters(
+      ('Conv2D', 'BatchNormalization'),
+      ('Conv2D', 'SyncBatchNormalization'),
+      ('DepthwiseConv2D', 'BatchNormalization'),
+      ('DepthwiseConv2D', 'SyncBatchNormalization'),
+  )
+  def testConv2DReshapeBatchNormReLUQuantize(
+      self, layer_type, normalization_type):
+    self._test_conv_squeeze_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type='sepconv1d_squeeze',
+        normalization_type=normalization_type,
+        activation_type='relu',
+        transform_class=
+        default_8bit_transforms.Conv2DReshapeBatchNormReLUQuantize,
+        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=
+        default_8bit_quantize_configs.NoOpQuantizeConfig)
+
+  @parameterized.parameters(
+      ('Conv2D', 'BatchNormalization'),
+      ('Conv2D', 'SyncBatchNormalization'),
+      ('DepthwiseConv2D', 'BatchNormalization'),
+      ('DepthwiseConv2D', 'SyncBatchNormalization'),
+  )
+  def testConv2DReshapeBatchNormActivationQuantize(
+      self, layer_type, normalization_type):
+    self._test_conv_squeeze_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type='sepconv1d_squeeze',
+        normalization_type=normalization_type,
+        activation_type='act_relu',
+        transform_class=
+        default_8bit_transforms.Conv2DReshapeBatchNormActivationQuantize,
+        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=
+        default_8bit_quantize_configs.NoOpQuantizeConfig)
 
   @parameterized.named_parameters(
       ('padding_valid', {'padding': 'valid'}),
@@ -352,10 +455,6 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
           sepconv_model.predict(x),
           transformed_model.predict(x))
 
-  # TODO(pulkitb): Add individual tests for the following transforms.
-  # Conv2DReshapeBatchNormQuantize, Conv2DReshapeBatchNormReLUQuantize
-  # Conv2DReshapeBatchNormActivationQuantize
-
   @parameterized.parameters(
       ('relu', default_8bit_transforms.LayerReLUQuantize),
       ('act_relu', default_8bit_transforms.LayerReluActivationQuantize),
@@ -388,7 +487,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       ('act_relu', default_8bit_transforms.LayerReluActivationQuantize))
   def testLayerReLUQuantize(self, activation_type, transform_type):
     # TODO(b/185727342): Add tests for DepthConv and Dense
-    input_shape = (1, 3, 3, 3)
+    input_shape = (3, 3, 3)
     conv_layer = tf.keras.layers.Conv2D(5, 2, input_shape=input_shape)
     if activation_type == 'relu':
       act_layer = keras.layers.ReLU(6.0)
@@ -406,7 +505,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
         updated_metadata.get(model.layers[0].name).get('quantize_config'),
         default_8bit_quantize_configs.NoOpQuantizeConfig)
 
-    inputs = np.random.standard_normal(input_shape)
+    inputs = np.random.standard_normal((1,) + input_shape)
     self.assertAllClose(
         transformed_model.predict(inputs), model.predict(inputs))
 

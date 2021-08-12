@@ -20,160 +20,11 @@ from tensorflow_model_optimization.python.core.clustering.keras import clusterab
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_algorithm
 
 layers = tf.keras.layers
-AbstractClusteringAlgorithm = clustering_algorithm.AbstractClusteringAlgorithm
-
-
-class ConvolutionalWeightsCA(AbstractClusteringAlgorithm):
-  """Look-ups for convolutional kernels, e.g. tensors with shape [B,W,H,C]."""
-
-  def get_pulling_indices(self, weight):
-    clst_num = self.cluster_centroids.shape[0]
-    tiled_weights = tf.tile(tf.expand_dims(weight, 4), [1, 1, 1, 1, clst_num])
-
-    # Do the ugly reshape to the clustering points
-    tiled_cluster_centroids = tf.stack(
-        [tf.tile(tf.stack(
-            [tf.reshape(self.cluster_centroids, [1, 1, clst_num])] *
-            weight.shape[-2], axis=2),
-                 [weight.shape[0], weight.shape[1], 1, 1])] * weight.shape[-1],
-        axis=3)
-
-    # We find the nearest cluster centroids and store them so that ops can build
-    # their kernels upon it
-    pulling_indices = tf.argmin(
-        tf.abs(tiled_weights - tiled_cluster_centroids), axis=4
-    )
-
-    return pulling_indices
-
-
-class DenseWeightsCA(AbstractClusteringAlgorithm):
-  """Dense layers store their weights in 2D tables, i.e. tensor shape [U, D]."""
-
-  def get_pulling_indices(self, weight):
-    clst_num = self.cluster_centroids.shape[0]
-    tiled_weights = tf.tile(tf.expand_dims(weight, axis=2), [1, 1, clst_num])
-    tiled_cluster_centroids = tf.tile(
-        tf.reshape(self.cluster_centroids, [1, 1, clst_num]),
-        [weight.shape[0], weight.shape[1], 1])
-
-    # We find the nearest cluster centroids and store them so that ops can build
-    # their kernels upon it
-    pulling_indices = tf.argmin(tf.abs(tiled_weights - tiled_cluster_centroids),
-                                axis=2)
-
-    return pulling_indices
-
-
-class BiasWeightsCA(AbstractClusteringAlgorithm):
-  """Biases are stored as tensors of rank 0."""
-
-  def get_pulling_indices(self, weight):
-    clst_num = self.cluster_centroids.shape[0]
-    tiled_weights = tf.tile(tf.expand_dims(weight, axis=1), [1, clst_num])
-    tiled_cluster_centroids = tf.tile(
-        tf.reshape(self.cluster_centroids, [1, clst_num]), [weight.shape[0], 1])
-
-    pulling_indices = tf.argmin(tf.abs(tiled_weights - tiled_cluster_centroids),
-                                axis=1)
-
-    return pulling_indices
+ClusteringAlgorithm = clustering_algorithm.ClusteringAlgorithm
 
 
 class ClusteringLookupRegistry(object):
-  """Map of layers to strategy.
-
-  The keys represent built-in keras layers and the values represent the
-  strategy accoding to which clustering will be done.
-  If the key is not present in the map, that means that there is nothing to
-  work on, or the strategy is not currently supported
-  """
-  _LAYERS_RESHAPE_MAP = {
-      layers.Conv1D: {
-          'kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.Conv2D: {
-          'kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.Conv2DTranspose: {
-          'kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.Conv3D: {
-          'kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.Conv3DTranspose: {
-          'kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.SeparableConv1D: {
-          'pointwise_kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.SeparableConv2D: {
-          'pointwise_kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.Dense: {
-          'kernel': DenseWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.Embedding: {
-          'embeddings': DenseWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.LocallyConnected1D: {
-          'kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.LocallyConnected2D: {
-          'kernel': ConvolutionalWeightsCA,
-          'bias': BiasWeightsCA
-      },
-      layers.LSTM: {
-          'kernel': DenseWeightsCA,
-          'recurrent_kernel': DenseWeightsCA
-      },
-      layers.GRU: {
-          'kernel': DenseWeightsCA,
-          'recurrent_kernel': DenseWeightsCA
-      },
-      layers.SimpleRNN: {
-          'kernel': DenseWeightsCA,
-          'recurrent_kernel': DenseWeightsCA
-      },
-  }
-
-  @classmethod
-  def register_new_implementation(cls, new_impl):
-    """Registers new implementation.
-
-    For custom user-defined objects define the way how clusterable weights
-    are going to be formed. If weights are any of these, 1D,2D or 4D, please
-    consider using existing implementations: BiasWeightsCA,
-    ConvolutionalWeightsCA and DenseWeightsCA.
-
-    Args:
-      new_impl: dictionary. Keys are classes and values are dictionaries.
-      The latter have strings as keys and values are classes inherited from
-      AbstractClusteringAlgorithm. Normally, the set keys of the latter
-      dictionaries should match the set of clusterable weights names for the
-      layer.
-    Returns:
-      None
-    """
-    if not isinstance(new_impl, dict):
-      raise TypeError('new_impl must be a dictionary')
-    for k, v in new_impl.items():
-      if not isinstance(v, dict):
-        raise TypeError(
-            'Every value of new_impl must be a dictionary. Item for key {key} '
-            'has class {vclass}'.format(key=k, vclass=v))
-
-    cls._LAYERS_RESHAPE_MAP.update(new_impl)
+  """Clustering registry to return the implementation for a layer."""
 
   @classmethod
   def get_clustering_impl(cls, layer, weight_name):
@@ -185,42 +36,14 @@ class ClusteringLookupRegistry(object):
     Returns:
       A concrete implementation of a lookup algorithm.
     """
-    custom_layer_of_built_layer = None
-    if layer.__class__ not in cls._LAYERS_RESHAPE_MAP:
-      # Checks whether we have a custom layer derived from built-in keras class.
-      for key in cls._LAYERS_RESHAPE_MAP:
-        if issubclass(layer.__class__, key):
-          custom_layer_of_built_layer = key
-      if not custom_layer_of_built_layer:
-        # Checks whether we have a customerable layer that provides
-        # clusterable algorithm for the given weights.
-        if (issubclass(layer.__class__, clusterable_layer.ClusterableLayer) and
-            layer.get_clusterable_algorithm is not None):
-          ans = layer.get_clusterable_algorithm(weight_name)
-          if not ans:
-            raise ValueError(
-                'Class {given_class} does not provide clustering algorithm'
-                'for the weights with the name {weight_name}.'.format(
-                    given_class=layer.__class__, weight_name=weight_name))
-          else:
-            return ans
-        else:
-          raise ValueError(
-              'Class {given_class} has not derived from ClusterableLayer'
-              'or the funtion get_pulling_indices is not provided.'.format(
-                  given_class=layer.__class__))
-    else:
-      custom_layer_of_built_layer = layer.__class__
-    if weight_name not in cls._LAYERS_RESHAPE_MAP[custom_layer_of_built_layer]:
-      raise ValueError(
-          "Weight with the name '{given_weight_name}' for class {given_class} "
-          'has not been registered in the ClusteringLookupRegistry. Use '
-          'ClusteringLookupRegistry.register_new_implementation '
-          'to fix this.'.format(
-              given_class=layer.__class__, given_weight_name=weight_name))
-    # Different weights will have different shapes hence there is double hash
-    # map lookup.
-    return cls._LAYERS_RESHAPE_MAP[custom_layer_of_built_layer][weight_name]
+
+    # Clusterable layer could provide own implementation of get_pulling_indices
+    if (issubclass(layer.__class__, clusterable_layer.ClusterableLayer) and
+        layer.get_clusterable_algorithm is not None):
+      ans = layer.get_clusterable_algorithm(weight_name)
+      if ans:
+        return ans
+    return ClusteringAlgorithm
 
 
 class ClusteringRegistry(object):
@@ -247,10 +70,26 @@ class ClusteringRegistry(object):
       layers.LayerNormalization: [],
   }
 
+  _SUPPORTED_RNN_CELLS = frozenset({
+      # Sometimes v2 RNN will wrap some v1 RNN cells and we need
+      # to consider this
+      tf.compat.v1.keras.layers.GRUCell,
+      tf.compat.v2.keras.layers.GRUCell,
+      tf.compat.v1.keras.layers.LSTMCell,
+      tf.compat.v2.keras.layers.LSTMCell,
+      tf.compat.v1.keras.layers.SimpleRNNCell,
+      tf.compat.v2.keras.layers.SimpleRNNCell,
+      tf.compat.v1.keras.layers.StackedRNNCells,
+      tf.compat.v2.keras.layers.StackedRNNCells,
+      tf.keras.experimental.PeepholeLSTMCell,
+  })
+
   _SUPPORTED_RNN_LAYERS = frozenset([
       layers.GRU,
       layers.LSTM,
       layers.SimpleRNN,
+      layers.RNN,
+      layers.Bidirectional,
   ])
 
   @classmethod
@@ -272,10 +111,31 @@ class ClusteringRegistry(object):
     if layer.__class__ in cls._LAYERS_WEIGHTS_MAP:
       return True
 
+    if layer.__class__ in cls._SUPPORTED_RNN_CELLS:
+      return True
+
     if layer.__class__ in cls._SUPPORTED_RNN_LAYERS:
+      for cell in cls._get_rnn_cells(layer):
+        if (cell.__class__ not in cls._SUPPORTED_RNN_CELLS
+            or isinstance(cell, clusterable_layer.ClusterableLayer)):
+          return False
       return True
 
     return False
+
+  def _get_rnn_cells(rnn_layer):  # pylint: disable=no-self-argument
+    """Get rnn cells from layer."""
+
+    if isinstance(rnn_layer, tf.keras.layers.Bidirectional):
+      return [rnn_layer.forward_layer.cell, rnn_layer.backward_layer.cell]
+    if isinstance(rnn_layer.cell, tf.keras.layers.StackedRNNCells):
+      return rnn_layer.cell.cells
+    # The case when RNN contains multiple cells
+    if isinstance(rnn_layer.cell, (list, tuple)):
+      return rnn_layer.cell
+    # The case when RNN contains a single cell
+    else:
+      return [rnn_layer.cell]
 
   @classmethod
   def _weight_names(cls, layer):
@@ -304,14 +164,30 @@ class ClusteringRegistry(object):
               for weight_name in cls._weight_names(layer)]
 
     def get_clusterable_weights_rnn():  # pylint: disable=missing-docstring
-      if isinstance(layer.cell, clusterable_layer.ClusterableLayer):
-        raise ValueError(
-            'ClusterableLayer is not yet supported for RNNs based layer.')
+      def get_clusterable_weights_rnn_cell(cell, i):
+        # Cell weights will be a list of tuples in RNN or
+        # when are wrapped by the StackedRNNCell layer
+        # The weight names will have indices attached only
+        # for the registry
+        if cell.__class__ in cls._SUPPORTED_RNN_CELLS:
+          return [('kernel/' + str(i), cell.kernel),
+                  ('recurrent_kernel/' + str(i), cell.recurrent_kernel)]
 
-      clusterable_weights = [
-          ('kernel', layer.cell.kernel),
-          ('recurrent_kernel', layer.cell.recurrent_kernel),
-      ]
+        if isinstance(cell, clusterable_layer.ClusterableLayer):
+          raise ValueError(
+              'ClusterableLayer is not yet supported for RNNs based layer.')
+
+        raise ValueError('Layer cell ' + str(cell.__class__) +
+                         ' is not supported.')
+
+      clusterable_weights = []
+      for rnn_cell in cls._get_rnn_cells(layer):
+        if len(cls._get_rnn_cells(layer)) > 1:
+          cell_index = cls._get_rnn_cells(layer).index(rnn_cell)
+          clusterable_weights.extend(get_clusterable_weights_rnn_cell(
+              rnn_cell, cell_index))
+        else:
+          clusterable_weights = get_clusterable_weights_rnn_cell(rnn_cell, 0)
       return clusterable_weights
 
     if layer.__class__ in cls._SUPPORTED_RNN_LAYERS:

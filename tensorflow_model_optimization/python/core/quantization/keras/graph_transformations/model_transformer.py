@@ -57,13 +57,11 @@ class ModelTransformer(object):
     self.candidate_layers = candidate_layers
     self.layer_metadata = layer_metadata
 
-  @staticmethod
-  def _is_sequential_or_functional_model(model):
-    return ModelTransformer._is_functional_model(model) or isinstance(
+  def _is_sequential_or_functional_model(self, model):
+    return ModelTransformer._is_functional_model(self, model) or isinstance(
         model, keras.Sequential)
 
-  @staticmethod
-  def _is_functional_model(model):
+  def _is_functional_model(self, model):
     return isinstance(model, keras.Model) \
            and not isinstance(model, keras.Sequential) \
            and model._is_graph_network    # pylint: disable=protected-access
@@ -277,11 +275,10 @@ class ModelTransformer(object):
 
     return leaf_layers
 
-  @staticmethod
-  def _get_layer_names(layer_node):
+  def _get_layer_names(self, layer_node):
     result = [layer_node.layer['config']['name']]
     for input_layer in layer_node.input_layers:
-      result.extend(ModelTransformer._get_layer_names(input_layer))
+      result.extend(self._get_layer_names(input_layer))
     return result
 
   def _remove_layers(self, layers_to_remove, layers_to_remove_names):
@@ -458,8 +455,7 @@ class ModelTransformer(object):
     replacement_nodes = _get_replacement_nodes(replacement_layer_node)
     _add_replacement_nodes(first_layer_removed_index, replacement_nodes)
 
-  @staticmethod
-  def _weight_name(name):
+  def _weight_name(self, name):
     """Extracts the weight name by removing layer from TF variable name.
 
     For example, returns 'kernel:0' for 'dense_2/kernel:0'.
@@ -505,8 +501,7 @@ class ModelTransformer(object):
   def _set_layer_names_and_weights(self, layer, names_and_weights):
     layer.set_weights([weight for _, weight in names_and_weights])
 
-  @staticmethod
-  def _name(obj):
+  def _name(self, obj):
     return obj.__class__.__name__
 
   def _get_matched_layers(self, transform):

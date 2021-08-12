@@ -108,6 +108,7 @@ py_library(
 
 py_strict_test(
     name = "default_8bit_transforms_test",
+    size = "large",
     srcs = [
         "default_8bit_transforms_test.py",
     ],

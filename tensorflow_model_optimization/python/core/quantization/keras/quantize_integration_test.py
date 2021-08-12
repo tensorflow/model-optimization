@@ -33,7 +33,6 @@ from tensorflow_model_optimization.python.core.keras import test_utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
-from tensorflow_model_optimization.python.core.quantization.keras import utils
 
 QuantizeConfig = quantize_config.QuantizeConfig
 Quantizer = quantizers.Quantizer
@@ -48,8 +47,7 @@ l = tf.keras.layers
 @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
 class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
-  @staticmethod
-  def _batch(dims, batch_size):
+  def _batch(self, dims, batch_size):
     """Adds provided batch_size to existing dims.
 
     If dims is (None, 5, 2), returns (batch_size, 5, 2)
@@ -84,8 +82,7 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(model1.predict(inputs), model2.predict(inputs))
 
   # TODO(tfmot): use shared test util that is model-independent.
-  @staticmethod
-  def _train_model(model):
+  def _train_model(self, model):
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     model.fit(
@@ -110,8 +107,7 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     def get_config(self):
       return {}
 
-  @staticmethod
-  def _get_quant_params(quantizer_class):
+  def _get_quant_params(self, quantizer_class):
     if quantizer_class == quantizers.LastValueQuantizer:
       return {
           'num_bits': 8,

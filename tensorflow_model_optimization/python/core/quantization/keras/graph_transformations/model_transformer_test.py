@@ -36,8 +36,7 @@ keras = tf.keras
 
 class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
 
-  @staticmethod
-  def _batch(dims, batch_size):
+  def _batch(self, dims, batch_size):
     """Adds provided batch_size to existing dims.
 
     If dims is (None, 5, 2), returns (batch_size, 5, 2)
@@ -53,8 +52,7 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
       dims[0] = batch_size
     return dims
 
-  @staticmethod
-  def _get_layer(model, n_excluding_input, model_type):
+  def _get_layer(self, model, n_excluding_input, model_type):
     # Argument n excludes the input layer.
     if model_type == 'functional':
       return model.layers[n_excluding_input + 1]

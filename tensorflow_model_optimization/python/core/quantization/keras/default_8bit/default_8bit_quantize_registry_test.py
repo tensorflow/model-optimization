@@ -476,7 +476,7 @@ class ActivationQuantizeConfigTest(tf.test.TestCase):
     )
 
     with self.assertRaises(ValueError):
-      quantize_config.get_output_quantizers(keras.layers.Activation('swish'))
+      quantize_config.get_output_quantizers(keras.layers.Activation('selu'))
 
     with self.assertRaises(ValueError):
       quantize_config.get_output_quantizers(

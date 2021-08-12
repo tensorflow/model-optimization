@@ -101,7 +101,7 @@ class PruneRegistryTest(tf.test.TestCase):
         keras.layers.RNN(PruneRegistryTest.MinimalRNNCellPrunable(32))))
 
   def testDoesNotSupportCustomLayer(self):
-    self.assertFalse(PruneRegistry.supports(PruneRegistryTest.CustomLayer(10)))
+    self.assertFalse(PruneRegistry.supports(PruneRegistryTest.CustomLayer()))
 
   def testDoesNotSupportCustomLayerInheritedFromPrunableLayer(self):
     self.assertFalse(
@@ -114,7 +114,7 @@ class PruneRegistryTest(tf.test.TestCase):
 
   def testMakePrunableRaisesErrorForCustomLayer(self):
     with self.assertRaises(ValueError):
-      PruneRegistry.make_prunable(PruneRegistryTest.CustomLayer(10))
+      PruneRegistry.make_prunable(PruneRegistryTest.CustomLayer())
 
   def testMakePrunableRaisesErrorForCustomLayerInheritedFromPrunableLayer(self):
     with self.assertRaises(ValueError):
@@ -189,6 +189,10 @@ class PruneRegistryTest(tf.test.TestCase):
     with self.assertRaises(ValueError):
       PruneRegistry.make_prunable(layers.RNN(
           [layers.LSTMCell(10), PruneRegistryTest.MinimalRNNCell(5)]))
+
+  def testRescalingLayer(self):
+    self.assertTrue(PruneRegistry.supports(
+        tf.keras.layers.experimental.preprocessing.Rescaling))
 
 
 if __name__ == '__main__':

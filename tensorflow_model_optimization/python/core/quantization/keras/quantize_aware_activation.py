@@ -80,7 +80,7 @@ class QuantizeAwareActivation(object):
   _PRE_QUANT_ACTIVATIONS = frozenset({'softmax', 'sigmoid', 'tanh'})
 
   # These activations should be quantized after the activation has been applied.
-  _POST_QUANT_ACTIVATIONS = frozenset({'linear', 'relu'})
+  _POST_QUANT_ACTIVATIONS = frozenset({'linear', 'relu', 'swish'})
 
   # Don't take any quantize operations for these activations.
   _NO_QUANTIZE_ACTIVATIONS = frozenset({'NoOpActivation'})
@@ -115,8 +115,7 @@ class QuantizeAwareActivation(object):
       self._post_activation_vars = quantizer.build(None, 'post_activation',
                                                    quantize_wrapper)
 
-  @staticmethod
-  def _name(activation):
+  def _name(self, activation):
     if hasattr(activation, '__name__'):
       return activation.__name__
     return activation.__class__.__name__

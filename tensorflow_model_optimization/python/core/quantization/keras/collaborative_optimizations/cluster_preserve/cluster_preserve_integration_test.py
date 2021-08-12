@@ -52,8 +52,8 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         batch_size=20)
 
-  @staticmethod
-  def _get_number_of_unique_weights(stripped_model, layer_nr, weight_name):
+  def _get_number_of_unique_weights(self, stripped_model, layer_nr,
+                                    weight_name):
     layer = stripped_model.layers[layer_nr]
     if isinstance(layer, quantize.quantize_wrapper.QuantizeWrapper):
       for weight_item in layer.trainable_weights:
@@ -65,8 +65,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     nr_of_unique_weights = len(set(weights_as_list))
     return nr_of_unique_weights
 
-  @staticmethod
-  def _get_sparsity(model):
+  def _get_sparsity(self, model):
     sparsity_list = []
     for layer in model.layers:
       for weights in layer.trainable_weights:
@@ -78,8 +77,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     return sparsity_list
 
-  @staticmethod
-  def _get_clustered_model(preserve_sparsity):
+  def _get_clustered_model(self, preserve_sparsity):
     """Cluster the (sparse) model and return clustered_model."""
     tf.random.set_seed(1)
     original_model = tf.keras.Sequential([
