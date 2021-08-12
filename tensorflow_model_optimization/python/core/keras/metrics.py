@@ -20,6 +20,10 @@ from tensorflow.python.eager import monitoring
 class MonitorBoolGauge():
   """Monitoring utility class for usage metrics."""
 
+  _PRUNE_FOR_BENCHMARK_USAGE = monitoring.BoolGauge(
+      '/tfmot/api/sparsity/prune_for_benchmark',
+      'prune_for_benchmark usage.', 'status')
+
   _PRUNE_LOW_MAGNITUDE_USAGE = monitoring.BoolGauge(
       '/tfmot/api/sparsity/prune_low_magnitude',
       'prune_low_magnitude usage.', 'status')
@@ -43,6 +47,9 @@ class MonitorBoolGauge():
     self.bool_gauge = self.get_usage_gauge(name)
 
   def get_usage_gauge(self, name):
+    """Gets a gauge by name."""
+    if name == 'prune_for_benchmark_usage':
+      return MonitorBoolGauge._PRUNE_FOR_BENCHMARK_USAGE
     if name == 'prune_low_magnitude_usage':
       return MonitorBoolGauge._PRUNE_LOW_MAGNITUDE_USAGE
     if name == 'prune_low_magnitude_wrapper_usage':
