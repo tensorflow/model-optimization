@@ -20,11 +20,16 @@ from tensorflow_model_optimization.python.core.quantization.keras.default_8bit i
 
 
 class Default8BitQuantizeScheme(quantize_scheme.QuantizeScheme):
+  """Default 8Bit Scheme supported by TFLite."""
+
+  def __init__(self, disable_per_axis=False):
+    self._disable_per_axis = disable_per_axis
 
   def get_layout_transformer(self):
     return default_8bit_quantize_layout_transform.\
         Default8BitQuantizeLayoutTransform()
 
   def get_quantize_registry(self):
-    return default_8bit_quantize_registry.Default8BitQuantizeRegistry()
-
+    return (
+        default_8bit_quantize_registry.Default8BitQuantizeRegistry(
+            disable_per_axis=self._disable_per_axis))

@@ -183,7 +183,7 @@ class Default8BitQuantizeRegistry(
       _no_quantize(conv_batchnorm._DepthwiseConvBatchNorm2D),  # pylint: disable=protected-access
   ]
 
-  def __init__(self):
+  def __init__(self, disable_per_axis=False):
     self._layer_quantize_map = {}
     for quantize_info in self._LAYER_QUANTIZE_INFO:
       self._layer_quantize_map[quantize_info.layer_type] = quantize_info
@@ -192,14 +192,24 @@ class Default8BitQuantizeRegistry(
     # QuantizeConfig.
     self._layer_quantize_map[
         layers.Activation] = Default8BitActivationQuantizeConfig()
-    self._layer_quantize_map[layers.Conv2D] = Default8BitConvQuantizeConfig(
-        ['kernel'], ['activation'], False)
-    self._layer_quantize_map[
-        layers.DepthwiseConv2D] = Default8BitConvQuantizeConfig(
-            ['depthwise_kernel'], ['activation'], False)
-    self._layer_quantize_map[layers.Conv2DTranspose] = \
+
+    self._layer_quantize_map[layers.Conv2DTranspose] = (
         Default8BitConvTransposeQuantizeConfig(
-            ['kernel'], ['activation'], False)
+            ['kernel'], ['activation'], False))
+
+    self._disable_per_axis = disable_per_axis
+    if not self._disable_per_axis:
+      self._layer_quantize_map[layers.Conv2D] = Default8BitConvQuantizeConfig(
+          ['kernel'], ['activation'], False)
+      self._layer_quantize_map[
+          layers.DepthwiseConv2D] = Default8BitConvQuantizeConfig(
+              ['depthwise_kernel'], ['activation'], False)
+    else:
+      self._layer_quantize_map[layers.Conv2D] = Default8BitQuantizeConfig(
+          ['kernel'], ['activation'], False)
+      self._layer_quantize_map[
+          layers.DepthwiseConv2D] = Default8BitQuantizeConfig(
+              ['depthwise_kernel'], ['activation'], False)
 
   def _is_supported_layer(self, layer_class):
     return layer_class in self._layer_quantize_map

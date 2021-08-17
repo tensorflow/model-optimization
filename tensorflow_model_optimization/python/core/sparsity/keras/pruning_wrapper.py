@@ -130,14 +130,15 @@ class PruneLowMagnitude(Wrapper):
 
     if sparsity_m_by_n:
       # Sparsity m_by_n can be applied only to Conv2D and Dense layers.
-      if (not isinstance(layer, tf.keras.layers.Conv2D) \
-          and not isinstance(layer, tf.keras.layers.Dense)):
+
+      if (not isinstance(layer, tf.keras.layers.Conv2D) and
+          not isinstance(layer, tf.keras.layers.Dense)):
         raise ValueError('Structural sparsity M by N is applicable only '
                          'to `Conv2D` and `Dense` layers. You passed: '
                          '{input}'.format(input=layer.__class__))
 
       self.sparsity_m_by_n = convert_to_tuple_of_two_int(
-        sparsity_m_by_n, 'sparsity_m_by_n')
+          sparsity_m_by_n, 'sparsity_m_by_n')
 
     # An instance of the Pruning class. This class contains the logic to prune
     # the weights of this layer.
@@ -253,7 +254,7 @@ class PruneLowMagnitude(Wrapper):
         pruning_vars=self.pruning_vars,
         pruning_schedule=self.pruning_schedule,
         block_size=self.block_size,
-        sparsity_m_by_n = self.sparsity_m_by_n,
+        sparsity_m_by_n=self.sparsity_m_by_n,
         block_pooling_type=self.block_pooling_type)
 
   def call(self, inputs, training=None, **kwargs):

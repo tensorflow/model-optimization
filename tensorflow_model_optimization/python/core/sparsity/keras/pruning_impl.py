@@ -27,8 +27,13 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_uti
 class Pruning(object):
   """Implementation of magnitude-based weight pruning."""
 
-  def __init__(self, training_step_fn, pruning_vars, pruning_schedule,
-               block_size, block_pooling_type, sparsity_m_by_n=None):
+  def __init__(self,
+               training_step_fn,
+               pruning_vars,
+               pruning_schedule,
+               block_size,
+               block_pooling_type,
+               sparsity_m_by_n=None):
     """The logic for magnitude-based pruning weight tensors.
 
     Args:
@@ -112,8 +117,8 @@ class Pruning(object):
 
     Args:
       weights: The weight tensor that needs to be masked.
-      m_by_n: tuple of two integers, indicating m zeros out of
-        n consecutive elements, default as 2 by 4 sparsity.
+      m_by_n: tuple of two integers, indicating m zeros out of n consecutive
+        elements, default as 2 by 4 sparsity.
 
     Returns:
       new_mask: A numpy array of the same size and shape as weights containing
@@ -150,7 +155,7 @@ class Pruning(object):
       ValueError: if block pooling function is not AVG or MAX
     """
     if self._sparsity_m_by_n:
-      mask =  self._update_mask_sparsity_m_by_n(weights, self._sparsity_m_by_n)
+      mask = self._update_mask_sparsity_m_by_n(weights, self._sparsity_m_by_n)
       # We need to return some numbers for threshold.
       return 999.0, mask
 

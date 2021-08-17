@@ -123,6 +123,21 @@ class QuantizeRegistryTest(
             l.RNN(cell=[l.LSTMCell(10), MinimalRNNCell(10)])))
 
   # get_quantize_config() tests.
+  @parameterized.parameters([False, True])
+  def testGetsPerTensorIfPerAxisDisabled(self, disable_per_axis):
+    test_quantize_registry = (default_8bit_quantize_registry.
+                              Default8BitQuantizeRegistry(
+                                  disable_per_axis))
+    quantize_config = test_quantize_registry.get_quantize_config(
+        l.Conv2D(10, (2, 2)))
+    if disable_per_axis:
+      self.assertIsInstance(
+          quantize_config,
+          default_8bit_quantize_registry.Default8BitQuantizeConfig)
+    else:
+      self.assertIsInstance(
+          quantize_config,
+          default_8bit_quantize_registry.Default8BitConvQuantizeConfig)
 
   def testRaisesError_UnsupportedLayer(self):
     with self.assertRaises(ValueError):

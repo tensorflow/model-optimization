@@ -14,6 +14,7 @@
 # ==============================================================================
 # pylint: disable=missing-docstring,protected-access
 """Train a simple convnet on the MNIST dataset with sparsity 2x4.
+
   It is based on mnist_e2e.py
 """
 from __future__ import print_function
@@ -44,33 +45,29 @@ PRUNABLE_2x4_LAYERS = (tf.keras.layers.Conv2D, tf.keras.layers.Dense)
 
 def check_model_sparsity_2x4(model):
   for layer in model.layers:
-    if isinstance(layer, pruning_wrapper.PruneLowMagnitude) and\
-      isinstance(layer.layer, PRUNABLE_2x4_LAYERS):
+    if isinstance(layer, pruning_wrapper.PruneLowMagnitude) and isinstance(
+        layer.layer, PRUNABLE_2x4_LAYERS):
       for weight in layer.layer.get_prunable_weights():
         if not pruning_utils.is_pruned_m_by_n(weight):
-            return False
+          return False
   return True
 
 
 def build_layerwise_model(input_shape, **pruning_params):
   return tf.keras.Sequential([
-      prune.prune_low_magnitude(l.Conv2D(
-          32, 5, padding='same',
-          activation='relu',
-          input_shape=input_shape),
-          **pruning_params),
+      prune.prune_low_magnitude(
+          l.Conv2D(
+              32, 5, padding='same', activation='relu',
+              input_shape=input_shape), **pruning_params),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
-      prune.prune_low_magnitude(l.Conv2D(
-          64, 5, padding='same'),
-          **pruning_params),
+      prune.prune_low_magnitude(
+          l.Conv2D(64, 5, padding='same'), **pruning_params),
       l.BatchNormalization(),
       l.ReLU(),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.Flatten(),
       prune.prune_low_magnitude(
-          l.Dense(1024,
-          activation='relu'
-          ), **pruning_params),
+          l.Dense(1024, activation='relu'), **pruning_params),
       l.Dropout(0.4),
       l.Dense(num_classes, activation='softmax')
   ])
@@ -107,7 +104,7 @@ def train(model, x_train, y_train, x_test, y_test):
 
   # Check sparsity 2x4 type before stripping pruning
   is_pruned_2x4 = check_model_sparsity_2x4(model)
-  print("Pass the check for sparsity 2x4: ", is_pruned_2x4)
+  print('Pass the check for sparsity 2x4: ', is_pruned_2x4)
 
   model = prune.strip_pruning(model)
   return model
@@ -125,9 +122,8 @@ def main(unused_argv):
   # Train a model with sparsity 2x4.
   ##############################################################################
   pruning_params = {
-      'pruning_schedule':
-          ConstantSparsity(0.5, begin_step=0, frequency=100),
-       'sparsity_m_by_n': (2, 4),
+      'pruning_schedule': ConstantSparsity(0.5, begin_step=0, frequency=100),
+      'sparsity_m_by_n': (2, 4),
   }
 
   model = build_layerwise_model(input_shape, **pruning_params)
@@ -146,6 +142,7 @@ def main(unused_argv):
   print(keras_test_utils.eval_mnist_tflite(model_content=tflite_model))
   # the accuracy of 2:4 pruning model is 0.9866
   # the accuracy of unstructured model with 50% is 0.9863
+
 
 if __name__ == '__main__':
   absl_app.run(main)
