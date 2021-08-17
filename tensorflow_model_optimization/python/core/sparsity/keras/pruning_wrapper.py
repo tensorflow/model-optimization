@@ -130,7 +130,6 @@ class PruneLowMagnitude(Wrapper):
 
     if sparsity_m_by_n:
       # Sparsity m_by_n can be applied only to Conv2D and Dense layers.
-
       if (not isinstance(layer, tf.keras.layers.Conv2D) and
           not isinstance(layer, tf.keras.layers.Dense)):
         raise ValueError('Structural sparsity M by N is applicable only '

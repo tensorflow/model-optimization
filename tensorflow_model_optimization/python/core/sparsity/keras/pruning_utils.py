@@ -21,7 +21,6 @@ from __future__ import division
 from __future__ import print_function
 
 # import g3
-import logging
 import numpy as np
 import tensorflow as tf
 
