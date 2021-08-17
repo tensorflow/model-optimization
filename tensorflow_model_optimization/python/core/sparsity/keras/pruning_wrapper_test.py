@@ -142,13 +142,6 @@ class PruningWrapperTest(tf.test.TestCase):
     _ = layer(inputs)
     pruning_wrapper.PruneLowMagnitude(layer, block_pooling_type='MAX')
 
-  def testConv3DNonPrunableWithSparsityMbyN(self):
-    layer = keras.layers.Conv3D(2, 3)
-    inputs = keras.layers.Input(shape=(4, 28, 28, 28, 1))
-    _ = layer(inputs)
-    with self.assertRaises(ValueError):
-      pruning_wrapper.PruneLowMagnitude(layer, sparsity_m_by_n=(2, 4))
-
   def testCollectPrunableLayers(self):
     lstm_layer = keras.layers.RNN(
         layers.LSTMCell(4, dropout=0.5, recurrent_dropout=0.5),
