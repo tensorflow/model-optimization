@@ -366,6 +366,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
           'm_by_n': (1, 2),
       },
   )
+
   def testMbyNSparsityPruning_SupportedLayers(self,
                                               layer_type,
                                               layer_arg,
@@ -379,7 +380,6 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     model.add(
         prune.prune_low_magnitude(
             layer_type(*layer_arg), input_shape=input_shape, **self.params))
-
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
