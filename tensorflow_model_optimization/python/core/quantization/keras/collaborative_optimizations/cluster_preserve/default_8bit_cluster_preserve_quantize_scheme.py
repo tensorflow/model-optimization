@@ -29,14 +29,7 @@ class Default8BitClusterPreserveQuantizeScheme(
     Args:
       preserve_sparsity: the flag to enable prune-cluster-preserving QAT.
     """
-    self.preserve_sparsity = preserve_sparsity
-
-  def __init__(self, preserve_sparsity=True):
-    """Same as Default8BitQuantizeScheme but preserves clustering and sparsity.
-
-    Args:
-      preserve_sparsity: the flag to enable prune-cluster-preserving QAT.
-    """
+    super().__init__(self)
     self.preserve_sparsity = preserve_sparsity
 
   def get_quantize_registry(self):

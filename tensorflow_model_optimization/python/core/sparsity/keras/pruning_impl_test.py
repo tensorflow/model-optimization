@@ -134,10 +134,13 @@ class PruningTest(test.TestCase, parameterized.TestCase):
   def testConstructsMaskAndThresholdCorrectly(self):
     self.initialize()
     p = pruning_impl.Pruning(
-        lambda: 0, None,
+        lambda: 0,
+        None,
         # Sparsity math often returns values with small tolerances.
         lambda x: (True, 0.200000018),
-        (1, 1), None, False)
+        (1, 1),
+        None,
+        False)
 
     # input matrix is [ 1.0, 2.0, ..., 8.0, 9.0, 10.0 ]
     threshold, mask = p._update_mask(np.arange(1, 11))
@@ -268,17 +271,20 @@ class PruningTest(test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(
       {
           "testcase_name": "_2d_2by4",
-          "weights": [[0.74, 0.68], [-0.89, -0.45], [-1.68, 1.24], [0.31, -0.6]],
+          "weights": [[0.74, 0.68], [-0.89, -0.45], [-1.68, 1.24], [0.31, -0.6]
+                     ],
           "expected_mask": [[0.0, 1.0], [1.0, 0.0], [1.0, 1.0], [0.0, 0.0]],
       },
       {
           "testcase_name": "_4d_2by4",
-          "weights": [[[[-0.36, -0.77], [-0.43, -0.18], [0.12, 1.36], [0.77, 0.96]]]],
+          "weights": [[[[-0.36, -0.77], [-0.43, -0.18], [0.12, 1.36],
+                        [0.77, 0.96]]]],
           "expected_mask": [[[[0.0, 0.0], [1.0, 0.0], [0.0, 1.0], [1.0, 1.0]]]],
       },
       {
           "testcase_name": "_4d_1by2",
-          "weights": [[[[-0.36, -0.77], [-0.43, -0.18], [0.12, 1.36], [0.77, 0.96]]]],
+          "weights": [[[[-0.36, -0.77], [-0.43, -0.18], [0.12, 1.36],
+                        [0.77, 0.96]]]],
           "expected_mask": [[[[0.0, 1.0], [1.0, 0.0], [0.0, 1.0], [1.0, 0.0]]]],
           "m_by_n": (1, 2),
       },
@@ -302,8 +308,14 @@ class PruningTest(test.TestCase, parameterized.TestCase):
     self.assertAllEqual(mask, expected_mask_ts)
 
   @parameterized.named_parameters(
-    {"testcase_name": "_1d", "weights_shape": [4]},
-    {"testcase_name": "_3d", "weights_shape": [4, 4, 4]},
+      {
+          "testcase_name": "_1d",
+          "weights_shape": [4]
+      },
+      {
+          "testcase_name": "_3d",
+          "weights_shape": [4, 4, 4]
+      },
   )
   def testSparsityMbyNMaskingSimpleRaises(self, weights_shape):
     weights_ts = tf.ones(weights_shape)

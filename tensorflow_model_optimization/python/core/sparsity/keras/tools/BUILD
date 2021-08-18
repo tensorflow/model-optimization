@@ -45,3 +45,16 @@ py_binary(
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
     ],
 )
+
+py_strict_library(
+    name = "check_sparsity_m_by_n",
+    srcs = ["check_sparsity_m_by_n.py"],
+    srcs_version = "PY3",
+    deps = [
+        # absl:app dep1,
+        # absl/flags dep1,
+        # numpy dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_utils",
+    ],
+)

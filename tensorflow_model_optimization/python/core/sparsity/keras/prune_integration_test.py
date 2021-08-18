@@ -366,18 +366,20 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
           'm_by_n': (1, 2),
       },
   )
-  def testMbyNSparsityPruning_SupportedLayers(
-      self, layer_type, layer_arg, input_shape,
-      m_by_n=(2, 4),
-      sparsity_ratio=0.50
-  ):
-    """ Check that we prune supported layers with m by n sparsity. """
+
+  def testMbyNSparsityPruning_SupportedLayers(self,
+                                              layer_type,
+                                              layer_arg,
+                                              input_shape,
+                                              m_by_n=(2, 4),
+                                              sparsity_ratio=0.50):
+    """Check that we prune supported layers with m by n sparsity."""
     self.params.update({'sparsity_m_by_n': m_by_n})
 
     model = keras.Sequential()
-    model.add(prune.prune_low_magnitude(
-        layer_type(*layer_arg), input_shape=input_shape, **self.params))
-
+    model.add(
+        prune.prune_low_magnitude(
+            layer_type(*layer_arg), input_shape=input_shape, **self.params))
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
 
@@ -391,7 +393,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     self._check_strip_pruning_matches_original(model, sparsity_ratio)
 
   def testSparsityPruningMbyN_NonSupportedLayers(self):
-    """ Check layer that is not supported for m by n sparsity."""
+    """Check layer that is not supported for m by n sparsity."""
     self.params.update({'sparsity_m_by_n': (2, 4)})
 
     model = keras.Sequential()
@@ -399,8 +401,9 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     args, input_shape = ([4, 3], (3, 6))
 
     with self.assertRaises(ValueError):
-      model.add(prune.prune_low_magnitude(
-        layer_type(*args), input_shape=input_shape, **self.params))
+      model.add(
+          prune.prune_low_magnitude(
+              layer_type(*args), input_shape=input_shape, **self.params))
 
   @parameterized.parameters(prune_registry.PruneRegistry._RNN_LAYERS -
                             {keras.layers.RNN})
