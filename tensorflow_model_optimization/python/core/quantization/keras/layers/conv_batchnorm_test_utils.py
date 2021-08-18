@@ -20,12 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
-
 keras = tf.keras
-
-_ConvBatchNorm2D = conv_batchnorm._ConvBatchNorm2D  # pylint: disable=protected-access
-_DepthwiseConvBatchNorm2D = conv_batchnorm._DepthwiseConvBatchNorm2D  # pylint: disable=protected-access
 
 
 def _get_conv2d_params():
@@ -64,19 +59,6 @@ class Conv2DModel(object):
   @classmethod
   def get_output_shape(cls):
     return [cls.params['batch_size'], 2, 2, 2]
-
-  @classmethod
-  def get_folded_batchnorm_model(cls,
-                                 is_quantized=False,
-                                 post_bn_activation=None):
-    """Return folded Conv2D + BN + optional activation model."""
-    return tf.keras.Sequential([
-        _ConvBatchNorm2D(
-            kernel_initializer=_get_initializer(random_init=False),
-            is_quantized=is_quantized,
-            post_activation=post_bn_activation,
-            **cls.params)
-    ])
 
   @classmethod
   def get_nonfolded_batchnorm_model(cls,
@@ -139,18 +121,6 @@ class DepthwiseConv2DModel(Conv2DModel):
   @classmethod
   def get_output_shape(cls):
     return [cls.params['batch_size'], 8, 8, 3]
-
-  @classmethod
-  def get_folded_batchnorm_model(cls,
-                                 is_quantized=False,
-                                 post_bn_activation=None):
-    return tf.keras.Sequential([
-        _DepthwiseConvBatchNorm2D(
-            depthwise_initializer=_get_initializer(random_init=False),
-            is_quantized=is_quantized,
-            post_activation=post_bn_activation,
-            **cls.params)
-    ])
 
   @classmethod
   def get_nonfolded_batchnorm_model(cls,

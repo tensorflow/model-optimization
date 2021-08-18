@@ -252,7 +252,6 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
-        "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
     ],
 )
 

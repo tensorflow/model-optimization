@@ -25,7 +25,6 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_scheme
-from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 
 keras = tf.keras
 
@@ -69,9 +68,6 @@ def quantize_scope(*args):
       'QuantizeWrapper': quantize_wrapper.QuantizeWrapper,
       'QuantizeLayer': quantize_layer.QuantizeLayer,
       'OutputOnlyConfig': quantize_config_mod.OutputOnlyConfig,
-      # TODO(tf-mot): add way for different quantization schemes to modify this.
-      '_DepthwiseConvBatchNorm2D': conv_batchnorm._DepthwiseConvBatchNorm2D,  # pylint: disable=protected-access
-      '_ConvBatchNorm2D': conv_batchnorm._ConvBatchNorm2D  # pylint: disable=protected-access
   }
   quantization_objects.update(default_8bit_quantize_registry._types_dict())  # pylint: disable=protected-access
   quantization_objects.update(quantizers._types_dict())  # pylint: disable=protected-access

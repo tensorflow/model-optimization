@@ -66,7 +66,6 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_configs",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantizers",
-        "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
     ],
 )
 
@@ -102,7 +101,6 @@ py_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_configs",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:transforms",
-        "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm",
     ],
 )
 
@@ -119,7 +117,6 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_layer",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",

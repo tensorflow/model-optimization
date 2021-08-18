@@ -28,13 +28,9 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_configs
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
-from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 
 LayerNode = transforms.LayerNode
 LayerPattern = transforms.LayerPattern
-
-_ConvBatchNorm2D = conv_batchnorm._ConvBatchNorm2D  # pylint: disable=protected-access
-_DepthwiseConvBatchNorm2D = conv_batchnorm._DepthwiseConvBatchNorm2D  # pylint: disable=protected-access
 
 keras = tf.keras
 
@@ -85,69 +81,6 @@ def _get_layer_node(fused_layer, weights):
   layer_metadata = {'quantize_config': None}
 
   return LayerNode(layer_config, weights, metadata=layer_metadata)
-
-
-class Conv2DBatchNormFold(transforms.Transform):
-  """Conv2DBatchNormFold."""
-
-  def pattern(self):
-    return LayerPattern('BatchNormalization', {},
-                        [LayerPattern('Conv2D', {}, [])])
-
-  def replacement(self, match_layer):
-    conv_layer, bn_layer = _get_conv_bn_layers(match_layer)
-
-    fused_params = _get_params(conv_layer, bn_layer)
-    fused_layer = _ConvBatchNorm2D(**fused_params)
-
-    weights = _get_weights(match_layer)
-    return _get_layer_node(fused_layer, weights)
-
-  def custom_objects(self):
-    return {'_ConvBatchNorm2D': _ConvBatchNorm2D}
-
-
-class Conv2DBatchNormReLU6Fold(Conv2DBatchNormFold):
-  """Conv2DBatchNormReLU6Fold."""
-
-  def pattern(self):
-    return LayerPattern('ReLU', {'max_value': 6}, [
-        LayerPattern('BatchNormalization', {},
-                     [LayerPattern('Conv2D', {}, [])])
-    ])
-
-  def replacement(self, match_layer):
-    relu_layer = match_layer.layer
-    conv_layer, bn_layer = _get_conv_bn_layers(match_layer.input_layers[0])
-
-    fused_params = _get_params(conv_layer, bn_layer, relu_layer)
-    fused_layer = _ConvBatchNorm2D(**fused_params)
-
-    weights = _get_weights(match_layer.input_layers[0])
-    return _get_layer_node(fused_layer, weights)
-
-
-class DepthwiseConv2DBatchNormReLU6Fold(transforms.Transform):
-  """DepthwiseConv2DBatchNormReLU6Fold."""
-
-  def pattern(self):
-    return LayerPattern('ReLU', {'max_value': 6}, [
-        LayerPattern('BatchNormalization', {},
-                     [LayerPattern('DepthwiseConv2D', {}, [])])
-    ])
-
-  def replacement(self, match_layer):
-    relu_layer = match_layer.layer
-    conv_layer, bn_layer = _get_conv_bn_layers(match_layer.input_layers[0])
-
-    fused_params = _get_params(conv_layer, bn_layer, relu_layer)
-    fused_layer = _DepthwiseConvBatchNorm2D(**fused_params)
-
-    weights = _get_weights(match_layer.input_layers[0])
-    return _get_layer_node(fused_layer, weights)
-
-  def custom_objects(self):
-    return {'_DepthwiseConvBatchNorm2D': _DepthwiseConvBatchNorm2D}
 
 
 def _get_quantize_config(layer_node):
