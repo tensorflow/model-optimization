@@ -11,6 +11,8 @@ fits with your use case.
     [pruning comprehensive guide](comprehensive_guide.ipynb).
 *   To explore the application of pruning for on-device inference, see the
     [Pruning for on-device inference with XNNPACK](pruning_for_on_device_inference.ipynb).
+*   To see an example of structural pruning, see the
+    [Structural pruning with sparsity 2 by 4](pruning_with_sparsity_2_by_4.ipynb).
 
 ## Overview
 
@@ -126,3 +128,55 @@ pruning:
 
 For background, see *To prune, or not to prune: exploring the efficacy of
 pruning for model compression* [[paper](https://arxiv.org/pdf/1710.01878.pdf)].
+
+## Structural pruning M by N
+
+Structural pruning zeroes out model weights at the beginning of the training
+process according to the following pattern: M weights are set to zero in the
+block of N weights. It is important to notice that this pattern affects only the last dimension of the weight tensor for the model that is converted by TensorFlow Lite. For example, `Conv2D` layer weights in TensorFlow Lite have the structure [channel_out, height, width, channel_in] and `Dense` layer weights have the structure [channel_out, channel_in]. The sparsity pattern is applied to the weights in the last dimension: channel_in.
+Special hardware can benefit from this type of sparsity in the model and inference time can have a speedup up to 2x. Because this pattern lock in sparsity is more restrictive, the accuracy achieved after fine-tuning is worse than with the magnitude-based pruning.
+It is important to indicate that the pattern is valid only for the model that is converted to tflite.
+If the model is quantized, then the accuracy could be improved using [collaborative optimization technique](https://blog.tensorflow.org/2021/10/Collaborative-Optimizations.html): Sparsity preserving quantization aware training.
+
+The table below provides some results for 2 by 4 sparsity in comparison with the magnitude based pruning with the same target sparsity 50%.
+
+<figure>
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>unpruned</th>
+      <th>2/4 sparsity </th>
+      <th>magnitude based sparsity, 50% </th>
+    </tr>
+    <tr>
+      <td>Inception-V3</td>
+      <td>77.82</td>
+      <td>75.8</td>
+      <td>77.47 </td>
+    </tr>
+    <tr>
+      <td>DS-CNN-L</td>
+      <td>95.23</td>
+      <td>94.33</td>
+      <td>94.84</td>
+    </tr>
+    <tr>
+      <td>MobileNet-V1</td>
+      <td>70.97</td>
+      <td>67.35</td>
+      <td>69.46</td>
+    </tr>
+    <tr>
+      <td>MobileNet-V2</td>
+      <td>71.77</td>
+      <td>66.75</td>
+      <td>69.64</td>
+    </tr>
+ </table>
+</figure>
+
+Note: DS-CNN-L is a keyword spotting model created for edge devices. It can be found
+in [Arm’s ML Examples repository](https://github.com/ARM-software/ML-examples/tree/master/tflu-kws-cortex-m).
+
+The tutorial [Structural pruning with sparsity 2 by 4](pruning_with_sparsity_2_by_4.ipynb)
+provides more information on this topic.
