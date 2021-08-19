@@ -25,7 +25,6 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_configs
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
-from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm
 
 QuantizeConfig = quantize_config.QuantizeConfig
 
@@ -177,10 +176,6 @@ class Default8BitQuantizeRegistry(
       # _QuantizeInfo(tf.keras.layers.SimpleRNNCell,
       #               ['kernel', 'recurrent_kernel'],
       #               ['activation', 'recurrent_activation']),
-
-      # TODO(tf-mot): Move layers out once Transforms indicate quantization.
-      _no_quantize(conv_batchnorm._ConvBatchNorm2D),  # pylint: disable=protected-access
-      _no_quantize(conv_batchnorm._DepthwiseConvBatchNorm2D),  # pylint: disable=protected-access
   ]
 
   def __init__(self, disable_per_axis=False):
