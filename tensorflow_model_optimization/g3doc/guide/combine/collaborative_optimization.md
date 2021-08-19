@@ -35,7 +35,7 @@ techniques:
     (PQAT)
 *   [Cluster preserving quantization aware training](https://github.com/tensorflow/model-optimization/pull/617)
     (CQAT)
-*   Sparsity and cluster preserving quantization aware training (PCQAT) - WIP
+*   [Sparsity and cluster preserving quantization aware training](https://github.com/tensorflow/model-optimization/pull/699) (PCQAT)
 
 These provide several deployment paths that could be used to compress a machine
 learning model and to take advantage of hardware acceleration at inference time.
@@ -108,5 +108,4 @@ with PQAT and CQAT collaborative optimization paths.
 
 ## Examples
 
-End-to-end example of the different deployment paths will be added in the
-future.
+For end-to-end examples of the collaborative optimization techniques described here, please refer to the [CQAT](https://www.tensorflow.org/model_optimization/guide/combine/cqat_example), [PQAT](https://www.tensorflow.org/model_optimization/guide/combine/pqat_example), [sparsity-preserving clustering](https://www.tensorflow.org/model_optimization/guide/combine/sparse_clustering_example), and [PCQAT](https://www.tensorflow.org/model_optimization/guide/combine/pcqat_example) example notebooks.
