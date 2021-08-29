@@ -27,7 +27,6 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper as quantize_wrapper_mod
-from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 
 quantize_annotate_layer = quantize.quantize_annotate_layer
@@ -513,69 +512,6 @@ class QuantizeApplyTest(tf.test.TestCase):
     ])
 
     quantize_apply(annotated_model)
-
-  class CustomConvLayer(tf.keras.layers.Layer):
-
-    def __init__(self, name=None, **kwargs):
-      super().__init__(name=name, **kwargs)
-      self.conv1 = tf.keras.layers.Conv2D(2, 2)
-
-    def build(self, input_shape):
-      self.conv1.build(input_shape)
-
-    def call(self, inputs):
-      return self.conv1(inputs)
-
-    def get_config(self):
-      return {'name': self.name}
-
-  class CustomConvQuantizeConfig(quantize_config_mod.QuantizeConfig):
-
-    def get_weights_and_quantizers(self, layer):
-      return [(layer.conv1.kernel, quantizers.LastValueQuantizer(
-          num_bits=8, symmetric=True, narrow_range=False, per_axis=False)),]
-
-    def get_activations_and_quantizers(self, layer):
-      return []
-
-    def set_quantize_weights(self, layer, quantize_weights):
-      # layer.conv1._kernel_bak = layer.conv1.kernel
-      layer.conv1.kernel = quantize_weights[0]
-
-    def set_quantize_activations(self, layer, quantize_activations):
-      pass
-
-    def get_output_quantizers(self, layer):
-      return []
-
-    def get_config(self):
-      return {}
-
-  def testQuantizeApply_KeepTrainableWeightOrder(self):
-    layer = self.CustomConvLayer(input_shape=(28, 28, 3))
-    model = keras.Sequential([layer])
-
-    def apply_quantization_to_dense(layer):
-      if isinstance(layer, self.CustomConvLayer):
-        return quantize_annotate_layer(
-            layer, quantize_config=self.CustomConvQuantizeConfig())
-      return layer
-
-    annotated_model = tf.keras.models.clone_model(
-        model,
-        clone_function=apply_quantization_to_dense,
-    )
-
-    with quantize.quantize_scope({
-        'CustomConvQuantizeConfig': self.CustomConvQuantizeConfig,
-        'CustomConvLayer': self.CustomConvLayer
-    }):
-      quant_aware_model = quantize_apply(annotated_model)
-
-    self._assert_weights_different_objects(
-        model.trainable_weights, quant_aware_model.trainable_weights)
-    self._assert_weights_equal_value(
-        model.trainable_weights, quant_aware_model.trainable_weights)
 
 
 if __name__ == '__main__':

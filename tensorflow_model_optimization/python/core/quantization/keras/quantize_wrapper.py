@@ -99,7 +99,6 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
         dtype=tf.dtypes.int32,
         trainable=False)
 
-    self._trainable_weights.extend(self.layer.trainable_weights)
     self._weight_vars = []
     for weight, quantizer in \
         self.quantize_config.get_weights_and_quantizers(self.layer):
@@ -107,6 +106,8 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
                                        self._weight_name(weight.name), self)
 
       self._weight_vars.append((weight, quantizer, quantizer_vars))
+      # Needed to ensure unquantized weights get trained as part of the wrapper.
+      self._trainable_weights.append(weight)
 
     self._quantize_activations = []
     for activation, quantizer in \
@@ -214,9 +215,7 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
 
   @property
   def trainable_weights(self):
-    # Change the order to keep the weight order after applying QAT.
-    return self._dedup_weights(
-        self._trainable_weights + self.layer.trainable_weights)
+    return self.layer.trainable_weights + self._trainable_weights
 
   @property
   def non_trainable_weights(self):
