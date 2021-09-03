@@ -32,8 +32,11 @@ K = tf.keras.backend
 class ModelTransformer(object):
   """Matches patterns to apply transforms in a tf.keras model graph."""
 
-  def __init__(
-      self, model, transforms, candidate_layers=None, layer_metadata=None):
+  def __init__(self,
+               model,
+               transforms,
+               candidate_layers=None,
+               layer_metadata=None):
     """Construct ModelTransformer.
 
     Args:
@@ -68,7 +71,8 @@ class ModelTransformer(object):
 
   def _inbound_node_generator(self, layer):
     for inbound_node in layer['inbound_nodes']:
-      if len(inbound_node) > 0 and isinstance(inbound_node[0], str):
+      if (isinstance(inbound_node, list) and len(inbound_node) > 0 and
+          isinstance(inbound_node[0], str)):
         # TODO(tfmot): The case for the SlicingOpLambda.
         yield [inbound_node]
       else:
@@ -78,12 +82,17 @@ class ModelTransformer(object):
     """Return all the inbound connection layer names for the layer."""
     inbound_layer_names = []
     for inbound_node in self._inbound_node_generator(layer):
+      # TODO(b/197935452): temporary fix when the input is a dictionary of
+      # tensors. A comprehensive solution may be needed.
+      if isinstance(inbound_node, dict):
+        inbound_node = inbound_node.values()
       for connection_info in inbound_node:
         # input argument case.
         inbound_layer_names.append(connection_info[0])
         # **kwarg argument case.
         inbound_layer_names += [
-            value[0] for value in connection_info[3].items()]
+            value[0] for value in connection_info[3].items()
+        ]
 
     return inbound_layer_names
 
@@ -212,10 +221,10 @@ class ModelTransformer(object):
 
     if len(pattern.inputs) == 0:
       # Leaf layer in pattern.
-      return LayerNode(layer, self._get_layer_weights(layer['config']['name']),
-                       [], self._get_layer_metadata(layer['config']['name']),
-                       self._get_layer_names_and_weights(
-                           layer['config']['name']))
+      return LayerNode(
+          layer, self._get_layer_weights(layer['config']['name']), [],
+          self._get_layer_metadata(layer['config']['name']),
+          self._get_layer_names_and_weights(layer['config']['name']))
 
     # There is a possible edge case where a single layer may output multiple
     # tensors and multiple tensors from that layer may be used by the
@@ -313,8 +322,8 @@ class ModelTransformer(object):
     match_name = match_layer_node.layer['config']['name']
     replacement_name = replacement_layer_node.layer['config']['name']
 
-    def _replace_layer_name_for_connection_info(
-        connection_info, match_name, replacement_name):
+    def _replace_layer_name_for_connection_info(connection_info, match_name,
+                                                replacement_name):
       if connection_info[0] == match_name:
         connection_info[0] = replacement_name
       for key in connection_info[3]:
@@ -323,9 +332,11 @@ class ModelTransformer(object):
 
     for consumer in consuming_layers:
       for inbound_node in self._inbound_node_generator(consumer):
+        if isinstance(inbound_node, dict):
+          inbound_node = inbound_node.values()
         for connection_info in inbound_node:
-          _replace_layer_name_for_connection_info(
-              connection_info, match_name, replacement_name)
+          _replace_layer_name_for_connection_info(connection_info, match_name,
+                                                  replacement_name)
 
     output_consumers = self._get_output_consumers(match_layer_node.layer)
     for output_consumer in output_consumers:
@@ -493,8 +504,7 @@ class ModelTransformer(object):
     for weight_tensor in layer.weights:
       weight_name = self._weight_name(weight_tensor.name)
       if weight_name in weights_map:
-        weight_value_tuples.append(
-            (weight_tensor, weights_map[weight_name]))
+        weight_value_tuples.append((weight_tensor, weights_map[weight_name]))
 
     K.batch_set_value(weight_value_tuples)
 
