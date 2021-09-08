@@ -59,6 +59,8 @@ upper_tabs:
         path: /model_optimization/guide/combine/cqat_example
       - title: Sparsity preserving quantization
         path: /model_optimization/guide/combine/pqat_example
+      - title: Sparsity and cluster preserving quantization
+        path: /model_optimization/guide/combine/pcqat_example
       - title: Sparsity preserving clustering
         path: /model_optimization/guide/combine/sparse_clustering_example
 
