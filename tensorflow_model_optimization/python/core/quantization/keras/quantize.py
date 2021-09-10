@@ -25,6 +25,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_scheme
+from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_registry
 
 keras = tf.keras
 
@@ -70,6 +71,7 @@ def quantize_scope(*args):
       'OutputOnlyConfig': quantize_config_mod.OutputOnlyConfig,
   }
   quantization_objects.update(default_8bit_quantize_registry._types_dict())  # pylint: disable=protected-access
+  quantization_objects.update(default_n_bit_quantize_registry._types_dict())  # pylint: disable=protected-access
   quantization_objects.update(quantizers._types_dict())  # pylint: disable=protected-access
 
   return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
@@ -126,8 +128,8 @@ def quantize_model(to_quantize):
         'You passed an instance of type: {input}.'.format(
             input=to_quantize.__class__.__name__))
 
-  if not isinstance(to_quantize, keras.Sequential) \
-      and not to_quantize._is_graph_network:  # pylint: disable=protected-access
+  if not isinstance(
+      to_quantize, keras.Sequential) and not to_quantize._is_graph_network:  # pylint: disable=protected-access
     raise ValueError(
         '`to_quantize` can only either be a tf.keras Sequential or '
         'Functional model.')
@@ -185,8 +187,8 @@ def quantize_annotate_model(to_annotate):
         'You passed an instance of type: {input}.'.format(
             input=to_annotate.__class__.__name__))
 
-  if not isinstance(to_annotate, keras.Sequential) \
-      and not to_annotate._is_graph_network:  # pylint: disable=protected-access
+  if not isinstance(
+      to_annotate, keras.Sequential) and not to_annotate._is_graph_network:  # pylint: disable=protected-access
     raise ValueError(
         '`to_annotate` can only either be a tf.keras Sequential or '
         'Functional model.')
@@ -314,8 +316,7 @@ def quantize_apply(
                      'You passed an instance of type: {input}.'.format(
                          input=model.__class__.__name__))
 
-  if not isinstance(model, keras.Sequential) \
-      and not model._is_graph_network:  # pylint: disable=protected-access
+  if not isinstance(model, keras.Sequential) and not model._is_graph_network:  # pylint: disable=protected-access
     raise ValueError('`model` can only either be a tf.keras Sequential or '
                      'Functional model.')
 
@@ -379,7 +380,8 @@ def quantize_apply(
       full_quantize_config = quantize_registry.get_quantize_config(layer)
       if not full_quantize_config:
         return layer
-      quantize_config = quantize_config_mod.OutputOnlyConfig(full_quantize_config)
+      quantize_config = quantize_config_mod.OutputOnlyConfig(
+          full_quantize_config)
     else:
       quantize_config = layer_quantize_map[layer.name].get('quantize_config')
       if not quantize_config and quantize_registry.supports(layer):

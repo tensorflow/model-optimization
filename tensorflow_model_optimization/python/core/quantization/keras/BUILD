@@ -19,6 +19,7 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations",  # buildcleaner: keep
         "//tensorflow_model_optimization/python/core/quantization/keras/layers",  # buildcleaner: keep
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit",  # buildcleaner: keep
+        "//tensorflow_model_optimization/python/core/quantization/keras/experimental/default_n_bit",  # buildcleaner: keep
         "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations",  # buildcleaner: keep
     ],
 )
@@ -28,6 +29,7 @@ py_strict_library(
     srcs = ["quant_ops.py"],
     srcs_version = "PY3",
     deps = [
+        # absl/logging dep1,
         # tensorflow dep1,
         # python:training tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -252,6 +254,7 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
+        "//tensorflow_model_optimization/python/core/quantization/keras/experimental/default_n_bit:default_n_bit_quantize_registry",
     ],
 )
 
