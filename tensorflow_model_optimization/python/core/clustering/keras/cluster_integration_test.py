@@ -40,7 +40,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     super(ClusterIntegrationTest, self).setUp()
     self.params = {
         "number_of_clusters": 8,
-        "cluster_centroids_init": CentroidInitialization.LINEAR,
     }
 
     self.x_train = np.array(
@@ -135,6 +134,19 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     nr_of_unique_weights = len(set(weights_as_list))
     return nr_of_unique_weights
 
+  def testDefaultClusteringInit(self):
+    """Verifies that default initialization method is KMEANS_PLUS_PLUS."""
+    original_model = keras.Sequential([
+        layers.Dense(5, input_shape=(5,)),
+        layers.Dense(5),
+    ])
+    clustered_model = cluster.cluster_weights(original_model, **self.params)
+
+    for i in range(len(clustered_model.layers)):
+        if hasattr(clustered_model.layers[i], "layer"):
+            init_method = clustered_model.layers[i].get_config()["cluster_centroids_init"]
+            self.assertEqual(init_method, CentroidInitialization.KMEANS_PLUS_PLUS)
+
   @keras_parameterized.run_all_keras_modes
   def testValuesRemainClusteredAfterTraining(self):
     """Verifies that training a clustered model does not destroy the clusters."""
@@ -179,7 +191,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     original_model.layers[0].set_weights(first_layer_weights)
     clustering_params = {
         "number_of_clusters": 6,
-        "cluster_centroids_init": CentroidInitialization.LINEAR,
         "preserve_sparsity": True
     }
     clustered_model = experimental_cluster.cluster_weights(
@@ -352,7 +363,6 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     self.params_clustering = {
         "number_of_clusters": 16,
-        "cluster_centroids_init": CentroidInitialization.KMEANS_PLUS_PLUS,
     }
 
   def _train(self, model):
