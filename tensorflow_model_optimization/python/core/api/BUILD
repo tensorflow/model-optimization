@@ -42,6 +42,7 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_scheme",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_wrapper",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
+        "//tensorflow_model_optimization/python/core/quantization/keras/experimental",
         "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/cluster_preserve:cluster_utils",
         "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/cluster_preserve:default_8bit_cluster_preserve_quantize_scheme",
         "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations/prune_preserve:default_8bit_prune_preserve_quantize_scheme",
