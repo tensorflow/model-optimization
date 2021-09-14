@@ -67,6 +67,7 @@ def quantize_scope(*args):
           quantize_aware_activation.QuantizeAwareActivation,
       'NoOpActivation': quantize_aware_activation.NoOpActivation,
       'QuantizeWrapper': quantize_wrapper.QuantizeWrapper,
+      'QuantizeWrapperV2': quantize_wrapper.QuantizeWrapperV2,
       'QuantizeLayer': quantize_layer.QuantizeLayer,
       'OutputOnlyConfig': quantize_config_mod.OutputOnlyConfig,
   }
@@ -401,7 +402,8 @@ def quantize_apply(
     # `QuantizeAnnotate`. This should generally be fine, but occasionally
     # `QuantizeAnnotate` wrapper may contain `batch_input_shape` like params.
     # TODO(pulkitb): Ensure this does not affect model cloning.
-    return quantize_wrapper.QuantizeWrapper(layer, quantize_config)
+    return quantize_wrapper.QuantizeWrapperV2(
+        layer, quantize_config)
 
   # 1. Create a copy of the model with the same weights. This ensures
   # modifications don't affect the original model, or its weights.

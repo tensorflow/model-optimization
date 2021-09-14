@@ -34,7 +34,7 @@ from tensorflow_model_optimization.python.core.quantization.keras.quantize impor
 # handle custom Keras layers.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_config import QuantizeConfig
 from tensorflow_model_optimization.python.core.quantization.keras.quantize_wrapper import QuantizeWrapper
-
+from tensorflow_model_optimization.python.core.quantization.keras.quantize_wrapper import QuantizeWrapperV2
 # Deserialize quantized model for Keras h5 format.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_scope
 

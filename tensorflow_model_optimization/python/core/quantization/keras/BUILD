@@ -269,6 +269,7 @@ py_strict_test(
         ":quantize_config",
         ":quantize_layer",
         ":quantize_wrapper",
+        ":quantizers",
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
