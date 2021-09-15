@@ -365,6 +365,13 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
           'input_shape': [(8)],
           'm_by_n': (1, 2),
       },
+      {
+          'testcase_name': 'DepthwiseConv_2by4',
+          'layer_type': tf.keras.layers.DepthwiseConv2D,
+          'layer_arg': [3],
+          'input_shape': (7, 7, 32),
+          'm_by_n': (2, 4),
+      },
   )
 
   def testMbyNSparsityPruning_SupportedLayers(self,
@@ -392,18 +399,45 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     test_utils.assert_model_sparsity_m_by_n(self, model, m_by_n)
     self._check_strip_pruning_matches_original(model, sparsity_ratio)
 
-  def testSparsityPruningMbyN_NonSupportedLayers(self):
-    """Check layer that is not supported for m by n sparsity."""
-    self.params.update({'sparsity_m_by_n': (2, 4)})
+  def testSparsityPruningMbyN_SupportedSubclassLayers(self):
+    """Check subclass layer that is supported for m by n sparsity."""
+    m_by_n = (2, 4)
+    self.params.update({'sparsity_m_by_n': m_by_n})
 
-    model = keras.Sequential()
-    layer_type = tf.keras.layers.SeparableConv1D
-    args, input_shape = ([4, 3], (3, 6))
+    class SubclassLayer(tf.keras.layers.Layer):
 
+      def __init__(self):
+        super(SubclassLayer, self).__init__()
+        self.conv1 = tf.keras.layers.Conv2D(
+            2, 3, activation='relu', padding='same', input_shape=[7, 7, 3])
+        self.conv2 = tf.keras.layers.DepthwiseConv2D(3)
+        self.flatten = keras.layers.Flatten()
+        self.dense = layers.Dense(10, activation='sigmoid')
+
+      def call(self, inputs):
+        x = self.conv1(inputs)
+        x = self.conv2(x)
+        x = self.flatten(x)
+        x = self.dense(x)
+        return x
+
+    inputs = keras.Input(shape=(7, 7, 3))
+    outputs = SubclassLayer()(inputs)
+    model = keras.Model(inputs, outputs)
     with self.assertRaises(ValueError):
-      model.add(
-          prune.prune_low_magnitude(
-              layer_type(*args), input_shape=input_shape, **self.params))
+      model = prune.prune_low_magnitude(model, **self.params)
+
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+
+    test_utils.assert_model_sparsity(self, 0.0, model)
+    model.fit(
+        np.random.randn(*self._batch(model.input.get_shape().as_list(), 32)),
+        np.random.randn(*self._batch(model.output.get_shape().as_list(), 32)),
+        callbacks=[pruning_callbacks.UpdatePruningStep()])
+
+    test_utils.assert_model_sparsity_m_by_n(self, model, m_by_n)
+    self._check_strip_pruning_matches_original(model, 0.5)
 
   @parameterized.parameters(prune_registry.PruneRegistry._RNN_LAYERS -
                             {keras.layers.RNN})

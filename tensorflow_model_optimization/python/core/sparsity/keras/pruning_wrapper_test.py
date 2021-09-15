@@ -156,12 +156,18 @@ class PruningWrapperTest(tf.test.TestCase):
 
     self.assertLen(pruning_wrapper.collect_prunable_layers(self.model), 5)
 
-  def testConv3DNonPrunableWithSparsityMbyN(self):
+  def testConv3DWeightNotPrunedWithSparsityMbyN(self):
     layer = keras.layers.Conv3D(2, 3)
     inputs = keras.layers.Input(shape=(4, 28, 28, 28, 1))
     _ = layer(inputs)
-    with self.assertRaises(ValueError):
-      pruning_wrapper.PruneLowMagnitude(layer, sparsity_m_by_n=(2, 4))
+    self.model.add(Prune(layer, sparsity_m_by_n=(2, 4)))
+
+    pruned_layers = pruning_wrapper.collect_prunable_layers(self.model)
+
+    self.assertLen(pruned_layers, 1)
+    # Only rank-2 (e.g, Conv2D) or rank-4 (e.g, Dense) weight are pruned with
+    # M-by-N sparsity.
+    self.assertLen(pruned_layers[0].pruning_vars, 0)
 
 
 if __name__ == '__main__':
