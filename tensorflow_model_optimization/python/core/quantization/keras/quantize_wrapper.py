@@ -228,3 +228,19 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
   @property
   def losses(self):
     return self.layer.losses + self._losses
+
+
+# TODO(b/199809494): Update guide document to use QuantizeWrapperV2.
+# Do not override this class method to quantize wrapper directly.
+# It breaks existing h5 models that uses QuantizeWrapper class.
+class QuantizeWrapperV2(QuantizeWrapper):
+
+  def build(self, input_shape):
+    self._trainable_weights.extend(self.layer.trainable_weights)
+    super(QuantizeWrapperV2, self).build(input_shape)
+
+  @property
+  def trainable_weights(self):
+    # Change the order to keep the weight order after applying QAT.
+    return self._dedup_weights(
+        self._trainable_weights + self.layer.trainable_weights)

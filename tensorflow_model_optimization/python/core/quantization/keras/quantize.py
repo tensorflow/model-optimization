@@ -67,6 +67,7 @@ def quantize_scope(*args):
           quantize_aware_activation.QuantizeAwareActivation,
       'NoOpActivation': quantize_aware_activation.NoOpActivation,
       'QuantizeWrapper': quantize_wrapper.QuantizeWrapper,
+      'QuantizeWrapperV2': quantize_wrapper.QuantizeWrapperV2,
       'QuantizeLayer': quantize_layer.QuantizeLayer,
       'OutputOnlyConfig': quantize_config_mod.OutputOnlyConfig,
   }
@@ -401,7 +402,8 @@ def quantize_apply(
     # `QuantizeAnnotate`. This should generally be fine, but occasionally
     # `QuantizeAnnotate` wrapper may contain `batch_input_shape` like params.
     # TODO(pulkitb): Ensure this does not affect model cloning.
-    return quantize_wrapper.QuantizeWrapper(layer, quantize_config)
+    return quantize_wrapper.QuantizeWrapperV2(
+        layer, quantize_config)
 
   # 1. Create a copy of the model with the same weights. This ensures
   # modifications don't affect the original model, or its weights.
@@ -409,10 +411,10 @@ def quantize_apply(
     model_copy = _clone_model_with_weights(model)
   except ValueError:
     raise ValueError(
-        'Unable to clone model. This generally happens if you used custom Keras layers or objects '
-        'in your model. Please specify them via `quantize_scope` for your calls to `quantize_model` '
-        'and `quantize_apply`.'
-    )
+        'Unable to clone model. This generally happens if you used custom '
+        'Keras layers or objects in your model. Please specify them via '
+        '`quantize_scope` for your calls to `quantize_model` and '
+        '`quantize_apply`.')
 
   # 2. Remove QuantizeAnnotate wrappers from the layers in the model. This
   # extracts the original model structure (easier to transform), and
