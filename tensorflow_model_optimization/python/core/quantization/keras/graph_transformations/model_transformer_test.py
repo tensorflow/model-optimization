@@ -289,6 +289,61 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
     # Should match since bias is initialized with zeros.
     self._assert_model_results_equal(model, transformed_model)
 
+  def testReplaceSingleLayerWithSingleLayer_CustomLayerWithNontensorInput(self):
+
+    class CustomDense(keras.layers.Dense):
+
+      def call(self, inputs, identity=False):
+        if identity:
+          return inputs
+        return super().call(inputs)
+
+    class QuantizedCustomDense(CustomDense):
+      pass
+
+    class ReplaceCustomDenseLayer(transforms.Transform):
+      """Replaces `CustomDense` layers with `QuantizedCustomDense`."""
+
+      def pattern(self):
+        return LayerPattern('CustomDense')
+
+      def replacement(self, match_layer):
+        match_layer_config = match_layer.layer['config']
+        my_dense_layer = QuantizedCustomDense(**match_layer_config)
+
+        replace_layer = keras.layers.serialize(my_dense_layer)
+        replace_layer['name'] = replace_layer['config']['name']
+
+        return LayerNode(replace_layer, match_layer.weights, [])
+
+      def custom_objects(self):
+        return {
+            'CustomDense': CustomDense,
+            'QuantizedCustomDense': QuantizedCustomDense}
+
+    inp = keras.layers.Input((3,))
+    x1 = CustomDense(2)(inp, identity=False)
+    x2 = CustomDense(2)(x1, identity=True)
+    out = keras.layers.ReLU(6.0)(x2)
+    model = keras.Model(inp, [out])
+
+    transformed_model, _ = ModelTransformer(
+        model, [ReplaceCustomDenseLayer()]).transform()
+
+    # build_input_shape is a TensorShape object and the two objects are not
+    # considered the same even though the shapes are the same.
+    self._assert_config(model.get_config(), transformed_model.get_config(),
+                        ['class_name', 'build_input_shape'])
+
+    self.assertEqual(
+        'QuantizedCustomDense',
+        self._get_layer(transformed_model, 0, 'functional').__class__.__name__)
+    self.assertEqual(
+        'QuantizedCustomDense',
+        self._get_layer(transformed_model, 1, 'functional').__class__.__name__)
+
+    self._assert_model_results_equal(model, transformed_model)
+
   @parameterized.parameters(['sequential', 'functional'])
   def testReplaceSingleLayer_WithMultipleLayers(self, model_type):
 

@@ -91,7 +91,8 @@ class ModelTransformer(object):
         inbound_layer_names.append(connection_info[0])
         # **kwarg argument case.
         inbound_layer_names += [
-            value[0] for value in connection_info[3].items()
+            value[0] for value in connection_info[3].values() if isinstance(
+                value, list)
         ]
 
     return inbound_layer_names
@@ -327,8 +328,9 @@ class ModelTransformer(object):
       if connection_info[0] == match_name:
         connection_info[0] = replacement_name
       for key in connection_info[3]:
-        if connection_info[3][key][0] == match_name:
-          connection_info[3][key][0] = replacement_name
+        if isinstance(connection_info[3][key], list):
+          if connection_info[3][key][0] == match_name:
+            connection_info[3][key][0] = replacement_name
 
     for consumer in consuming_layers:
       for inbound_node in self._inbound_node_generator(consumer):
