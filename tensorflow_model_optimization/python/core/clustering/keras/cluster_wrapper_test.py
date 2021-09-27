@@ -61,7 +61,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(
           {'this': 'is not a Layer instance'},
           number_of_clusters=13,
-          cluster_centroids_init=CentroidInitialization.LINEAR
       )
 
   def testCannotBeInitializedWithNonClusterableLayer(self):
@@ -70,7 +69,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(
           NonClusterableLayer(10),
           number_of_clusters=13,
-          cluster_centroids_init=CentroidInitialization.LINEAR
       )
 
   def testCanBeInitializedWithClusterableLayer(self):
@@ -78,7 +76,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     l = cluster_wrapper.ClusterWeights(
         layers.Dense(10),
         number_of_clusters=13,
-        cluster_centroids_init=CentroidInitialization.LINEAR
     )
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
@@ -87,8 +84,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     with self.assertRaises(ValueError):
       cluster_wrapper.ClusterWeights(
           layers.Dense(10),
-          number_of_clusters='13',
-          cluster_centroids_init=CentroidInitialization.LINEAR)
+          number_of_clusters='13')
 
   def testCannotBeInitializedWithFloatNumberOfClusters(self):
     """Verifies that ClusterWeights cannot be initialized with a decimal value provided for the number of clusters."""
@@ -96,7 +92,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(
           layers.Dense(10),
           number_of_clusters=13.4,
-          cluster_centroids_init=CentroidInitialization.LINEAR
       )
 
   @parameterized.parameters(
@@ -111,7 +106,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(
           layers.Dense(10),
           number_of_clusters=number_of_clusters,
-          cluster_centroids_init=CentroidInitialization.LINEAR
       )
 
   @parameterized.parameters((0), (2), (-32))
@@ -122,7 +116,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
       cluster_wrapper.ClusterWeights(
           layers.Dense(10),
           number_of_clusters=number_of_clusters,
-          cluster_centroids_init=CentroidInitialization.LINEAR,
           preserve_sparsity=True)
 
   def testCanBeInitializedWithAlreadyClusterableLayer(self):
@@ -131,7 +124,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     l = cluster_wrapper.ClusterWeights(
         layer,
         number_of_clusters=13,
-        cluster_centroids_init=CentroidInitialization.LINEAR
     )
     self.assertIsInstance(l, cluster_wrapper.ClusterWeights)
 
@@ -140,7 +132,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     l = cluster_wrapper.ClusterWeights(
         layers.Dense(10, input_shape=(10,)),
         number_of_clusters=13,
-        cluster_centroids_init=CentroidInitialization.LINEAR
     )
     self.assertTrue(hasattr(l, '_batch_input_shape'))
 
@@ -183,7 +174,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     l = cluster_wrapper.ClusterWeights(
         keras.layers.Dense(8, input_shape=input_shape),
         number_of_clusters=2,
-        cluster_centroids_init=CentroidInitialization.LINEAR
     )
     # Build a layer with the given shape
     l.build(input_shape)
@@ -239,7 +229,6 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
     original_layer = cluster_wrapper.ClusterWeights(
         keras.layers.Dense(8, input_shape=input_shape),
         number_of_clusters=2,
-        cluster_centroids_init=CentroidInitialization.LINEAR
     )
     # Build a layer with the given shape
     original_layer.build(input_shape)

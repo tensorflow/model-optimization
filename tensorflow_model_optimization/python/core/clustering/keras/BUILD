@@ -25,6 +25,7 @@ py_strict_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        ":cluster_config",
         ":cluster_wrapper",
         ":clustering_centroids",
         # tensorflow dep1,
