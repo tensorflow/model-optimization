@@ -17,12 +17,14 @@ import distutils.version
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 from tensorflow_model_optimization.python.core.clustering.keras.clustering_registry import ClusteringRegistry
 
 k = tf.keras.backend
 CustomObjectScope = tf.keras.utils.CustomObjectScope
+CentroidInitialization = cluster_config.CentroidInitialization
 Layer = tf.keras.layers.Layer
 InputLayer = tf.keras.layers.InputLayer
 
@@ -51,11 +53,7 @@ def cluster_scope():
     loaded_model = tf.keras.models.load_model(keras_file)
   ```
   """
-  return CustomObjectScope(
-      {
-          'ClusterWeights': cluster_wrapper.ClusterWeights
-      }
-  )
+  return CustomObjectScope({'ClusterWeights': cluster_wrapper.ClusterWeights})
 
 def _type_model(model):
   """ Auxiliary function to check type of the model:
@@ -79,10 +77,11 @@ def _type_model(model):
 
   return (is_sequential_or_functional, is_keras_layer, is_subclassed_model)
 
-def cluster_weights(to_cluster,
-                    number_of_clusters,
-                    cluster_centroids_init,
-                    **kwargs):
+def cluster_weights(
+    to_cluster,
+    number_of_clusters,
+    cluster_centroids_init=CentroidInitialization.KMEANS_PLUS_PLUS,
+    **kwargs):
   """Modifies a keras layer or model to be clustered during training.
 
   This function wraps a keras model or layer with clustering functionality

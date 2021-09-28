@@ -14,11 +14,18 @@
 # ==============================================================================
 """Experimental clustering API functions for Keras models."""
 
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras.cluster import _cluster_weights
 
+CentroidInitialization = cluster_config.CentroidInitialization
 
-def cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
-                    preserve_sparsity, **kwargs):
+
+def cluster_weights(
+    to_cluster,
+    number_of_clusters,
+    cluster_centroids_init=CentroidInitialization.KMEANS_PLUS_PLUS,
+    preserve_sparsity=False,
+    **kwargs):
   """Modify a keras layer or model to be clustered during training (experimental).
 
   This function wraps a keras model or layer with clustering functionality

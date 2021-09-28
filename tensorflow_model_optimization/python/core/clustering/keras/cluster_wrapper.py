@@ -56,7 +56,7 @@ class ClusterWeights(Wrapper):
   def __init__(self,
                layer,
                number_of_clusters,
-               cluster_centroids_init,
+               cluster_centroids_init=CentroidInitialization.KMEANS_PLUS_PLUS,
                preserve_sparsity=False,
                cluster_gradient_aggregation=GradientAggregation.SUM,
                **kwargs):

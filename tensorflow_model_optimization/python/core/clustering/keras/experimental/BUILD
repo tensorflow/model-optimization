@@ -24,5 +24,6 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
     ],
 )
