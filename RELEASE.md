@@ -32,6 +32,16 @@ Keras pruning API:
 
 # TensorFlow Model Optimization next release TBD
 
+Keras pruning API:
+* Added structural pruning with MxN sparsity.
+
+Keras clustering API:
+* Added support for RNNSimple, LSTM, GRU, StackedRNNCells, PeepholeLSTMCell, and Bidirectional layers.
+* Updated and fixed sparsity-preserving clustering.
+* Added an experimental quantization schemes for Quantization Aware Training for collaborative model.optimization:
+    - Pruning-Clustering-preserving QAT: pruned and clustered model can be QAT trained with preserved sparsity and the number of clusters.
+* Updated Clustering initialization default to KMEANS_PLUS_PLUS.
+
 # TensorFlow Model Optimization 0.6.0
 
 TFMOT 0.6.0 adds some additional features for Quantization Aware Training (QAT)
