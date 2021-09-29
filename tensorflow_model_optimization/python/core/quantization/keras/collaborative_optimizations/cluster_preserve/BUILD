@@ -68,6 +68,7 @@ py_test(
         "mnist_prune_cluster_preserve_qat_test.py",
     ],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     visibility = ["//visibility:private"],
     deps = [
         ":default_8bit_cluster_preserve_quantize_scheme",
