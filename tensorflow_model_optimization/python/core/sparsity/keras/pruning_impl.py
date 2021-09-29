@@ -54,6 +54,10 @@ class Pruning(object):
     self._block_size = list(block_size)
     self._block_pooling_type = block_pooling_type
     self._sparsity_m_by_n = sparsity_m_by_n
+    # We compute the mask for the structural sparsity at the first step and
+    # keep it the same during fine-training.
+    self._constant_mask_sparsity_m_by_n = None
+    self._sparsity_2_by_4_mask_available = False
     self._validate_block()
 
     # Training step
@@ -155,9 +159,10 @@ class Pruning(object):
       ValueError: if block pooling function is not AVG or MAX
     """
     if self._sparsity_m_by_n:
-      mask = self._update_mask_sparsity_m_by_n(weights, self._sparsity_m_by_n)
+      self._constant_mask_sparsity_m_by_n = self._update_mask_sparsity_m_by_n(weights, self._sparsity_m_by_n)
+      self._sparsity_2_by_4_mask_available = True
       # We need to return some numbers for threshold.
-      return 999.0, mask
+      return 999.0, self._constant_mask_sparsity_m_by_n
 
     if self._block_size == [1, 1]:
       return self._update_mask(weights)
@@ -240,7 +245,8 @@ class Pruning(object):
     """Returns an op to updates masks as per the pruning schedule."""
 
     def maybe_update_masks():
-      return self._pruning_schedule(self._step_fn())[0]
+      return tf.math.equal(self._sparsity_2_by_4_mask_available, False)\
+        and self._pruning_schedule(self._step_fn())[0]
 
     def no_update():
       return tf.no_op()
