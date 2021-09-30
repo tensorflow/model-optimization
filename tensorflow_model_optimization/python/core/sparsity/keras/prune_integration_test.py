@@ -389,6 +389,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
             layer_type(*layer_arg), input_shape=input_shape, **self.params))
     model.compile(
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    model.run_eagerly = True
 
     test_utils.assert_model_sparsity(self, 0.0, model)
     model.fit(
