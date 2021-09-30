@@ -32,7 +32,24 @@ Keras pruning API:
 
 # TensorFlow Model Optimization next release TBD
 
+
+
+# TensorFlow Model Optimization 0.7.0
+
+TFMOT 0.7.0 adds updates for Quantization Aware Training (QAT)
+and Pruning API. Adds support for structured (MxN) pruning.
+QAT now also has support for layers with swish activations and ability
+to disable per-axis quantization in the default8_bit scheme.
+Adds support for combining pruning, QAT and weight clustering.
+
+Keras Quantization API:
+Tested against TensorFlow 2.6.0, 2.5.1 and nightly with Python 3.
+* Added QuantizeWrapperV2 class which preserves order of weights is the default for quantize_apply.
+* Added a flag to disable per-axis quantizers in default8_bit scheme.
+* Added swish as supported activation.
+
 Keras pruning API:
+Tested against TensorFlow 2.6.0, 2.5.1 and nightly with Python 3.
 * Added structural pruning with MxN sparsity.
 
 Keras clustering API:
