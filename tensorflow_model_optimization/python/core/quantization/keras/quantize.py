@@ -25,7 +25,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_scheme
-from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_registry
+
 
 keras = tf.keras
 
@@ -72,7 +72,6 @@ def quantize_scope(*args):
       'OutputOnlyConfig': quantize_config_mod.OutputOnlyConfig,
   }
   quantization_objects.update(default_8bit_quantize_registry._types_dict())  # pylint: disable=protected-access
-  quantization_objects.update(default_n_bit_quantize_registry._types_dict())  # pylint: disable=protected-access
   quantization_objects.update(quantizers._types_dict())  # pylint: disable=protected-access
 
   return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
