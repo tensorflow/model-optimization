@@ -28,6 +28,7 @@ keras = tf.keras
 EPOCHS = 7
 EPOCHS_FINE_TUNING = 4
 NUMBER_OF_CLUSTERS = 8
+NUMBER_OF_CHANNELS = 12
 
 
 def _build_model():
@@ -35,8 +36,8 @@ def _build_model():
   i = tf.keras.layers.Input(shape=(28, 28), name='input')
   x = tf.keras.layers.Reshape((28, 28, 1))(i)
   x = tf.keras.layers.Conv2D(
-      filters=12, kernel_size=(3, 3), activation='relu', name='conv1')(
-          x)
+      filters=NUMBER_OF_CHANNELS, kernel_size=(3, 3),
+      activation='relu', name='conv1')(x)
   x = tf.keras.layers.MaxPool2D(2, 2)(x)
   x = tf.keras.layers.Flatten()(x)
   output = tf.keras.layers.Dense(units=10)(x)
@@ -65,7 +66,8 @@ def _train_model(model):
   model.fit(x_train, y_train, epochs=EPOCHS)
 
 
-def _cluster_model(model, number_of_clusters, preserve_sparsity=False):
+def _cluster_model(model, number_of_clusters,
+                   preserve_sparsity=False, cluster_per_channel = False):
 
   (x_train, y_train), _ = _get_dataset()
 
@@ -74,13 +76,15 @@ def _cluster_model(model, number_of_clusters, preserve_sparsity=False):
           number_of_clusters,
       'cluster_centroids_init':
           cluster_config.CentroidInitialization.KMEANS_PLUS_PLUS,
+      'cluster_per_channel':
+          cluster_per_channel,
       'preserve_sparsity':
-          preserve_sparsity,
+          preserve_sparsity
   }
 
   # Cluster model
-  clustered_model = experimental_cluster.cluster_weights(model,
-                                                         **clustering_params)
+  clustered_model = cluster.cluster_weights(model,
+                                            **clustering_params)
 
   # Use smaller learning rate for fine-tuning
   # clustered model
@@ -128,42 +132,58 @@ class FunctionalTest(tf.test.TestCase, parameterized.TestCase):
     self.dataset = _get_dataset()
 
   @parameterized.parameters(
-      (False),
-      (True),
+      (False, False),
+      (True, False),
+      (True, True),
+      (False, True)
   )
-  def testMnist(self, preserve_sparisty):
+  def testMnist(self, preserve_sparsity, cluster_per_channel):
     """In this test we test that 'kernel' weights are clustered."""
     model = self.model
     _, (x_test, y_test) = self.dataset
 
-    # Checks that number of original weights('kernel') is greater than the
-    # number of clusters
-    nr_of_unique_weights = _get_number_of_unique_weights(model, -1, 'kernel')
-    self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
+    # Indices of Conv2D and Dense layers, respectively.
+    layer_indices = [2,5]
 
-    # Record the number of unique values of 'bias'
-    nr_of_bias_weights = _get_number_of_unique_weights(model, -1, 'bias')
-    self.assertGreater(nr_of_bias_weights, NUMBER_OF_CLUSTERS)
+    # Dict to store the layer bias weight counts to
+    # ensure they aren't clustered
+    nr_of_bias_weights = {}
+
+    # Checks that number of original weights ('kernel') and biases
+    # are greater than the number of clusters for all clusterable layers
+    for i in layer_indices:
+      nr_of_unique_weights = _get_number_of_unique_weights(model, i, 'kernel')
+      self.assertGreater(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
+
+      nr_of_bias_weights[i] = _get_number_of_unique_weights(model, i, 'bias')
+      self.assertGreater(nr_of_bias_weights[i], NUMBER_OF_CLUSTERS)
 
     results_original = model.evaluate(x_test, y_test)
     self.assertGreater(results_original[1], 0.8)
 
     model_copy = _deepcopy_model(model)
     clustered_model = _cluster_model(model_copy, NUMBER_OF_CLUSTERS,
-                                     preserve_sparisty)
+                                     preserve_sparsity=preserve_sparsity,
+                                     cluster_per_channel=cluster_per_channel)
 
     results = clustered_model.evaluate(x_test, y_test)
 
     self.assertGreater(results[1], 0.8)
 
-    nr_of_unique_weights = _get_number_of_unique_weights(
-        clustered_model, -1, 'kernel')
-    self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
+    for i in layer_indices:
+      nr_of_unique_weights = _get_number_of_unique_weights(
+          clustered_model, i, 'kernel')
+      if cluster_per_channel \
+        and isinstance(clustered_model.layers[i], tf.keras.layers.Conv2D):
 
-    # checks that we don't cluster 'bias' weights
-    clustered_nr_of_bias_weights = _get_number_of_unique_weights(
-        clustered_model, -1, 'bias')
-    self.assertEqual(nr_of_bias_weights, clustered_nr_of_bias_weights)
+        self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS*NUMBER_OF_CHANNELS)
+      else:
+        self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
+
+      # checks that we don't cluster 'bias' weights
+      clustered_nr_of_bias_weights = _get_number_of_unique_weights(
+          clustered_model, i, 'bias')
+      self.assertEqual(nr_of_bias_weights[i], clustered_nr_of_bias_weights)
 
 
 if __name__ == '__main__':

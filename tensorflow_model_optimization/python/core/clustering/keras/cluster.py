@@ -128,12 +128,11 @@ def cluster_weights(
       to_cluster,
       number_of_clusters,
       cluster_centroids_init,
-      preserve_sparsity=False,
       **kwargs)
 
 
 def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
-                     preserve_sparsity, **kwargs):
+                     preserve_sparsity=False, cluster_per_channel=False, **kwargs):
   """Modifies a keras layer or model to be clustered during training.
 
   This function wraps a keras model or layer with clustering functionality
@@ -158,6 +157,7 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
   clustering_params = {
     'number_of_clusters': 8,
     'cluster_centroids_init': CentroidInitialization.DENSITY_BASED,
+    'cluster_per_channel': False,
     'preserve_sparsity': False
   }
 
@@ -170,6 +170,7 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
   clustering_params = {
     'number_of_clusters': 8,
     'cluster_centroids_init': CentroidInitialization.DENSITY_BASED,
+    'cluster_per_channel': False,
     'preserve_sparsity': False
   }
 
@@ -202,8 +203,19 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
         8 unique values will be used in each weight array.
       cluster_centroids_init: `tfmot.clustering.keras.CentroidInitialization`
         instance that determines how the cluster centroids will be initialized.
+      cluster_per_channel: optional boolean value that determines whether the
+        clustering should be applied separately on the individual channels, as
+        opposed to the whole kernel. Only applicable to Conv2D layers and is
+        ignored otherwise. The number of clusters in this case would be
+        num_clusters*num_channels. This is useful for the collaborative
+        optimization pipeline where clustering is followed by quantization,
+        since Conv2D is quantized per-channel, so we end up with
+        num_clusters*num_channels total clusters at the end. Clustering
+        per-channel from the beginning leads to better accuracy.
       preserve_sparsity (experimental): optional boolean value that determines
         whether or not sparsity preservation will be enforced during training.
+        When used along with cluster_per_channel flag above, the zero centroid
+        is treated separately and maintained individually for each channel.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 
@@ -255,7 +267,8 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
 
     return cluster_wrapper.ClusterWeights(layer, number_of_clusters,
                                           cluster_centroids_init,
-                                          preserve_sparsity, **kwargs)
+                                          preserve_sparsity,
+                                          cluster_per_channel, **kwargs)
 
   def _wrap_list(layers):
     output = []
