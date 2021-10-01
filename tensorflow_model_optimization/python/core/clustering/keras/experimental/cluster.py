@@ -25,6 +25,7 @@ def cluster_weights(
     number_of_clusters,
     cluster_centroids_init=CentroidInitialization.KMEANS_PLUS_PLUS,
     preserve_sparsity=False,
+    cluster_per_channel=False,
     **kwargs):
   """Modify a keras layer or model to be clustered during training (experimental).
 
@@ -107,4 +108,6 @@ def cluster_weights(
     an unsupported layer.
   """
   return _cluster_weights(to_cluster, number_of_clusters,
-                          cluster_centroids_init, preserve_sparsity, **kwargs)
+                          cluster_centroids_init,
+                          preserve_sparsity,
+                          cluster_per_channel, **kwargs)

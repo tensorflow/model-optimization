@@ -58,6 +58,7 @@ class ClusterWeights(Wrapper):
                number_of_clusters,
                cluster_centroids_init=CentroidInitialization.KMEANS_PLUS_PLUS,
                preserve_sparsity=False,
+               cluster_per_channel=False,
                cluster_gradient_aggregation=GradientAggregation.SUM,
                **kwargs):
     if not isinstance(layer, Layer):
@@ -101,6 +102,17 @@ class ClusterWeights(Wrapper):
     # The number of cluster centroids
     self.number_of_clusters = number_of_clusters
 
+    # Whether to cluster Conv2D kernels per-channel.
+    # In case the layer isn't a Conv2D, this isn't
+    # applicable
+    self.cluster_per_channel = \
+      cluster_per_channel if isinstance(layer, tf.keras.layers.Conv2D) \
+        else False
+
+    # Number of channels in a Conv2D layer, to be
+    # used the case of per-channel clustering
+    self.num_channels = None
+
     # Whether to apply sparsity preservation or not
     self.preserve_sparsity = preserve_sparsity
 
@@ -137,11 +149,30 @@ class ClusterWeights(Wrapper):
         hasattr(layer, '_batch_input_shape')):
       self._batch_input_shape = self.layer._batch_input_shape
 
+    # In the case of Conv2D layer, the data_format
+    # needs to be preserved to be used for per-channel
+    # clustering
+    if hasattr(layer, 'data_format'):
+      self.data_format = self.layer.data_format
+    else:
+      self.data_format = None
+
     # Save the input shape specified in the build
     self.build_input_shape = None
 
   def _make_layer_name(self, layer):
     return '{}_{}'.format('cluster', layer.name)
+
+  def _get_zero_idx_mask(self, centroids, zero_cluster):
+    zero_idx_mask = (tf.cast(tf.math.not_equal(centroids,
+                                              zero_cluster),
+                                              dtype=tf.float32))
+    return zero_idx_mask
+
+  def _get_zero_centroid(self, centroids, zero_idx_mask):
+    zero_centroid = tf.math.multiply(centroids,
+                                     zero_idx_mask)
+    return zero_centroid
 
   def get_weight_from_layer(self, weight_name):
     return getattr(self.layer, weight_name)
@@ -173,15 +204,28 @@ class ClusterWeights(Wrapper):
           i for i, w in enumerate(self.layer.weights) if w is original_weight)
       self.position_original_weights[position_original_weight] = weight_name
 
+      # In the case of per-channel clustering, the number of channels,
+      # per-channel number of clusters, as well as the overall number
+      # of clusters all need to be preserved in the wrapper.
+      if self.cluster_per_channel:
+        self.num_channels = \
+          original_weight.shape[1] if self.data_format == "channels_first" \
+            else original_weight.shape[-1]
+
+      centroid_init_factory = clustering_centroids.CentroidsInitializerFactory
+      centroid_init = centroid_init_factory.get_centroid_initializer(
+                                            self.cluster_centroids_init)(
+                                            weight, self.number_of_clusters,
+                                            self.cluster_per_channel,
+                                            self.num_channels,
+                                            self.preserve_sparsity)
+
       # Init the cluster centroids
-      cluster_centroids = (
-          clustering_centroids.CentroidsInitializerFactory
-          .get_centroid_initializer(self.cluster_centroids_init)(
-              weight, self.number_of_clusters,
-              self.preserve_sparsity).get_cluster_centroids())
+      cluster_centroids = (centroid_init.get_cluster_centroids())
+
       self.cluster_centroids[weight_name] = self.add_weight(
           '{}{}'.format('cluster_centroids_', weight_name),
-          shape=(self.number_of_clusters,),
+          shape=(cluster_centroids.shape),
           dtype=weight.dtype,
           trainable=True,
           initializer=tf.keras.initializers.Constant(value=cluster_centroids))
@@ -198,10 +242,11 @@ class ClusterWeights(Wrapper):
         weight_name_no_index = weight_name
       self.clustering_algorithms[weight_name] = (
           clustering_registry.ClusteringLookupRegistry().get_clustering_impl(
-              self.layer, weight_name_no_index)
+              self.layer, weight_name_no_index, self.cluster_per_channel)
           (
               clusters_centroids=self.cluster_centroids[weight_name],
               cluster_gradient_aggregation=self.cluster_gradient_aggregation,
+              data_format=self.data_format,
           ))
 
       # Init the pulling_indices (weights associations)
@@ -233,18 +278,27 @@ class ClusterWeights(Wrapper):
     ):
 
       if self.preserve_sparsity:
-        # Set the smallest centroid to zero to force sparsity
-        # and avoid extra cluster from forming
-        zero_idx_mask = (
-            tf.cast(
-                tf.math.not_equal(
-                    self.cluster_centroids[weight_name],
-                    self.cluster_centroids[weight_name][
-                        self.zero_idx[weight_name]]),
-                dtype=tf.float32))
-        self.cluster_centroids[weight_name].assign(
-            tf.math.multiply(self.cluster_centroids[weight_name],
-                             zero_idx_mask))
+        # In the case of per-channel clustering, sparsity
+        # needs to be preserved per-channel
+        if self.cluster_per_channel:
+          for channel in range(self.num_channels):
+            zero_idx_mask = \
+              self._get_zero_idx_mask(self.cluster_centroids[weight_name][channel],
+                                      self.cluster_centroids[weight_name][channel][
+                                      self.zero_idx[weight_name][channel]])
+            self.cluster_centroids[weight_name][channel].assign(
+                self._get_zero_centroid(self.cluster_centroids[weight_name][channel],
+                                        zero_idx_mask))
+        else:
+          # Set the smallest centroid to zero to force sparsity
+          # and avoid extra cluster from forming
+          zero_idx_mask = self._get_zero_idx_mask(self.cluster_centroids[weight_name],
+                                                  self.cluster_centroids[weight_name][
+                                                  self.zero_idx[weight_name]])
+          self.cluster_centroids[weight_name].assign(
+              self._get_zero_centroid(self.cluster_centroids[weight_name],
+                                      zero_idx_mask))
+
         # During training, the original zero weights can drift slightly.
         # We want to prevent this by forcing them to stay zero at the places
         # where they were originally zero to begin with.
@@ -284,6 +338,7 @@ class ClusterWeights(Wrapper):
         'cluster_centroids_init': self.cluster_centroids_init,
         'preserve_sparsity': self.preserve_sparsity,
         'cluster_gradient_aggregation': self.cluster_gradient_aggregation,
+        'cluster_per_channel': self.cluster_per_channel,
         **base_config
     }
     return config
@@ -296,12 +351,14 @@ class ClusterWeights(Wrapper):
     cluster_centroids_init = config.pop('cluster_centroids_init')
     preserve_sparsity = config.pop('preserve_sparsity')
     cluster_gradient_aggregation = config.pop('cluster_gradient_aggregation')
+    cluster_per_channel = config.pop('cluster_per_channel')
 
     config['number_of_clusters'] = number_of_clusters
     config['cluster_centroids_init'] = cluster_config.CentroidInitialization(
         cluster_centroids_init)
     config['preserve_sparsity'] = preserve_sparsity
     config['cluster_gradient_aggregation'] = cluster_gradient_aggregation
+    config['cluster_per_channel'] = cluster_per_channel
 
     layer = tf.keras.layers.deserialize(
         config.pop('layer'), custom_objects=custom_objects)

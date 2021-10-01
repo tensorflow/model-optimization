@@ -767,5 +767,52 @@ class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         nr_unique_weights = len(np.unique(weight.numpy()))
         assert nr_unique_weights == self.nr_of_clusters
 
+class ClusterPerChannelIntegrationTest(tf.test.TestCase, parameterized.TestCase):
+  """Integration tests for per-channel clustering of Conv2D layer."""
+
+  def setUp(self):
+    self.x_train = np.random.uniform(size=(500, 32, 32))
+    self.y_train = np.random.randint(low=0, high=1024, size=(500,))
+
+    self.nr_of_clusters = 4
+    self.num_channels = 12
+    self.params_clustering = {
+      "number_of_clusters": self.nr_of_clusters,
+      "cluster_centroids_init": CentroidInitialization.KMEANS_PLUS_PLUS,
+      "cluster_per_channel": True
+    }
+
+  def _get_model(self):
+    """Returns functional model with Conv2D layer."""
+    inp = tf.keras.layers.Input(shape=(32,32), batch_size=100)
+    x = tf.keras.layers.Reshape((32, 32, 1))(inp)
+    x = tf.keras.layers.Conv2D(
+        filters=self.num_channels, kernel_size=(3, 3),
+        activation='relu')(x)
+    x = tf.keras.layers.MaxPool2D(2, 2)(x)
+    out = tf.keras.layers.Flatten()(x)
+    model = tf.keras.Model(inputs=inp, outputs=out)
+    return model
+
+  @keras_parameterized.run_all_keras_modes
+  def testPerChannel(self):
+    model = self._get_model()
+
+    clustered_model = cluster.cluster_weights(model, **self.params_clustering)
+
+    clustered_model.compile(
+      optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')])
+    clustered_model.fit(self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
+
+    stripped_model = cluster.strip_clustering(clustered_model)
+
+    layerConv2D = stripped_model.layers[2]
+    for weight in layerConv2D.weights:
+      if 'kernel' in weight.name:
+        nr_unique_weights = len(np.unique(weight.numpy()))
+        assert nr_unique_weights == self.nr_of_clusters*self.num_channels
+
 if __name__ == "__main__":
   test.main()
