@@ -20,6 +20,7 @@ from tensorflow_model_optimization.python.core.api.quantization.keras import qua
 from tensorflow_model_optimization.python.core.api.quantization.keras import default_8bit
 from tensorflow_model_optimization.python.core.api.quantization.keras import graph_transformations
 from tensorflow_model_optimization.python.core.api.quantization.keras import collaborative_optimizations
+from tensorflow_model_optimization.python.core.api.quantization.keras import experimental
 
 # quantize all layers with default quantization implementation.
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_model
