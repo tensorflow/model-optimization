@@ -241,7 +241,7 @@ class Pruning(object):
 
     def maybe_update_masks():
       if self._sparsity_m_by_n:
-        # only calculate m_by_n masks at step 1
+        # Update structured sparsity masks only at step 1
         return tf.math.equal(self._step_fn(), 1)
       else:
         return self._pruning_schedule(self._step_fn())[0]
