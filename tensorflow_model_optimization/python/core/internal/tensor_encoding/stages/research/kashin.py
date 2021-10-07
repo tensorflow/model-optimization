@@ -195,10 +195,11 @@ class KashinHadamardEncodingStage(encoding_stage.EncodingStageInterface):
                                x.dtype)
 
     # Compute the Kashin coefficients.
+    ep_trans = tf.cast(encode_params[self.ETA_PARAMS_KEY], x.dtype)
     for _ in range(self._num_iters - 1):
       residual, kashin_coefficients = self._kashin_iter(
           residual, kashin_coefficients, signs, clip_level)
-      clip_level *= tf.cast(encode_params[self.ETA_PARAMS_KEY], x.dtype)
+      clip_level *= ep_trans
     # The last iteration can be with or without clipping.
     kashin_coefficients += self._kashin_forward(residual, signs, clip_level,
                                                 last_iter_clip)
