@@ -269,7 +269,11 @@ class Pruning(object):
     """Returns an op to updates masks as per the pruning schedule."""
 
     def maybe_update_masks():
-      return self._pruning_schedule(self._step_fn())[0]
+      if self._sparsity_m_by_n:
+        # Update structured sparsity masks only at step 1
+        return tf.math.equal(self._step_fn(), 1)
+      else:
+        return self._pruning_schedule(self._step_fn())[0]
 
     def no_update():
       return tf.no_op()
