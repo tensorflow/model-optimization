@@ -244,6 +244,14 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
           preserve_sparsity,
           **kwargs,
       )
+    if isinstance(layer, tf.keras.layers.MultiHeadAttention):
+      return cluster_wrapper.ClusterWeightsMHA(
+          layer,
+          number_of_clusters,
+          cluster_centroids_init,
+          preserve_sparsity,
+          **kwargs,
+      )
 
     return cluster_wrapper.ClusterWeights(layer, number_of_clusters,
                                           cluster_centroids_init,
@@ -300,6 +308,13 @@ def strip_clustering(model):
     if isinstance(layer, tf.keras.Model):
       return tf.keras.models.clone_model(
           layer, input_tensors=None, clone_function=_strip_clustering_wrapper)
+
+    elif isinstance(layer, cluster_wrapper.ClusterWeightsMHA):
+        # Update cluster associations in order to get the latest weights
+        layer.update_clustered_weights_associations()
+
+        # In case of MHA layer, use the overloaded implementation
+        return layer.strip_clustering()
 
     elif isinstance(layer, cluster_wrapper.ClusterWeights):
       # Update cluster associations in order to get the latest weights
