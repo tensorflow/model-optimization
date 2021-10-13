@@ -105,6 +105,9 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
         # Embedding has a separate test since training it is not
         # feasible as a single layer.
         layers.Embedding: (None, None),
+
+        # MultiHeadAttention layer has a separate test
+        layers.MultiHeadAttention: (None, None)
     }[layer_type]
 
   def setUp(self):
@@ -528,6 +531,28 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
 
     input_data = np.random.randint(10, size=(32, 10))
     self._check_strip_pruning_matches_original(model, 0.5, input_data)
+
+  def testMHALayerReachesTargetSparsity(self):
+    inp = tf.keras.layers.Input(shape=(32,32), batch_size=100)
+    x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16)(query=inp, value=inp)
+    out = tf.keras.layers.Flatten()(x)
+    model = tf.keras.Model(inputs=inp, outputs=out)
+    model = prune.prune_low_magnitude(model, **self.params)
+    x_train = np.random.uniform(size=(500, 32, 32))
+    y_train = np.random.randint(low=0, high=1024, size=(500,))
+    model.compile(
+      optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')])
+    test_utils.assert_model_sparsity(self, 0.0, model)
+    model.fit(
+        x_train,
+        y_train,
+        epochs=1,
+        batch_size=100,
+        callbacks=[pruning_callbacks.UpdatePruningStep()])
+    test_utils.assert_model_sparsity(self, 0.5, model)
+    self._check_strip_pruning_matches_original(model, 0.5, x_train)
 
   @parameterized.parameters(test_utils.model_type_keys())
   def testPrunesMnist_ReachesTargetSparsity(self, model_type):
