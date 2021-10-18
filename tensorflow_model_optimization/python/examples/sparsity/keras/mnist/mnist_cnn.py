@@ -25,7 +25,7 @@ from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
-ConstantSparsity = pruning_schedule.ConstantSparsity
+PolynomialDecay = pruning_schedule.PolynomialDecay
 keras = tf.keras
 l = keras.layers
 
@@ -159,7 +159,13 @@ def main(unused_argv):
   y_test = tf.keras.utils.to_categorical(y_test, num_classes)
 
   pruning_params = {
-      'pruning_schedule': ConstantSparsity(0.75, begin_step=2000, frequency=100)
+      'pruning_schedule':
+          PolynomialDecay(
+              initial_sparsity=0.1,
+              final_sparsity=0.75,
+              begin_step=1000,
+              end_step=5000,
+              frequency=100)
   }
 
   layerwise_model = build_layerwise_model(input_shape, **pruning_params)

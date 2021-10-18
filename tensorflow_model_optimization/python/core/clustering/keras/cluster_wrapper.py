@@ -422,6 +422,7 @@ class ClusterWeightsRNN(ClusterWeights):
     else:
       raise ValueError('No cells in the RNN layer to set weights for.')
 
+
 class ClusterWeightsMHA(ClusterWeights):
   """This wrapper augments a keras MHA layer so that the weights can be clustered."""
 

@@ -14,7 +14,7 @@
 # ==============================================================================
 """Utility functions for making pruning wrapper work with estimators."""
 
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 
 from tensorflow.python.framework import ops
 from tensorflow_model_optimization.python.core.sparsity.keras.pruning_wrapper import PruneLowMagnitude
@@ -32,6 +32,12 @@ class PruningEstimatorSpec(tf.estimator.EstimatorSpec):
       raise ValueError(
           "Must provide train_op for creating a PruningEstimatorSpec")
 
+    for layer in model.layers:
+      # If the model is newly created/initialized, set the 'pruning_step' to 0.
+      # Otherwise, do nothing.
+      if isinstance(layer, PruneLowMagnitude) and layer.pruning_step == -1:
+        tf.assign(layer.pruning_step, 0)
+
     def _get_step_increment_ops(model, step=None):
       """Returns ops to increment the pruning_step in the prunable layers."""
       increment_ops = []
@@ -43,7 +49,7 @@ class PruningEstimatorSpec(tf.estimator.EstimatorSpec):
             increment_ops.append(tf.assign_add(layer.pruning_step, 1))
           else:
             increment_ops.append(
-                tf.assign(layer.pruning_step, tf.cast(step, tf.int32)))
+                tf.assign(layer.pruning_step, tf.cast(step, tf.int64)))
 
       return tf.group(increment_ops)
 
