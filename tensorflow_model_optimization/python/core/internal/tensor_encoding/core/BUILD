@@ -47,7 +47,6 @@ py_strict_library(
     name = "encoding_stage",
     srcs = ["encoding_stage.py"],
     deps = [
-        # enum dep1,
         # six dep1,
         # tensorflow dep1,
     ],

@@ -20,7 +20,6 @@ py_strict_library(
     name = "py_utils",
     srcs = ["py_utils.py"],
     deps = [
-        # enum dep1,
         # numpy dep1,
         # six dep1,
         # tensorflow dep1,
