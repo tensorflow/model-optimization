@@ -375,6 +375,18 @@ def quantize_apply(
       # It supports for custom QuantizeWrapper.
       return layer
 
+    # layer is a QuantizeLayer, possibly rebuild
+    # layer with modified config from parameters stored in the map.
+    if isinstance(layer, quantize_layer.QuantizeLayer):
+      # If there is more than one usage of the input, even if all are concat,
+      # we need to quantize.
+      if len(layer._outbound_nodes) > 1:  # pylint: disable=protected-access
+        return layer
+      layer_config = layer.get_config()
+      for key, value in layer_quantize_map[layer.name].items():
+        layer_config[key] = value
+      return quantize_layer.QuantizeLayer.from_config(layer_config)
+
     if layer.name in requires_output_quantize:
       if not quantize_registry.supports(layer):
         return layer
