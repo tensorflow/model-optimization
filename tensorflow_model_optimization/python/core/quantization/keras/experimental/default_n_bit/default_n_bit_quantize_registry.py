@@ -101,6 +101,7 @@ class DefaultNBitQuantizeRegistry(
 
       # _QuantizeInfo(layers.Conv3D, ['kernel'], ['activation']),
       # _QuantizeInfo(layers.Conv3DTranspose, ['kernel'], ['activation']),
+      _QuantizeInfo(layers.Concatenate, [], [], True),
       _no_quantize(layers.Cropping1D),
       _no_quantize(layers.Cropping2D),
       _no_quantize(layers.Cropping3D),

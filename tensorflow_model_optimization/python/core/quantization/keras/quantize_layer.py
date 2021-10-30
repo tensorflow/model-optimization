@@ -38,20 +38,23 @@ class QuantizeLayer(tf.keras.layers.Layer):
     """Create a QuantizeLayer.
 
     Args:
-      quantizer: `Quantizer` used to quantize tensors.
+      quantizer: `Quantizer` used to quantize tensors. quantizer=None
+        means no quantization of the input layer.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
     super(QuantizeLayer, self).__init__(**kwargs)
 
-    if quantizer is None or not isinstance(quantizer, quantizers.Quantizer):
-      raise ValueError('quantizer should not be None, and should be an instance'
+    if quantizer is not None and not isinstance(quantizer,
+                                                quantizers.Quantizer):
+      raise ValueError('quantizer should be an instance'
                        'of `tfmot.quantization.keras.quantizers.Quantizer`.')
 
     self.quantizer = quantizer
 
   def build(self, input_shape):
-    self.quantizer_vars = self.quantizer.build(
-        input_shape, self.name, self)
+    if self.quantizer:
+      self.quantizer_vars = self.quantizer.build(
+          input_shape, self.name, self)
 
     self.optimizer_step = self.add_weight(
         'optimizer_step',
@@ -60,6 +63,9 @@ class QuantizeLayer(tf.keras.layers.Layer):
         trainable=False)
 
   def call(self, inputs, training=None):
+    if not self.quantizer:
+      return inputs
+
     if training is None:
       training = tf.keras.backend.learning_phase()
 

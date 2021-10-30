@@ -69,6 +69,22 @@ class QuantizeLayerTest(tf.test.TestCase):
 
     self.assertEqual(layer_from_config.get_config(), layer.get_config())
 
+  def testNoQuantizeLayer(self):
+    layer = QuantizeLayer(quantizer=None, input_shape=(4,))
+    model = tf.keras.Sequential([layer])
+    x = np.random.rand(1, 4)
+    self.assertAllClose(x, model.predict(x))
+
+    custom_objects = {
+        'QuantizeLayer': QuantizeLayer,
+    }
+
+    serialized_layer = serialize_layer(layer)
+    with tf.keras.utils.custom_object_scope(custom_objects):
+      layer_from_config = deserialize_layer(serialized_layer)
+
+    self.assertEqual(layer_from_config.get_config(), layer.get_config())
+
 
 if __name__ == '__main__':
   tf.test.main()

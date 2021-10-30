@@ -504,6 +504,8 @@ class ConcatTransform(transforms.Transform):
         'Concatenate', inputs=[LayerPattern('.*'), LayerPattern('.*')])
 
   def _get_layer_type(self, layer_class_name):
+    if layer_class_name == 'QuantizeLayer':
+      return quantize_layer.QuantizeLayer
     keras_layers = inspect.getmembers(tf.keras.layers, inspect.isclass)
     for layer_name, layer_type in keras_layers:
       if layer_name == layer_class_name:
@@ -535,6 +537,10 @@ class ConcatTransform(transforms.Transform):
           # Input layer to Concat is also Concat. Don't quantize it.
           feed_layer_node.metadata['quantize_config'] = (
               default_8bit_quantize_configs.NoOpQuantizeConfig())
+          continue
+
+        if layer_class == quantize_layer.QuantizeLayer:
+          feed_layer_node.metadata['quantizer'] = None
           continue
 
         if not default_registry._is_supported_layer(layer_class):
