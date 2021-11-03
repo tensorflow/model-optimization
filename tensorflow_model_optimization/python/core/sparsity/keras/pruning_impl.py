@@ -221,14 +221,14 @@ class Pruning(object):
     if tf.distribute.get_replica_context():
       values_and_vars = []
       for weight, mask, _ in self._pruning_vars:
-        masked_weight = tf.math.multiply(weight, mask)
+        masked_weight = tf.dtypes.cast(tf.math.multiply(weight, mask), dtype=weight.dtype)
         values_and_vars.append((masked_weight, weight))
       if values_and_vars:
         assign_objs.append(tf.distribute.get_replica_context().merge_call(
             update_fn, args=(values_and_vars,)))
     else:
       for weight, mask, _ in self._pruning_vars:
-        masked_weight = tf.math.multiply(weight, mask)
+        masked_weight = tf.dtypes.cast(tf.math.multiply(weight, mask), dtype=weight.dtype)
         assign_objs.append(tf_compat.assign(weight, masked_weight))
 
     return assign_objs

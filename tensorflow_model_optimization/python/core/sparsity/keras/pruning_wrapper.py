@@ -213,14 +213,12 @@ class PruneLowMagnitude(Wrapper):
           'mask',
           shape=weight.shape,
           initializer=tf.keras.initializers.get('ones'),
-          dtype=weight.dtype,
           trainable=False,
           aggregation=tf.VariableAggregation.MEAN)
       threshold = self.add_variable(
           'threshold',
           shape=[],
           initializer=tf.keras.initializers.get('zeros'),
-          dtype=weight.dtype,
           trainable=False,
           aggregation=tf.VariableAggregation.MEAN)
 
