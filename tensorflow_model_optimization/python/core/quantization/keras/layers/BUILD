@@ -23,3 +23,12 @@ py_strict_library(
         # tensorflow dep1,
     ],
 )
+
+py_strict_library(
+    name = "dense_batchnorm_test_utils",
+    srcs = ["dense_batchnorm_test_utils.py"],
+    srcs_version = "PY3",
+    deps = [
+        # tensorflow dep1,
+    ],
+)
