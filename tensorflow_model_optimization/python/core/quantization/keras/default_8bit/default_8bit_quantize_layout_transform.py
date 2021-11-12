@@ -65,6 +65,9 @@ class Default8BitQuantizeLayoutTransform(
         default_8bit_transforms.ConcatTransform4Inputs(),
         default_8bit_transforms.ConcatTransform3Inputs(),
         default_8bit_transforms.ConcatTransform(),
+        default_8bit_transforms.DenseBatchNormQuantize(),
+        default_8bit_transforms.DenseBatchNormReLUQuantize(),
+        default_8bit_transforms.DenseBatchNormActivationQuantize(),
         default_8bit_transforms.LayerReLUQuantize(),
         default_8bit_transforms.LayerReluActivationQuantize(),
     ]
