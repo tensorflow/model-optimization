@@ -297,7 +297,7 @@ class Pruning(object):
 
   def add_pruning_summaries(self):
     """Adds summaries of weight sparsities and thresholds."""
-    # b/(139939526): update to use public API.
+    # TODO(b/139939526): update to use public API.
     summary = tf.summary
     if not tf.executing_eagerly():
       summary = tf.compat.v1.summary
