@@ -24,7 +24,7 @@ import inspect
 import numpy as np
 import tensorflow as tf
 
-# b/(139939526): update to use public API.
+# TODO(b/139939526): update to use public API.
 from tensorflow.python.keras.utils import generic_utils
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 from tensorflow_model_optimization.python.core.keras import metrics
