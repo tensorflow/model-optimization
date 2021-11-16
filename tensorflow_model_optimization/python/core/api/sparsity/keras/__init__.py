@@ -26,6 +26,8 @@ from tensorflow_model_optimization.python.core.sparsity.keras.pruning_schedule i
 from tensorflow_model_optimization.python.core.sparsity.keras.pruning_schedule import ConstantSparsity
 from tensorflow_model_optimization.python.core.sparsity.keras.pruning_schedule import PolynomialDecay
 
+from tensorflow_model_optimization.python.core.sparsity.keras.pruning_wrapper import collect_prunable_layers
+
 from tensorflow_model_optimization.python.core.sparsity.keras.prunable_layer import PrunableLayer
 
 from tensorflow_model_optimization.python.core.sparsity.keras.pruning_policy import PruningPolicy

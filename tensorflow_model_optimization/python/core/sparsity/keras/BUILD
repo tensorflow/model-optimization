@@ -18,6 +18,7 @@ py_strict_library(
         ":pruning_callbacks",  # buildcleaner: keep
         ":pruning_policy",  # buildcleaner: keep
         ":pruning_schedule",  # buildcleaner: keep
+        ":pruning_wrapper",  # buildcleaner: keep
     ],
 )
 
