@@ -102,7 +102,11 @@ def _normalize_tuple(value):
 
 
 class Conv2DBatchNormQuantize(transforms.Transform):
-  """Ensure FQ does not get placed between Conv and BatchNorm."""
+  """Transform to be applied to "Conv2D" + "BatchNorm" Graph.
+
+  This transform disables Quantization between Conv and BatchNorm
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -135,7 +139,11 @@ class Conv2DBatchNormQuantize(transforms.Transform):
 
 
 class Conv2DReshapeBatchNormQuantize(Conv2DBatchNormQuantize):
-  """Ensure FQ does not get placed between Conv, Reshape and BatchNorm."""
+  """Transform to be applied to "Conv2D" + "Reshape" + "BatchNorm" Graph.
+
+  This transform disables Quantization between Conv, Reshape and BatchNorm
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -155,7 +163,11 @@ class Conv2DReshapeBatchNormQuantize(Conv2DBatchNormQuantize):
 
 
 class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
-  """Ensure FQ does not get placed between Conv, BatchNorm and ReLU."""
+  """Transform to be applied to "Conv2D" + "BatchNorm" + "ReLU" Graph.
+
+  This transform disables Quantization between Conv, BatchNorm and ReLU
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -184,7 +196,11 @@ class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
 
 
 class Conv2DBatchNormActivationQuantize(Conv2DBatchNormReLUQuantize):
-  """Ensure FQ does not get placed between Conv, BatchNorm and ReLU."""
+  """Transform to be applied to "Conv2D" + "BatchNorm" + "ReLU" Graph.
+
+  This transform disables Quantization between Conv, BatchNorm and ReLU
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -194,7 +210,11 @@ class Conv2DBatchNormActivationQuantize(Conv2DBatchNormReLUQuantize):
 
 
 class Conv2DReshapeBatchNormReLUQuantize(Conv2DBatchNormReLUQuantize):
-  """Ensure FQ does not get placed between Conv, BatchNorm and ReLU."""
+  """Transform to be applied to "Conv2D" + "Reshape" + "BatchNorm" + "ReLU" Graph.
+
+  This transform disables Quantization between Conv, Reshape, BatchNorm and ReLU
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -212,7 +232,11 @@ class Conv2DReshapeBatchNormReLUQuantize(Conv2DBatchNormReLUQuantize):
 
 class Conv2DReshapeBatchNormActivationQuantize(
     Conv2DReshapeBatchNormReLUQuantize):
-  """Ensure FQ does not get placed between Conv, BatchNorm and ReLU."""
+  """Transform to be applied to "Conv2D" + "Reshape" + "BatchNorm" + "ReLU" Graph.
+
+  This transform disables Quantization between Conv, Reshape, BatchNorm and ReLU
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -222,7 +246,11 @@ class Conv2DReshapeBatchNormActivationQuantize(
 
 
 class DenseBatchNormQuantize(transforms.Transform):
-  """Ensure FQ does not get placed between Dense and BatchNorm."""
+  """Transform to be applied to "Dense"+ "BatchNorm" Graph.
+
+  This transform disables Quantization between Dense and BatchNorm
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -254,7 +282,11 @@ class DenseBatchNormQuantize(transforms.Transform):
 
 
 class DenseBatchNormReLUQuantize(DenseBatchNormQuantize):
-  """Ensure FQ does not get placed between Dense, BatchNorm and ReLU."""
+  """Transform to be applied to "Dense"+ "BatchNorm" + "ReLU" Graph.
+
+  This transform disables Quantization between Dense, BatchNorm and ReLU
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -281,7 +313,11 @@ class DenseBatchNormReLUQuantize(DenseBatchNormQuantize):
 
 
 class DenseBatchNormActivationQuantize(DenseBatchNormReLUQuantize):
-  """Ensure FQ does not get placed between Dense, BatchNorm and ReLU."""
+  """Transform to be applied to "Dense"+ "BatchNorm" + "ReLU" Graph.
+
+  This transform disables Quantization between Dense, BatchNorm and ReLU
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -501,7 +537,11 @@ class SeparableConvQuantize(transforms.Transform):
 
 
 class LayerReLUQuantize(transforms.Transform):
-  """Ensure FQ does not get placed between Add and ReLU."""
+  """Transform to be applied to "Add"+ "ReLU" Graph.
+
+  This transform disables Quantization between Add and ReLU
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
@@ -523,7 +563,11 @@ class LayerReLUQuantize(transforms.Transform):
 
 
 class LayerReluActivationQuantize(LayerReLUQuantize):
-  """Ensure FQ does not get placed between Add and ReLU."""
+  """Transform to be applied to "Add"+ "ReLU" Graph.
+
+  This transform disables Quantization between Add and ReLU
+  to ensure FQ does not get placed between them.
+  """
 
   def pattern(self):
     return LayerPattern(
