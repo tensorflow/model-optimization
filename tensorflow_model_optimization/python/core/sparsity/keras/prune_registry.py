@@ -93,6 +93,11 @@ class PruneRegistry(object):
       layers.MaxPooling1D: [],
       layers.MaxPooling2D: [],
       layers.MaxPooling3D: [],
+      layers.MultiHeadAttention: [
+        '_query_dense.kernel',
+        '_key_dense.kernel',
+        '_value_dense.kernel',
+        '_output_dense.kernel'],
       layers.experimental.preprocessing.Rescaling.__class__: [],
       TensorFlowOpLayer: [],
   }
@@ -164,6 +169,10 @@ class PruneRegistry(object):
     return layer.__class__ in cls._RNN_LAYERS
 
   @classmethod
+  def _is_mha_layer(cls, layer):
+    return layer.__class__ is layers.MultiHeadAttention
+
+  @classmethod
   def _weight_names(cls, layer):
     return cls._LAYERS_WEIGHTS_MAP[layer.__class__]
 
@@ -202,8 +211,20 @@ class PruneRegistry(object):
         prunable_weights.extend(get_prunable_weights_rnn_cell(rnn_cell))
       return prunable_weights
 
+    def get_prunable_weights_mha():  # pylint: disable=missing-docstring
+      def get_prunable_weights_mha_weight(weight_name):
+        pre, _, post = weight_name.rpartition('.')
+        return getattr(getattr(layer, pre), post)
+
+      prunable_weights = []
+      for weight_name in cls._weight_names(layer):
+        prunable_weights.append(get_prunable_weights_mha_weight(weight_name))
+      return prunable_weights
+
     if cls._is_rnn_layer(layer):
       layer.get_prunable_weights = get_prunable_weights_rnn
+    elif cls._is_mha_layer(layer):
+      layer.get_prunable_weights = get_prunable_weights_mha
     else:
       layer.get_prunable_weights = get_prunable_weights
 
