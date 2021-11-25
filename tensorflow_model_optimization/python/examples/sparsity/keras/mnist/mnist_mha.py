@@ -39,7 +39,7 @@ test_images = test_images / 255.0
 
 # define model
 input = tf.keras.layers.Input(shape=(28, 28))
-x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16, name="mha")(
+x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16, name='mha')(
     query=input, value=input
 )
 x = tf.keras.layers.Flatten()(x)
@@ -48,9 +48,9 @@ model = tf.keras.Model(inputs=input, outputs=out)
 
 # Train the digit classification model
 model.compile(
-    optimizer="adam",
+    optimizer='adam',
     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=["accuracy"],
+    metrics=['accuracy'],
 )
 
 model.fit(
@@ -80,9 +80,9 @@ model_for_pruning = prune.prune_low_magnitude(model, **pruning_params)
 
 # `prune_low_magnitude` requires a recompile.
 model_for_pruning.compile(
-    optimizer="adam",
+    optimizer='adam',
     loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=["accuracy"],
+    metrics=['accuracy'],
 )
 
 model_for_pruning.fit(
