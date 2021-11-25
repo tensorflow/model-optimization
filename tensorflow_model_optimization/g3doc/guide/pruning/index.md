@@ -43,6 +43,18 @@ It is on our roadmap to add support in the following areas:
 *   [Minimal Subclassed model support](https://github.com/tensorflow/model-optimization/issues/155)
 *   [Framework support for latency improvements](https://github.com/tensorflow/model-optimization/issues/173)
 
+## Structural pruning M by N
+
+Structural pruning zeroes out model weights at the beginning of the training
+process according to the following pattern: M weights are set to zero in the
+block of N weights. It is important to notice that this pattern affects only the last dimension of the weight tensor for the model that is converted by TensorFlow Lite. For example, `Conv2D` layer weights in TensorFlow Lite have the structure [channel_out, height, width, channel_in] and `Dense` layer weights have the structure [channel_out, channel_in]. The sparsity pattern is applied to the weights in the last dimension: channel_in.
+Special hardware can benefit from this type of sparsity in the model and inference time can have a speedup up to 2x. Because this pattern lock in sparsity is more restrictive, the accuracy achieved after fine-tuning is worse than with the magnitude-based pruning.
+It is important to indicate that the pattern is valid only for the model that is converted to tflite.
+If the model is quantized, then the accuracy could be improved using [collaborative optimization technique](https://blog.tensorflow.org/2021/10/Collaborative-Optimizations.html): Sparsity preserving quantization aware training.
+
+The tutorial [Structural pruning with sparsity 2 by 4](pruning_with_sparsity_2_by_4.ipynb)
+provides more information on this topic.
+
 ## Results
 
 ### Image Classification
@@ -53,12 +65,14 @@ It is on our roadmap to add support in the following areas:
       <th>Model</th>
       <th>Non-sparse Top-1 Accuracy </th>
       <th>Sparse Accuracy </th>
+      <th>Sparsity 2 by 4</th>
       <th>Sparsity </th>
     </tr>
     <tr>
       <td rowspan=3>InceptionV3</td>
       <td rowspan=3>78.1%</td>
       <td>78.0%</td>
+      <td>75.8%</td>
       <td>50%</td>
     </tr>
     <tr>
@@ -68,7 +82,10 @@ It is on our roadmap to add support in the following areas:
       <td>74.6%</td><td>87.5%</td>
     </tr>
     <tr>
-      <td>MobilenetV1 224</td><td>71.04%</td><td>70.84%</td><td>50%</td>
+      <td>MobilenetV1 224</td><td>71.04%</td><td>70.84%</td><td>67.35%</td><td>50%</td>
+    </tr>
+    <tr>
+      <td>MobilenetV2 224</td><td>71.77%</td><td>69.64%</td><td>66.75%</td><td>50%</td>
     </tr>
  </table>
 </figure>
@@ -115,6 +132,28 @@ The models were tested on Imagenet.
 The models use WMT16 German and English dataset with news-test2013 as the dev
 set and news-test2015 as the test set.
 
+### Keyword spotting model
+
+DS-CNN-L is a keyword spotting model created for edge devices. It can be found
+in [Arm’s ML Examples repository](https://github.com/ARM-software/ML-examples/tree/master/tflu-kws-cortex-m).
+
+<figure>
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>Unpruned</th>
+      <th>Sparsity 2 by 4 </th>
+      <th>Sparsity, 50% </th>
+    </tr>
+    <tr>
+      <td>DS-CNN-L</td>
+      <td>95.23</td>
+      <td>94.33</td>
+      <td>94.84</td>
+    </tr>
+ </table>
+</figure>
+
 ## Examples
 
 In addition to the [Prune with Keras](pruning_with_keras.ipynb)
@@ -128,55 +167,3 @@ pruning:
 
 For background, see *To prune, or not to prune: exploring the efficacy of
 pruning for model compression* [[paper](https://arxiv.org/pdf/1710.01878.pdf)].
-
-## Structural pruning M by N
-
-Structural pruning zeroes out model weights at the beginning of the training
-process according to the following pattern: M weights are set to zero in the
-block of N weights. It is important to notice that this pattern affects only the last dimension of the weight tensor for the model that is converted by TensorFlow Lite. For example, `Conv2D` layer weights in TensorFlow Lite have the structure [channel_out, height, width, channel_in] and `Dense` layer weights have the structure [channel_out, channel_in]. The sparsity pattern is applied to the weights in the last dimension: channel_in.
-Special hardware can benefit from this type of sparsity in the model and inference time can have a speedup up to 2x. Because this pattern lock in sparsity is more restrictive, the accuracy achieved after fine-tuning is worse than with the magnitude-based pruning.
-It is important to indicate that the pattern is valid only for the model that is converted to tflite.
-If the model is quantized, then the accuracy could be improved using [collaborative optimization technique](https://blog.tensorflow.org/2021/10/Collaborative-Optimizations.html): Sparsity preserving quantization aware training.
-
-The table below provides some results for 2 by 4 sparsity in comparison with the magnitude based pruning with the same target sparsity 50%.
-
-<figure>
-  <table>
-    <tr>
-      <th>Model</th>
-      <th>unpruned</th>
-      <th>2/4 sparsity </th>
-      <th>magnitude based sparsity, 50% </th>
-    </tr>
-    <tr>
-      <td>Inception-V3</td>
-      <td>77.82</td>
-      <td>75.8</td>
-      <td>77.47 </td>
-    </tr>
-    <tr>
-      <td>DS-CNN-L</td>
-      <td>95.23</td>
-      <td>94.33</td>
-      <td>94.84</td>
-    </tr>
-    <tr>
-      <td>MobileNet-V1</td>
-      <td>70.97</td>
-      <td>67.35</td>
-      <td>69.46</td>
-    </tr>
-    <tr>
-      <td>MobileNet-V2</td>
-      <td>71.77</td>
-      <td>66.75</td>
-      <td>69.64</td>
-    </tr>
- </table>
-</figure>
-
-Note: DS-CNN-L is a keyword spotting model created for edge devices. It can be found
-in [Arm’s ML Examples repository](https://github.com/ARM-software/ML-examples/tree/master/tflu-kws-cortex-m).
-
-The tutorial [Structural pruning with sparsity 2 by 4](pruning_with_sparsity_2_by_4.ipynb)
-provides more information on this topic.
