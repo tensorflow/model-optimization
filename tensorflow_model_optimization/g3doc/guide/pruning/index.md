@@ -11,7 +11,7 @@ fits with your use case.
     [pruning comprehensive guide](comprehensive_guide.ipynb).
 *   To explore the application of pruning for on-device inference, see the
     [Pruning for on-device inference with XNNPACK](pruning_for_on_device_inference.ipynb).
-*   To see an example of structural pruning, see the
+*   To see an example of structural pruning, run the tutorial
     [Structural pruning with sparsity 2 by 4](pruning_with_sparsity_2_by_4.ipynb).
 
 ## Overview
@@ -43,18 +43,6 @@ It is on our roadmap to add support in the following areas:
 *   [Minimal Subclassed model support](https://github.com/tensorflow/model-optimization/issues/155)
 *   [Framework support for latency improvements](https://github.com/tensorflow/model-optimization/issues/173)
 
-## Structural pruning M by N
-
-Structural pruning zeroes out model weights at the beginning of the training
-process according to the following pattern: M weights are set to zero in the
-block of N weights. It is important to notice that this pattern affects only the last dimension of the weight tensor for the model that is converted by TensorFlow Lite. For example, `Conv2D` layer weights in TensorFlow Lite have the structure [channel_out, height, width, channel_in] and `Dense` layer weights have the structure [channel_out, channel_in]. The sparsity pattern is applied to the weights in the last dimension: channel_in.
-Special hardware can benefit from this type of sparsity in the model and inference time can have a speedup up to 2x. Because this pattern lock in sparsity is more restrictive, the accuracy achieved after fine-tuning is worse than with the magnitude-based pruning.
-It is important to indicate that the pattern is valid only for the model that is converted to tflite.
-If the model is quantized, then the accuracy could be improved using [collaborative optimization technique](https://blog.tensorflow.org/2021/10/Collaborative-Optimizations.html): Sparsity preserving quantization aware training.
-
-The tutorial [Structural pruning with sparsity 2 by 4](pruning_with_sparsity_2_by_4.ipynb)
-provides more information on this topic.
-
 ## Results
 
 ### Image Classification
@@ -64,16 +52,18 @@ provides more information on this topic.
     <tr>
       <th>Model</th>
       <th>Non-sparse Top-1 Accuracy </th>
-      <th>Sparse Accuracy </th>
-      <th>Sparsity 2 by 4</th>
-      <th>Sparsity </th>
+      <th>Random Sparse Accuracy </th>
+      <th>Random Sparsity </th>
+      <th>Structured Sparse Accuracy</th>
+      <th>Structured Sparsity </th>
     </tr>
     <tr>
       <td rowspan=3>InceptionV3</td>
       <td rowspan=3>78.1%</td>
       <td>78.0%</td>
-      <td>75.8%</td>
       <td>50%</td>
+      <td>75.8%</td>
+      <td>2 by 4</td>
     </tr>
     <tr>
       <td>76.1%</td><td>75%</td>
@@ -82,10 +72,10 @@ provides more information on this topic.
       <td>74.6%</td><td>87.5%</td>
     </tr>
     <tr>
-      <td>MobilenetV1 224</td><td>71.04%</td><td>70.84%</td><td>67.35%</td><td>50%</td>
+      <td>MobilenetV1 224</td><td>71.04%</td><td>70.84%</td><td>50%</td><td>67.35%</td><td>2 by 4</td>
     </tr>
     <tr>
-      <td>MobilenetV2 224</td><td>71.77%</td><td>69.64%</td><td>66.75%</td><td>50%</td>
+      <td>MobilenetV2 224</td><td>71.77%</td><td>69.64%</td><td>50%</td><td>66.75%</td><td>2 by 4</td>
     </tr>
  </table>
 </figure>
