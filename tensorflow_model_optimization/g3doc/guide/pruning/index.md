@@ -131,9 +131,9 @@ in [Arm’s ML Examples repository](https://github.com/ARM-software/ML-examples/
   <table>
     <tr>
       <th>Model</th>
-      <th>Unpruned</th>
-      <th>Sparsity 2 by 4 </th>
-      <th>Sparsity, 50% </th>
+      <th>Non-sparse Accuracy</th>
+      <th>Structured Sparse Accuracy (2 by 4 pattern)</th>
+      <th>Random Sparse Accuracy (target sparsity 50%)</th>
     </tr>
     <tr>
       <td>DS-CNN-L</td>
