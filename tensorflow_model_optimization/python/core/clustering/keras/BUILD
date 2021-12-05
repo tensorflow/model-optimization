@@ -211,6 +211,7 @@ py_strict_test(
     name = "mnist_clusterable_layer_test",
     srcs = ["mnist_clusterable_layer_test.py"],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",
@@ -225,6 +226,7 @@ py_strict_test(
     name = "mnist_clustering_test",
     srcs = ["mnist_clustering_test.py"],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",

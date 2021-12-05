@@ -20,6 +20,7 @@ py_strict_test(
     timeout = "long",
     srcs = ["same_training_and_inference_test.py"],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     deps = [
         ":same_training_and_inference",
         # tensorflow dep1,
@@ -42,6 +43,7 @@ py_strict_test(
     timeout = "long",
     srcs = ["different_training_and_inference_test.py"],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     deps = [
         ":different_training_and_inference",
         # tensorflow dep1,
@@ -64,6 +66,7 @@ py_strict_test(
     timeout = "long",
     srcs = ["bias_only_test.py"],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     deps = [
         ":bias_only",
         # tensorflow dep1,
@@ -88,6 +91,7 @@ py_strict_test(
     name = "weight_clustering_test",
     srcs = ["weight_clustering_test.py"],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     deps = [
         ":weight_clustering",
         # tensorflow dep1,
@@ -110,6 +114,7 @@ py_strict_test(
     timeout = "long",
     srcs = ["periodical_update_and_scheduling_test.py"],
     python_version = "PY3",
+    tags = ["requires-net:external"],
     deps = [
         ":periodical_update_and_scheduling",
         # tensorflow dep1,

@@ -492,6 +492,10 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         self.bias = (self.model.layers[0].layer.bias.numpy())
 
       def on_train_batch_end(self, batch, logs=None):
+        # Skip the first batch since the update from the start of training is
+        # too small.
+        if not batch:
+          return
         # Check weights are different after batch
         assert not np.array_equal(
             self.original_weight_kernel,
