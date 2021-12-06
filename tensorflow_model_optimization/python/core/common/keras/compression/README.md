@@ -1,9 +1,14 @@
-These APIs are not ready for public usage yet.
+# Compression API
 
-algorithms/ : end-to-end tests that demonstrate usage of algorithm developer
-public API.
+These modules implement the TFMOT's Compression APIs. But they are experimental
+and are not yet officially supported.
 
-algorithm.py : public API for algorithm developer
+## Modules
 
-internal/ : internal parts of library. These should not be used anywhere outside
-this directory.
+algorithm.py : The API that algorithm developers can inherit to implement any
+custom model compression algorithms.
+
+algorithms/ : Repository of example algorithms that can be used to Compression
+API, and corresponding end-to-end tests to demonstrate the usage.
+
+internal/ : Libraries for internal usage.
