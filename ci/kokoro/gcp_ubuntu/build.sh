@@ -20,8 +20,10 @@
 
 # TODO(b/185727163): switch to prebuilt Docker image to speed this up.
 
-# Fail on any error.
-set -e
+# Make Bash more strict, for easier debugging.
+set -e  # Exit on the first error.
+set -u  # Treat unset variables as error.
+set -o pipefail  # Treat the failure of a command in a pipeline as error.
 
 # Display commands being run.
 # WARNING: please only enable 'set -x' if necessary for debugging, and be very
