@@ -187,6 +187,21 @@ class QuantizeAnnotateTest(tf.test.TestCase):
           keras.Sequential(
               [keras.Sequential([keras.layers.Dense(10, input_shape=(2,))])]))
 
+  def testQuantizeAnnotateModel_SkipsLambda(self):
+    model = keras.Sequential([
+        keras.layers.Dense(10, input_shape=(5,)),
+        keras.layers.Dropout(0.4),
+        keras.layers.Lambda(lambda x: x + 1.0)
+    ])
+    with self.assertWarns(Warning):
+      annotated_model = quantize_annotate_model(model)
+
+    self._assertWrappedLayer(annotated_model.layers[0])
+    self._assertWrappedLayer(annotated_model.layers[1])
+    self.assertIsInstance(annotated_model.layers[2], keras.layers.Lambda)
+    inputs = np.random.rand(1, 5)
+    self.assertAllEqual(model.predict(inputs), annotated_model.predict(inputs))
+
 
 class QuantizeApplyTest(tf.test.TestCase):
 

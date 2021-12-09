@@ -13,6 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 """Quantization API functions for tf.keras models."""
+import warnings
 
 import tensorflow as tf
 
@@ -177,6 +178,9 @@ def quantize_annotate_model(to_annotate):
     New tf.keras model with each layer in the model wrapped with
     `QuantizeAnnotate`. The new model preserves weights from the original
     model.
+
+  Raises:
+    ValueError: if the model cannot be annotated.
   """
   if to_annotate is None:
     raise ValueError('`to_annotate` cannot be None')
@@ -198,6 +202,15 @@ def quantize_annotate_model(to_annotate):
     """Add annotation wrapper."""
     # Already annotated layer. No need to wrap.
     if isinstance(layer, quantize_annotate_mod.QuantizeAnnotate):
+      return layer
+
+    if isinstance(layer, tf.keras.layers.Lambda):
+      warnings.warn(
+          'Lambda layers are not supported by automatic model annotation '
+          'because the internal functionality cannot always be determined by '
+          'serialization alone. We recommend that you make a custom layer '
+          'and add a custom QuantizeConfig for it instead. This layer will not '
+          'be quantized which may lead to unexpected results.')
       return layer
 
     if isinstance(layer, tf.keras.Model):
