@@ -124,16 +124,16 @@ def cluster_weights(
     ValueError: if the keras layer is unsupported, or the keras model contains
     an unsupported layer.
   """
-  return _cluster_weights(
-      to_cluster,
-      number_of_clusters,
-      cluster_centroids_init,
-      preserve_sparsity=False,
-      **kwargs)
+  return _cluster_weights(to_cluster, number_of_clusters,
+                          cluster_centroids_init, **kwargs)
 
 
-def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
-                     preserve_sparsity, **kwargs):
+def _cluster_weights(to_cluster,
+                     number_of_clusters,
+                     cluster_centroids_init,
+                     preserve_sparsity=False,
+                     cluster_per_channel=False,
+                     **kwargs):
   """Modifies a keras layer or model to be clustered during training.
 
   This function wraps a keras model or layer with clustering functionality
@@ -158,6 +158,7 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
   clustering_params = {
     'number_of_clusters': 8,
     'cluster_centroids_init': CentroidInitialization.DENSITY_BASED,
+    'cluster_per_channel': False,
     'preserve_sparsity': False
   }
 
@@ -170,6 +171,7 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
   clustering_params = {
     'number_of_clusters': 8,
     'cluster_centroids_init': CentroidInitialization.DENSITY_BASED,
+    'cluster_per_channel': False,
     'preserve_sparsity': False
   }
 
@@ -204,6 +206,17 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
         instance that determines how the cluster centroids will be initialized.
       preserve_sparsity (experimental): optional boolean value that determines
         whether or not sparsity preservation will be enforced during training.
+        When used along with cluster_per_channel flag below, the zero centroid
+        is treated separately and maintained individually for each channel.
+      cluster_per_channel: optional boolean value that determines whether the
+        clustering should be applied separately on the individual channels, as
+        opposed to the whole kernel. Only applicable to Conv2D layers and is
+        ignored otherwise. The number of clusters in this case would be
+        num_clusters*num_channels. This is useful for the collaborative
+        optimization pipeline where clustering is followed by quantization,
+        since Conv2D is quantized per-channel, so we end up with
+        num_clusters*num_channels total clusters at the end. Clustering
+        per-channel from the beginning leads to better accuracy.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 
@@ -255,7 +268,8 @@ def _cluster_weights(to_cluster, number_of_clusters, cluster_centroids_init,
 
     return cluster_wrapper.ClusterWeights(layer, number_of_clusters,
                                           cluster_centroids_init,
-                                          preserve_sparsity, **kwargs)
+                                          preserve_sparsity,
+                                          cluster_per_channel, **kwargs)
 
   def _wrap_list(layers):
     output = []
@@ -310,11 +324,11 @@ def strip_clustering(model):
           layer, input_tensors=None, clone_function=_strip_clustering_wrapper)
 
     elif isinstance(layer, cluster_wrapper.ClusterWeightsMHA):
-        # Update cluster associations in order to get the latest weights
-        layer.update_clustered_weights_associations()
+      # Update cluster associations in order to get the latest weights
+      layer.update_clustered_weights_associations()
 
-        # In case of MHA layer, use the overloaded implementation
-        return layer.strip_clustering()
+      # In case of MHA layer, use the overloaded implementation
+      return layer.strip_clustering()
 
     elif isinstance(layer, cluster_wrapper.ClusterWeights):
       # Update cluster associations in order to get the latest weights
