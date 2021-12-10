@@ -20,6 +20,7 @@ from tensorflow.python.keras import backend as K
 import logging
 
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
@@ -42,7 +43,7 @@ def get_unique(t):
   Args:
     t: tensor
   Returns:
-    unique value, lookup index (same shape as input tensor)
+    centroids (unique values), lookup index (same shape as input tensor)
   Example:
     t:
     ([[1.0, 2.0],
@@ -50,7 +51,7 @@ def get_unique(t):
       [3.0, 3.0],
       [1.0, 2.0]]
     )
-    uniques:
+    centroids(unique values):
     ([1.0, 2.0, 3.0])
     output final index:
     ([[0, 1],
@@ -63,6 +64,81 @@ def get_unique(t):
   uniques, index = tf.unique(t_flatten)
   return uniques, tf.reshape(index, shape=tf.shape(t))
 
+def max_difference(arr):
+  """ Returns maximum difference between elements in array.
+  Args:
+    arr: array with numbers
+  Returns:
+    maximum difference
+  """
+  arr_size = len(arr)
+  if arr_size == 1:
+    return 0
+
+  # Maximum difference is the difference between maximum and
+  # minimum element.
+  min_element = arr[0]
+  max_element = arr[0]
+  for i in range(1, arr_size):
+    min_element = min(arr[i], min_element)
+    max_element = max(arr[i], max_element)
+
+  return max_element - min_element
+
+def get_centroids(layer, weight, data_format):
+  """Get centroids, number of centroids and lookup index.
+  Args:
+    layer: keras layer
+    weight: tensor
+    data_format: string to indicate format: "channels_first" or "channels_last"
+  Returns:
+    centroids (unique values), number of centroids, lookup index
+  """
+  cluster_per_channel = (layer.layer and \
+    isinstance(layer.layer, tf.keras.layers.Conv2D))
+
+  if not cluster_per_channel:
+    centroids, index = get_unique(weight)
+    return centroids, tf.size(centroids), index, False
+
+  # In case of cluster_per_channel we need to extract
+  # unique values (centroids) for each channel.
+
+  num_channels = weight.shape[1] if data_format == "channels_first" \
+    else weight.shape[-1]
+
+  channel_centroids = []
+  channel_indices = []
+  num_centroids = []
+
+  for channel in range(num_channels):
+    channel_weights = weight[:,:,:,channel]
+    centroids, indices = get_unique(channel_weights)
+
+    channel_centroids.append(centroids)
+    channel_indices.append(indices)
+    num_centroids.append(tf.size(centroids))
+
+  max_centroid = max(num_centroids)
+  max_diff = max_difference(num_centroids)
+
+  if max_diff > 1:
+    centroids, index = get_unique(weight)
+    return centroids, tf.size(centroids), index, False
+
+  for i, centroid in enumerate(channel_centroids):
+    if num_centroids[i] != max_centroid:
+      one_padding = tf.ones([max_centroid - num_centroids[i]])
+      channel_centroids[i] = tf.concat([centroid, one_padding], 0)
+
+  centroids = tf.convert_to_tensor(channel_centroids)
+  lookup = tf.convert_to_tensor(channel_indices)
+
+  lookup = (tf.transpose(lookup, perm=[1, 0, 2, 3])\
+    if data_format == "channels_first"\
+    else tf.transpose(lookup, perm=[1, 2, 3, 0]))
+
+  return centroids, max_centroid, lookup, True
 
 class _ClusterPreserveInfo(object):
   """ClusterPreserveInfo."""
@@ -293,8 +369,13 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       logging.warning(
           'Input layer does not contain zero weights, so apply CQAT instead.')
     centroids_mask = None
-    centroids, lookup = get_unique(weights)
-    num_centroids = tf.size(centroids)
+
+    # Detects whether layer is convolutional and is clustered per channel
+    data_format = getattr(layer.layer, 'data_format', None)
+    centroids, num_centroids, lookup, cluster_per_channel = \
+       get_centroids(layer,
+                     weights,
+                     data_format)
 
     if self.preserve_sparsity:
       sparsity_mask = tf.math.divide_no_nan(weights, weights)
@@ -325,8 +406,10 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
 
       # Get clustering implementation according to layer type
       clustering_impl_cls = clustering_registry.ClusteringLookupRegistry(
-          ).get_clustering_impl(layer.layer, name)
-      clustering_impl = clustering_impl_cls(clst_centroids_tf)
+          ).get_clustering_impl(layer.layer, name,
+            cluster_per_channel=cluster_per_channel)
+      clustering_impl = clustering_impl_cls(clst_centroids_tf,
+          cluster_config.GradientAggregation.SUM, data_format)
 
       pulling_indices = tf.dtypes.cast(
           clustering_impl.get_pulling_indices(ori_weights_tf),

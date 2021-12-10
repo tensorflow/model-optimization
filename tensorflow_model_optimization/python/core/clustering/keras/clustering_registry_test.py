@@ -185,43 +185,91 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
 
   @parameterized.parameters(
-      ([[0., 1, 2], [3, 4, 5]],
-       [[[[0], [0]], [[0], [1]]],
-        [[[0], [2]], [[1], [0]]]],
-       [[[[0], [0]], [[0], [0]]],
-        [[[0], [0]], [[1], [1]]]]))
+      ("channels_last",
+        [[1, 2], [3, 4], [5, 6]], # 3 channels and 2 cluster per channel
+        # pulling indices has shape (2, 2, 1, 3)
+        [[[[0, 1, 0]], [[0, 1, 1]]], [[[1, 0, 1]], [[0, 1, 0]]]],
+        [[[[1, 4, 5]], [[1, 4, 6]]], [[[2, 3, 6]], [[1, 4, 5]]]]),
+      ("channels_first",
+        [[1, 2], [3, 4], [4, 5], [6, 7]], # 4 channels and 2 clusters per channel
+        # pulling indices has shape (1, 4, 2, 2)
+        [[[[0, 1], [1, 1]], [[0, 0], [0, 1]],
+         [[1, 0], [0, 0]], [[1, 1], [0, 0]]]],
+        [[[[1, 2], [2, 2]], [[3, 3], [3, 4]],
+        [[5, 4], [4, 4]], [[7, 7], [6, 6]]]])
+  )
   def testConvolutionalWeightsPerChannelCA(self,
+                                           data_format,
                                            clustering_centroids,
                                            pulling_indices,
                                            expected_output):
-    """Verifies that PerChannelCA works as expected."""
+    """Verifies that get_clustered_weight function works as expected."""
     clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
-    clustering_algo = clustering_registry.PerChannelCA(
-        clustering_centroids, GradientAggregation.SUM
+    clustering_algo = clustering_registry.ClusteringAlgorithmPerChannel(
+        clustering_centroids, GradientAggregation.SUM, data_format
     )
+    # Note that clustered_weights has the same shape as pulling_indices,
+    # because they are defined inside of the check function.
     self._check_pull_values(clustering_algo, pulling_indices, expected_output)
 
   @parameterized.parameters(
+      ("channels_last",
+        [[1, 2], [3, 4], [5, 6]], # 3 channels and 2 cluster per channel
+        # weight has shape (2, 2, 1, 3)
+        [[[[1.1, 3.2, 5.2]], [[2.0, 4.1, 5.2]]],
+         [[[2.1, 2., 6.1]], [[1., 5., 5.]]]],
+        # expected pulling indices
+        [[[[0, 0, 0]], [[1, 1, 0]]], [[[1, 0, 1]], [[0, 1, 0]]]]),
+      ("channels_first",
+        # 4 channels and 2 clusters per channel
+        [[1, 2], [3, 4], [4, 5], [6, 7]],
+        # weight has shape (1, 4, 2, 2)
+        [[[[0.1, 1.5], [2.0, 1.1]], [[0., 3.5], [4.4, 4.]],
+         [[4.1, 4.2], [5.3, 6.]], [[7., 7.1], [6.1, 5.8]]]],
+        # expected pulling indices
+        [[[[0, 0], [1, 0]], [[0, 0], [1, 1]],
+        [[0, 0], [1, 1]], [[1, 1], [0, 0]]]])
+  )
+  def testConvolutionalPullingIndicesPerChannelCA(self,
+                                           data_format,
+                                           clustering_centroids,
+                                           weight,
+                                           expected_output):
+    """Verifies that get_pulling_indices function works as expected."""
+    clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
+    clustering_algo = clustering_registry.ClusteringAlgorithmPerChannel(
+        clustering_centroids, GradientAggregation.SUM, data_format
+    )
+    weight = tf.convert_to_tensor(weight)
+    pulling_indices = clustering_algo.get_pulling_indices(weight)
+
+    # check that pulling_indices has the same shape as weight
+    self.assertEqual(pulling_indices.shape, weight.shape)
+    self.assertAllEqual(pulling_indices, expected_output)
+
+  @parameterized.parameters(
       (GradientAggregation.AVG,
-       [[[[0], [0]], [[0], [1]]],
-        [[[0], [2]], [[1], [0]]]], [[1, 1, 0], [1, 1, 1]]),
+       [[[[0, 0, 0]], [[1, 1, 0]]],
+        [[[1, 0, 1]], [[0, 1, 0]]]],
+       [[1, 1], [1, 1], [1, 1]]),
       (GradientAggregation.SUM,
-       [[[[0], [0]], [[0], [1]]],
-        [[[0], [2]], [[1], [0]]]], [[3, 1, 0], [2, 1, 1]])
+       [[[[0, 0, 0]], [[1, 1, 0]]],
+        [[[1, 0, 1]], [[0, 1, 0]]]],
+       [[2, 2], [2, 2], [3, 1]])
       )
-  def testConvolutionalPerChannelCAGrad(self,
+  def testConvolutionalPerChannelCAGradChannelsLast(self,
                                         cluster_gradient_aggregation,
                                         pulling_indices,
                                         expected_grad_centroids):
-    """Verifies that the gradients of convolutional layer work as expected."""
+    """Verifies that the gradients of convolutional layer works."""
 
-    clustering_centroids = tf.Variable([[0., 1, 2], [3, 4, 5]],
+    clustering_centroids = tf.Variable([[1, 2], [3, 4], [5, 6]],
                                        dtype=tf.float32)
-    weight = tf.constant([[[[0.1, 3.0]], [[0.2, 0.1]]],
-                          [[[0.1, 3.0]], [[0.2, 0.1]]]])
+    weight = tf.constant([[[[1.1, 3.2, 5.2]], [[2.0, 4.1, 5.2]]],
+         [[[2.1, 2., 6.1]], [[1., 5., 5.]]]])
 
-    clustering_algo = clustering_registry.PerChannelCA(
-        clustering_centroids, cluster_gradient_aggregation
+    clustering_algo = clustering_registry.ClusteringAlgorithmPerChannel(
+        clustering_centroids, cluster_gradient_aggregation, "channels_last"
     )
     self._check_gradients_clustered_weight(
         clustering_algo,
@@ -230,6 +278,37 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
         expected_grad_centroids,
     )
 
+  @parameterized.parameters(
+      (GradientAggregation.AVG,
+       [[[[0, 0], [1, 0]], [[0, 0], [1, 1]],
+        [[0, 0], [1, 1]], [[1, 1], [0, 0]]]],
+       [[1, 1], [1, 1], [1, 1], [1, 1]]),
+      (GradientAggregation.SUM,
+       [[[[0, 0], [1, 0]], [[0, 0], [1, 1]],
+        [[0, 0], [1, 1]], [[1, 1], [0, 0]]]],
+       [[3, 1], [2, 2], [2, 2], [2, 2]])
+      )
+  def testConvolutionalPerChannelCAGradChannelsFirst(self,
+                                        cluster_gradient_aggregation,
+                                        pulling_indices,
+                                        expected_grad_centroids):
+    """Verifies that the gradients of convolutional layer works."""
+
+    clustering_centroids = tf.Variable([[1, 2], [3, 4], [4, 5], [6, 7]],
+                                       dtype=tf.float32)
+    weight = tf.constant([[[[0.1, 1.5], [2.0, 1.1]],
+        [[0., 3.5], [4.4, 4.]], [[4.1, 4.2], [5.3, 6.]],
+        [[7., 7.1], [6.1, 5.8]]]])
+
+    clustering_algo = clustering_registry.ClusteringAlgorithmPerChannel(
+        clustering_centroids, cluster_gradient_aggregation, "channels_first"
+    )
+    self._check_gradients_clustered_weight(
+        clustering_algo,
+        weight,
+        pulling_indices,
+        expected_grad_centroids,
+    )
 
 class CustomLayer(layers.Layer):
   """A custom non-clusterable layer class."""

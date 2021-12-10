@@ -778,7 +778,7 @@ class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
 class ClusterPerChannelIntegrationTest(tf.test.TestCase,
                                        parameterized.TestCase):
-  """Integration tests for per-channel clustering of Conv2D layer."""
+  """Integration test for cluster_per_channel for Conv2D layer."""
 
   def setUp(self):
     super(ClusterPerChannelIntegrationTest, self).setUp()
@@ -816,15 +816,27 @@ class ClusterPerChannelIntegrationTest(tf.test.TestCase,
         loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
         metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")])
     clustered_model.fit(
-        self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
+        self.x_train, self.y_train, epochs=2, batch_size=100, verbose=1)
 
     stripped_model = cluster.strip_clustering(clustered_model)
 
     layer_conv2d = stripped_model.layers[2]
+    layer_conv2d_kernel_weight = None
     for weight in layer_conv2d.weights:
       if "kernel" in weight.name:
-        nr_unique_weights = len(np.unique(weight.numpy()))
-        assert nr_unique_weights == self.nr_of_clusters*self.num_channels
+        layer_conv2d_kernel_weight = weight
+    assert layer_conv2d_kernel_weight is not None
+    nr_unique_weights = len(np.unique(layer_conv2d_kernel_weight.numpy()))
+    assert nr_unique_weights == self.nr_of_clusters*self.num_channels
+
+    # The above check is too general.
+    # We need to check that we actually have nr_of_clusters per channel.
+    # If more general case passed, then we do tighter check.
+    # Note that we assume that data_format is NHWC.
+    for i in range(self.num_channels):
+      nr_unique_weights_per_channel = len(np.unique(
+        layer_conv2d_kernel_weight[:, :, :, i]))
+      assert nr_unique_weights_per_channel == self.nr_of_clusters
 
 if __name__ == "__main__":
   test.main()
