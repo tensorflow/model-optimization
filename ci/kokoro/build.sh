@@ -28,6 +28,9 @@ set -o pipefail  # Treat the failure of a command in a pipeline as error.
 #  parameters, will print the full command, with credentials, in the build logs.
 # set -x
 
-pip3 install --requirement "requirements.txt"
+pip install --requirement "requirements.txt"
 
-bazel test --python_path=$PYTHON_BIN //tensorflow_model_optimization/python/core/...
+# Run the tests.
+# Some tests requiring more RAM that the CI machine provides are disabled.
+bazel test --test_size_filters="-enormous" \
+  //tensorflow_model_optimization/python/core/...
