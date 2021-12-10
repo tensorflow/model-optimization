@@ -53,7 +53,7 @@ class ClusteringAlgorithm(object):
         clusters centroids.
       cluster_gradient_aggregation: An enum that specify the aggregation method
         of the cluster gradient.
-      data_format: To be used in Per-Channel clustering to ensure the weight
+      data_format: To be used in cluster_per_channel to ensure the weight
         kernel is permuted properly when updating the weights and calculating
         gradients
     """
@@ -194,10 +194,24 @@ class ClusteringAlgorithm(object):
     return clustered_weight
 
 
-class PerChannelCA(ClusteringAlgorithm):
+class ClusteringAlgorithmPerChannel(ClusteringAlgorithm):
   """Class for Per-channel clustering of Conv2D layers."""
 
   def get_pulling_indices(self, weight):
+    """Returns indices of closest cluster centroids.
+
+    This function is based on the function get_pulling_indices
+    of the base class ClusteringAlgorithm. We apply each per
+    channel of the convolutional layer.
+
+    Args:
+      weight: ND array of weights. For each weight in this array the closest
+        cluster centroids is found.
+
+    Returns:
+      ND array of the same shape as `weight` parameter of the type
+      tf.int32. The returned array contain weight lookup indices.
+    """
     channel_indices = []
 
     num_channels = (weight.shape[1] if self.data_format == "channels_first"
@@ -213,7 +227,13 @@ class PerChannelCA(ClusteringAlgorithm):
 
       channel_indices.append(pulling_indices)
 
-    return tf.convert_to_tensor(channel_indices)
+    pulling_indices = tf.convert_to_tensor(channel_indices)
+    pulling_indices = (
+      tf.transpose(pulling_indices, perm=[1, 0, 2, 3])
+        if self.data_format == "channels_first" else tf.transpose(
+          pulling_indices, perm=[1, 2, 3, 0]))
+
+    return pulling_indices
 
   def get_clustered_weight(self, pulling_indices, original_weight):
     """Returns clustered weights with custom gradients.
@@ -239,6 +259,16 @@ class PerChannelCA(ClusteringAlgorithm):
     num_channels = (
         original_weight.shape[1]
         if self.data_format == "channels_first" else original_weight.shape[-1])
+
+    # In case of channels_last, we have NHWC
+    # In case of channels_first, we have NCHW
+
+    # We need to transpose the tensor, so C is the first dimension
+    # and then we could loop over channels
+    pulling_indices = (
+        tf.transpose(pulling_indices, perm=[1, 0, 2, 3])
+        if self.data_format == "channels_first" else tf.transpose(
+            pulling_indices, perm=[3, 0, 1, 2]))
 
     if self.cluster_gradient_aggregation == GradientAggregation.SUM:
       cluster_centroids = self.cluster_centroids
@@ -268,7 +298,7 @@ class PerChannelCA(ClusteringAlgorithm):
 
     for i in range(num_channels):
       clustered_weights.append(
-          tf.gather(cluster_centroids[i], pulling_indices[i]))
+        tf.gather(cluster_centroids[i], pulling_indices[i]))
 
     clustered_weight = tf.convert_to_tensor(clustered_weights)
 
