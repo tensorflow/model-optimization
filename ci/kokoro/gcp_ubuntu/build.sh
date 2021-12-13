@@ -18,8 +18,6 @@
 # be used to reproduce errors locally by modifying WORKDIR to be
 # the top-level directory of the checked out TFMOT Github repository.
 
-# TODO(b/185727163): switch to prebuilt Docker image to speed this up.
-
 # Make Bash more strict, for easier debugging.
 set -e  # Exit on the first error.
 set -u  # Treat unset variables as error.
@@ -34,22 +32,53 @@ set -o pipefail  # Treat the failure of a command in a pipeline as error.
 #  parameters, will print the full command, with credentials, in the build logs.
 # set -x
 
-# Code under repo is checked out to
-# ${KOKORO_ARTIFACTS_DIR}/github/tensorflow_model_optimization.
-WORKDIR="${KOKORO_ARTIFACTS_DIR}/github/tensorflow_model_optimization"
+# The TFMOT Git repository is checked out here.
+GIT_REPO_DIR="${KOKORO_ARTIFACTS_DIR}/github/tensorflow_model_optimization"
 
+
+cleanup() {
+  # Collect the test logs.
+  docker exec tfmot find \
+    -L "bazel-testlogs" \
+    \( -name "test.log" -o -name "test.xml" \) \
+    -exec cp --parents {} "${KOKORO_ARTIFACTS_DIR}" \;
+
+  # Rename test.xml to sponge_log.xml so they show up in Sponge.
+   docker exec tfmot find "${KOKORO_ARTIFACTS_DIR}/bazel-testlogs" \
+    -type f \
+    -name test.xml \
+    -execdir mv "{}" sponge_log.xml \;
+
+  # Rename test.log to sponge_log.log so they show up in Sponge.
+  docker exec tfmot find "${KOKORO_ARTIFACTS_DIR}/bazel-testlogs" \
+    -type f \
+    -name test.log \
+    -execdir mv "{}" sponge_log.log \;
+
+  # Stop the container
+  docker stop tfmot
+}
+
+# Build the Docker image.
+# TODO(b/185727163): switch to prebuilt Docker image to speed this up.
 docker build --tag tfmot \
-  $WORKDIR/ci/kokoro/gcp_ubuntu
+  "${GIT_REPO_DIR}/ci/kokoro/gcp_ubuntu"
 
-# Mount the checked out repository, make that the working directory and run
-# ci/kokoro/build.sh from the repository, which runs all the unit tests.
+# Start a Docker container in the background.
+# The Kokoro artitifacts directory is mounted and the work directory
+# conveniently set to the TFMOT Git repository.
 docker run \
-  --volume "${WORKDIR?}:${WORKDIR?}" \
-  --workdir="${WORKDIR?}" \
+  -it \
+  -d \
   --rm \
+  --name tfmot \
+  --volume "${KOKORO_ARTIFACTS_DIR}:${KOKORO_ARTIFACTS_DIR}" \
+  --workdir="${GIT_REPO_DIR}" \
   tfmot:latest \
-  ci/kokoro/build.sh
+  bash
 
-# Kokoro will rsync this entire directory back to the executor orchestrating the
-# build which takes forever and is totally useless.
-sudo rm -rf "${KOKORO_ARTIFACTS_DIR?}"/*
+# On exit: collect the test logs and stop the container.
+trap cleanup EXIT
+
+# Run the tests inside the container,
+docker exec tfmot "${GIT_REPO_DIR}/ci/kokoro/build.sh"
