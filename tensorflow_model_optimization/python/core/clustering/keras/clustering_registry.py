@@ -28,12 +28,14 @@ class ClusteringLookupRegistry(object):
   """Clustering registry to return the implementation for a layer."""
 
   @classmethod
-  def get_clustering_impl(cls, layer, weight_name, cluster_per_channel=None):
+  def get_clustering_impl(cls, layer, weight_name, cluster_per_channel=False):
     """Returns a certain reshape/lookup implementation for a given array.
 
     Args:
       layer: A layer that is being clustered
       weight_name: concrete weight name to be clustered.
+      cluster_per_channel: Optional boolean indicating whether to use
+        per-channel clustering.
     Returns:
       A concrete implementation of a lookup algorithm.
     """
@@ -206,6 +208,7 @@ class ClusteringRegistry(object):
       return clusterable_weights
 
     def get_clusterable_weights_mha():  # pylint: disable=missing-docstring
+      # pylint: disable=protected-access
       return [('_query_dense.kernel', layer._query_dense.kernel),
               ('_key_dense.kernel', layer._key_dense.kernel),
               ('_value_dense.kernel', layer._value_dense.kernel),

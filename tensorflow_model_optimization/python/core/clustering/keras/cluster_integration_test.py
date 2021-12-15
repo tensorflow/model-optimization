@@ -730,23 +730,26 @@ class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         nr_unique_weights = len(np.unique(weight.numpy()))
         assert nr_unique_weights == self.nr_of_clusters
 
+
 class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
   """Integration tests for clustering MHA layer."""
 
   def setUp(self):
+    super(ClusterMHAIntegrationTest, self).setUp()
     self.x_train = np.random.uniform(size=(500, 32, 32))
     self.y_train = np.random.randint(low=0, high=1024, size=(500,))
 
     self.nr_of_clusters = 16
     self.params_clustering = {
-      "number_of_clusters": self.nr_of_clusters,
-      "cluster_centroids_init": CentroidInitialization.KMEANS_PLUS_PLUS,
+        "number_of_clusters": self.nr_of_clusters,
+        "cluster_centroids_init": CentroidInitialization.KMEANS_PLUS_PLUS,
     }
 
   def _get_model(self):
     """Returns functional model with MHA layer."""
-    inp = tf.keras.layers.Input(shape=(32,32), batch_size=100)
-    x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16)(query=inp, value=inp)
+    inp = tf.keras.layers.Input(shape=(32, 32), batch_size=100)
+    x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16)(
+        query=inp, value=inp)
     out = tf.keras.layers.Flatten()(x)
     model = tf.keras.Model(inputs=inp, outputs=out)
     return model
@@ -758,41 +761,45 @@ class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     clustered_model = cluster.cluster_weights(model, **self.params_clustering)
 
     clustered_model.compile(
-      optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-      metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')])
-    clustered_model.fit(self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")])
+    clustered_model.fit(
+        self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
 
     stripped_model = cluster.strip_clustering(clustered_model)
 
-    layerMHA = stripped_model.layers[1]
-    for weight in layerMHA.weights:
-      if 'kernel' in weight.name:
+    layer_mha = stripped_model.layers[1]
+    for weight in layer_mha.weights:
+      if "kernel" in weight.name:
         nr_unique_weights = len(np.unique(weight.numpy()))
         assert nr_unique_weights == self.nr_of_clusters
 
-class ClusterPerChannelIntegrationTest(tf.test.TestCase, parameterized.TestCase):
+
+class ClusterPerChannelIntegrationTest(tf.test.TestCase,
+                                       parameterized.TestCase):
   """Integration tests for per-channel clustering of Conv2D layer."""
 
   def setUp(self):
+    super(ClusterPerChannelIntegrationTest, self).setUp()
     self.x_train = np.random.uniform(size=(500, 32, 32))
     self.y_train = np.random.randint(low=0, high=1024, size=(500,))
 
     self.nr_of_clusters = 4
     self.num_channels = 12
     self.params_clustering = {
-      "number_of_clusters": self.nr_of_clusters,
-      "cluster_centroids_init": CentroidInitialization.KMEANS_PLUS_PLUS,
-      "cluster_per_channel": True
+        "number_of_clusters": self.nr_of_clusters,
+        "cluster_centroids_init": CentroidInitialization.KMEANS_PLUS_PLUS,
+        "cluster_per_channel": True
     }
 
   def _get_model(self):
     """Returns functional model with Conv2D layer."""
-    inp = tf.keras.layers.Input(shape=(32,32), batch_size=100)
+    inp = tf.keras.layers.Input(shape=(32, 32), batch_size=100)
     x = tf.keras.layers.Reshape((32, 32, 1))(inp)
     x = tf.keras.layers.Conv2D(
         filters=self.num_channels, kernel_size=(3, 3),
-        activation='relu')(x)
+        activation="relu")(x)
     x = tf.keras.layers.MaxPool2D(2, 2)(x)
     out = tf.keras.layers.Flatten()(x)
     model = tf.keras.Model(inputs=inp, outputs=out)
@@ -805,16 +812,17 @@ class ClusterPerChannelIntegrationTest(tf.test.TestCase, parameterized.TestCase)
     clustered_model = cluster.cluster_weights(model, **self.params_clustering)
 
     clustered_model.compile(
-      optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-      metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')])
-    clustered_model.fit(self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
+        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
+        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")])
+    clustered_model.fit(
+        self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
 
     stripped_model = cluster.strip_clustering(clustered_model)
 
-    layerConv2D = stripped_model.layers[2]
-    for weight in layerConv2D.weights:
-      if 'kernel' in weight.name:
+    layer_conv2d = stripped_model.layers[2]
+    for weight in layer_conv2d.weights:
+      if "kernel" in weight.name:
         nr_unique_weights = len(np.unique(weight.numpy()))
         assert nr_unique_weights == self.nr_of_clusters*self.num_channels
 

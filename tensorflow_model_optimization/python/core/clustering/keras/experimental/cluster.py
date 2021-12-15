@@ -97,6 +97,15 @@ def cluster_weights(
         instance that determines how the cluster centroids will be initialized.
       preserve_sparsity: optional boolean value that determines whether or not
         sparsity preservation will be enforced during training.
+      cluster_per_channel: optional boolean value that determines whether the
+        clustering should be applied separately on the individual channels, as
+        opposed to the whole kernel. Only applicable to Conv2D layers and is
+        ignored otherwise. The number of clusters in this case would be
+        num_clusters*num_channels. This is useful for the collaborative
+        optimization pipeline where clustering is followed by quantization,
+        since Conv2D is quantized per-channel, so we end up with
+        num_clusters*num_channels total clusters at the end. Clustering
+        per-channel from the beginning leads to better accuracy.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 

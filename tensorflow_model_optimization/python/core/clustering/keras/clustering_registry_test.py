@@ -186,13 +186,13 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters(
       ([[0., 1, 2], [3, 4, 5]],
-      [[[[0], [0]], [[0], [1]]],
-       [[[0], [2]], [[1], [0]]]],
-      [[[[0], [0]], [[0], [0]]],
-       [[[0], [0]], [[1], [1]]]]
-      )
-  )
-  def testConvolutionalWeightsPerChannelCA(self, clustering_centroids, pulling_indices,
+       [[[[0], [0]], [[0], [1]]],
+        [[[0], [2]], [[1], [0]]]],
+       [[[[0], [0]], [[0], [0]]],
+        [[[0], [0]], [[1], [1]]]]))
+  def testConvolutionalWeightsPerChannelCA(self,
+                                           clustering_centroids,
+                                           pulling_indices,
                                            expected_output):
     """Verifies that PerChannelCA works as expected."""
     clustering_centroids = tf.Variable(clustering_centroids, dtype=tf.float32)
@@ -204,21 +204,21 @@ class ClusteringAlgorithmTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.parameters(
       (GradientAggregation.AVG,
        [[[[0], [0]], [[0], [1]]],
-       [[[0], [2]], [[1], [0]]]], [[1, 1, 0], [1, 1, 1]]),
+        [[[0], [2]], [[1], [0]]]], [[1, 1, 0], [1, 1, 1]]),
       (GradientAggregation.SUM,
        [[[[0], [0]], [[0], [1]]],
-       [[[0], [2]], [[1], [0]]]], [[3, 1, 0], [2, 1, 1]])
-  )
+        [[[0], [2]], [[1], [0]]]], [[3, 1, 0], [2, 1, 1]])
+      )
   def testConvolutionalPerChannelCAGrad(self,
                                         cluster_gradient_aggregation,
                                         pulling_indices,
                                         expected_grad_centroids):
-    """Verifies that the gradients of convolutional layer work as expected
-    when using per-channel clustering algorithm."""
+    """Verifies that the gradients of convolutional layer work as expected."""
 
-    clustering_centroids = tf.Variable([[0., 1, 2], [3, 4, 5]], dtype=tf.float32)
+    clustering_centroids = tf.Variable([[0., 1, 2], [3, 4, 5]],
+                                       dtype=tf.float32)
     weight = tf.constant([[[[0.1, 3.0]], [[0.2, 0.1]]],
-                         [[[0.1, 3.0]], [[0.2, 0.1]]]])
+                          [[[0.1, 3.0]], [[0.2, 0.1]]]])
 
     clustering_algo = clustering_registry.PerChannelCA(
         clustering_centroids, cluster_gradient_aggregation
@@ -566,9 +566,7 @@ class ClusterRegistryTest(test.TestCase):
       ClusterRegistry.make_clusterable(layer)
 
   def testSupportsMultiHeadAttentionLayer(self):
-    """
-    Verifies that ClusterRegistry supports a MultiHeadAttention layer.
-    """
+    """Verifies that ClusterRegistry supports a MultiHeadAttention layer."""
     layer = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=2)
     self.assertTrue(ClusterRegistry.supports(layer))
     ClusterRegistry.make_clusterable(layer)

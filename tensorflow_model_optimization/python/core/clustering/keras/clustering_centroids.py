@@ -48,14 +48,14 @@ class AbstractCentroidsInitialisation:
                preserve_sparsity=False):
     self.weights = weights
     self.number_of_clusters = number_of_clusters
-    self.cluster_per_channel=cluster_per_channel
+    self.cluster_per_channel = cluster_per_channel
     self.data_format = data_format
     self.preserve_sparsity = preserve_sparsity
 
     if cluster_per_channel:
-      self.num_channels = \
-        weights.shape[1] if self.data_format == "channels_first" \
-          else weights.shape[-1]
+      self.num_channels = (
+          weights.shape[1]
+          if self.data_format == 'channels_first' else weights.shape[-1])
 
   @abc.abstractmethod
   def _calculate_centroids_for_interval(self, weight_interval,
@@ -64,20 +64,22 @@ class AbstractCentroidsInitialisation:
 
   def _regular_clustering(self):
     # Regular clustering calculates the centroids using all the weights
-    cluster_centroids = self._calculate_centroids_for_interval(self.weights,
-                                                       self.number_of_clusters)
+    cluster_centroids = self._calculate_centroids_for_interval(
+        self.weights, self.number_of_clusters)
 
     return cluster_centroids
 
   def _per_channel_clustering(self):
+    """Implements per channel clustering."""
 
     channel_centroids = []
     for channel in range(self.num_channels):
-      channel_weights = \
-        self.weights[:,channel,:,:] if self.data_format == "channels_first" \
-          else self.weights[:,:,:,channel]
-      channel_centroids.append(self._calculate_centroids_for_interval(channel_weights,
-                                                                      self.number_of_clusters))
+      channel_weights = (
+          self.weights[:, channel, :, :] if self.data_format == 'channels_first'
+          else self.weights[:, :, :, channel])
+      channel_centroids.append(
+          self._calculate_centroids_for_interval(channel_weights,
+                                                 self.number_of_clusters))
 
     cluster_centroids = tf.convert_to_tensor(channel_centroids)
 
@@ -95,13 +97,16 @@ class AbstractCentroidsInitialisation:
        is used
     This method is also referred to as sparsity-aware centroid initialization.
 
+    Args:
+      weights_to_cluster: Optional list of weights.
+
     Returns:
       centroids.
     """
     # In the case of per-channel clustering, set weights
     # to be clustered to channel weights.
-    weights = weights_to_cluster if weights_to_cluster is not None \
-      else self.weights
+    weights = (
+        weights_to_cluster if weights_to_cluster is not None else self.weights)
 
     # Zero-point centroid
     zero_centroid = tf.zeros(shape=(1,))
@@ -152,16 +157,21 @@ class AbstractCentroidsInitialisation:
     return centroids
 
   def _per_channel_zero_centroid_initialization(self):
-    """The per-channel sparsity-preserving centroid initialization
+    """Per-channel sparsity-preserving centroid initialization.
+
+    The per-channel sparsity-preserving centroid initialization
     works as described in the above method, but applied to each
     channel separately.
+
+    Returns:
+      List of cluster centroids.
     """
 
     channel_centroids = []
     for channel in range(self.num_channels):
-      channel_weights = \
-        self.weights[:,channel,:,:] if self.data_format == "channels_first" \
-          else self.weights[:,:,:,channel]
+      channel_weights = (
+          self.weights[:, channel, :, :] if self.data_format == 'channels_first'
+          else self.weights[:, :, :, channel])
 
       zero_centroids = self._zero_centroid_initialization(channel_weights)
 
@@ -173,7 +183,7 @@ class AbstractCentroidsInitialisation:
     return cluster_centroids
 
   def get_cluster_centroids(self):
-    # Check whether sparsity preservation should be enforced
+    """Check whether sparsity preservation should be enforced."""
     if self.preserve_sparsity:
       if self.cluster_per_channel:
         return self._per_channel_zero_centroid_initialization()

@@ -297,7 +297,7 @@ py_strict_test(
 
 py_strict_test(
     name = "quantize_models_test",
-    size = "large",
+    size = "enormous",
     srcs = ["quantize_models_test.py"],
     flaky = True,
     python_version = "PY3",

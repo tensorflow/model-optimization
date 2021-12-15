@@ -14,8 +14,10 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Fail on any error.
-set -e
+# Make Bash more strict, for easier debugging.
+set -e  # Exit on the first error.
+set -u  # Treat unset variables as error.
+set -o pipefail  # Treat the failure of a command in a pipeline as error.
 
 # Display commands being run.
 # WARNING: please only enable 'set -x' if necessary for debugging, and be very
@@ -26,6 +28,9 @@ set -e
 #  parameters, will print the full command, with credentials, in the build logs.
 # set -x
 
-pip3 install --requirement "requirements.txt"
+pip install --requirement "requirements.txt"
 
-bazel test --python_path=$PYTHON_BIN //tensorflow_model_optimization/python/core/...
+# Run the tests.
+# Some tests requiring more RAM that the CI machine provides are disabled.
+bazel test --test_size_filters="-enormous" \
+  //tensorflow_model_optimization/python/core/...

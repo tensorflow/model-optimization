@@ -15,6 +15,7 @@
 """Tests for keras clustering centroids initialisation API."""
 
 from absl.testing import parameterized
+import numpy as np
 import tensorflow as tf
 import numpy as np
 
@@ -217,45 +218,39 @@ class ClusteringCentroidsTest(tf.test.TestCase, parameterized.TestCase):
     calc_centroids = K.batch_get_value([kmci.get_cluster_centroids()])[0]
     self.assertSequenceAlmostEqual(centroids, calc_centroids, places=4)
 
-  @parameterized.parameters(
-      ([[[[0., 1.]], [[2., 3.]]], [[[4., 5.]], [[6., 7.]]]],
-        2,
-        [[4., 0.], [5., 1.]], "channels_last"),
-        ([[[[0., 1.]], [[2., 3.]]], [[[4., 5.]], [[6., 7.]]]],
-        2,
-        [[4., 0.], [6., 2.]], "channels_first"))
+  @parameterized.parameters(([[[[0., 1.]], [[2., 3.]]], [[[4., 5.]], [[6., 7.]]]
+                             ], 2, [[4., 0.], [5., 1.]], "channels_last"),
+                            ([[[[0., 1.]], [[2., 3.]]], [[[4., 5.]], [[6., 7.]]]
+                             ], 2, [[4., 0.], [6., 2.]], "channels_first"))
   def testKmeansPlusPlusClusterCentroidsWithPerChannelClustering(
       self, weights, number_of_clusters, centroids, data_format):
     kmci = clustering_centroids.KmeansPlusPlusCentroidsInitialisation(
-        np.array(weights, dtype='float32'),
-        number_of_clusters, cluster_per_channel=True,
+        np.array(weights, dtype="float32"),
+        number_of_clusters,
+        cluster_per_channel=True,
         data_format=data_format)
     calc_centroids = K.batch_get_value([kmci.get_cluster_centroids()])[0]
     self.assertAllClose(centroids, calc_centroids)
 
   @parameterized.parameters(
-      ([[[[0.0, 1.0]], [[2.0, 3.0]]], [[[4.0, 5.0]], [[6.0, 7.0]]]],
-        2,
-        [[0.197586, 6.01], [1.197586, 7.01]], "channels_last"),
-        ([[[[0.0, 1.0]], [[2.0, 3.0]]], [[[4.0, 5.0]], [[6.0, 7.0]]]],
-        2,
-        [[0.163103, 5.01], [2.163104, 7.01]], "channels_first"))
+      ([[[[0.0, 1.0]], [[2.0, 3.0]]], [[[4.0, 5.0]], [[6.0, 7.0]]]
+       ], 2, [[0.197586, 6.01], [1.197586, 7.01]], "channels_last"),
+      ([[[[0.0, 1.0]], [[2.0, 3.0]]], [[[4.0, 5.0]], [[6.0, 7.0]]]
+       ], 2, [[0.163103, 5.01], [2.163104, 7.01]], "channels_first"))
   def testDensityBasedClusterCentroidsWithPerChannelClustering(
       self, weights, number_of_clusters, centroids, data_format):
     dbci = clustering_centroids.DensityBasedCentroidsInitialisation(
-        np.array(weights, dtype='float32'),
-        number_of_clusters, cluster_per_channel=True,
+        np.array(weights, dtype="float32"),
+        number_of_clusters,
+        cluster_per_channel=True,
         data_format=data_format)
     calc_centroids = K.batch_get_value([dbci.get_cluster_centroids()])[0]
     self.assertAllClose(centroids, calc_centroids)
 
-  @parameterized.parameters(
-      ([[[[0., 1.]], [[2., 3.]]], [[[4., 5.]], [[6., 7.]]]],
-        2,
-        [[0., 6.], [1., 7.]], "channels_last"),
-        ([[[[0., 1.]], [[2., 3.]]], [[[4., 5.]], [[6., 7.]]]],
-        2,
-        [[0., 5.], [2., 7.]], "channels_first"))
+  @parameterized.parameters(([[[[0., 1.]], [[2., 3.]]], [[[4., 5.]], [[6., 7.]]]
+                             ], 2, [[0., 6.], [1., 7.]], "channels_last"),
+                            ([[[[0., 1.]], [[2., 3.]]], [[[4., 5.]], [[6., 7.]]]
+                             ], 2, [[0., 5.], [2., 7.]], "channels_first"))
   def testLinearClusterCentroidsWithPerChannelClustering(
       self, weights, number_of_clusters, centroids, data_format):
     dbci = clustering_centroids.LinearCentroidsInitialisation(

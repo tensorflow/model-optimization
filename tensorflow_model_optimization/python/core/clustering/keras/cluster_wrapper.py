@@ -14,7 +14,7 @@
 # ==============================================================================
 """Keras ClusterWeights wrapper API."""
 
-from operator import attrgetter
+import operator
 
 import tensorflow as tf
 
@@ -23,6 +23,7 @@ from tensorflow_model_optimization.python.core.clustering.keras import clusterab
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 
+attrgetter = operator.attrgetter  # pylint: disable=invalid-name
 keras = tf.keras
 k = keras.backend
 Layer = keras.layers.Layer
@@ -103,14 +104,13 @@ class ClusterWeights(Wrapper):
     self.number_of_clusters = number_of_clusters
 
     # Whether to cluster Conv2D kernels per-channel.
-    # In case the layer isn't a Conv2D, this isn't
-    # applicable
-    self.cluster_per_channel = \
-      cluster_per_channel if isinstance(layer, tf.keras.layers.Conv2D) \
-        else False
+    # In case the layer isn't a Conv2D, this isn't applicable
+    self.cluster_per_channel = (
+        cluster_per_channel if isinstance(layer, tf.keras.layers.Conv2D)
+        else False)
 
-    # Number of channels in a Conv2D layer, to be
-    # used the case of per-channel clustering
+    # Number of channels in a Conv2D layer, to be used the case of per-channel
+    # clustering.
     self.num_channels = None
 
     # Whether to apply sparsity preservation or not
@@ -149,9 +149,8 @@ class ClusterWeights(Wrapper):
         hasattr(layer, '_batch_input_shape')):
       self._batch_input_shape = self.layer._batch_input_shape
 
-    # In the case of Conv2D layer, the data_format
-    # needs to be preserved to be used for per-channel
-    # clustering
+    # In the case of Conv2D layer, the data_format needs to be preserved to be
+    # used for per-channel clustering
     if hasattr(layer, 'data_format'):
       self.data_format = self.layer.data_format
     else:
@@ -165,8 +164,8 @@ class ClusterWeights(Wrapper):
 
   def _get_zero_idx_mask(self, centroids, zero_cluster):
     zero_idx_mask = (tf.cast(tf.math.not_equal(centroids,
-                                              zero_cluster),
-                                              dtype=tf.float32))
+                                               zero_cluster),
+                             dtype=tf.float32))
     return zero_idx_mask
 
   def _get_zero_centroid(self, centroids, zero_idx_mask):
@@ -208,17 +207,16 @@ class ClusterWeights(Wrapper):
       # per-channel number of clusters, as well as the overall number
       # of clusters all need to be preserved in the wrapper.
       if self.cluster_per_channel:
-        self.num_channels = \
-          original_weight.shape[1] if self.data_format == "channels_first" \
-            else original_weight.shape[-1]
+        self.num_channels = (
+            original_weight.shape[1] if self.data_format == 'channels_first'
+            else original_weight.shape[-1])
 
       centroid_init_factory = clustering_centroids.CentroidsInitializerFactory
       centroid_init = centroid_init_factory.get_centroid_initializer(
-                                            self.cluster_centroids_init)(
-                                            weight, self.number_of_clusters,
-                                            self.cluster_per_channel,
-                                            self.num_channels,
-                                            self.preserve_sparsity)
+          self.cluster_centroids_init)(weight, self.number_of_clusters,
+                                       self.cluster_per_channel,
+                                       self.num_channels,
+                                       self.preserve_sparsity)
 
       # Init the cluster centroids
       cluster_centroids = (centroid_init.get_cluster_centroids())
@@ -282,19 +280,21 @@ class ClusterWeights(Wrapper):
         # needs to be preserved per-channel
         if self.cluster_per_channel:
           for channel in range(self.num_channels):
-            zero_idx_mask = \
-              self._get_zero_idx_mask(self.cluster_centroids[weight_name][channel],
-                                      self.cluster_centroids[weight_name][channel][
-                                      self.zero_idx[weight_name][channel]])
+            zero_idx_mask = (
+                self._get_zero_idx_mask(
+                    self.cluster_centroids[weight_name][channel],
+                    self.cluster_centroids[weight_name][channel][
+                        self.zero_idx[weight_name][channel]]))
             self.cluster_centroids[weight_name][channel].assign(
-                self._get_zero_centroid(self.cluster_centroids[weight_name][channel],
-                                        zero_idx_mask))
+                self._get_zero_centroid(
+                    self.cluster_centroids[weight_name][channel],
+                    zero_idx_mask))
         else:
           # Set the smallest centroid to zero to force sparsity
           # and avoid extra cluster from forming
-          zero_idx_mask = self._get_zero_idx_mask(self.cluster_centroids[weight_name],
-                                                  self.cluster_centroids[weight_name][
-                                                  self.zero_idx[weight_name]])
+          zero_idx_mask = self._get_zero_idx_mask(
+              self.cluster_centroids[weight_name],
+              self.cluster_centroids[weight_name][self.zero_idx[weight_name]])
           self.cluster_centroids[weight_name].assign(
               self._get_zero_centroid(self.cluster_centroids[weight_name],
                                       zero_idx_mask))
@@ -493,10 +493,16 @@ class ClusterWeightsMHA(ClusterWeights):
     setattr(layer, post, new_weight)
 
   def strip_clustering(self):
-    """ The restore from config is not working for MHA layer, because
-    weights are not created when the build function is called. Therefore,
-    original weights have been replaced in the layer."""
-    for weight_name, original_weight in self.original_clusterable_weights.items():
+    """The restore from config is not working for MHA layer.
+
+    Weights are not created when the build function is called. Therefore,
+    original weights have been replaced in the layer.
+
+    Returns:
+      Updated layer.
+    """
+    for weight_name, original_weight in (
+        self.original_clusterable_weights.items()):
 
       # Get the clustered weights
       clustered_weight = self.get_weight_from_layer(weight_name)

@@ -139,6 +139,7 @@ py_strict_test(
         ":cluster_config",
         ":clustering_centroids",
         # absl/testing:parameterized dep1,
+        # numpy dep1,
         # tensorflow dep1,
     ],
 )

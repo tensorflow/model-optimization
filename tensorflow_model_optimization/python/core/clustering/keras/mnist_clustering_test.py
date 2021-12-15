@@ -19,7 +19,6 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
-from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 
 tf.random.set_seed(42)
 
@@ -66,8 +65,10 @@ def _train_model(model):
   model.fit(x_train, y_train, epochs=EPOCHS)
 
 
-def _cluster_model(model, number_of_clusters,
-                   preserve_sparsity=False, cluster_per_channel = False):
+def _cluster_model(model,
+                   number_of_clusters,
+                   preserve_sparsity=False,
+                   cluster_per_channel=False):
 
   (x_train, y_train), _ = _get_dataset()
 
@@ -143,7 +144,7 @@ class FunctionalTest(tf.test.TestCase, parameterized.TestCase):
     _, (x_test, y_test) = self.dataset
 
     # Indices of Conv2D and Dense layers, respectively.
-    layer_indices = [2,5]
+    layer_indices = [2, 5]
 
     # Dict to store the layer bias weight counts to
     # ensure they aren't clustered
@@ -173,10 +174,10 @@ class FunctionalTest(tf.test.TestCase, parameterized.TestCase):
     for i in layer_indices:
       nr_of_unique_weights = _get_number_of_unique_weights(
           clustered_model, i, 'kernel')
-      if cluster_per_channel \
-        and isinstance(clustered_model.layers[i], tf.keras.layers.Conv2D):
-
-        self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS*NUMBER_OF_CHANNELS)
+      if (cluster_per_channel
+          and isinstance(clustered_model.layers[i], tf.keras.layers.Conv2D)):
+        self.assertLessEqual(nr_of_unique_weights,
+                             NUMBER_OF_CLUSTERS * NUMBER_OF_CHANNELS)
       else:
         self.assertLessEqual(nr_of_unique_weights, NUMBER_OF_CLUSTERS)
 
