@@ -33,7 +33,8 @@ set -o pipefail  # Treat the failure of a command in a pipeline as error.
 # set -x
 
 # The TFMOT Git repository is checked out here.
-GIT_REPO_DIR="${KOKORO_ARTIFACTS_DIR}/github/tensorflow_model_optimization"
+DEFAULT_REPO_DIR="${KOKORO_ARTIFACTS_DIR}/github/tensorflow_model_optimization"
+GIT_REPO_DIR="${GIT_REPO_DIR:-$DEFAULT_REPO_DIR}"
 
 
 cleanup() {
