@@ -486,3 +486,93 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
       return tf.cast(unpacked_x, dummy_type_value.dtype)
     else:
       return tf.cast(unpacked_x, tf.float32)
+
+
+@encoding_stage.tf_style_encoding_stage
+class RotationAwareSignEncodingStage(encoding_stage.EncodingStageInterface):
+  """Encoding stage performing a rotation-aware sign.
+
+  This class is adapted from the source published with "DRIVE: One-bit
+  Distributed Mean Estimation" (NeurIPS '21;
+  https://arxiv.org/pdf/2105.08339.pdf), and the algorithm presented therein.
+
+  The encoding stage encodes vectors into a single bit per coordinate. It is
+  designed to execute after a random rotation (such as the result of the
+  `HadamardEncodingStage`). It calculates an appropriate scale that ensures
+  that the dequantized tensor will be (a) unbiased, or (b) with a minimal MSE
+  (after the inverse rotation).
+  """
+
+  ENCODED_VALUES_KEY = 'bit_values'
+  SCALE_VALUES_KEY = 'scale'
+
+  def __init__(self, bias_correction=True):
+    """Initializer for the RotationAwareSignEncodingStage.
+
+    Args:
+      bias_correction: A Python bool, whether to use bias correcting or
+      MSE minimizing scale.
+        If `True`, the encoding (post-rotation) is on expectation unbiased.
+        If `False`, the encoding (post-rotation) minimizes the MSE.
+    """
+
+    self._bias_correction = bias_correction
+
+  @property
+  def name(self):
+    """See base class."""
+    return 'rotation_aware_sign'
+
+  @property
+  def compressible_tensors_keys(self):
+    """See base class."""
+    return [self.ENCODED_VALUES_KEY]
+
+  @property
+  def commutes_with_sum(self):
+    """See base class."""
+    return False
+
+  @property
+  def decode_needs_input_shape(self):
+    """See base class."""
+    return False
+
+  def get_params(self):
+    """See base class."""
+    return {}, {}
+
+  def encode(self, x, encode_params):
+    """See base class."""
+    del encode_params
+
+    if self._bias_correction:
+      # the bias correcting scale is (||x||_2)^2 / (||x||_1)
+      scale = tf.reduce_sum(x**2) / tf.reduce_sum(tf.abs(x))
+    else:
+      # the MSE minimizing scale is (||x||_1) / x's dimension
+      scale = tf.reduce_sum(tf.abs(x)) / tf.size(x)
+
+    # send one-bit sign
+    # We note that zeros are unlikely after running the high-dimensional
+    # Hadamard rotation that precedes this stage, so the bias derived from
+    # always rounding 0 to 1 can be safely ignored.
+    onebit_signs = tf.cast(tf.greater(x, 0), x.dtype)
+
+    return {self.ENCODED_VALUES_KEY: onebit_signs,
+            self.SCALE_VALUES_KEY: scale}
+
+  def decode(self,
+             encoded_tensors,
+             decode_params,
+             num_summands=None,
+             shape=None):
+    """See base class."""
+    del decode_params, num_summands, shape  # Unused.
+
+    onebit_signs = encoded_tensors[self.ENCODED_VALUES_KEY]
+    scale = encoded_tensors[self.SCALE_VALUES_KEY]
+
+    signs = onebit_signs * 2 - 1
+
+    return scale * signs

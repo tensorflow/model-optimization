@@ -134,3 +134,52 @@ def hadamard_quantization(bits):
               stages_impl.HadamardEncodingStage.ENCODED_VALUES_KEY).add_parent(
                   stages_impl.FlattenEncodingStage(),
                   stages_impl.FlattenEncodingStage.ENCODED_VALUES_KEY).make()
+
+
+def drive(bias_correction=True):
+  """Returns DRIVE `Encoder`.
+
+  First, the `Encoder` reshapes the input to a rank-1 `Tensor` and applies a
+  randomized Hadamard transform (rotation). It then applies a rotation-aware
+  sign, and, finally, the quantized values are bit-packed into an integer type.
+
+  This encoder is derived from the source published with "DRIVE: One-bit
+  Distributed Mean Estimation" (NeurIPS '21;
+  https://arxiv.org/pdf/2105.08339.pdf), and the algorithm presented therein.
+
+  Limitations:
+  (1) In the implementation of HadamardEncodingStage a single seed is shared
+  among senders, as described in the paper this should be used when the number
+  of senders are no more than log of the dimension of the input tensor.
+  (2) This encoder works better on larger tensors. An ideal preprocessing
+  stage would concatenate the input model into a single tensor. Additionally,
+  the ability to mark a few tensors for being skipped would also be helpful
+  (e.g., normalization layers). Currently, this is not always possible with
+  the tensor encoders API.
+
+  Despite the limitations of this implementation, this achieves accuracy similar
+  to sending the full tensors for many distributed learning scenarios.
+
+  The `Encoder` is a composition of the following encoding stages:
+  * `FlattenEncodingStage` - reshaping the input tensor into a vector.
+  * `HadamardEncodingStage` - applying the Hadamard transform.
+  * `RotationAwareSignEncodingStage` - applying a rotation-aware sign.
+  * `BitpackingEncodingStage` - bit-packing the result into integer values.
+
+  Args:
+    bias_correction: A Python bool, whether to use bias correcting or
+      MSE minimizing scale.
+      If `True`, the encoding is unbiased on expectation.
+      If `False`, the encoding minimizes the MSE.
+
+  Returns:
+    The DRIVE `Encoder`.
+  """
+  return core_encoder.EncoderComposer(
+    stages_impl.BitpackingEncodingStage(1)).add_parent(
+        stages_impl.RotationAwareSignEncodingStage(bias_correction), stages_impl
+        .RotationAwareSignEncodingStage.ENCODED_VALUES_KEY).add_parent(
+            stages_impl.HadamardEncodingStage(),
+            stages_impl.HadamardEncodingStage.ENCODED_VALUES_KEY).add_parent(
+                stages_impl.FlattenEncodingStage(),
+                stages_impl.FlattenEncodingStage.ENCODED_VALUES_KEY).make()

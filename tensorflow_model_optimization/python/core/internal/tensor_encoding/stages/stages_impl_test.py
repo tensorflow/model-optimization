@@ -450,5 +450,51 @@ class BitpackingEncodingStageTest(test_utils.BaseEncodingStageTest):
       stages_impl.BitpackingEncodingStage(17)
 
 
+class RotationAwareSignEncodingStageStageTest(test_utils.BaseEncodingStageTest):
+
+  def default_encoding_stage(self):
+    """See base class."""
+    return stages_impl.RotationAwareSignEncodingStage()
+
+  def default_input(self):
+    """See base class."""
+    return tf.random.uniform([50], minval=-1.0, maxval=1.0)
+
+  @property
+  def is_lossless(self):
+    """See base class."""
+    return False
+
+  def common_asserts_for_test_data(self, data):
+    """See base class."""
+
+    # Asserts that float type values are integers.
+    bits = data.encoded_x[
+      stages_impl.RotationAwareSignEncodingStage.ENCODED_VALUES_KEY]
+    assert bits.dtype == np.float32
+    self.assertAllClose(bits, tf.cast(tf.cast(bits, np.int32), np.float32))
+
+  def test_scaled_sign(self):
+    stage = stages_impl.RotationAwareSignEncodingStage()
+    test_data = self.run_one_to_many_encode_decode(stage, self.default_input)
+
+    self.assertAllClose(
+      tf.sign(test_data.x) * test_data.encoded_x[
+          stages_impl.RotationAwareSignEncodingStage.SCALE_VALUES_KEY],
+      test_data.decoded_x)
+
+  def test_one_bit_encoding(self):
+    stage = stages_impl.RotationAwareSignEncodingStage()
+    test_data = self.run_one_to_many_encode_decode(stage, self.default_input)
+
+    bits = test_data.encoded_x[
+        stages_impl.RotationAwareSignEncodingStage.ENCODED_VALUES_KEY]
+    one_bit_packing_stage = stages_impl.BitpackingEncodingStage(1)
+    packing_test_data = self.run_one_to_many_encode_decode(
+        one_bit_packing_stage, lambda: bits)
+
+    self.assertAllClose(bits, packing_test_data.decoded_x)
+
+
 if __name__ == '__main__':
   tf.test.main()
