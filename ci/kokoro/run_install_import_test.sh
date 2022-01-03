@@ -35,7 +35,7 @@ set -o pipefail  # Treat the failure of a command in a pipeline as error.
 
 
 # Create an isolated Python environment.
-mkdir venv
+mkdir -p venv
 virtualenv ./venv
 source ./venv/bin/activate
 
@@ -45,6 +45,6 @@ pip install --requirement "requirements.txt"
 python setup.py install
 
 # Go to another directory and try to import TFMOT.
-mkdir /tmp/my_project
-pushd /tmp/my_project
+TEMP_PROJECT_DIR=$(mktemp --directory)
+pushd "${TEMP_PROJECT_DIR}"
 python -c "import tensorflow_model_optimization"
