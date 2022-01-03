@@ -87,7 +87,7 @@ def train_model(model, x_train, y_train, x_test, y_test):
       validation_split=0.1)
 
   score = model.evaluate(x_test, y_test, verbose=0)
-  print('Test loss:', score[0])
+  print('Test loss: TODO(frec)', score[0])
   print('Test accuracy:', score[1])
 
   return model
