@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -81,5 +80,8 @@ docker run \
 # On exit: collect the test logs and stop the container.
 trap cleanup EXIT
 
-# Run the tests inside the container,
-docker exec tfmot "${GIT_REPO_DIR}/ci/kokoro/build.sh"
+# Run the unit tests inside the container.
+docker exec tfmot "${GIT_REPO_DIR}/ci/kokoro/run_bazel_unittests.sh"
+
+# Run the install/import test inside the container.
+docker exec tfmot "${GIT_REPO_DIR}/ci/kokoro/run_install_import_test.sh"
