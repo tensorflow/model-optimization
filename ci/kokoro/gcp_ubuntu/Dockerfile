@@ -38,6 +38,7 @@ RUN apt-get update -y
 RUN DEBIAN_FRONTEND=noninteractive apt-get install -y \
    python3 \
    python3-pip \
+   python3-virtualenv \
    && update-alternatives --install /usr/bin/python python /usr/bin/python3 10
 
 # Install Bazel.
