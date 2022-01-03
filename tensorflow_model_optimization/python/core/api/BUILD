@@ -49,6 +49,7 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_transforms",
+        "//tensorflow_model_optimization/python/core/quantization/keras/experimental",
         "//tensorflow_model_optimization/python/core/quantization/keras/experimental/default_n_bit:default_n_bit_quantize_layout_transform",
         "//tensorflow_model_optimization/python/core/quantization/keras/experimental/default_n_bit:default_n_bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/experimental/default_n_bit:default_n_bit_quantize_scheme",
