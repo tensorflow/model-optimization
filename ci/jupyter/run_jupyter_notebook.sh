@@ -19,7 +19,7 @@ trap "deactivate 2> /dev/null" EXIT
 
 # Install the packages required for executing jupyter from the virtual environment
 pip install --quiet \
-  jupyter nbconvert ipykernel
+  jupyter nbconvert ipykernel setuptools==59.5.0
 
 export TF_CPP_MIN_LOG_LEVEL=2
 
