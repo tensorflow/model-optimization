@@ -263,6 +263,7 @@ py_strict_test(
     deps = [
         ":prunable_layer",
         ":prune_registry",
+        # absl/testing:parameterized dep1,
         # tensorflow dep1,
     ],
 )

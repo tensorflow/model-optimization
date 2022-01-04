@@ -21,6 +21,7 @@ from tensorflow.python.keras.engine.base_layer import TensorFlowOpLayer
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 
 layers = tf.keras.layers
+layers_compat_v1 = tf.compat.v1.keras.layers
 
 
 class PruneRegistry(object):
@@ -94,12 +95,12 @@ class PruneRegistry(object):
       layers.MaxPooling2D: [],
       layers.MaxPooling3D: [],
       layers.MultiHeadAttention: [
-        '_query_dense.kernel',
-        '_key_dense.kernel',
-        '_value_dense.kernel',
-        '_output_dense.kernel'],
+          '_query_dense.kernel', '_key_dense.kernel', '_value_dense.kernel',
+          '_output_dense.kernel'
+      ],
       layers.experimental.preprocessing.Rescaling.__class__: [],
       TensorFlowOpLayer: [],
+      layers_compat_v1.BatchNormalization: [],
   }
 
   _RNN_CELLS_WEIGHTS_MAP = {
