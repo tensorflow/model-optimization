@@ -14,6 +14,8 @@
 # ==============================================================================
 """Implements monitoring."""
 
+import functools
+
 from tensorflow.python.eager import monitoring
 
 
@@ -61,6 +63,7 @@ class MonitorBoolGauge():
     raise ValueError('Invalid gauge name: {}'.format(name))
 
   def __call__(self, func):
+    @functools.wraps(func)
     def inner(*args, **kwargs):
       try:
         results = func(*args, **kwargs)

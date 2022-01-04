@@ -295,7 +295,8 @@ def quantize_apply(
   quantization have already been annotated. See `quantize_annotate_model`
   and `quantize_annotate_layer`.
 
-  Quantize model.
+  Example:
+
   ```python
   model = keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
