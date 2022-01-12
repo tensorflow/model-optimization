@@ -1,5 +1,4 @@
 #!/bin/bash
-
 # Copyright 2020 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -39,10 +38,13 @@ GIT_REPO_DIR="${GIT_REPO_DIR:-$DEFAULT_REPO_DIR}"
 
 cleanup() {
   # Collect the test logs.
-  docker exec tfmot find \
-    -L "bazel-testlogs" \
-    \( -name "test.log" -o -name "test.xml" \) \
-    -exec cp --parents {} "${KOKORO_ARTIFACTS_DIR}" \;
+  # Skipped when the container workdir is $KOKORO_ARTIFACTS_DIR.
+  if docker exec tfmot test ! . -ef "${KOKORO_ARTIFACTS_DIR}"; then
+    docker exec tfmot find \
+      -L "bazel-testlogs" \
+      \( -name "test.log" -o -name "test.xml" \) \
+      -exec cp --parents {} "${KOKORO_ARTIFACTS_DIR}" \;
+  fi
 
   # Rename test.xml to sponge_log.xml so they show up in Sponge.
    docker exec tfmot find "${KOKORO_ARTIFACTS_DIR}/bazel-testlogs" \
@@ -81,5 +83,8 @@ docker run \
 # On exit: collect the test logs and stop the container.
 trap cleanup EXIT
 
-# Run the tests inside the container,
-docker exec tfmot "${GIT_REPO_DIR}/ci/kokoro/build.sh"
+# Run the unit tests inside the container.
+docker exec tfmot "${GIT_REPO_DIR}/ci/kokoro/run_bazel_unittests.sh"
+
+# Run the install/import test inside the container.
+docker exec tfmot "${GIT_REPO_DIR}/ci/kokoro/run_install_import_test.sh"

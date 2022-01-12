@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# Copyright 2020 Google LLC
+# Copyright 2021 Google LLC
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,6 +13,11 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
+
+#
+# A smoke test that installs TFMOT with `setup.py install` and then tries to
+# import it.
+#
 
 # Make Bash more strict, for easier debugging.
 set -e  # Exit on the first error.
@@ -28,9 +33,18 @@ set -o pipefail  # Treat the failure of a command in a pipeline as error.
 #  parameters, will print the full command, with credentials, in the build logs.
 # set -x
 
-pip install --requirement "requirements.txt"
 
-# Run the tests.
-# Some tests requiring more RAM that the CI machine provides are disabled.
-bazel test --test_size_filters="-enormous" \
-  //tensorflow_model_optimization/python/core/...
+# Create an isolated Python environment.
+mkdir -p venv
+virtualenv ./venv
+source ./venv/bin/activate
+
+# Install Tensorflow, then TFMOT from source.
+pip install tensorflow
+pip install --requirement "requirements.txt"
+python setup.py install
+
+# Go to another directory and try to import TFMOT.
+TEMP_PROJECT_DIR=$(mktemp --directory)
+pushd "${TEMP_PROJECT_DIR}"
+python -c "import tensorflow_model_optimization"
