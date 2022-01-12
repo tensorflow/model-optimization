@@ -11,8 +11,7 @@ set -x
 # Run under a virtual environment to isolate Python packages.
 # This is done as jupyter notebooks can install python packages and we don't
 # want to pollute the system packages.
-python -m venv .notebook.venv --system-site-packages --clear
-source .notebook.venv/bin/activate 2> /dev/null
+source ./venv/bin/activate 2> /dev/null
 
 # Set a trap so the virtual environment is deactivated if the script fails
 trap "deactivate 2> /dev/null" EXIT

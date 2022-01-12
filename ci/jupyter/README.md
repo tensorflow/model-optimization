@@ -7,6 +7,6 @@ as part of a CI system.
 To run this script locally using Docker, run the following commands from the root directory of this repository:
 1. `docker pull tensorflow/tensorflow`
 2. `docker run -it --rm -v $PWD:/tmp -w /tmp tensorflow/tensorflow bash`
-3. `apt-get install python3-venv`
+3. `apt-get install python3-virtualenv`
 4. `pip install --upgrade pip tensorflow-model-optimization`
 5. `python ci/jupyter/test_jupyter_notebooks.py`
