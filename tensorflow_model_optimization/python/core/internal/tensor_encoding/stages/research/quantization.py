@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import encoding_stage
@@ -92,7 +93,8 @@ class PRNGUniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface
 
   def get_params(self):
     """See base class."""
-    params = {self.MAX_INT_VALUE_PARAMS_KEY: 2**self._bits - 1}
+    params = collections.OrderedDict([(self.MAX_INT_VALUE_PARAMS_KEY,
+                                       2**self._bits - 1)])
     return params, params
 
   def encode(self, x, encode_params):
@@ -117,11 +119,11 @@ class PRNGUniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface
 
     # Include the random seed in the encoded tensors so that it can be used to
     # generate the same random sequence in the decode method.
-    encoded_tensors = {
-        self.ENCODED_VALUES_KEY: quantized_x,
-        self.SEED_PARAMS_KEY: random_seed,
-        self.MIN_MAX_VALUES_KEY: tf.stack([min_x, max_x])
-    }
+    encoded_tensors = collections.OrderedDict([
+        (self.ENCODED_VALUES_KEY, quantized_x),
+        (self.SEED_PARAMS_KEY, random_seed),
+        (self.MIN_MAX_VALUES_KEY, tf.stack([min_x, max_x]))
+    ])
 
     return encoded_tensors
 
@@ -235,7 +237,8 @@ class PerChannelUniformQuantizationEncodingStage(
 
   def get_params(self):
     """See base class."""
-    params = {self.MAX_INT_VALUE_PARAMS_KEY: 2**self._bits - 1}
+    params = collections.OrderedDict([(self.MAX_INT_VALUE_PARAMS_KEY,
+                                       2**self._bits - 1)])
     return params, params
 
   def encode(self, x, encode_params):
@@ -259,10 +262,10 @@ class PerChannelUniformQuantizationEncodingStage(
     else:  # Deterministic rounding.
       quantized_x = tf.round(x)
 
-    encoded_tensors = {
-        self.ENCODED_VALUES_KEY: quantized_x,
-        self.MIN_MAX_VALUES_KEY: tf.stack([min_x, max_x])
-    }
+    encoded_tensors = collections.OrderedDict([
+        (self.ENCODED_VALUES_KEY, quantized_x),
+        (self.MIN_MAX_VALUES_KEY, tf.stack([min_x, max_x]))
+    ])
 
     return encoded_tensors
 
@@ -359,7 +362,8 @@ class PerChannelPRNGUniformQuantizationEncodingStage(
 
   def get_params(self):
     """See base class."""
-    params = {self.MAX_INT_VALUE_PARAMS_KEY: 2**self._bits - 1}
+    params = collections.OrderedDict([(self.MAX_INT_VALUE_PARAMS_KEY,
+                                       2**self._bits - 1)])
     return params, params
 
   def encode(self, x, encode_params):
@@ -388,11 +392,11 @@ class PerChannelPRNGUniformQuantizationEncodingStage(
 
     # Include the random seed in the encoded tensors so that it can be used to
     # generate the same random sequence in the decode method.
-    encoded_tensors = {
-        self.ENCODED_VALUES_KEY: quantized_x,
-        self.SEED_PARAMS_KEY: random_seed,
-        self.MIN_MAX_VALUES_KEY: tf.stack([min_x, max_x])
-    }
+    encoded_tensors = collections.OrderedDict([
+        (self.ENCODED_VALUES_KEY, quantized_x),
+        (self.SEED_PARAMS_KEY, random_seed),
+        (self.MIN_MAX_VALUES_KEY, tf.stack([min_x, max_x]))
+    ])
 
     return encoded_tensors
 

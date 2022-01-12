@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import encoding_stage
@@ -68,7 +69,10 @@ class SplitBySmallValueEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    return {self.THRESHOLD_PARAMS_KEY: self._threshold}, {}
+    encode_params = collections.OrderedDict([(self.THRESHOLD_PARAMS_KEY,
+                                              self._threshold)])
+    decode_params = collections.OrderedDict()
+    return encode_params, decode_params
 
   def encode(self, x, encode_params):
     """See base class."""
@@ -77,10 +81,10 @@ class SplitBySmallValueEncodingStage(encoding_stage.EncodingStageInterface):
     indices = tf.cast(tf.compat.v2.where(tf.abs(x) > threshold), tf.int32)
     non_zero_x = tf.gather_nd(x, indices)
     indices = tf.squeeze(indices, axis=1)
-    return {
-        self.ENCODED_INDICES_KEY: indices,
-        self.ENCODED_VALUES_KEY: non_zero_x,
-    }
+    return collections.OrderedDict([
+        (self.ENCODED_INDICES_KEY, indices),
+        (self.ENCODED_VALUES_KEY, non_zero_x),
+    ])
 
   def decode(self,
              encoded_tensors,
@@ -144,7 +148,7 @@ class DifferenceBetweenIntegersEncodingStage(
 
   def get_params(self):
     """See base class."""
-    return {}, {}
+    return collections.OrderedDict(), collections.OrderedDict()
 
   def encode(self, x, encode_params):
     """See base class."""
@@ -157,9 +161,7 @@ class DifferenceBetweenIntegersEncodingStage(
           'Unsupported input type: %s. Support only integer types.' % x.dtype)
 
     diff_x = x - tf.concat([[0], x[:-1]], 0)
-    return {
-        self.ENCODED_VALUES_KEY: diff_x,
-    }
+    return collections.OrderedDict([(self.ENCODED_VALUES_KEY, diff_x)])
 
   def decode(self,
              encoded_tensors,

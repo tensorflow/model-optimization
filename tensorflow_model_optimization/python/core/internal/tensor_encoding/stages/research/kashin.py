@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import numpy as np
 import tensorflow as tf
 
@@ -170,12 +171,11 @@ class KashinHadamardEncodingStage(encoding_stage.EncodingStageInterface):
   def get_params(self):
     """See base class."""
     seed = tf.random.uniform((2,), maxval=tf.int64.max, dtype=tf.int64)
-    encode_params = {
-        self.ETA_PARAMS_KEY: self._eta,
-        self.DELTA_PARAMS_KEY: self._delta,
-        self.SEED_PARAMS_KEY: seed,
-    }
-    decode_params = {self.SEED_PARAMS_KEY: seed}
+    encode_params = collections.OrderedDict([(self.ETA_PARAMS_KEY, self._eta),
+                                             (self.DELTA_PARAMS_KEY,
+                                              self._delta),
+                                             (self.SEED_PARAMS_KEY, seed)])
+    decode_params = collections.OrderedDict([(self.SEED_PARAMS_KEY, seed)])
     return encode_params, decode_params
 
   def encode(self, x, encode_params):
@@ -211,7 +211,8 @@ class KashinHadamardEncodingStage(encoding_stage.EncodingStageInterface):
           tf.norm(x, axis=1, keepdims=True),
           tf.norm(kashin_coefficients, axis=1, keepdims=True))
 
-    return {self.ENCODED_VALUES_KEY: kashin_coefficients}
+    return collections.OrderedDict([(self.ENCODED_VALUES_KEY,
+                                     kashin_coefficients)])
 
   def decode(self,
              encoded_tensors,
