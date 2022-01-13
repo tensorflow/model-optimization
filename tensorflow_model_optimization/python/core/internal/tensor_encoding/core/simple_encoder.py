@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
@@ -79,8 +80,8 @@ class SimpleEncoder(object):
     # methods, to be used in encode_fn and decode_fn methods, respectively.
     # Decorated by tf.function, their necessary side effects are realized during
     # call to get_concrete_function().
-    state_py_structure = {}
-    encoded_py_structure = {}
+    state_py_structure = collections.OrderedDict()
+    encoded_py_structure = collections.OrderedDict()
 
     @tf.function
     def initial_state_fn():
@@ -108,12 +109,12 @@ class SimpleEncoder(object):
       # The following code converts the nested structres necessary for the
       # underlying encoder, to a single flat dictionary, which is simpler to
       # manipulate by the users of SimpleEncoder.
-      full_encoded_structure = {
-          _TENSORS: encoded_x,
-          _PARAMS: decode_params,
-          _SHAPES: input_shapes
-      }
-      flat_encoded_structure = dict(
+      full_encoded_structure = collections.OrderedDict([
+          (_TENSORS, encoded_x),
+          (_PARAMS, decode_params),
+          (_SHAPES, input_shapes),
+      ])
+      flat_encoded_structure = collections.OrderedDict(
           py_utils.flatten_with_joined_string_paths(full_encoded_structure))
       flat_encoded_py_structure, flat_encoded_tf_structure = (
           py_utils.split_dict_py_tf(flat_encoded_structure))

@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import core_encoder
@@ -147,7 +148,6 @@ class GatherEncoder(object):
     if not tensorspec.shape.is_fully_defined():
       raise TypeError('The shape of provided tensorspec must be fully defined.')
 
-    tensorspec = tensorspec
     commuting_structure = encoder.commuting_structure
     state_update_aggregation_modes = tf.nest.flatten(
         encoder.state_update_aggregation_modes)
@@ -187,8 +187,8 @@ class GatherEncoder(object):
     # of the tensor_encoding tool do not even need to be aware of it. This
     # argument is well supported for instance in the book of John Ousterhout,
     # "A Philosophy of Software Design".
-    internal_structure = {}
-    internal_py_values = {}
+    internal_structure = collections.OrderedDict()
+    internal_py_values = collections.OrderedDict()
 
     def _add_to_structure(key, value):
       if key not in internal_structure:
@@ -226,10 +226,10 @@ class GatherEncoder(object):
       _, input_shapes_after_sum = (
           core_encoder.split_shapes_by_commuting_structure(
               input_shapes, commuting_structure))
-      decode_after_sum_params = {
-          _PARAMS: decode_after_sum_params,
-          _SHAPES: input_shapes_after_sum
-      }
+      decode_after_sum_params = collections.OrderedDict([
+          (_PARAMS, decode_after_sum_params),
+          (_SHAPES, input_shapes_after_sum),
+      ])
 
       encode_params_py, encode_params_tf = py_utils.split_dict_py_tf(
           encode_params)
@@ -274,10 +274,10 @@ class GatherEncoder(object):
           core_encoder.split_shapes_by_commuting_structure(
               input_shapes, commuting_structure))
 
-      encoded_structure = {
-          _TENSORS: encoded_x,
-          _SHAPES: input_shapes_before_sum
-      }
+      encoded_structure = collections.OrderedDict([
+          (_TENSORS, encoded_x),
+          (_SHAPES, input_shapes_before_sum),
+      ])
       encoded_structure_py, encoded_structure_tf = py_utils.split_dict_py_tf(
           encoded_structure)
 
@@ -285,7 +285,7 @@ class GatherEncoder(object):
       _add_to_structure('state_update_tensors', state_update_tensors)
       _add_to_py_values('encoded_structure', encoded_structure_py)
 
-      return (dict(
+      return (collections.OrderedDict(
           py_utils.flatten_with_joined_string_paths(encoded_structure_tf)),
               tuple(tf.nest.flatten(state_update_tensors)))
 
@@ -316,7 +316,7 @@ class GatherEncoder(object):
 
       _add_to_structure('part_decoded_structure', part_decoded_structure)
       if isinstance(part_decoded_structure, dict):
-        return dict(
+        return collections.OrderedDict(
             py_utils.flatten_with_joined_string_paths(part_decoded_structure))
       else:
         return part_decoded_structure
