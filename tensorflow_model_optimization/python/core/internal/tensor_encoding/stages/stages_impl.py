@@ -17,6 +17,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import numpy as np
 import tensorflow as tf
 
@@ -52,12 +53,12 @@ class IdentityEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    return {}, {}
+    return collections.OrderedDict(), collections.OrderedDict()
 
   def encode(self, x, encode_params):
     """See base class."""
     del encode_params  # Unused.
-    return {self.ENCODED_VALUES_KEY: tf.identity(x)}
+    return collections.OrderedDict([(self.ENCODED_VALUES_KEY, tf.identity(x))])
 
   def decode(self,
              encoded_tensors,
@@ -97,12 +98,13 @@ class FlattenEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    return {}, {}
+    return collections.OrderedDict(), collections.OrderedDict()
 
   def encode(self, x, encode_params):
     """See base class."""
     del encode_params  # Unused.
-    return {self.ENCODED_VALUES_KEY: tf.reshape(x, [-1])}
+    return collections.OrderedDict([(self.ENCODED_VALUES_KEY,
+                                     tf.reshape(x, [-1]))])
 
   def decode(self,
              encoded_tensors,
@@ -173,10 +175,10 @@ class HadamardEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    params = {
-        self.SEED_PARAMS_KEY:
-            tf.random.uniform((2,), maxval=tf.int64.max, dtype=tf.int64),
-    }
+    params = collections.OrderedDict()
+    params[self.SEED_PARAMS_KEY] = tf.random.uniform((2,),
+                                                     maxval=tf.int64.max,
+                                                     dtype=tf.int64)
     return params, params
 
   def encode(self, x, encode_params):
@@ -187,7 +189,7 @@ class HadamardEncodingStage(encoding_stage.EncodingStageInterface):
     x = x * signs
     x = self._pad(x)
     rotated_x = tf_utils.fast_walsh_hadamard_transform(x)
-    return {self.ENCODED_VALUES_KEY: rotated_x}
+    return collections.OrderedDict([(self.ENCODED_VALUES_KEY, rotated_x)])
 
   def decode(self,
              encoded_tensors,
@@ -325,7 +327,8 @@ class UniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    params = {self.MAX_INT_VALUE_PARAMS_KEY: 2**self._bits - 1}
+    params = collections.OrderedDict([(self.MAX_INT_VALUE_PARAMS_KEY,
+                                       2**self._bits - 1)])
     if self._min_max is not None:
       # If fixed min and max is provided, expose them via params.
       params[self.MIN_MAX_VALUES_KEY] = self._min_max
@@ -353,7 +356,8 @@ class UniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface):
     else:  # Deterministic rounding.
       quantized_x = tf.round(x)
 
-    encoded_tensors = {self.ENCODED_VALUES_KEY: quantized_x}
+    encoded_tensors = collections.OrderedDict([(self.ENCODED_VALUES_KEY,
+                                                quantized_x)])
     if self.MIN_MAX_VALUES_KEY not in encode_params:
       encoded_tensors[self.MIN_MAX_VALUES_KEY] = tf.stack([min_x, max_x])
     return encoded_tensors
@@ -448,7 +452,7 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    return {}, {}
+    return collections.OrderedDict(), collections.OrderedDict()
 
   def encode(self, x, encode_params):
     """See base class."""
@@ -461,10 +465,11 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
     # If another type is provided, return a Tensor with a single value of that
     # type to be able to recover the type from encoded_tensors in decode method.
     if x.dtype == tf.float32:
-      return {self.ENCODED_VALUES_KEY: packed_x}
+      return collections.OrderedDict([(self.ENCODED_VALUES_KEY, packed_x)])
     elif x.dtype == tf.float64:
-      return {self.ENCODED_VALUES_KEY: packed_x,
-              self.DUMMY_TYPE_VALUES_KEY: tf.constant(0.0, dtype=tf.float64)}
+      return collections.OrderedDict([(self.ENCODED_VALUES_KEY, packed_x),
+                                      (self.DUMMY_TYPE_VALUES_KEY,
+                                       tf.constant(0.0, dtype=tf.float64))])
     else:
       raise TypeError(
           'Unsupported packing type: %s. Supported types are tf.float32 and '

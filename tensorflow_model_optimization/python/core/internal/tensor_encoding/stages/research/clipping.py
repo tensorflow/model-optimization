@@ -23,6 +23,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+import collections
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.core import encoding_stage
@@ -68,13 +69,16 @@ class ClipByNormEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    return {self.NORM_PARAMS_KEY: self._clip_norm}, {}
+    encode_params = collections.OrderedDict([(self.NORM_PARAMS_KEY,
+                                              self._clip_norm)])
+    decode_params = collections.OrderedDict()
+    return encode_params, decode_params
 
   def encode(self, x, encode_params):
     """See base class."""
     clipped_x = tf.clip_by_norm(
         x, tf.cast(encode_params[self.NORM_PARAMS_KEY], x.dtype))
-    return {self.ENCODED_VALUES_KEY: clipped_x}
+    return collections.OrderedDict([(self.ENCODED_VALUES_KEY, clipped_x)])
 
   def decode(self,
              encoded_tensors,
@@ -129,11 +133,11 @@ class ClipByValueEncodingStage(encoding_stage.EncodingStageInterface):
 
   def get_params(self):
     """See base class."""
-    params = {
-        self.MIN_PARAMS_KEY: self._clip_value_min,
-        self.MAX_PARAMS_KEY: self._clip_value_max
-    }
-    return params, {}
+    params = collections.OrderedDict([
+        (self.MIN_PARAMS_KEY, self._clip_value_min),
+        (self.MAX_PARAMS_KEY, self._clip_value_max)
+    ])
+    return params, collections.OrderedDict()
 
   def encode(self, x, encode_params):
     """See base class."""
@@ -141,7 +145,7 @@ class ClipByValueEncodingStage(encoding_stage.EncodingStageInterface):
         x,
         tf.cast(encode_params[self.MIN_PARAMS_KEY], x.dtype),
         tf.cast(encode_params[self.MAX_PARAMS_KEY], x.dtype))
-    return {self.ENCODED_VALUES_KEY: clipped_x}
+    return collections.OrderedDict([(self.ENCODED_VALUES_KEY, clipped_x)])
 
   def decode(self,
              encoded_tensors,
