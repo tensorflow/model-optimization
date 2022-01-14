@@ -33,6 +33,8 @@ upper_tabs:
         path: /model_optimization/guide/pruning/comprehensive_guide
       - title: Pruning for on-device inference with XNNPACK
         path: /model_optimization/guide/pruning/pruning_for_on_device_inference
+      - title: Sparse weights using structural pruning
+        path: /model_optimization/guide/pruning/pruning_with_sparsity_2_by_4
 
       - heading: Quantization
       - title: Quantization aware training overview
