@@ -37,7 +37,7 @@ You can also install from source. This requires the
 # sudo apt-get install bazel git python-pip
 # For other platforms, see Bazel docs above.
 git clone https://github.com/tensorflow/model-optimization.git
-cd model_optimization
+cd model-optimization
 bazel build --copt=-O3 --copt=-march=native :pip_pkg
 PKGDIR=$(mktemp -d)
 ./bazel-bin/pip_pkg $PKGDIR

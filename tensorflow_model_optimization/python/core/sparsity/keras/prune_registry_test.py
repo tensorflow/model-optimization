@@ -72,7 +72,8 @@ class PruneRegistryTest(tf.test.TestCase, parameterized.TestCase):
       layers.Conv2D(10, 5),
       layers.Dropout(0.5),
       # Supports specific layers from experimental or compat_v1.
-      tf.keras.layers.experimental.preprocessing.Rescaling,
+      layers.experimental.SyncBatchNormalization(),
+      layers.experimental.preprocessing.Rescaling,
       tf.compat.v1.keras.layers.BatchNormalization(),
       # Supports Keras RNN Layers with prunable cells.
       layers.LSTM(10),

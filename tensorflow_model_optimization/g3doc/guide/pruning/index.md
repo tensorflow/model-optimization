@@ -1,7 +1,5 @@
 # Trim insignificant weights
 
-<sub>Maintained by TensorFlow Model Optimization</sub>
-
 This document provides an overview on model pruning to help you determine how it
 fits with your use case.
 
@@ -11,8 +9,8 @@ fits with your use case.
     [pruning comprehensive guide](comprehensive_guide.ipynb).
 *   To explore the application of pruning for on-device inference, see the
     [Pruning for on-device inference with XNNPACK](pruning_for_on_device_inference.ipynb).
-*   To see an example of structural pruning, see the
-    [Structural pruning with sparsity 2 by 4](pruning_with_sparsity_2_by_4.ipynb).
+*   To see an example of structural pruning, run the tutorial
+    [Structural pruning with 2 by 4 sparsity](pruning_with_sparsity_2_by_4.ipynb).
 
 ## Overview
 
@@ -52,14 +50,18 @@ It is on our roadmap to add support in the following areas:
     <tr>
       <th>Model</th>
       <th>Non-sparse Top-1 Accuracy </th>
-      <th>Sparse Accuracy </th>
-      <th>Sparsity </th>
+      <th>Random Sparse Accuracy </th>
+      <th>Random Sparsity </th>
+      <th>Structured Sparse Accuracy</th>
+      <th>Structured Sparsity </th>
     </tr>
     <tr>
       <td rowspan=3>InceptionV3</td>
       <td rowspan=3>78.1%</td>
       <td>78.0%</td>
       <td>50%</td>
+      <td>75.8%</td>
+      <td>2 by 4</td>
     </tr>
     <tr>
       <td>76.1%</td><td>75%</td>
@@ -68,7 +70,10 @@ It is on our roadmap to add support in the following areas:
       <td>74.6%</td><td>87.5%</td>
     </tr>
     <tr>
-      <td>MobilenetV1 224</td><td>71.04%</td><td>70.84%</td><td>50%</td>
+      <td>MobilenetV1 224</td><td>71.04%</td><td>70.84%</td><td>50%</td><td>67.35%</td><td>2 by 4</td>
+    </tr>
+    <tr>
+      <td>MobilenetV2 224</td><td>71.77%</td><td>69.64%</td><td>50%</td><td>66.75%</td><td>2 by 4</td>
     </tr>
  </table>
 </figure>
@@ -114,6 +119,29 @@ The models were tested on Imagenet.
 
 The models use WMT16 German and English dataset with news-test2013 as the dev
 set and news-test2015 as the test set.
+
+### Keyword spotting model
+
+DS-CNN-L is a keyword spotting model created for edge devices. It can be found
+in ARM software's
+[examples repository](https://github.com/ARM-software/ML-examples/tree/master/tflu-kws-cortex-m).
+
+<figure>
+  <table>
+    <tr>
+      <th>Model</th>
+      <th>Non-sparse Accuracy</th>
+      <th>Structured Sparse Accuracy (2 by 4 pattern)</th>
+      <th>Random Sparse Accuracy (target sparsity 50%)</th>
+    </tr>
+    <tr>
+      <td>DS-CNN-L</td>
+      <td>95.23</td>
+      <td>94.33</td>
+      <td>94.84</td>
+    </tr>
+ </table>
+</figure>
 
 ## Examples
 
