@@ -32,7 +32,7 @@ class CompatGlobalAveragePooling2D(layers.GlobalAveragePooling2D):
 
   def __init__(self, *args, keepdims=False, **kwargs):
     self._compat = False
-    if version.LooseVersion(tf.__version__) > version.LooseVersion('2.5.0'):
+    if version.LooseVersion(tf.__version__) > version.LooseVersion('2.5.1'):
       super(CompatGlobalAveragePooling2D, self).__init__(
           *args, keepdims=keepdims, **kwargs)
     else:
