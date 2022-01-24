@@ -98,6 +98,7 @@ class PruneRegistry(object):
           '_query_dense.kernel', '_key_dense.kernel', '_value_dense.kernel',
           '_output_dense.kernel'
       ],
+      layers.experimental.SyncBatchNormalization: [],
       layers.experimental.preprocessing.Rescaling.__class__: [],
       TensorFlowOpLayer: [],
       layers_compat_v1.BatchNormalization: [],
