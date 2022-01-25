@@ -75,12 +75,13 @@ class QuantizeAwareActivation(object):
 
   # TODO(pulkitb): Other activations such as elu, tanh etc., should just work
   # on inclusion. Verify in TFLite before enabling.
+  # gelu requires both because it is not folded by tflite.
 
   # These activations should be quantized prior to the activation being applied.
-  _PRE_QUANT_ACTIVATIONS = frozenset({'softmax', 'sigmoid', 'tanh'})
+  _PRE_QUANT_ACTIVATIONS = frozenset({'softmax', 'sigmoid', 'tanh', 'gelu'})
 
   # These activations should be quantized after the activation has been applied.
-  _POST_QUANT_ACTIVATIONS = frozenset({'linear', 'relu', 'swish'})
+  _POST_QUANT_ACTIVATIONS = frozenset({'linear', 'relu', 'swish', 'gelu'})
 
   # Don't take any quantize operations for these activations.
   _NO_QUANTIZE_ACTIVATIONS = frozenset({'NoOpActivation'})
