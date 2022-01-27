@@ -59,6 +59,15 @@ class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
     def compute_output_shape(self, input_shape):
       return input_shape
 
+  def testSupportedPreAndPostActivation(self):
+    layer = self.TestLayer()
+    layer.activation = QuantizeAwareActivation(
+        activations.get('gelu'), self.quantizer, 0, layer)
+    model = keras.Sequential([layer])
+    names = ', '.join([weight.name for weight in model.layers[-1].weights])
+    self.assertIn('pre_activation', names)
+    self.assertIn('post_activation', names)
+
   def testConstruction_SupportedAndUnsupportedActivations(self):
     layer = self.TestLayer()
 
