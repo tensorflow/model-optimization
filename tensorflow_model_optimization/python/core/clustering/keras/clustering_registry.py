@@ -89,7 +89,6 @@ class ClusteringRegistry(object):
       tf.compat.v2.keras.layers.SimpleRNNCell,
       tf.compat.v1.keras.layers.StackedRNNCells,
       tf.compat.v2.keras.layers.StackedRNNCells,
-      tf.keras.experimental.PeepholeLSTMCell,
   })
 
   _SUPPORTED_RNN_LAYERS = frozenset([
