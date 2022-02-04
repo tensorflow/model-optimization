@@ -126,11 +126,16 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
   def compute_output_shape(self, input_shape):
     return self.layer.compute_output_shape(self.layer.input_shape)
 
-  def _make_quantizer_fn(self, quantizer, x, training, quantizer_vars):
+  def _make_quantizer_fn(self,
+                         quantizer,
+                         x,
+                         training,
+                         quantizer_vars,
+                         layer=None):
     """Use currying to return True/False specialized fns to the cond."""
 
     def quantizer_fn():
-      return quantizer(x, training, weights=quantizer_vars)
+      return quantizer(x, training, weights=quantizer_vars, layer=layer)
 
     return quantizer_fn
 
@@ -145,9 +150,9 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
       quantized_weight = utils.smart_cond(
           training,
           self._make_quantizer_fn(quantizer, unquantized_weight, True,
-                                  quantizer_vars),
+                                  quantizer_vars, self.layer),
           self._make_quantizer_fn(quantizer, unquantized_weight, False,
-                                  quantizer_vars))
+                                  quantizer_vars, self.layer))
       quantized_weights.append(quantized_weight)
 
     self.quantize_config.set_quantize_weights(self.layer, quantized_weights)
@@ -176,12 +181,13 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
       raise RuntimeError('Multiple output tensors not handled currently.')
 
     output_quantizer = self._output_quantizers[0]
+
     return utils.smart_cond(
         training,
         self._make_quantizer_fn(output_quantizer, outputs, True,
-                                self._output_quantizer_vars),
+                                self._output_quantizer_vars, self.layer),
         self._make_quantizer_fn(output_quantizer, outputs, False,
-                                self._output_quantizer_vars))
+                                self._output_quantizer_vars, self.layer))
 
   def get_config(self):
     base_config = super(QuantizeWrapper, self).get_config()
