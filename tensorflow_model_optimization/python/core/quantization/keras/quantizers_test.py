@@ -35,12 +35,20 @@ serialize_keras_object = tf.keras.utils.serialize_keras_object
 @parameterized.parameters(
     quantizers.LastValueQuantizer,
     quantizers.MovingAverageQuantizer,
-    quantizers.AllValuesQuantizer)
+    quantizers.AllValuesQuantizer,
+    quantizers.FixedQuantizer)
 class QuantizersTest(tf.test.TestCase, parameterized.TestCase):
 
-  def setUp(self):
-    super(QuantizersTest, self).setUp()
-    self.quant_params = {
+  def _get_quant_params(self, quantizer_type):
+    if quantizer_type == quantizers.FixedQuantizer:
+      return {
+          'num_bits': 8,
+          'init_min': 0.0,
+          'init_max': 1.0,
+          'narrow_range': False
+      }
+
+    return {
         'num_bits': 8,
         'per_axis': False,
         'symmetric': False,
@@ -70,21 +78,16 @@ class QuantizersTest(tf.test.TestCase, parameterized.TestCase):
     print('max_var: ', min_max_values[1])
 
   def testQuantizer(self, quantizer_type):
-    quantizer = quantizer_type(**self.quant_params)
+    quantizer = quantizer_type(**self._get_quant_params(quantizer_type))
 
     self._test_quantizer(quantizer)
 
   def testSerialization(self, quantizer_type):
-    quantizer = quantizer_type(**self.quant_params)
+    quantizer = quantizer_type(**self._get_quant_params(quantizer_type))
 
     expected_config = {
         'class_name': quantizer_type.__name__,
-        'config': {
-            'num_bits': 8,
-            'per_axis': False,
-            'symmetric': False,
-            'narrow_range': False
-        }
+        'config': self._get_quant_params(quantizer_type),
     }
     serialized_quantizer = serialize_keras_object(quantizer)
 

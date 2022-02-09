@@ -18,6 +18,7 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
+from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
@@ -33,6 +34,7 @@ from tensorflow_model_optimization.python.core.quantization.keras.default_8bit i
 quantize_annotate_layer = quantize.quantize_annotate_layer
 quantize_annotate_model = quantize.quantize_annotate_model
 quantize_apply = quantize.quantize_apply
+fix_input_output_range = quantize.fix_input_output_range
 QuantizeAnnotate = quantize_annotate_mod.QuantizeAnnotate
 QuantizeWrapper = quantize_wrapper_mod.QuantizeWrapper
 
@@ -591,6 +593,95 @@ class QuantizeApplyTest(tf.test.TestCase):
         model.trainable_weights, quant_aware_model.trainable_weights)
     self._assert_weights_equal_value(
         model.trainable_weights, quant_aware_model.trainable_weights)
+
+
+class FixInputOutputRangeTest(tf.test.TestCase, parameterized.TestCase):
+
+  @parameterized.parameters(
+      ('sequential', 8, 0, 1, 0, 1, False, 1./255, -128., 1./255, -128.),
+      ('sequential', 8, -127, 127, -127, 127, True, 1., 0., 1., 0.),
+      ('sequential', 8, 0, 1, 0, 255, False, 1./255, -128., 1., -128.),
+      ('sequential', 8, 0, 255, 0, 1, False, 1., -128., 1./255, -128.),
+
+      ('functional_list', 8, 0, 1, 0, 1, False, 1./255, -128., 1./255, -128.),
+      ('functional_list', 8, -127, 127, -127, 127, True, 1., 0., 1., 0.),
+      ('functional_list', 8, 0, 1, 0, 255, False, 1./255, -128., 1., -128.),
+      ('functional_list', 8, 0, 255, 0, 1, False, 1., -128., 1./255, -128.),
+
+      ('functional_dict', 8, 0, 1, 0, 1, False, 1./255, -128., 1./255, -128.),
+      ('functional_dict', 8, -127, 127, -127, 127, True, 1., 0., 1., 0.),
+      ('functional_dict', 8, 0, 1, 0, 255, False, 1./255, -128., 1., -128.),
+      ('functional_dict', 8, 0, 255, 0, 1, False, 1., -128., 1./255, -128.),
+  )
+  def testFixInputOutputRangeModel(
+      self, model_type, num_bits, input_min, input_max, output_min, output_max,
+      narrow_range,
+      expected_input_scales, expected_input_zero_points,
+      expected_output_scales, expected_output_zero_points):
+    if model_type == 'sequential':
+      model = keras.Sequential([
+          keras.layers.Dense(10, input_shape=(5,)),
+      ])
+    elif model_type == 'functional_list':
+      x = keras.Input(shape=(5), name='x')
+      y = keras.layers.Dense(10)(x)
+      model = keras.Model(inputs=[x], outputs=[y])
+    elif model_type == 'functional_dict':
+      x = keras.Input(shape=(5), name='x')
+      y = keras.layers.Dense(10)(x)
+      model = keras.Model(inputs={'x': x}, outputs={'y': y})
+
+    with quantize.quantize_scope():
+      annotated_model = quantize_annotate_model(model)
+      quantized_model = quantize_apply(annotated_model)
+      fixed_range_model = fix_input_output_range(
+          quantized_model,
+          num_bits=num_bits,
+          input_min=input_min,
+          input_max=input_max,
+          output_min=output_min,
+          output_max=output_max,
+          narrow_range=narrow_range)
+
+    converter = tf.lite.TFLiteConverter.from_keras_model(fixed_range_model)
+    converter.optimizations = [tf.lite.Optimize.DEFAULT]
+    converter.inference_input_type = tf.int8
+    converter.inference_output_type = tf.int8
+    tflite_model = converter.convert()
+    interpreter = tf.lite.Interpreter(model_content=tflite_model)
+
+    input_detail = interpreter.get_input_details()[0]
+    input_quantization_parameters = input_detail['quantization_parameters']
+    input_scales = input_quantization_parameters['scales']
+    input_zero_points = input_quantization_parameters['zero_points']
+
+    output_detail = interpreter.get_output_details()[0]
+    output_quantization_parameters = output_detail['quantization_parameters']
+    output_scales = output_quantization_parameters['scales']
+    output_zero_points = output_quantization_parameters['zero_points']
+
+    self.assertAlmostEqual(input_scales, expected_input_scales, delta=1e-6)
+    self.assertAlmostEqual(
+        input_zero_points, expected_input_zero_points, delta=1e-6)
+    self.assertAlmostEqual(output_scales, expected_output_scales, delta=1e-6)
+    self.assertAlmostEqual(
+        output_zero_points, expected_output_zero_points, delta=1e-6)
+
+  def testFixInputOutputRangeModel_PreservesBuiltState(self):
+    model = keras_test_utils.build_simple_dense_model()
+
+    with quantize.quantize_scope():
+      annotated_model = quantize_annotate_model(model)
+
+      self.assertTrue(annotated_model.built)
+
+      quantized_model = quantize_apply(annotated_model)
+
+      self.assertTrue(quantized_model.built)
+
+      fixed_range_model = fix_input_output_range(quantized_model)
+
+      self.assertTrue(fixed_range_model.built)
 
 if __name__ == '__main__':
   tf.test.main()

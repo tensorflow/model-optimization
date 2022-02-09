@@ -90,6 +90,8 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
 )
 
@@ -270,6 +272,7 @@ py_strict_test(
         ":quantize_layer",
         ":quantize_wrapper",
         ":quantizers",
+        # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",

@@ -17,6 +17,9 @@
 import abc
 import six
 
+import tensorflow as tf
+from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+
 
 @six.add_metaclass(abc.ABCMeta)
 class QuantizeConfig(object):
@@ -214,4 +217,55 @@ class OutputOnlyConfig(QuantizeConfig):
 
   @classmethod
   def from_config(cls, config):
+    return cls(**config)
+
+
+class FixedQuantizeConfig(QuantizeConfig):
+  """QuantizeConfig that quantizes output with fixed range."""
+
+  def __init__(self, config, num_bits, init_min, init_max, narrow_range):
+    self.config = config
+    self.num_bits = num_bits
+    self.init_min = init_min
+    self.init_max = init_max
+    self.narrow_range = narrow_range
+    self.fixed_quantizer = quantizers.FixedQuantizer(
+        num_bits=num_bits,
+        init_min=init_min,
+        init_max=init_max,
+        narrow_range=narrow_range)
+
+  def get_weights_and_quantizers(self, layer):
+    return self.config.get_weights_and_quantizers(layer)
+
+  def set_quantize_weights(self, layer, quantize_weights):
+    return self.config.set_quantize_weights(layer, quantize_weights)
+
+  def get_activations_and_quantizers(self, layer):
+    activations_and_quantizers = (
+        self.config.get_activations_and_quantizers(layer))
+    return [(activation, self.fixed_quantizer)
+            for activation, _ in activations_and_quantizers]
+
+  def set_quantize_activations(self, layer, quantize_activations):
+    return self.config.set_quantize_activations(
+        layer, quantize_activations)
+
+  def get_output_quantizers(self, layer):
+    outputs_and_quantizers = (
+        self.config.get_output_quantizers(layer))
+    return [self.fixed_quantizer
+            for _ in outputs_and_quantizers]
+
+  def get_config(self):
+    return {
+        'config': tf.keras.utils.serialize_keras_object(self.config),
+        'num_bits': self.num_bits,
+        'init_min': self.init_min,
+        'init_max': self.init_max,
+        'narrow_range': self.narrow_range}
+
+  @classmethod
+  def from_config(cls, config):
+    config['config'] = tf.keras.utils.deserialize_keras_object(config['config'])
     return cls(**config)

@@ -26,6 +26,7 @@ from tensorflow_model_optimization.python.core.api.quantization.keras import exp
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_model
 
 # quantize some layers with default or custom quantization implementation.
+from tensorflow_model_optimization.python.core.quantization.keras.quantize import fix_input_output_range
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_annotate_layer
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_annotate_model
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_apply
