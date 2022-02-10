@@ -645,17 +645,15 @@ class FixInputOutputRangeTest(tf.test.TestCase, parameterized.TestCase):
 
     converter = tf.lite.TFLiteConverter.from_keras_model(fixed_range_model)
     converter.optimizations = [tf.lite.Optimize.DEFAULT]
-    converter.inference_input_type = tf.int8
-    converter.inference_output_type = tf.int8
     tflite_model = converter.convert()
     interpreter = tf.lite.Interpreter(model_content=tflite_model)
 
-    input_detail = interpreter.get_input_details()[0]
+    input_detail = interpreter.get_tensor_details()[1]
     input_quantization_parameters = input_detail['quantization_parameters']
     input_scales = input_quantization_parameters['scales']
     input_zero_points = input_quantization_parameters['zero_points']
 
-    output_detail = interpreter.get_output_details()[0]
+    output_detail = interpreter.get_tensor_details()[-2]
     output_quantization_parameters = output_detail['quantization_parameters']
     output_scales = output_quantization_parameters['scales']
     output_zero_points = output_quantization_parameters['zero_points']
