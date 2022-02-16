@@ -29,11 +29,13 @@ from tensorflow_model_optimization.python.core.quantization.keras.experimental.d
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_transforms
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
+from tensorflow_model_optimization.python.core.quantization.keras.layers import dense_batchnorm_test_utils
 
 ModelTransformer = model_transformer.ModelTransformer
 
 Conv2DModel = conv_batchnorm_test_utils.Conv2DModel
 DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
+DenseModel = dense_batchnorm_test_utils.DenseModel
 
 keras = tf.keras
 
@@ -73,21 +75,26 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
           post_bn_activation=activation,
           squeeze_type=squeeze_type,
           normalization_type=normalization_type)
+    elif layer_type == 'Dense':
+      return DenseModel.get_nonfolded_batchnorm_model(
+          post_bn_activation=activation, normalization_type=normalization_type)
 
   def _get_input_shape(self, layer_type):
     if layer_type == 'Conv2D':
       return Conv2DModel.get_batched_input_shape()
     elif layer_type == 'DepthwiseConv2D':
       return DepthwiseConv2DModel.get_batched_input_shape()
+    elif layer_type == 'Dense':
+      return DenseModel.get_batched_input_shape()
 
-  def _test_conv_squeeze_bn_activation_transform(
+  def _test_conv_squeeze_or_dense_bn_activation_transform(
       self,
       layer_type,
       squeeze_type,
       normalization_type,
       activation_type,
       transform_class,
-      conv_activation_class,
+      conv_or_dense_activation_class,
       normalization_quantize_config_class):
     model = self._get_model(layer_type,
                             squeeze_type,
@@ -107,7 +114,7 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       bn_layer = transformed_model.layers[2]
 
     self.assertIsInstance(
-        conv_layer.activation, conv_activation_class)
+        conv_layer.activation, conv_or_dense_activation_class)
     self.assertIsInstance(
         updated_metadata.get(bn_layer.name).get('quantize_config'),
         normalization_quantize_config_class)
@@ -123,13 +130,13 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       ('DepthwiseConv2D', 'SyncBatchNormalization'),
   )
   def testConv2DBatchNormQuantize(self, layer_type, normalization_type):
-    self._test_conv_squeeze_bn_activation_transform(
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
         layer_type=layer_type,
         squeeze_type=None,
         normalization_type=normalization_type,
         activation_type=None,
         transform_class=default_n_bit_transforms.Conv2DBatchNormQuantize,
-        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
         normalization_quantize_config_class=
         n_bit_configs.DefaultNBitOutputQuantizeConfig)
 
@@ -140,14 +147,14 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       ('DepthwiseConv2D', 'SyncBatchNormalization'),
   )
   def testConv2DBatchNormReLUQuantize(self, layer_type, normalization_type):
-    self._test_conv_squeeze_bn_activation_transform(
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
         layer_type=layer_type,
         squeeze_type=None,
         normalization_type=normalization_type,
         activation_type='relu',
         transform_class=
         default_n_bit_transforms.Conv2DBatchNormReLUQuantize,
-        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
         normalization_quantize_config_class=
         n_bit_configs.NoOpQuantizeConfig)
 
@@ -159,14 +166,14 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
   )
   def testConv2DBatchNormActivationQuantize(
       self, layer_type, normalization_type):
-    self._test_conv_squeeze_bn_activation_transform(
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
         layer_type=layer_type,
         squeeze_type=None,
         normalization_type=normalization_type,
         activation_type='act_relu',
         transform_class=
         default_n_bit_transforms.Conv2DBatchNormActivationQuantize,
-        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
         normalization_quantize_config_class=
         n_bit_configs.NoOpQuantizeConfig)
 
@@ -178,14 +185,14 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
   )
   def testConv2DReshapeBatchNormQuantize(
       self, layer_type, normalization_type):
-    self._test_conv_squeeze_bn_activation_transform(
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
         layer_type=layer_type,
         squeeze_type='sepconv1d_squeeze',
         normalization_type=normalization_type,
         activation_type=False,
         transform_class=
         default_n_bit_transforms.Conv2DReshapeBatchNormQuantize,
-        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
         normalization_quantize_config_class=
         n_bit_configs.DefaultNBitOutputQuantizeConfig)
 
@@ -197,14 +204,14 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
   )
   def testConv2DReshapeBatchNormReLUQuantize(
       self, layer_type, normalization_type):
-    self._test_conv_squeeze_bn_activation_transform(
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
         layer_type=layer_type,
         squeeze_type='sepconv1d_squeeze',
         normalization_type=normalization_type,
         activation_type='relu',
         transform_class=
         default_n_bit_transforms.Conv2DReshapeBatchNormReLUQuantize,
-        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
         normalization_quantize_config_class=
         n_bit_configs.NoOpQuantizeConfig)
 
@@ -216,16 +223,63 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
   )
   def testConv2DReshapeBatchNormActivationQuantize(
       self, layer_type, normalization_type):
-    self._test_conv_squeeze_bn_activation_transform(
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
         layer_type=layer_type,
         squeeze_type='sepconv1d_squeeze',
         normalization_type=normalization_type,
         activation_type='act_relu',
         transform_class=
         default_n_bit_transforms.Conv2DReshapeBatchNormActivationQuantize,
-        conv_activation_class=quantize_aware_activation.NoOpActivation,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
         normalization_quantize_config_class=
         n_bit_configs.NoOpQuantizeConfig)
+
+  @parameterized.parameters(
+      ('Dense', 'BatchNormalization'),
+      ('Dense', 'SyncBatchNormalization'),
+  )
+  def testDenseBatchNormQuantize(self, layer_type, normalization_type):
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type=None,
+        normalization_type=normalization_type,
+        activation_type=None,
+        transform_class=default_n_bit_transforms.DenseBatchNormQuantize,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=n_bit_configs
+        .DefaultNBitOutputQuantizeConfig)
+
+  @parameterized.parameters(
+      ('Dense', 'BatchNormalization'),
+      ('Dense', 'SyncBatchNormalization'),
+  )
+  def testDenseBatchNormReLUQuantize(self, layer_type, normalization_type):
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type=None,
+        normalization_type=normalization_type,
+        activation_type='relu',
+        transform_class=default_n_bit_transforms.DenseBatchNormReLUQuantize,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=n_bit_configs
+        .NoOpQuantizeConfig)
+
+  @parameterized.parameters(
+      ('Dense', 'BatchNormalization'),
+      ('Dense', 'SyncBatchNormalization'),
+  )
+  def testDenseBatchNormActivationQuantize(self, layer_type,
+                                           normalization_type):
+    self._test_conv_squeeze_or_dense_bn_activation_transform(
+        layer_type=layer_type,
+        squeeze_type=None,
+        normalization_type=normalization_type,
+        activation_type='act_relu',
+        transform_class=default_n_bit_transforms
+        .DenseBatchNormActivationQuantize,
+        conv_or_dense_activation_class=quantize_aware_activation.NoOpActivation,
+        normalization_quantize_config_class=n_bit_configs
+        .NoOpQuantizeConfig)
 
   @parameterized.named_parameters(
       ('padding_valid', {'padding': 'valid'}),
