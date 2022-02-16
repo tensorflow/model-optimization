@@ -25,7 +25,8 @@ from tensorflow.python.training import moving_averages
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 
 
-def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
+def FixedQuantize(
+    inputs, init_min=-6.0, init_max=6.0, scope=None, narrow_range=False):
   """Adds a fake quantize layer with fixed quantization interval.
 
   Args:
@@ -33,6 +34,8 @@ def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
     init_min: the lower end of quantization interval.
     init_max: the upper end of quantization interval.
     scope: Optional scope for name_scope.
+    narrow_range: Whether to use the narrow quantization range
+      [1; 2^num_bits - 1] or wide range [0; 2^num_bits - 1].
   Returns:
     a tensor containing quantized values.
   """
@@ -41,7 +44,7 @@ def FixedQuantize(inputs, init_min=-6.0, init_max=6.0, scope=None):
 
   with tf.name_scope(scope):
     return tf.quantization.fake_quant_with_min_max_args(
-        inputs, min=init_min, max=init_max)
+        inputs, min=init_min, max=init_max, narrow_range=narrow_range)
 
 
 def AllValuesQuantize(inputs,

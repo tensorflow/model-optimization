@@ -71,6 +71,7 @@ def quantize_scope(*args):
       'QuantizeWrapperV2': quantize_wrapper.QuantizeWrapperV2,
       'QuantizeLayer': quantize_layer.QuantizeLayer,
       'OutputOnlyConfig': quantize_config_mod.OutputOnlyConfig,
+      'FixedQuantizeConfig': quantize_config_mod.FixedQuantizeConfig,
   }
   quantization_objects.update(default_8bit_quantize_registry._types_dict())  # pylint: disable=protected-access
   quantization_objects.update(default_n_bit_quantize_registry._types_dict())  # pylint: disable=protected-access
@@ -472,3 +473,169 @@ def quantize_apply(
 
   return keras.models.clone_model(
       transformed_model, input_tensors=None, clone_function=_quantize)
+
+
+def _unwrap_first_input_name(inbound_nodes):
+  """Unwrap inbound_nodes three times to get first input name.
+
+  Args:
+    inbound_nodes: A str config that indicates input node. This method assumed
+      the inbound_nodes looks like `[[['input', 0, 0, {}]]]`.
+
+  Returns:
+    Returns a str name for the first inbound node.
+  """
+  current = inbound_nodes
+
+  for _ in range(3):
+    if not current:
+      return None
+    if not isinstance(current, list):
+      return None
+    current = current[0]
+
+  if isinstance(current, str):
+    return current
+
+  return None
+
+
+def _wrap_fixed_range(
+    quantize_config, num_bits, init_min, init_max, narrow_range):
+  config = quantize_config_mod.FixedQuantizeConfig.from_config(
+      {'config': quantize_config,
+       'num_bits': num_bits,
+       'init_min': init_min,
+       'init_max': init_max,
+       'narrow_range': narrow_range})
+  return tf.keras.utils.serialize_keras_object(config)
+
+
+def _is_serialized_node_data(nested):
+  # Node data can be of form `[layer_name, node_id, tensor_id]` or
+  # `[layer_name, node_id, tensor_id, kwargs]`.
+  if (isinstance(nested, list) and (len(nested) in [3, 4]) and
+      isinstance(nested[0], str)):
+    return True
+  return False
+
+
+def _nested_to_flatten_node_data_list(nested):
+  """Makes nested node data to flatten node data list."""
+  if _is_serialized_node_data(nested):
+    return [nested]
+
+  if isinstance(nested, list):
+    return sum(map(_nested_to_flatten_node_data_list, nested), [])
+
+  if isinstance(nested, dict):
+    return sum(map(_nested_to_flatten_node_data_list, nested.values()), [])
+
+  raise ValueError('{} is not a supported nested node data.'.format(nested))
+
+
+def fix_input_output_range(
+    model,
+    num_bits=8,
+    input_min=0.0,
+    input_max=1.0,
+    output_min=0.0,
+    output_max=1.0,
+    narrow_range=False):
+  """Fix the input and output ranges.
+
+  Example:
+
+  ```python
+  model = keras.Sequential([
+      layers.Dense(10, activation='relu', input_shape=(100,)),
+      quantize_annotate_layer(layers.Dense(2, activation='sigmoid'))
+  ])
+  with quantize.quantize_scope():
+    model = quantize_annotate_model(model)
+    model = quantize_apply(model)
+    model = fix_input_output_range(model, num_bits=4,
+        input_min=0, input_max=15,
+        output_min=0, output_max=15,
+        narrow_range=False)
+  ```
+
+  In certain cases, a desired input/output ranges is known and should not be
+  altered during training. To set these values, use the arguments as follows:
+
+  Args:
+    model: A `tf.keras` Sequential or Functional model which has been quantized.
+    num_bits: Number of bits for quantization
+    input_min: The lower end of quantization interval for the input.
+    input_max: The upper end of quantization interval for the input.
+    output_min: The lower end of quantization interval for the output.
+    output_max: The upper end of quantization interval for the output.
+    narrow_range: In case of 8 bits, narrow_range nudges the quantized range
+      to be [-127, 127] instead of [-128, 127]. This ensures symmetric
+      range has 0 as the centre.
+
+  Returns:
+    Returns a new `tf.keras` model fixed input range set to (input_min,
+    input_max) and fixed output range set to (output_min, output_max).
+  """
+  config = model.get_config()
+  fixed_input_quantizer = quantizers.FixedQuantizer(
+      num_bits=num_bits,
+      init_min=input_min,
+      init_max=input_max,
+      narrow_range=narrow_range)
+  serialized_fixed_input_quantizer = tf.keras.utils.serialize_keras_object(
+      fixed_input_quantizer)
+
+  if _is_functional_model(model):
+    input_layer_list = _nested_to_flatten_node_data_list(config['input_layers'])
+    for layer_config in config['layers']:
+      input_name = _unwrap_first_input_name(layer_config['inbound_nodes'])
+      if input_name is None:
+        continue
+
+      for input_layer in input_layer_list:
+        if input_name == input_layer[0]:
+          layer_config['config']['quantizer'] = serialized_fixed_input_quantizer
+          break
+
+    output_layer_list = _nested_to_flatten_node_data_list(
+        config['output_layers'])
+    for layer_config in config['layers']:
+      for output_layer in output_layer_list:
+        if layer_config['config']['name'] == output_layer[0]:
+          if 'quantize_config' in layer_config['config']:
+            layer_config['config']['quantize_config'] = (
+                _wrap_fixed_range(
+                    layer_config['config']['quantize_config'],
+                    num_bits=num_bits,
+                    init_min=output_min,
+                    init_max=output_max,
+                    narrow_range=narrow_range))
+          break
+
+    model = keras.Model.from_config(config)
+  else:
+    if (len(config['layers']) < 1 or
+        config['layers'][1]['class_name'] != 'QuantizeLayer'):
+      raise ValueError('`model` should be already quantized.')
+    config['layers'][1]['config'][
+        'quantizer'] = serialized_fixed_input_quantizer
+    if 'quantize_config' in config['layers'][-1]['config']:
+      config['layers'][-1]['config']['quantize_config'] = (
+          _wrap_fixed_range(
+              config['layers'][-1]['config']['quantize_config'],
+              num_bits=num_bits,
+              init_min=output_min,
+              init_max=output_max,
+              narrow_range=narrow_range))
+
+    model = keras.Sequential.from_config(config)
+
+  return model
+
+
+def _is_functional_model(model):
+  return (isinstance(model, keras.Model)
+          and not isinstance(model, keras.Sequential)
+          and model._is_graph_network)    # pylint: disable=protected-access
