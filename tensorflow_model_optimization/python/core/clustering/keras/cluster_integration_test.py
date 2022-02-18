@@ -464,30 +464,6 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     self._train(stripped_model)
 
   @keras_parameterized.run_all_keras_modes
-  def testClusterPeepholeLSTM(self):
-    model = keras.models.Sequential()
-    model.add(
-        keras.layers.Embedding(self.max_features, 16, input_length=self.maxlen))
-    model.add(keras.layers.RNN(tf.keras.experimental.PeepholeLSTMCell(16)))
-    model.add(keras.layers.Dense(1))
-    model.add(keras.layers.Activation("sigmoid"))
-
-    self._clusterTrainStrip(model)
-
-    self._assertNbUniqueWeights(
-        weight=model.layers[1].cell.kernel,
-        expected_unique_weights=self.params_clustering["number_of_clusters"],
-    )
-    self._assertNbUniqueWeights(
-        weight=model.layers[1].cell.recurrent_kernel,
-        expected_unique_weights=self.params_clustering["number_of_clusters"],
-    )
-    self._assertNbUniqueWeights(
-        weight=model.layers[0].embeddings,
-        expected_unique_weights=self.params_clustering["number_of_clusters"],
-    )
-
-  @keras_parameterized.run_all_keras_modes
   def testClusterBidirectional(self):
     model = keras.models.Sequential()
     model.add(

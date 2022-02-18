@@ -472,19 +472,6 @@ class ClusterRegistryTest(test.TestCase):
                          layer.cell.cells[0].recurrent_kernel)]
     self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
 
-  def testMakeClusterableWorksOnKerasStackedRNNLayerWithPeepholeLSTMCell(self):
-    """Test stacked RNN layer with peephole LSTM cell.
-
-    Verifies that make_clusterable() works as expected on a built-in
-    RNN layer with a PeepholeLSTMCell
-    """
-    cell1 = layers.LSTMCell(10)
-    cell2 = keras.experimental.PeepholeLSTMCell(10)
-    cell_list = tf.keras.layers.StackedRNNCells([cell1, cell2])
-    layer = layers.RNN(cell_list)
-    with self.assertRaises(AttributeError):
-      layer.get_clusterable_weights()
-
     ClusterRegistry.make_clusterable(layer)
     keras.Sequential([layer]).build(input_shape=(2, 3, 4))
 
@@ -509,27 +496,6 @@ class ClusterRegistryTest(test.TestCase):
     expected_weights = [('kernel/0', layer.forward_layer.cell.kernel),
                         ('recurrent_kernel/0',
                          layer.forward_layer.cell.recurrent_kernel)]
-    self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
-
-  def testMakeClusterableWorksOnRNNLayerWithPeepholeLSTMCell(self):
-    """Test RNN with peephole LSTM cell.
-
-    Verifies that make_clusterable() works as expected on a built-in
-    RNN layer with a PeepholeLSTMCell
-    """
-    cell1 = layers.LSTMCell(10)
-    cell2 = keras.experimental.PeepholeLSTMCell(10)
-    layer = layers.RNN([cell1, cell2])
-
-    with self.assertRaises(AttributeError):
-      layer.get_clusterable_weights()
-
-    ClusterRegistry.make_clusterable(layer)
-    keras.Sequential([layer]).build(input_shape=(2, 3, 4))
-
-    expected_weights = [('kernel/0', layer.cell.cells[0].kernel),
-                        ('recurrent_kernel/0',
-                         layer.cell.cells[0].recurrent_kernel)]
     self.assertEqual(expected_weights[0], layer.get_clusterable_weights()[0])
 
   def testMakeClusterableDoesNotWorksOnKerasRNNLayerWithClusterableCell(self):
