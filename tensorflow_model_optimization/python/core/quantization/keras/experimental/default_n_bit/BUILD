@@ -134,6 +134,7 @@ py_strict_test(
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:model_transformer",
         "//tensorflow_model_optimization/python/core/quantization/keras/layers:conv_batchnorm_test_utils",
+        "//tensorflow_model_optimization/python/core/quantization/keras/layers:dense_batchnorm_test_utils",
     ],
 )
 
