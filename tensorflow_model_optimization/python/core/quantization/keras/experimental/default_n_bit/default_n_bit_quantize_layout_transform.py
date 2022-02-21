@@ -104,6 +104,15 @@ class DefaultNBitQuantizeLayoutTransform(
         default_n_bit_transforms.LayerReluActivationQuantize(
             num_bits_weight=self._num_bits_weight,
             num_bits_activation=self._num_bits_activation),
+        default_n_bit_transforms.DenseBatchNormQuantize(
+            num_bits_weight=self._num_bits_weight,
+            num_bits_activation=self._num_bits_activation),
+        default_n_bit_transforms.DenseBatchNormReLUQuantize(
+            num_bits_weight=self._num_bits_weight,
+            num_bits_activation=self._num_bits_activation),
+        default_n_bit_transforms.DenseBatchNormActivationQuantize(
+            num_bits_weight=self._num_bits_weight,
+            num_bits_activation=self._num_bits_activation),
     ]
     return model_transformer.ModelTransformer(
         model, transforms,

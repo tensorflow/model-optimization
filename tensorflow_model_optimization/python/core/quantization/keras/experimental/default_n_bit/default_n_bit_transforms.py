@@ -263,6 +263,95 @@ class Conv2DReshapeBatchNormActivationQuantize(
         inputs=[Conv2DReshapeBatchNormQuantize.pattern(self)])
 
 
+class DenseBatchNormQuantize(transforms.Transform):
+  """Transform to be applied to "Dense"+ "BatchNorm" Graph.
+
+  This transform disables Quantization between Dense and BatchNorm
+  to ensure FQ does not get placed between them.
+  """
+
+  def __init__(self, num_bits_weight: int = 8, num_bits_activation: int = 8):
+    self._num_bits_weight = num_bits_weight
+    self._num_bits_activation = num_bits_activation
+
+  def pattern(self):
+    return LayerPattern(
+        'BatchNormalization|SyncBatchNormalization',
+        inputs=[LayerPattern('Dense', config={'activation': 'linear'})])
+
+  def _replace(self, bn_layer_node, dense_layer_node):
+    if _has_custom_quantize_config(bn_layer_node, dense_layer_node):
+      return bn_layer_node
+
+    dense_layer_node.layer['config']['activation'] = (
+        keras.activations.serialize(quantize_aware_activation.NoOpActivation()))
+    bn_layer_node.metadata['quantize_config'] = (
+        configs.DefaultNBitOutputQuantizeConfig(
+            num_bits_weight=self._num_bits_weight,
+            num_bits_activation=self._num_bits_activation))
+    return bn_layer_node
+
+  def replacement(self, match_layer):
+    bn_layer_node = match_layer
+    dense_layer_node = match_layer.input_layers[0]
+
+    return self._replace(bn_layer_node, dense_layer_node)
+
+  def custom_objects(self):
+    return {
+        'DefaultNBitOutputQuantizeConfig':
+            configs.DefaultNBitOutputQuantizeConfig,
+        'NoOpQuantizeConfig':
+            configs.NoOpQuantizeConfig,
+        'NoOpActivation': quantize_aware_activation.NoOpActivation
+    }
+
+
+class DenseBatchNormReLUQuantize(DenseBatchNormQuantize):
+  """Transform to be applied to "Dense"+ "BatchNorm" + "ReLU" Graph.
+
+  This transform disables Quantization between Dense, BatchNorm and ReLU
+  to ensure FQ does not get placed between them.
+  """
+
+  def pattern(self):
+    return LayerPattern(
+        'ReLU', inputs=[super(DenseBatchNormReLUQuantize, self).pattern()])
+
+  def _replace(self, relu_layer_node, bn_layer_node, dense_layer_node):
+    if _has_custom_quantize_config(relu_layer_node, bn_layer_node,
+                                   dense_layer_node):
+      return relu_layer_node
+
+    dense_layer_node.layer['config']['activation'] = (
+        keras.activations.serialize(quantize_aware_activation.NoOpActivation()))
+    bn_layer_node.metadata['quantize_config'] = (
+        configs.NoOpQuantizeConfig())
+
+    return relu_layer_node
+
+  def replacement(self, match_layer):
+    relu_layer_node = match_layer
+    bn_layer_node = relu_layer_node.input_layers[0]
+    dense_layer_node = bn_layer_node.input_layers[0]
+
+    return self._replace(relu_layer_node, bn_layer_node, dense_layer_node)
+
+
+class DenseBatchNormActivationQuantize(DenseBatchNormReLUQuantize):
+  """Transform to be applied to "Dense"+ "BatchNorm" + "ReLU" Graph.
+
+  This transform disables Quantization between Dense, BatchNorm and ReLU
+  to ensure FQ does not get placed between them.
+  """
+
+  def pattern(self):
+    return LayerPattern(
+        'Activation',
+        config={'activation': 'relu'},
+        inputs=[DenseBatchNormQuantize.pattern(self)])
+
+
 class SeparableConv1DQuantize(transforms.Transform):
   """Add QAT support for Keras SeparableConv1D layer.
 
