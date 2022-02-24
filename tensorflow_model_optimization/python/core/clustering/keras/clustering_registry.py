@@ -21,7 +21,7 @@ from tensorflow_model_optimization.python.core.clustering.keras import clusterin
 
 layers = tf.keras.layers
 ClusteringAlgorithm = clustering_algorithm.ClusteringAlgorithm
-PerChannelCA = clustering_algorithm.PerChannelCA
+ClusteringAlgorithmPerChannel = clustering_algorithm.ClusteringAlgorithmPerChannel
 
 
 class ClusteringLookupRegistry(object):
@@ -43,7 +43,7 @@ class ClusteringLookupRegistry(object):
     # Per-channel clustering is only applied if the layer is a Conv2D,
     # ignored otherwise
     if cluster_per_channel and isinstance(layer, tf.keras.layers.Conv2D):
-      return PerChannelCA
+      return ClusteringAlgorithmPerChannel
 
     # Clusterable layer could provide own implementation of get_pulling_indices
     if (issubclass(layer.__class__, clusterable_layer.ClusterableLayer) and
