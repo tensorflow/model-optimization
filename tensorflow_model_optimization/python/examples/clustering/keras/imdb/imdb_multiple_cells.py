@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""End-to-end tests for StackedRNNCells and PeepholeLSTMCell.
+"""End-to-end tests for StackedRNNCells.
 
 The dataset is actually too small for LSTM to be of any advantage
 compared to simpler, much faster methods such as TF-IDF+LogReg.
@@ -31,22 +31,6 @@ maxlen = 100  # cut texts after this number of words
 batch_size = 32
 
 x_train, y_train, x_test, y_test = prepare_dataset()
-
-print("Build a model with the StackedRNNCells with PeepholeLSTMCell...")
-model = tf.keras.models.Sequential()
-
-model.add(tf.keras.layers.Embedding(max_features, 128, input_length=maxlen))
-model.add(
-    tf.keras.layers.RNN(
-        tf.keras.layers.StackedRNNCells(
-            [tf.keras.experimental.PeepholeLSTMCell(128) for _ in range(2)])))
-model.add(tf.keras.layers.Dropout(0.5))
-model.add(tf.keras.layers.Dense(1))
-model.add(tf.keras.layers.Activation("sigmoid"))
-
-test_case = "StackedRNNCells_PeepholeLSTMCell"
-cluster_train_eval_strip(
-    model, x_train, y_train, x_test, y_test, batch_size, test_case)
 
 print("Build a model with the StackedRNNCells with LSTMCell...")
 model = tf.keras.models.Sequential()
