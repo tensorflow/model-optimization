@@ -451,10 +451,7 @@ class DefaultNBitQuantizeConfigRNN(DefaultNBitQuantizeConfig,
     return activations_quantizers
 
   def _flatten(self, list_of_lists):
-    flat_list = []
-    for sublist in list_of_lists:
-      for item in sublist:
-        flat_list.append(item)
+    flat_list = [item for sublist in list_of_lists for item in sublist]
     return flat_list
 
   def set_quantize_weights(self, layer, quantize_weights):
