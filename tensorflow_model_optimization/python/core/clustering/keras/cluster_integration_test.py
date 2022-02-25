@@ -801,18 +801,19 @@ class ClusterPerChannelIntegrationTest(tf.test.TestCase,
     for weight in layer_conv2d.weights:
       if "kernel" in weight.name:
         layer_conv2d_kernel_weight = weight
-    assert layer_conv2d_kernel_weight is not None
+    self.assertIsNotNone(layer_conv2d_kernel_weight)
     nr_unique_weights = len(np.unique(layer_conv2d_kernel_weight.numpy()))
-    assert nr_unique_weights == self.nr_of_clusters*self.num_channels
+    self.assertEqual(nr_unique_weights, self.nr_of_clusters*self.num_channels)
 
     # The above check is too general.
     # We need to check that we actually have nr_of_clusters per channel.
     # If more general case passed, then we do tighter check.
     # Note that we assume that data_format is NHWC.
     for i in range(self.num_channels):
-      nr_unique_weights_per_channel = len(np.unique(
-        layer_conv2d_kernel_weight[:, :, :, i]))
-      assert nr_unique_weights_per_channel == self.nr_of_clusters
+      nr_unique_weights_per_channel = len(
+          np.unique(layer_conv2d_kernel_weight[:, :, :, i]))
+      self.assertEqual(nr_unique_weights_per_channel, self.nr_of_clusters)
+
 
 if __name__ == "__main__":
   test.main()

@@ -37,6 +37,7 @@ py_strict_library(
     deps = [
         ":cluster_utils",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quant_ops",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",

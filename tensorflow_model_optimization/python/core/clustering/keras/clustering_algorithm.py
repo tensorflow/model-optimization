@@ -228,10 +228,10 @@ class ClusteringAlgorithmPerChannel(ClusteringAlgorithm):
       channel_indices.append(pulling_indices)
 
     pulling_indices = tf.convert_to_tensor(channel_indices)
-    pulling_indices = (
-      tf.transpose(pulling_indices, perm=[1, 0, 2, 3])
-        if self.data_format == "channels_first" else tf.transpose(
-          pulling_indices, perm=[1, 2, 3, 0]))
+    pulling_indices = tf.transpose(
+        pulling_indices,
+        perm=(1, 0, 2, 3) if self.data_format == "channels_first" else
+        (1, 2, 3, 0))
 
     return pulling_indices
 
@@ -260,15 +260,15 @@ class ClusteringAlgorithmPerChannel(ClusteringAlgorithm):
         original_weight.shape[1]
         if self.data_format == "channels_first" else original_weight.shape[-1])
 
-    # In case of channels_last, we have NHWC
-    # In case of channels_first, we have NCHW
-
+    # In case of channels_last, we have NHWC.
+    # In case of channels_first, we have NCHW.
     # We need to transpose the tensor, so C is the first dimension
     # and then we could loop over channels
     pulling_indices = (
-        tf.transpose(pulling_indices, perm=[1, 0, 2, 3])
-        if self.data_format == "channels_first" else tf.transpose(
-            pulling_indices, perm=[3, 0, 1, 2]))
+        tf.transpose(
+            pulling_indices,
+            perm=(1, 0, 2, 3) if self.data_format == "channels_first" else
+            (3, 0, 1, 2)))
 
     if self.cluster_gradient_aggregation == GradientAggregation.SUM:
       cluster_centroids = self.cluster_centroids
