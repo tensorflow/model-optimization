@@ -463,6 +463,15 @@ class Default8BitActivationQuantizeConfig(QuantizeConfig):
   decision to quantize depends on the specific activation type.
   """
 
+  def __init__(self, quantize_output=True):
+    """Construct a default QuantizeConfig for Activation layers.
+
+    Args:
+      quantize_output: Enable quantization of output, used to disable during
+        transform.
+    """
+    self.quantize_output = quantize_output
+
   def _assert_activation_layer(self, layer):
     if not isinstance(layer, layers.Activation):
       raise RuntimeError(
@@ -485,6 +494,8 @@ class Default8BitActivationQuantizeConfig(QuantizeConfig):
 
   def get_output_quantizers(self, layer):
     self._assert_activation_layer(layer)
+    if not self.quantize_output:
+      return []
 
     if not hasattr(layer.activation, '__name__'):
       raise ValueError('Activation {} not supported by '
@@ -504,7 +515,11 @@ class Default8BitActivationQuantizeConfig(QuantizeConfig):
                          layer.activation))
 
   def get_config(self):
-    return {}
+    return {'quantize_output': self.quantize_output}
+
+  @classmethod
+  def from_config(cls, config):
+    return cls(**config)
 
 
 class Default8BitConvQuantizeConfig(Default8BitQuantizeConfig):

@@ -237,6 +237,10 @@ class QuantizeRegistryTest(
     self._assert_activation_quantizers(
         quantize_config.get_output_quantizers(activation_layer))
 
+    quantize_config.quantize_output = False
+    self.assertEmpty(
+        quantize_config.get_output_quantizers(activation_layer))
+
 
 class Default8BitQuantizeConfigTest(tf.test.TestCase, _TestHelper):
 

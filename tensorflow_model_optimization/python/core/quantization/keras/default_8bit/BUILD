@@ -113,6 +113,7 @@ py_strict_test(
     python_version = "PY3",
     deps = [
         ":default_8bit_quantize_configs",
+        ":default_8bit_quantize_registry",
         ":default_8bit_transforms",
         # absl/testing:parameterized dep1,
         # numpy dep1,

@@ -26,6 +26,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_configs
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_transforms
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
@@ -575,6 +576,134 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
         quantize_config,
         default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
     self.assertNotEmpty(quantize_config.get_output_quantizers(None))
+
+  def testConcatActivationTransform(self):
+    r"""Tests the Concat Transform.
+
+         Input  Input
+          /       \
+        Relu     Relu
+          \       /
+            Concat
+
+      The Transform should ensure both the output FakeQuants are disabled,
+      and only a FakeQuant after Concat is present.
+    """
+    relu_1 = keras.layers.Activation('relu')
+    relu_2 = keras.layers.Activation('relu')
+    concat = keras.layers.Concatenate()
+
+    inp1 = keras.layers.Input((2,))
+    inp2 = keras.layers.Input((2,))
+    x1 = relu_1(inp1)
+    x2 = relu_2(inp2)
+    x = concat([x1, x2])
+    model = keras.Model([inp1, inp2], x)
+
+    layer_metadata = {
+        # dense_1 has an existing quantize_config.
+        relu_1.name: {
+            'quantize_config':
+                (default_8bit_quantize_registry
+                 .Default8BitActivationQuantizeConfig())
+        },
+        relu_2.name: {
+            'quantize_config':
+                (default_8bit_quantize_registry
+                 .Default8BitActivationQuantizeConfig())
+        }
+    }
+    _, updated_metadata = ModelTransformer(
+        model, [default_8bit_transforms.ConcatTransform()],
+        layer_metadata=layer_metadata).transform()
+
+    concat_quantize_config = updated_metadata.get(
+        concat.name).get('quantize_config')
+    # Concat should quantize the output.
+    self.assertIsInstance(
+        concat_quantize_config,
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
+    self.assertNotEmpty(concat_quantize_config.get_output_quantizers(None))
+
+    relu_1_quantize_config = updated_metadata.get(
+        relu_1.name).get('quantize_config')
+    # The existing quantize_config should do nothing for outputs.
+    self.assertIsInstance(
+        relu_1_quantize_config,
+        default_8bit_quantize_registry.Default8BitActivationQuantizeConfig)
+    self.assertEmpty(relu_1_quantize_config.get_output_quantizers(None))
+    self.assertFalse(relu_1_quantize_config.quantize_output)
+
+    relu_2_quantize_config = updated_metadata.get(
+        relu_2.name).get('quantize_config')
+    # The quantize_config from registry should do nothing at output.
+    self.assertIsInstance(
+        relu_1_quantize_config,
+        default_8bit_quantize_registry.Default8BitActivationQuantizeConfig)
+    self.assertEmpty(relu_2_quantize_config.get_output_quantizers(None))
+    self.assertFalse(relu_2_quantize_config.quantize_output)
+
+  def testConcatConcatTransformDisablesOutput(self):
+    r"""Tests the Concat Transform.
+
+          Input    Input   Input  Input
+          Reshape Reshape Reshape Reshape
+              \    /           \    /
+             Concat           Concat
+                   \         /
+                      Concat
+
+      The Transform should ensure all output FakeQuants are disabled,
+        and only a FakeQuant after the last Concat is present.
+    """
+    flatten_1 = keras.layers.Flatten()
+    flatten_2 = keras.layers.Flatten()
+    concat_1 = keras.layers.Concatenate()
+    flatten_3 = keras.layers.Flatten()
+    flatten_4 = keras.layers.Flatten()
+    concat_2 = keras.layers.Concatenate()
+    concat = keras.layers.Concatenate()
+
+    inp1 = keras.layers.Input((1, 2, 2))
+    inp2 = keras.layers.Input((1, 2, 2))
+    inp3 = keras.layers.Input((1, 2, 2))
+    inp4 = keras.layers.Input((1, 2, 2))
+    x1 = flatten_1(inp1)
+    x2 = flatten_2(inp2)
+    x3 = flatten_3(inp3)
+    x4 = flatten_4(inp4)
+
+    y1 = concat_1([x1, x2])
+    y2 = concat_2([x3, x4])
+    z = concat([y1, y2])
+    model = keras.Model([inp1, inp2, inp3, inp4], z)
+    reshapes = [flatten_1, flatten_2, flatten_3, flatten_4]
+    layer_metadata = {}
+    for layer in reshapes:
+      layer_metadata[layer.name] = {
+          'quantize_config':
+              default_8bit_quantize_registry.Default8BitQuantizeConfig(
+                  [], [], True)}
+    _, updated_metadata = ModelTransformer(
+        model, [default_8bit_transforms.ConcatTransform()],
+        layer_metadata=layer_metadata).transform()
+
+    concat_quantize_config = updated_metadata.get(
+        concat.name).get('quantize_config')
+    # Concat should quantize the output.
+    self.assertIsInstance(
+        concat_quantize_config,
+        default_8bit_quantize_configs.Default8BitOutputQuantizeConfig)
+    self.assertNotEmpty(concat_quantize_config.get_output_quantizers(None))
+
+    # The existing quantize_config should do nothing for outputs.
+    for layer in reshapes:
+      quantize_config = updated_metadata.get(layer.name).get('quantize_config')
+      self.assertIsInstance(
+          quantize_config,
+          default_8bit_quantize_registry.Default8BitQuantizeConfig)
+      self.assertEmpty(quantize_config.get_output_quantizers(layer))
+      self.assertFalse(quantize_config.quantize_output)
 
 
 if __name__ == '__main__':
