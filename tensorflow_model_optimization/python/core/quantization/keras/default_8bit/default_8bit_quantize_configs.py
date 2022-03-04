@@ -21,6 +21,9 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 class Default8BitOutputQuantizeConfig(quantize_config.QuantizeConfig):
   """QuantizeConfig which only quantizes the output from a layer."""
 
+  def __init__(self, quantize_output: bool = True) -> None:
+    self.quantize_output = quantize_output
+
   def get_weights_and_quantizers(self, layer):
     return []
 
@@ -34,11 +37,13 @@ class Default8BitOutputQuantizeConfig(quantize_config.QuantizeConfig):
     pass
 
   def get_output_quantizers(self, layer):
-    return [quantizers.MovingAverageQuantizer(
-        num_bits=8, per_axis=False, symmetric=False, narrow_range=False)]
+    if self.quantize_output:
+      return [quantizers.MovingAverageQuantizer(
+          num_bits=8, per_axis=False, symmetric=False, narrow_range=False)]
+    return []
 
   def get_config(self):
-    return {}
+    return {'quantize_output': self.quantize_output}
 
 
 class NoOpQuantizeConfig(quantize_config.QuantizeConfig):
