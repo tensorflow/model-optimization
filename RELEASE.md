@@ -33,6 +33,10 @@ Keras pruning API:
 # TensorFlow Model Optimization next release TBD
 
 
+# TensorFlow Model Optimization 0.7.2
+
+TFMOT 0.7.2 removes support for PeepholeLSTMCell that was removed in Keras.
+
 # TensorFlow Model Optimization 0.7.1
 
 TFMOT 0.7.1 fixes a bug in tensor_encoding in 9e4c106267a4a7f61e0d90b0848db15fd063b80e.
