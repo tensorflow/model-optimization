@@ -44,8 +44,15 @@ class AbstractCentroidsInitialisation:
   """
 
   def __init__(self, weights, number_of_clusters,
-               cluster_per_channel=False, data_format=None,
+               cluster_per_channel=False, data_format='channels_last',
                preserve_sparsity=False):
+
+    # Input checks
+    if (data_format != 'channels_first' and data_format != 'channels_last'):
+      raise ValueError(
+          'The given parameter data_format is not correct: {input}'.format(
+              input = data_format))
+
     self.weights = weights
     self.number_of_clusters = number_of_clusters
     self.cluster_per_channel = cluster_per_channel

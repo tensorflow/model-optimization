@@ -67,6 +67,13 @@ class ClusteringCentroidsTest(tf.test.TestCase, parameterized.TestCase):
     with self.assertRaises(ValueError):
       self.factory.get_centroid_initializer("DEADBEEF")
 
+  def testThrowsValueErrorForWrongDataFormat(self):
+    """Verifies that the centroid initializer factory method raises an exception
+    when invoked with an wrong type of data_format."""
+    f = self.factory.get_centroid_initializer("CentroidInitialization.KMEANS_PLUS_PLUS")
+    with self.assertRaises(ValueError):
+      f([1, 2], 2, True, "NCHW")
+
   @parameterized.parameters(
       (0, 0, 1, 1, 1, 0),
       (0, 0, 5, 5, 1, 0),
