@@ -108,6 +108,11 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     for x, y in zip(self.x_train2, self.y_train2):
       yield np.array([x]), np.array([y])
 
+  def _batch(self, dims, batch_size):
+    if dims[0] is None:
+      dims[0] = batch_size
+    return dims
+
   def end_to_end_testing(self, original_model, clusters_check=None):
     """Test End to End clustering."""
 
@@ -264,6 +269,44 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
           len(unique_weights), self.params["number_of_clusters"])
 
     self.end_to_end_testing(original_model, clusters_check)
+
+  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
+  def testEndToEndConv1DAndConv1DTranspose(self):
+    """Test End to End clustering - model with Conv1D and Conv1DTranspose."""
+    inp = layers.Input(batch_shape=(1, 16))
+    x = layers.Conv1D(10, 16, 4, padding = "valid", use_bias=False)(tf.expand_dims(inp, axis=-1))
+    y = layers.Conv1DTranspose(1, 16, 4, padding = "valid", use_bias=False)(x)
+    model = keras.models.Model(inputs=inp, outputs=[y])
+
+    def apply_clustering(layer):
+      if isinstance(layer, keras.layers.Conv1D) or \
+        isinstance(layer, keras.layers.Conv1DTranspose):
+        return cluster.cluster_weights(layer, **self.params)
+      return layer
+
+    model_to_cluster = keras.models.clone_model(
+      model,
+      clone_function=apply_clustering,
+    )
+
+    model_to_cluster.compile(
+        loss=keras.losses.categorical_crossentropy,
+        optimizer="adam",
+        metrics=["accuracy"]
+    )
+    model_to_cluster.fit(
+        np.random.randn(*self._batch(model.input.get_shape().as_list(), 16)),
+        np.random.randn(*self._batch(model.output.get_shape().as_list(), 16)),
+        steps_per_epoch=1)
+    clustered_model = cluster.strip_clustering(model_to_cluster)
+
+    def do_checks(layer, layer_name):
+      self.assertEqual(layer.name, layer_name)
+      unique_weights = np.unique(layer.weights[0].numpy().flatten())
+      self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
+
+    do_checks(clustered_model.layers[2], 'conv1d')
+    do_checks(clustered_model.layers[3], 'conv1d_transpose')
 
   def testStripClusteringSequentialModelWithRegulariser(self):
     """

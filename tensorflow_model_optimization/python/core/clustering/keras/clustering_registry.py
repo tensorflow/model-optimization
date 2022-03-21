@@ -62,6 +62,7 @@ class ClusteringRegistry(object):
   # allows the wrapper to access and modify the weights.
   _LAYERS_WEIGHTS_MAP = {
       tf.keras.layers.Conv1D: ['kernel'],
+      tf.keras.layers.Conv1DTranspose: ['kernel'],
       tf.keras.layers.Conv2D: ['kernel'],
       tf.keras.layers.Conv2DTranspose: ['kernel'],
       tf.keras.layers.Conv3D: ['kernel'],
