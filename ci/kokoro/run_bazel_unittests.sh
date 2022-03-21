@@ -33,8 +33,6 @@ set -o pipefail  # Treat the failure of a command in a pipeline as error.
 # set -x
 
 pip install --requirement "requirements.txt"
-# Not in list of requirements, but needed for EPR test:
-pip install tensorflow-compression
 
 # Run the tests.
 # Some tests requiring more RAM that the CI machine provides are disabled.
