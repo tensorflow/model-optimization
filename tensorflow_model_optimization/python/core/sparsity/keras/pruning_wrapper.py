@@ -209,14 +209,14 @@ class PruneLowMagnitude(Wrapper):
 
     # For each of the prunable weights, add mask and threshold variables
     for weight in self.prunable_weights:
-      mask = self.add_variable(
+      mask = self.add_weight(
           'mask',
           shape=weight.shape,
           initializer=tf.keras.initializers.get('ones'),
           dtype=weight.dtype,
           trainable=False,
           aggregation=tf.VariableAggregation.MEAN)
-      threshold = self.add_variable(
+      threshold = self.add_weight(
           'threshold',
           shape=[],
           initializer=tf.keras.initializers.get('zeros'),
@@ -230,7 +230,7 @@ class PruneLowMagnitude(Wrapper):
     self.pruning_vars = list(zip(weight_vars, mask_vars, threshold_vars))
 
     # Add a scalar tracking the number of updates to the wrapped layer.
-    self.pruning_step = self.add_variable(
+    self.pruning_step = self.add_weight(
         'pruning_step',
         shape=[],
         initializer=tf.keras.initializers.Constant(-1),
