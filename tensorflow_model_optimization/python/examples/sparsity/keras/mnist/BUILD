@@ -23,6 +23,7 @@ py_strict_binary(
         # numpy dep1,
         # six dep1,
         # tensorflow dep1,
+        # tensorflow:tensorflow_compat_v1_estimator dep1,
         "//tensorflow_model_optimization/python/core/sparsity/keras:estimator_utils",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",

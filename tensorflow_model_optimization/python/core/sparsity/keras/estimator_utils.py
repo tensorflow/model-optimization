@@ -15,12 +15,13 @@
 """Utility functions for making pruning wrapper work with estimators."""
 
 import tensorflow.compat.v1 as tf
+from tensorflow.compat.v1 import estimator as tf_estimator
 
 from tensorflow.python.framework import ops
 from tensorflow_model_optimization.python.core.sparsity.keras.pruning_wrapper import PruneLowMagnitude
 
 
-class PruningEstimatorSpec(tf.estimator.EstimatorSpec):
+class PruningEstimatorSpec(tf_estimator.EstimatorSpec):
   """Returns an EstimatorSpec modified to prune the model while training."""
 
   def __new__(cls, model, step=None, train_op=None, **kwargs):
