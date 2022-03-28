@@ -175,6 +175,7 @@ py_strict_library(
     deps = [
         ":pruning_wrapper",
         # tensorflow dep1,
+        # tensorflow:tensorflow_compat_v1_estimator dep1,
         # python/framework:for_generated_wrappers tensorflow dep2,
     ],
 )
