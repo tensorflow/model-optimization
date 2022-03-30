@@ -5,5 +5,4 @@ scipy
 enum34~=1.1
 mock
 dm-tree~=0.1.1
-tensorflow-compression~=2.8.1
 pylint-ignore==2021.1019
