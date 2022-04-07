@@ -380,16 +380,10 @@ def quantize_apply(
 
     unwrapped_model = keras.models.clone_model(
         model_to_unwrap, input_tensors=None, clone_function=_unwrap)
-
     return unwrapped_model, layer_quantize_map, requires_output_quantize
 
   def _quantize(layer):  # pylint: disable=missing-docstring
-    if ((layer.name not in layer_quantize_map and
-         layer.name not in requires_output_quantize) or
-        (isinstance(layer, quantize_wrapper.QuantizeWrapper))):
-      # It supports for custom QuantizeWrapper.
-      return layer
-
+    # Handle quantize layer before any layers.
     # layer is a QuantizeLayer, possibly rebuild
     # layer with modified config from parameters stored in the map.
     if isinstance(layer, quantize_layer.QuantizeLayer):
@@ -397,10 +391,21 @@ def quantize_apply(
       # we need to quantize.
       if len(layer._outbound_nodes) > 1:  # pylint: disable=protected-access
         return layer
+
       layer_config = layer.get_config()
+      if layer.name not in layer_quantize_map:  # Possibly added manually.
+        with quantize_scope():
+          return quantize_layer.QuantizeLayer.from_config(layer_config)
+
       for key, value in layer_quantize_map[layer.name].items():
         layer_config[key] = value
       return quantize_layer.QuantizeLayer.from_config(layer_config)
+
+    if ((layer.name not in layer_quantize_map and
+         layer.name not in requires_output_quantize) or
+        (isinstance(layer, quantize_wrapper.QuantizeWrapper))):
+      # It supports for custom QuantizeWrapper.
+      return layer
 
     if layer.name in requires_output_quantize:
       if not quantize_registry.supports(layer):
