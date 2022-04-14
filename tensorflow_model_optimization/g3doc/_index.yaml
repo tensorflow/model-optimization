@@ -84,6 +84,12 @@ landing_page:
       - label: "Read on TensorFlow blog"
         path: https://blog.tensorflow.org/2020/04/quantization-aware-training-with-tensorflow-model-optimization-toolkit.html
 
+    - heading: "TensorFlow Model Optimization Toolkit — Collaborative Optimization API"
+      path: https://blog.tensorflow.org/2021/10/Collaborative-Optimizations.html
+      buttons:
+      - label: "Read on TensorFlow blog"
+        path: https://blog.tensorflow.org/2021/10/Collaborative-Optimizations.html
+
     - heading: "TensorFlow Model Optimization Toolkit - Post Training Integer Quantization"
       path: https://blog.tensorflow.org/2019/06/tensorflow-integer-quantization.html
       buttons:
