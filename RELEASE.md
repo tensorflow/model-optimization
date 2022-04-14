@@ -32,6 +32,11 @@ Keras pruning API:
 
 # TensorFlow Model Optimization next release TBD
 
+Keras clustering API:
+
+* Added 'clustering per channel' technique for convolutional layers.
+* Extended CQAT(PCQAT) collaborative techniques to support 'clustering per channel'.
+* Added support for clustering of Conv1DTranspose layer.
 
 # TensorFlow Model Optimization 0.7.2
 
