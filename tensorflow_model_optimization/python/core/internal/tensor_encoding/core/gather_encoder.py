@@ -13,10 +13,6 @@
 # limitations under the License.
 """Base Encoder class for encoding in the "many-to-one" case."""
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import collections
 import tensorflow as tf
 
@@ -28,7 +24,7 @@ _SHAPES = 'shapes'
 _TENSORS = 'tensors'
 
 
-class GatherEncoder(object):
+class GatherEncoder:
   """A class for a gather-like operations with encoding.
 
   This class provides functionality for encoding in the "many-to-one" case,
@@ -198,17 +194,19 @@ class GatherEncoder(object):
       if key not in internal_py_values:
         internal_py_values[key] = value
 
-    @tf.function
     def initial_state_fn():
       """See the `initial_state` method of this class."""
-      state = encoder.initial_state()
+      # Convert to tensor values here. If the initial state is returning
+      # variables, this captures the value of the variable at the moment of
+      # this call.
+      state = tf.nest.map_structure(tf.convert_to_tensor,
+                                    encoder.initial_state())
       _add_to_structure('state', state)
       return tuple(tf.nest.flatten(state))
 
     state = initial_state_fn()
     flat_state_spec = tf.nest.map_structure(tf.TensorSpec.from_tensor, state)
 
-    @tf.function
     def get_params_fn(flat_state):
       """See the `get_params` method of this class."""
       py_utils.assert_compatible(flat_state_spec, flat_state)
@@ -249,8 +247,8 @@ class GatherEncoder(object):
               tuple(tf.nest.flatten(decode_before_sum_params_tf)),
               tuple(tf.nest.flatten(decode_after_sum_params_tf)))
 
-    encode_params, decode_before_sum_params, decode_after_sum_params = (
-        get_params_fn(state))
+    encode_params, decode_before_sum_params, decode_after_sum_params = tf.nest.map_structure(
+        tf.convert_to_tensor, (get_params_fn(state)))
     encode_params_spec = tf.nest.map_structure(tf.TensorSpec.from_tensor,
                                                encode_params)
     decode_before_sum_params_spec = tf.nest.map_structure(
@@ -258,7 +256,6 @@ class GatherEncoder(object):
     decode_after_sum_params_spec = tf.nest.map_structure(
         tf.TensorSpec.from_tensor, decode_after_sum_params)
 
-    @tf.function
     def encode_fn(x, params):
       """See the `encode` method of this class."""
       if not tensorspec.is_compatible_with(x):
@@ -294,7 +291,6 @@ class GatherEncoder(object):
     encoded_structure_spec = tf.nest.map_structure(tf.TensorSpec.from_tensor,
                                                    encoded_structure)
 
-    @tf.function
     def decode_before_sum_fn(encoded_structure, params):
       """See the `decode_before_sum` method of this class."""
       py_utils.assert_compatible(encoded_structure_spec, encoded_structure)
@@ -326,7 +322,6 @@ class GatherEncoder(object):
     part_decoded_structure_spec = tf.nest.map_structure(
         tf.TensorSpec.from_tensor, part_decoded_structure)
 
-    @tf.function
     def decode_after_sum_fn(part_decoded_structure, params, num_summands):
       """See the `decode_after_sum` method of this class."""
       py_utils.assert_compatible(part_decoded_structure_spec,
@@ -350,7 +345,6 @@ class GatherEncoder(object):
                                     decode_after_sum_params, 1)
     assert tensorspec.is_compatible_with(decoded_x)
 
-    @tf.function
     def update_state_fn(flat_state, state_update_tensors):
       """See the `update_state` method of this class."""
       py_utils.assert_compatible(flat_state_spec, flat_state)

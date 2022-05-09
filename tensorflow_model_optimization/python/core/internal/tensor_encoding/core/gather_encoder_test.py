@@ -12,10 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-from __future__ import absolute_import
-from __future__ import division
-from __future__ import print_function
-
 import collections
 
 from absl.testing import parameterized
@@ -136,8 +132,8 @@ class GatherEncoderTest(tf.test.TestCase, parameterized.TestCase):
                 test_utils.PlusOneEncodingStage(), P1_VALS).add_parent(
                     test_utils.SimpleLinearEncodingStage(2.0, 3.0),
                     SL_VALS).make(), tensorspec)
-    a_var = tf.compat.v1.get_variable('a_var', initializer=2.0)
-    b_var = tf.compat.v1.get_variable('b_var', initializer=3.0)
+    a_var = tf.Variable(2.0, name='a_var')
+    b_var = tf.Variable(3.0, name='b_var')
     encoder_tf = gather_encoder.GatherEncoder.from_encoder(
         core_encoder.EncoderComposer(
             test_utils.SimpleLinearEncodingStage(a_var, b_var)).add_parent(
