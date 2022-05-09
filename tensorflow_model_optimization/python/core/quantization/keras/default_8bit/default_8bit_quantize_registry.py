@@ -502,7 +502,7 @@ class Default8BitActivationQuantizeConfig(QuantizeConfig):
                        'Default8BitActivationQuantizeConfig.'.format(
                            layer.activation))
 
-    if layer.activation.__name__ in ['relu', 'swish', 'gelu']:
+    if layer.activation.__name__ in ['relu', 'swish', 'gelu', 'relu6']:
       # 'relu' should generally get fused into the previous layer.
       return [quantizers.MovingAverageQuantizer(
           num_bits=8, per_axis=False, symmetric=False, narrow_range=False)]
