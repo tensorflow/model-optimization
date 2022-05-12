@@ -154,7 +154,7 @@ class ClusterWeights(Wrapper):
     if hasattr(layer, 'data_format'):
       self.data_format = self.layer.data_format
     else:
-      self.data_format = None
+      self.data_format = 'channels_last'
 
     # Save the input shape specified in the build
     self.build_input_shape = None
@@ -215,7 +215,7 @@ class ClusterWeights(Wrapper):
       centroid_init = centroid_init_factory.get_centroid_initializer(
           self.cluster_centroids_init)(weight, self.number_of_clusters,
                                        self.cluster_per_channel,
-                                       self.num_channels,
+                                       self.data_format,
                                        self.preserve_sparsity)
 
       # Init the cluster centroids
