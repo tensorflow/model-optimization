@@ -127,7 +127,11 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self.keras_depthwiseconv2d_layer = layers.DepthwiseConv2D((3, 3), (1, 1))
     self.keras_dense_layer = layers.Dense(10)
     self.keras_conv1d_layer = layers.Conv1D(filters=3, kernel_size=(5))
+    self.keras_conv1d_tr_layer = layers.Conv1DTranspose(
+        filters=3, kernel_size=(5))
     self.keras_conv2d_layer = layers.Conv2D(filters=3, kernel_size=(4, 5))
+    self.keras_conv2d_tr_layer = layers.Conv2DTranspose(
+        filters=3, kernel_size=(4, 5))
     self.keras_conv3d_layer = layers.Conv3D(filters=2, kernel_size=(3, 4, 5))
     self.keras_custom_layer = KerasCustomLayer()
     self.clusterable_layer = MyClusterableLayer(10)
@@ -224,6 +228,19 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
                      wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
 
   @keras_parameterized.run_all_keras_modes
+  def testConv1DTransposeLayer(self):
+    """Verifies that we can cluster a Conv1DTranspose layer."""
+    input_shape = (4, 28, 1)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_conv1d_tr_layer,
+        input_shape=input_shape)
+
+    self._validate_clustered_layer(self.keras_conv1d_tr_layer,
+                                   wrapped_layer)
+    self.assertEqual([5, 3, 1],
+                     wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
+
+  @keras_parameterized.run_all_keras_modes
   def testConv2DLayer(self):
     """Verifies that we can cluster a Conv2D layer."""
     input_shape = (4, 28, 28, 1)
@@ -234,6 +251,19 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     self._validate_clustered_layer(self.keras_conv2d_layer,
                                    wrapped_layer)
     self.assertEqual([4, 5, 1, 3],
+                     wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
+
+  @keras_parameterized.run_all_keras_modes
+  def testConv2DTransposeLayer(self):
+    """Verifies that we can cluster a Conv2DTranspose layer."""
+    input_shape = (4, 28, 28, 1)
+    wrapped_layer = self._build_clustered_layer_model(
+        self.keras_conv2d_tr_layer,
+        input_shape=input_shape)
+
+    self._validate_clustered_layer(self.keras_conv2d_tr_layer,
+                                   wrapped_layer)
+    self.assertEqual([4, 5, 3, 1],
                      wrapped_layer.layer.get_clusterable_weights()[0][1].shape)
 
   @keras_parameterized.run_all_keras_modes

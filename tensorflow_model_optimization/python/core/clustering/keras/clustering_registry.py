@@ -62,6 +62,7 @@ class ClusteringRegistry(object):
   # allows the wrapper to access and modify the weights.
   _LAYERS_WEIGHTS_MAP = {
       layers.Conv1D: ['kernel'],
+      layers.Conv1DTranspose: ['kernel'],
       layers.Conv2D: ['kernel'],
       layers.Conv2DTranspose: ['kernel'],
       layers.Conv3D: ['kernel'],
