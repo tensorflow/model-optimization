@@ -72,19 +72,25 @@ landing_page:
 
   - classname: devsite-landing-row-cards
     items:
-    - heading: "TensorFlow Model Optimization Toolkit - Weight Clustering API"
+    - heading: "Collaborative Optimization API"
+      path: https://blog.tensorflow.org/2021/10/Collaborative-Optimizations.html
+      buttons:
+      - label: "Read on TensorFlow blog"
+        path: https://blog.tensorflow.org/2021/10/Collaborative-Optimizations.html
+
+    - heading: "Weight Clustering API"
       path: https://blog.tensorflow.org/2020/08/tensorflow-model-optimization-toolkit-weight-clustering-api.html
       buttons:
       - label: "Read on TensorFlow blog"
         path: https://blog.tensorflow.org/2020/08/tensorflow-model-optimization-toolkit-weight-clustering-api.html
 
-    - heading: "TensorFlow Model Optimization Toolkit - Quantization Aware Training"
+    - heading: "Quantization Aware Training - Performance with Accuracy"
       path: https://blog.tensorflow.org/2020/04/quantization-aware-training-with-tensorflow-model-optimization-toolkit.html
       buttons:
       - label: "Read on TensorFlow blog"
         path: https://blog.tensorflow.org/2020/04/quantization-aware-training-with-tensorflow-model-optimization-toolkit.html
 
-    - heading: "TensorFlow Model Optimization Toolkit - Post Training Integer Quantization"
+    - heading: "Post-Training Integer Quantization"
       path: https://blog.tensorflow.org/2019/06/tensorflow-integer-quantization.html
       buttons:
       - label: "Read on TensorFlow blog"
@@ -92,7 +98,7 @@ landing_page:
 
   - classname: devsite-landing-row-cards
     items:
-    - heading: "TensorFlow Model Optimization Toolkit - Pruning API"
+    - heading: "Pruning API"
       path: https://blog.tensorflow.org/2019/05/tf-model-optimization-toolkit-pruning-API.html
       buttons:
       - label: "Read on TensorFlow blog"
@@ -109,3 +115,7 @@ landing_page:
       buttons:
       - label: "View on GitHub"
         path: https://github.com/tensorflow/model-optimization
+
+    - heading: ""
+      options:
+      - hidden
