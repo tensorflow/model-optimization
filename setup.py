@@ -13,7 +13,6 @@
 # limitations under the License.
 # ==============================================================================
 """Install tensorflow_model_optimization."""
-import datetime
 import os
 import sys
 
@@ -50,11 +49,7 @@ else:
 if release:
   project_name = 'tensorflow-model-optimization'
 else:
-  # Nightly releases use date-based versioning of the form
-  # '0.0.1.dev20180305'
   project_name = 'tf-model-optimization-nightly'
-  datestring = datetime.datetime.now().strftime('%Y%m%d')
-  __version__ += datestring
 
 
 class BinaryDistribution(Distribution):
