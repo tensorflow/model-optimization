@@ -106,6 +106,18 @@ with PQAT and CQAT collaborative optimization paths.
 </table>
 </figure>
 
+### CQAT and PCQAT results for models clustered per channel
+Results below are obtained with the technique [clustering per channel](https://www.tensorflow.org/model_optimization/guide/clustering).
+They illustrate that if convolutional layers of the model are clustered per channel, then the model accuracy is higher. If your model has many convolutional layers, then we recommend to cluster per channel. The compression ratio remains the same, but the model accuracy will be higher. The model optimization pipeline is 'clustered -> cluster preserving QAT -> post training quantization, int8' in our experiments.
+<figure>
+<table  class="tableizer-table">
+<tr class="tableizer-firstrow"><th>Model</th><th>Clustered -> CQAT, int8 quantized</th><th>Clustered per channel -> CQAT, int8 quantized</th>
+ <tr><td>DS-CNN-L</td><td>95.949%</td><td> 96.44%</td></tr>
+ <tr><td>MobileNet-V2</td><td>71.538%</td><td>72.638%</td></tr>
+ <tr><td>MobileNet-V2 (pruned)</td><td>71.45%</td><td>71.901%</td></tr>
+</table>
+</figure>
+
 ## Examples
 
 For end-to-end examples of the collaborative optimization techniques described
