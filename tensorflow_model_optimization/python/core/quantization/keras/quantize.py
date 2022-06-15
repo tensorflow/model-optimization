@@ -441,12 +441,12 @@ def quantize_apply(
   # modifications don't affect the original model, or its weights.
   try:
     model_copy = _clone_model_with_weights(model)
-  except ValueError:
+  except ValueError as er:
     raise ValueError(
         'Unable to clone model. This generally happens if you used custom '
         'Keras layers or objects in your model. Please specify them via '
         '`quantize_scope` for your calls to `quantize_model` and '
-        '`quantize_apply`.')
+        '`quantize_apply`. [%s].' % er)
 
   # 2. Remove QuantizeAnnotate wrappers from the layers in the model. This
   # extracts the original model structure (easier to transform), and

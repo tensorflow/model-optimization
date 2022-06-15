@@ -362,7 +362,7 @@ class QuantizeApplyTest(tf.test.TestCase):
         '`quantize_scope` for your calls to `quantize_model` and '
         '`quantize_apply`.')
 
-    self.assertEqual(str(err.exception), expected_error)
+    self.assertIn(expected_error, str(err.exception))
 
   def testQuantize_RaisesErrorIfNoQuantizeConfig(self):
     annotated_model = keras.Sequential([
