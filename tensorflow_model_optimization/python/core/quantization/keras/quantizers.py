@@ -437,10 +437,52 @@ class FixedQuantizer(_QuantizeHelper, Quantizer):
     return not self.__eq__(other)
 
 
+class NoQuantizer(_QuantizeHelper, Quantizer):
+  """Dummy quantizer do nothing."""
+
+  def __init__(self):
+    """Construct an NoQuantizer.
+
+    This is an experimental API not subject to backward compatibility.
+    """
+    pass
+
+  def build(self, tensor_shape, name, layer):
+    pass
+
+  def __call__(self, inputs, training, weights, **kwargs):
+    """Quantize tensor.
+
+    Args:
+      inputs: Input tensor to be quantized.
+      training: Whether the graph is currently training.
+      weights: Dictionary of weights the quantizer can use to quantize the
+        tensor. This contains the weights created in the `build` function.
+      **kwargs: Additional variables which may be passed to the quantizer.
+
+    Returns:
+      Quantized tensor.
+    """
+    return inputs
+
+  def get_config(self):
+    return {}
+
+  def __eq__(self, other):
+    if not isinstance(other, NoQuantizer):
+      return False
+
+    return True
+
+  def __ne__(self, other):
+    return not self.__eq__(other)
+
+
 def _types_dict():
   return {
       'AllValuesQuantizer': AllValuesQuantizer,
       'LastValueQuantizer': LastValueQuantizer,
       'MovingAverageQuantizer': MovingAverageQuantizer,
       'FixedQuantizer': FixedQuantizer,
+      'NoQuantizer': NoQuantizer,
   }

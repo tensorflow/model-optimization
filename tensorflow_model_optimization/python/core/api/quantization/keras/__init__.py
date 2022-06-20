@@ -30,6 +30,7 @@ from tensorflow_model_optimization.python.core.quantization.keras.quantize impor
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_annotate_layer
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_annotate_model
 from tensorflow_model_optimization.python.core.quantization.keras.quantize import quantize_apply
+from tensorflow_model_optimization.python.core.quantization.keras.quantize import remove_input_range
 
 # quantize with custom quantization parameterization or implementation, or
 # handle custom Keras layers.

@@ -36,11 +36,14 @@ serialize_keras_object = tf.keras.utils.serialize_keras_object
     quantizers.LastValueQuantizer,
     quantizers.MovingAverageQuantizer,
     quantizers.AllValuesQuantizer,
-    quantizers.FixedQuantizer)
+    quantizers.FixedQuantizer,
+    quantizers.NoQuantizer)
 class QuantizersTest(tf.test.TestCase, parameterized.TestCase):
 
   def _get_quant_params(self, quantizer_type):
-    if quantizer_type == quantizers.FixedQuantizer:
+    if quantizer_type == quantizers.NoQuantizer:
+      return {}
+    elif quantizer_type == quantizers.FixedQuantizer:
       return {
           'num_bits': 8,
           'init_min': 0.0,

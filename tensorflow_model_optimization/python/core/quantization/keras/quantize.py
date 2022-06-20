@@ -644,3 +644,58 @@ def _is_functional_model(model):
   return (isinstance(model, keras.Model)
           and not isinstance(model, keras.Sequential)
           and model._is_graph_network)    # pylint: disable=protected-access
+
+
+def remove_input_range(model):
+  """Remove the input range.
+
+  Example:
+
+  ```python
+  model = keras.Sequential([
+      layers.Dense(10, activation='relu', input_shape=(100,)),
+      quantize_annotate_layer(layers.Dense(2, activation='sigmoid'))
+  ])
+  with quantize.quantize_scope():
+    model = quantize_annotate_model(model)
+    model = quantize_apply(model)
+    model = remove_input_range(model)
+  ```
+
+  In certain cases, a desired input range is not required if the model itself is
+  internally used.
+
+  Args:
+    model: A `tf.keras` Sequential or Functional model which has been quantized.
+
+  Returns:
+    Returns a new `tf.keras` model removed input range.
+  """
+  config = model.get_config()
+  no_input_quantizer = quantizers.NoQuantizer()
+  serialized_input_quantizer = tf.keras.utils.serialize_keras_object(
+      no_input_quantizer)
+
+  if _is_functional_model(model):
+    input_layer_list = _nested_to_flatten_node_data_list(config['input_layers'])
+    for layer_config in config['layers']:
+      input_name = _unwrap_first_input_name(layer_config['inbound_nodes'])
+      if input_name is None:
+        continue
+
+      for input_layer in input_layer_list:
+        if input_name == input_layer[0]:
+          layer_config['config']['quantizer'] = serialized_input_quantizer
+          break
+
+    model = keras.Model.from_config(config)
+  else:
+    if (len(config['layers']) < 1 or
+        config['layers'][1]['class_name'] != 'QuantizeLayer'):
+      raise ValueError('`model` should be already quantized.')
+    config['layers'][1]['config'][
+        'quantizer'] = serialized_input_quantizer
+
+    model = keras.Sequential.from_config(config)
+
+  return model
