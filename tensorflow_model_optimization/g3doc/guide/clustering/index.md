@@ -46,9 +46,9 @@ Users can apply clustering with the following APIs:
     <th>Size of compressed .tflite (MB)</th>
   </tr>
   <tr>
-    <td rowspan="3">MobileNetV1</td>
-    <td rowspan="3">70.976</td>
-    <td rowspan="3">14.97</td>
+    <td rowspan="4">MobileNetV1</td>
+    <td rowspan="4">70.976</td>
+    <td rowspan="4">14.97</td>
   </tr>
   <tr>
     <td>Selective (last 3 Conv2D layers)</td>
@@ -69,9 +69,9 @@ Users can apply clustering with the following APIs:
     <td>4.43</td>
   </tr>
   <tr>
-    <td rowspan="3">MobileNetV2</td>
-    <td rowspan="3">71.778</td>
-    <td rowspan="3">12.38</td>
+    <td rowspan="4">MobileNetV2</td>
+    <td rowspan="4">71.778</td>
+    <td rowspan="4">12.38</td>
   </tr>
   <tr>
     <td>Selective (last 3 Conv2D layers)</td>
