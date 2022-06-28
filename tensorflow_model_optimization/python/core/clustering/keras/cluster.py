@@ -14,6 +14,9 @@
 # ==============================================================================
 """Clustering API functions for Keras models."""
 
+import distutils.version
+import warnings
+
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
@@ -266,6 +269,10 @@ def _cluster_weights(to_cluster,
           **kwargs,
       )
 
+    # Skip clustering if Conv2D layer has insufficient number of weights for type of clustering
+    if isinstance(layer, tf.keras.layers.Conv2D) and not layer_has_enough_weights_to_cluster(layer, number_of_clusters, cluster_per_channel):
+      return layer
+
     return cluster_wrapper.ClusterWeights(layer, number_of_clusters,
                                           cluster_centroids_init,
                                           preserve_sparsity,
@@ -355,3 +362,36 @@ def strip_clustering(model):
   # Just copy the model with the right callback
   return tf.keras.models.clone_model(
       model, input_tensors=None, clone_function=_strip_clustering_wrapper)
+
+def layer_has_enough_weights_to_cluster(
+  layer, number_of_clusters, cluster_per_channel):
+  """Returns True if Conv2D layer has sufficient number of
+   weights to implement clustering, given an input number of clusters."""
+  if not isinstance(layer, tf.keras.layers.Conv2D):
+    raise ValueError(
+      f"Input layer should be Conv2D layer: {layer.name} given.")
+
+  if not layer.trainable_weights:
+    raise ValueError(f"Layer {layer.name} has no weights to cluster.")
+
+  number_of_layer_weights = tf.cast(
+    tf.size(getattr(layer,'kernel')), tf.int32)
+  channel_idx = 1 if layer.data_format == "channels_first" else -1
+  number_of_channels = tf.size(layer.trainable_weights[channel_idx])
+
+  if cluster_per_channel:
+    weights_to_cluster = number_of_layer_weights / number_of_channels
+  else:
+    weights_to_cluster = number_of_layer_weights
+
+  if weights_to_cluster <= number_of_clusters:
+    has_enough_weights = False
+  else:
+    has_enough_weights = True
+
+  if not has_enough_weights:
+    warnings.warn(
+      f"Layer {layer.name} does not have enough weights to implement"\
+      f"{'per-channel ' if cluster_per_channel else ''}clustering."\
+      f" \nNo clustering was implemented for this layer.\n")
+  return has_enough_weights

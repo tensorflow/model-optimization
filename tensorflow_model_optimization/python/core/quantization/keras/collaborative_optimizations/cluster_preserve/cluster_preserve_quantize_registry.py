@@ -15,8 +15,10 @@
 """Registry responsible for built-in keras classes."""
 
 import logging
+import warnings
 
 import tensorflow as tf
+from tensorflow.python.keras import backend as K
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
@@ -259,6 +261,7 @@ class ClusterPreserveQuantizeRegistry(object):
     if self._no_trainable_weights(layer) or self._disable_cluster_preserve(
         layer):
       return quantize_config
+
     # Example: Conv2D, Dense layers
     if quantize_config.__class__.__name__ in self._LAYERS_CONFIG_MAP[
         layer.__class__].quantize_config_attrs:
@@ -276,11 +279,6 @@ class ClusterPreserveQuantizeRegistry(object):
 class Default8bitClusterPreserveQuantizeRegistry(
     ClusterPreserveQuantizeRegistry):
   """Default 8 bit ClusterPreserveQuantizeRegistry."""
-
-  def __init__(self, preserve_sparsity):
-    super(Default8bitClusterPreserveQuantizeRegistry, self).__init__(
-        preserve_sparsity)
-    self.preserve_sparsity = preserve_sparsity
 
   def get_quantize_config(self, layer):
     """Returns the quantization config with weight_quantizer for a given layer.
@@ -364,6 +362,13 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
     # Prepare clustering variables for the Keras graph when clusters
     # exist, assuming we do not use number_of_clusters larger than 1024
     if num_centroids > 1024:
+      warnings.warn(f"No clustering performed on layer {layer.name}.\n" \
+      "Too many centroids to cluster.")
+      return result
+    # If not enough clusters, we do not preserve clustering
+    elif num_centroids <= 1:
+      warnings.warn(f"No clustering performed on layer {layer.name}.\n" \
+        "Perhaps too many clusters requested for this layer?")
       return result
     else:
       clst_centroids_tf = layer.add_weight(

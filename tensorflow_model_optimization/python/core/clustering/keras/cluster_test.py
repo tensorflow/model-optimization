@@ -145,10 +145,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     }
 
   def _build_clustered_layer_model(self, layer, input_shape=(10, 1)):
-    wrapped_layer = cluster.cluster_weights(layer, **self.params)
-    self.model.add(wrapped_layer)
-    self.model.build(input_shape=input_shape)
-
+    self.model.add(keras.Input(shape=input_shape))
+    self.model.add(layer)
+    self.model.build()
+    wrapped_layer = cluster.cluster_weights(self.model.layers[0], **self.params)
     return wrapped_layer
 
   def _validate_clustered_layer(self, original_layer, wrapped_layer):
@@ -194,7 +194,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testDepthwiseConv2DLayerNonClusterable(self):
     """Verifies that we don't cluster a DepthwiseConv2D layer, because clustering of this type of layer gives big unrecoverable accuracy loss."""
     wrapped_layer = self._build_clustered_layer_model(
-        self.keras_depthwiseconv2d_layer, input_shape=(1, 10, 10, 10))
+        self.keras_depthwiseconv2d_layer, input_shape=(10, 10, 10))
 
     self._validate_clustered_layer(self.keras_depthwiseconv2d_layer,
                                    wrapped_layer)
@@ -203,7 +203,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @keras_parameterized.run_all_keras_modes
   def testDenseLayer(self):
     """Verifies that we can cluster a Dense layer."""
-    input_shape = (4, 28, 1)
+    input_shape = (28, 1)
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_dense_layer,
         input_shape=input_shape
@@ -217,7 +217,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @keras_parameterized.run_all_keras_modes
   def testConv1DLayer(self):
     """Verifies that we can cluster a Conv1D layer."""
-    input_shape = (4, 28, 1)
+    input_shape = (28, 1)
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_conv1d_layer,
         input_shape=input_shape)
@@ -230,7 +230,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @keras_parameterized.run_all_keras_modes
   def testConv1DTransposeLayer(self):
     """Verifies that we can cluster a Conv1DTranspose layer."""
-    input_shape = (4, 28, 1)
+    input_shape = (28, 1)
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_conv1d_tr_layer,
         input_shape=input_shape)
@@ -243,7 +243,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @keras_parameterized.run_all_keras_modes
   def testConv2DLayer(self):
     """Verifies that we can cluster a Conv2D layer."""
-    input_shape = (4, 28, 28, 1)
+    input_shape = (28, 28, 1)
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_conv2d_layer,
         input_shape=input_shape)
@@ -256,7 +256,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @keras_parameterized.run_all_keras_modes
   def testConv2DTransposeLayer(self):
     """Verifies that we can cluster a Conv2DTranspose layer."""
-    input_shape = (4, 28, 28, 1)
+    input_shape = (28, 28, 1)
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_conv2d_tr_layer,
         input_shape=input_shape)
@@ -269,7 +269,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   @keras_parameterized.run_all_keras_modes
   def testConv3DLayer(self):
     """Verifies that we can cluster a Conv3D layer."""
-    input_shape = (4, 28, 28, 28, 1)
+    input_shape = (28, 28, 28, 1)
     wrapped_layer = self._build_clustered_layer_model(
         self.keras_conv3d_layer,
         input_shape=input_shape)
@@ -732,7 +732,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
   def testStrippedKernel(self):
     """Verifies that stripping the clustering wrappers from a functional model restores the layers kernel and the layers weight array to the new clustered weight value."""
     i1 = keras.Input(shape=(1, 1, 1))
-    x1 = layers.Conv2D(1, 1)(i1)
+    x1 = layers.Conv2D(12, 1)(i1)
     outputs = x1
     model = keras.Model(inputs=[i1], outputs=outputs)
 
