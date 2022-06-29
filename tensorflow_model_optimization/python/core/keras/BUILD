@@ -39,6 +39,7 @@ py_strict_library(
     name = "utils",
     srcs = ["utils.py"],
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         # python:control_flow_ops tensorflow dep2,
         # python:smart_cond tensorflow dep2,
