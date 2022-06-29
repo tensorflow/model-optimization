@@ -215,8 +215,8 @@ class HadamardEncodingStage(encoding_stage.EncodingStageInterface):
   def _validate_and_expand_encode_input(self, x):
     """Validates the input to encode and modifies it if necessary."""
     if x.shape.ndims not in [1, 2]:
-      raise ValueError(
-          'Number of dimensions must be 1 or 2. Shape of x: %s' % x.shape)
+      raise ValueError('Number of dimensions must be 1 or 2. Shape of x: %s' %
+                       x.shape)
     if x.shape.ndims == 1:
       # The input to the fast_walsh_hadamard_transform must have 2 dimensions.
       x = tf.expand_dims(x, 0)
@@ -262,7 +262,7 @@ class UniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface):
   # otherwise be numerically unstable for float32 values.
   _ALLOWED_BITS_ARG = list(range(1, 17))
 
-  def __init__(self, bits=8, min_max=None, stochastic=True):
+  def __init__(self, bits=8, min_max=None, stochastic=True, **kwargs):
     """Initializer for the UniformQuantizationEncodingStage.
 
     Args:
@@ -275,6 +275,7 @@ class UniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface):
       stochastic: A Python bool, whether to use stochastic or deterministic
         rounding. If `True`, the encoding is randomized and on expectation
         unbiased. If `False`, the encoding is deterministic.
+      **kwargs: Keyword arguments.
 
     Raises:
       ValueError: The inputs do not satisfy the above constraints.
@@ -300,6 +301,8 @@ class UniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface):
     if not isinstance(stochastic, bool):
       raise TypeError('The stochastic argument must be a bool.')
     self._stochastic = stochastic
+    self._force_random_op_after_clipping = kwargs.get(
+        'reduce_memory_use_by_forcing_random_op_after_clipping', False)
 
   @property
   def name(self):
@@ -350,8 +353,18 @@ class UniformQuantizationEncodingStage(encoding_stage.EncodingStageInterface):
     x = tf.compat.v1.div_no_nan(x - min_x, max_x - min_x) * max_value
     if self._stochastic:  # Randomized rounding.
       floored_x = tf.floor(x)
-      bernoulli = tf.random.uniform(tf.shape(x), dtype=x.dtype)
-      bernoulli = bernoulli < (x - floored_x)
+      residuals_x = x - floored_x
+      # Add graph dependencies to tensor `x` to ensure that the randomized
+      # rounding variables are not created before `x` is scaled above. This
+      # prevents TF from preallocating the tensor before it will actually be
+      # used, reducing memory pressure (especially important for mobile
+      # deployments).
+      if self._force_random_op_after_clipping:
+        with tf.control_dependencies([x]):
+          bernoulli = tf.random.uniform(tf.shape(x), dtype=x.dtype)
+      else:
+        bernoulli = tf.random.uniform(tf.shape(x), dtype=x.dtype)
+      bernoulli = bernoulli < residuals_x
       quantized_x = floored_x + tf.cast(bernoulli, x.dtype)
     else:  # Deterministic rounding.
       quantized_x = tf.round(x)

@@ -79,7 +79,7 @@ def identity():
       stages_impl.IdentityEncodingStage()).make()
 
 
-def uniform_quantization(bits):
+def uniform_quantization(bits, **kwargs):
   """Returns uniform quanitzation `Encoder`.
 
   The `Encoder` first reshapes the input to a rank-1 `Tensor`, then applies
@@ -94,16 +94,17 @@ def uniform_quantization(bits):
 
   Args:
     bits: Number of bits to quantize into.
+    **kwargs: Keyword arguments.
 
   Returns:
     The quantization `Encoder`.
   """
   return core_encoder.EncoderComposer(
       stages_impl.BitpackingEncodingStage(bits)).add_parent(
-          stages_impl.UniformQuantizationEncodingStage(bits), stages_impl
-          .UniformQuantizationEncodingStage.ENCODED_VALUES_KEY).add_parent(
-              stages_impl.FlattenEncodingStage(),
-              stages_impl.FlattenEncodingStage.ENCODED_VALUES_KEY).make()
+          stages_impl.UniformQuantizationEncodingStage(bits, **kwargs),
+          stages_impl.UniformQuantizationEncodingStage.ENCODED_VALUES_KEY
+      ).add_parent(stages_impl.FlattenEncodingStage(),
+                   stages_impl.FlattenEncodingStage.ENCODED_VALUES_KEY).make()
 
 
 def hadamard_quantization(bits):
