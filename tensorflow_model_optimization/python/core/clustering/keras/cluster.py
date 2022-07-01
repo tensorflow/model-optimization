@@ -14,7 +14,6 @@
 # ==============================================================================
 """Clustering API functions for Keras models."""
 
-import distutils.version
 import warnings
 
 import tensorflow as tf
