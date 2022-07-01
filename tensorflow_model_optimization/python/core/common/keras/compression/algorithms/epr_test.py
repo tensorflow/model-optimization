@@ -64,15 +64,6 @@ def evaluate_model(model):
   return results["accuracy"]
 
 
-def train_and_compress_model():
-  model = build_model()
-  algorithm = epr.EPR(entropy_penalty=10.)
-  training_model = algorithm.get_training_model(model)
-  train_model(training_model)
-  compressed_model = algorithm.compress_model(training_model)
-  return model, training_model, compressed_model
-
-
 def get_weight_size_in_bytes(weight):
   if weight.dtype == tf.string:
     return tf.reduce_sum(tf.strings.length(weight, unit="BYTE"))
@@ -86,17 +77,17 @@ def zip_directory(dir_name):
 
 class EPRTest(parameterized.TestCase, tf.test.TestCase):
 
-  def _save_models(self, model, compressed_model):
+  def get_algorithm(self, regularization_weight=1.):
+    return epr.EPR(regularization_weight=regularization_weight)
+
+  def save_model(self, model):
     model_dir = self.create_tempdir().full_path
-    original_model_dir = os.path.join(model_dir, "original")
-    compressed_model_dir = os.path.join(model_dir, "compressed")
-    model.save(original_model_dir)
-    compressed_model.save(compressed_model_dir)
-    return original_model_dir, compressed_model_dir
+    model.save(model_dir)
+    return model_dir
 
   @parameterized.parameters([5], [2, 3], [3, 4, 2], [2, 3, 4, 1])
   def test_project_training_weights_has_gradients(self, *shape):
-    algorithm = epr.EPR(entropy_penalty=1.)
+    algorithm = self.get_algorithm()
     init = tf.ones(shape, dtype=tf.float32)
     algorithm.init_training_weights(init)
     layer = tf.keras.layers.Layer()
@@ -105,29 +96,53 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
     with tf.GradientTape() as tape:
       weight = algorithm.project_training_weights(*layer.weights)
     gradients = tape.gradient(weight, layer.weights)
-    # Last weight is scale of prior. Should not have a gradient here.
     self.assertAllEqual(
         [g is not None for g in gradients],
-        [w.dtype.is_floating for w in layer.weights[:-1]] + [False])
+        [w.dtype.is_floating and "log_scale" not in w.name
+         for w in layer.weights])
 
   @parameterized.parameters([5], [2, 3], [3, 4, 2], [2, 3, 4, 1])
-  def test_compute_entropy_has_gradients(self, *shape):
-    algorithm = epr.EPR(entropy_penalty=1.)
+  def test_regularization_loss_has_gradients(self, *shape):
+    algorithm = self.get_algorithm()
     init = tf.ones(shape, dtype=tf.float32)
     algorithm.init_training_weights(init)
     layer = tf.keras.layers.Layer()
     for weight_repr in algorithm.weight_reprs:
       layer.add_weight(*weight_repr.args, **weight_repr.kwargs)
     with tf.GradientTape() as tape:
-      loss = algorithm.compute_entropy(*layer.weights)
+      loss = algorithm.regularization_loss(*layer.weights)
     gradients = tape.gradient(loss, layer.weights)
     self.assertAllEqual(
         [g is not None for g in gradients],
         [w.dtype.is_floating for w in layer.weights])
 
+  @parameterized.parameters(
+      ((2, 3), tf.keras.layers.Dense, 5),
+      # TODO(jballe): This fails with: 'You called `set_weights(weights)` on
+      # layer "private__training_wrapper" with a weight list of length 0, but
+      # the layer was expecting 5 weights.' Find fix.
+      # ((3, 10, 2), tf.keras.layers.Conv1D, 5, 3),
+      ((1, 8, 9, 2), tf.keras.layers.Conv2D, 5, 3),
+  )
+  def test_model_has_gradients(self, input_shape, layer_cls, *args):
+    algorithm = self.get_algorithm()
+    model = tf.keras.Sequential([layer_cls(*args, use_bias=True)])
+    inputs = tf.random.normal(input_shape)
+    model(inputs)
+    training_model = algorithm.get_training_model(model)
+    with tf.GradientTape(persistent=True) as tape:
+      tape.watch(inputs)
+      outputs = training_model(inputs)
+      loss = tf.reduce_sum(abs(outputs)) + tf.reduce_sum(training_model.losses)
+    self.assertIsNotNone(tape.gradient(loss, inputs))
+    gradients = tape.gradient(loss, training_model.trainable_weights)
+    self.assertAllEqual(
+        [g is not None for g in gradients],
+        [w.dtype.is_floating for w in training_model.trainable_weights])
+
   @parameterized.parameters([5], [2, 3], [3, 4, 2], [2, 3, 4, 1])
   def test_train_and_test_weights_are_equal(self, *shape):
-    algorithm = epr.EPR(entropy_penalty=1.)
+    algorithm = self.get_algorithm()
     init = tf.random.uniform(shape, dtype=tf.float32)
     algorithm.init_training_weights(init)
     layer = tf.keras.layers.Layer()
@@ -138,10 +153,32 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
     test_weight = algorithm.decompress_weights(*compressed_weights)
     self.assertAllEqual(train_weight, test_weight)
 
+  @parameterized.parameters([5], [2, 3], [3, 4, 2], [2, 3, 4, 1])
+  def test_initialized_value_is_close_enough(self, *shape):
+    algorithm = self.get_algorithm()
+    init = tf.random.uniform(shape, -10., 10., dtype=tf.float32)
+    algorithm.init_training_weights(init)
+    layer = tf.keras.layers.Layer()
+    for weight_repr in algorithm.weight_reprs:
+      layer.add_weight(*weight_repr.args, **weight_repr.kwargs)
+    weight = algorithm.project_training_weights(*layer.weights)
+    quantization_noise_std_dev = tf.exp(-4.) / tf.sqrt(12.)
+    self.assertLess(
+        tf.sqrt(tf.reduce_mean(tf.square(init - weight))),
+        3. * quantization_noise_std_dev)
+
   def test_reduces_model_size_at_reasonable_accuracy(self):
-    model, _, compressed_model = train_and_compress_model()
-    original_model_dir, compressed_model_dir = self._save_models(
-        model, compressed_model)
+    algorithm = self.get_algorithm()
+    model = build_model()
+    training_model = algorithm.get_training_model(model)
+    train_model(training_model)
+    compressed_model = algorithm.compress_model(training_model)
+    original_model_dir = self.save_model(model)
+    compressed_model_dir = self.save_model(compressed_model)
+
+    with self.subTest("training_model_has_reasonable_accuracy"):
+      accuracy = evaluate_model(training_model)
+      self.assertGreater(accuracy, .9)
 
     with self.subTest("compressed_weights_are_smaller"):
       original_size = sum(
@@ -162,10 +199,24 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
       # rather than of each layer?
       self.assertLess(compressed_size, 0.2 * original_size)
 
-    with self.subTest("has_reasonable_accuracy"):
+    with self.subTest("compressed_model_has_reasonable_accuracy"):
       compressed_model = tf.keras.models.load_model(compressed_model_dir)
       accuracy = evaluate_model(compressed_model)
       self.assertGreater(accuracy, .9)
+
+  def test_unregularized_training_model_has_reasonable_accuracy(self):
+    algorithm = self.get_algorithm(regularization_weight=0.)
+    model = build_model()
+    training_model = algorithm.get_training_model(model)
+    train_model(training_model)
+    accuracy = evaluate_model(training_model)
+    self.assertGreater(accuracy, .9)
+
+
+class FastEPRTest(EPRTest):
+
+  def get_algorithm(self, regularization_weight=1.):
+    return epr.FastEPR(regularization_weight=regularization_weight, alpha=1e-2)
 
 
 if __name__ == "__main__":

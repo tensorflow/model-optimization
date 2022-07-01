@@ -21,6 +21,7 @@ py_strict_test(
     timeout = "long",
     srcs = ["epr_test.py"],
     python_version = "PY3",
+    shard_count = 4,
     tags = ["requires-net:external"],
     deps = [
         ":epr",
