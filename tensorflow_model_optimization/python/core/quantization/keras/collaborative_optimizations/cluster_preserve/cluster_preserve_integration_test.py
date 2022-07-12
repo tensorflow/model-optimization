@@ -103,15 +103,20 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     return clustered_model
 
-  def _get_conv_model(self, nr_of_channels, data_format=None):
+  def _get_conv_model(self,
+                      nr_of_channels,
+                      data_format=None,
+                      kernel_size=(3, 3)):
     """Returns functional model with Conv2D layer."""
     inp = tf.keras.layers.Input(shape=(32, 32), batch_size=100)
     shape = (1, 32, 32) if data_format == 'channels_first' else (32, 32, 1)
     x = tf.keras.layers.Reshape(shape)(inp)
     x = tf.keras.layers.Conv2D(
-        filters=nr_of_channels, kernel_size=(3, 3),
+        filters=nr_of_channels,
+        kernel_size=kernel_size,
         data_format=data_format,
-        activation='relu')(x)
+        activation='relu')(
+            x)
     x = tf.keras.layers.MaxPool2D(2, 2)(x)
     out = tf.keras.layers.Flatten()(x)
     model = tf.keras.Model(inputs=inp, outputs=out)
@@ -130,11 +135,15 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     return model
 
-  def _get_conv_clustered_model(self, nr_of_channels, nr_of_clusters,
-                                data_format, preserve_sparsity):
+  def _get_conv_clustered_model(self,
+                                nr_of_channels,
+                                nr_of_clusters,
+                                data_format,
+                                preserve_sparsity,
+                                kernel_size=(3, 3)):
     """Returns clustered per channel model with Conv2D layer."""
     tf.random.set_seed(42)
-    model = self._get_conv_model(nr_of_channels, data_format)
+    model = self._get_conv_model(nr_of_channels, data_format, kernel_size)
 
     if preserve_sparsity:
       # Make the convolutional layer sparse by nullifying half of weights
@@ -471,6 +480,81 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
       nr_unique_weights_per_channel = len(
           np.unique(weight_to_check[:, :, :, i]))
       assert nr_unique_weights_per_channel == nr_of_clusters
+
+    cqat_sparsity = self._get_sparsity(stripped_cqat_model)
+    self.assertLessEqual(cqat_sparsity[0], control_sparsity[0])
+
+  def testEndToEndPCQATClusteredPerChannelConv2d1x1(self,
+                                                    data_format='channels_last'
+                                                    ):
+    """Runs PCQAT for model containing a 1x1 Conv2D.
+
+    (with insufficient number of weights per channel).
+
+    Args:
+      data_format: Format of input data.
+    """
+    nr_of_channels = 12
+    nr_of_clusters = 4
+
+    # Ensure a warning is given to the user that
+    # clustering is not implemented for this layer
+    with self.assertWarnsRegex(Warning,
+                               r'Layer conv2d does not have enough weights'):
+      clustered_model = self._get_conv_clustered_model(
+          nr_of_channels,
+          nr_of_clusters,
+          data_format,
+          preserve_sparsity=True,
+          kernel_size=(1, 1))
+      stripped_model = cluster.strip_clustering(clustered_model)
+
+    # Save the kernel weights
+    conv2d_layer = stripped_model.layers[2]
+    self.assertEqual(conv2d_layer.name, 'conv2d')
+
+    for weight in conv2d_layer.weights:
+      if 'kernel' in weight.name:
+        # Original number of unique weights
+        nr_original_weights = len(np.unique(weight.numpy()))
+        self.assertLess(nr_original_weights, nr_of_channels * nr_of_clusters)
+
+        # Demonstrate unmodified test layer has less weights
+        # than requested clusters
+        for channel in range(nr_of_channels):
+          channel_weights = (
+              weight[:, channel, :, :]
+              if data_format == 'channels_first' else weight[:, :, :, channel])
+          nr_channel_weights = len(channel_weights)
+          self.assertGreater(nr_channel_weights, 0)
+          self.assertLessEqual(nr_channel_weights, nr_of_clusters)
+
+    # get sparsity before PCQAT training
+    # we expect that only one value will be returned
+    control_sparsity = self._get_sparsity(stripped_model)
+    self.assertGreater(control_sparsity[0], 0.5)
+
+    quant_aware_annotate_model = (
+        quantize.quantize_annotate_model(stripped_model))
+
+    with self.assertWarnsRegex(
+        Warning, r'No clustering performed on layer quant_conv2d'):
+      quant_aware_model = quantize.quantize_apply(
+          quant_aware_annotate_model,
+          scheme=default_8bit_cluster_preserve_quantize_scheme
+          .Default8BitClusterPreserveQuantizeScheme(preserve_sparsity=True))
+
+    # Lets train for more epochs to have a chance to scatter clusters
+    model = self._compile_and_fit_conv_model(quant_aware_model, 3)
+
+    stripped_cqat_model = strip_clustering_cqat(model)
+
+    # Check the unique weights of a certain layer of
+    # clustered_model and cqat_model, ensuring unchanged
+    layer_nr = 3
+    num_of_unique_weights_cqat = self._get_number_of_unique_weights(
+        stripped_cqat_model, layer_nr, 'kernel')
+    self.assertEqual(num_of_unique_weights_cqat, nr_original_weights)
 
     cqat_sparsity = self._get_sparsity(stripped_cqat_model)
     self.assertLessEqual(cqat_sparsity[0], control_sparsity[0])

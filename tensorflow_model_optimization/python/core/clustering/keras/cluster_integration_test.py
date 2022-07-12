@@ -288,6 +288,74 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     do_checks(clustered_model.layers[2], "conv1d")
     do_checks(clustered_model.layers[3], "conv1d_transpose")
 
+  @parameterized.parameters(
+      (False, 16),  # number_of_clusters > Conv2D filters
+      (True,
+       8),  # number_of_clusters < Conv2D filters (but clustering by channel)
+      (True, 12),  # number_of_clusters = Conv2D filters
+      (False, 12),  # number_of_clusters = Conv2D filters
+  )
+  def testEndToEnd1x1Conv2d(self, cluster_per_channel, number_of_clusters):
+    """Test End to End clustering - model with 1x1 Conv2D.
+
+    Clustering should not be performed at all, since number of
+    weights in the layer is too low in all of these cases.
+
+    Args:
+      cluster_per_channel: An optional boolean value.
+      number_of_clusters: A number of cluster centroids to form clusters.
+    """
+    kernel_size = (1, 1)
+
+    inp = keras.layers.Input(shape=(28, 28), batch_size=16)
+    x = keras.layers.Reshape(target_shape=(28, 28, 1))(inp)
+    x = keras.layers.Conv2D(
+        filters=12, kernel_size=kernel_size, activation=tf.nn.relu)(
+            x)
+    model = keras.models.Model(inputs=inp, outputs=[x])
+
+    cluster_params = {
+        "number_of_clusters": number_of_clusters,
+        "cluster_per_channel": cluster_per_channel
+    }
+
+    # Get unique kernel weights on original model for comparison
+    original_unique_weights = model.layers[2].weights[0]
+
+    def apply_clustering(layer):
+      if isinstance(layer, keras.layers.Conv2D):
+        return cluster.cluster_weights(layer, **cluster_params)
+      return layer
+
+    # Ensure a warning is given to the user that clustering is not
+    # implemented for this layer
+    with self.assertWarnsRegex(Warning,
+                               r"Layer conv2d does not have enough weights"):
+      model_to_cluster = keras.models.clone_model(
+          model,
+          clone_function=apply_clustering,
+      )
+
+    model_to_cluster.compile(
+        loss=keras.losses.categorical_crossentropy,
+        optimizer="adam",
+        metrics=["accuracy"])
+    model_to_cluster.fit(
+        np.random.randn(*self._batch(model.input.get_shape().as_list(), 16)),
+        np.random.randn(*self._batch(model.output.get_shape().as_list(), 16)),
+        steps_per_epoch=1)
+    clustered_model = cluster.strip_clustering(model_to_cluster)
+
+    def do_checks(layer, layer_name, original_unique_weights):
+      self.assertEqual(layer.name, layer_name)
+      unique_weights = layer.weights[0]
+
+      # Ensure clustering was not performed on the 1x1 Conv
+      # (weights are identical to original unclustered layer)
+      self.assertAllEqual(unique_weights, original_unique_weights)
+
+    do_checks(clustered_model.layers[2], "conv2d", original_unique_weights)
+
   def testStripClusteringSequentialModelWithRegulariser(self):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     original_model = keras.Sequential([
