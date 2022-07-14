@@ -153,7 +153,8 @@ class HadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
        ((9, 7), (9, 8))])
   def test_with_multiple_input_shapes(self, input_dims, expected_output_dims):
     test_data = self.run_one_to_many_encode_decode(
-        self.default_encoding_stage(), lambda: tf.random.normal(input_dims))
+        self.default_encoding_stage(),
+        lambda: tf.random.stateless_normal(input_dims, (7, 77)))
     self.common_asserts_for_test_data(test_data)
     # Make sure output shape is as expected.
     self.assertEqual(
