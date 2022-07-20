@@ -32,6 +32,9 @@ Keras pruning API:
 
 # TensorFlow Model Optimization next release TBD
 
+# TensorFlow Model Optimization 0.7.3
+
+TFMOT 0.7.3 add remove_input_range method that removes input range after apply quantize.
 
 # TensorFlow Model Optimization 0.7.2
 
