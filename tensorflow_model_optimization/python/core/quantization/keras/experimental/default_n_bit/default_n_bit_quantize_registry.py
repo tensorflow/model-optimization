@@ -533,7 +533,7 @@ class DefaultNBitActivationQuantizeConfig(QuantizeConfig):
                        'DefaultNBitActivationQuantizeConfig.'.format(
                            layer.activation))
 
-    if layer.activation.__name__ in ['relu', 'swish']:
+    if layer.activation.__name__ in ['relu', 'relu6', 'swish']:
       # 'relu' should generally get fused into the previous layer.
       return [quantizers.MovingAverageQuantizer(
           num_bits=self._num_bits_activation, per_axis=False,
