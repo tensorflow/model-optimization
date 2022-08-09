@@ -58,6 +58,7 @@ py_strict_library(
         "default_n_bit_quantize_registry.py",
     ],
     srcs_version = "PY3",
+    visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
