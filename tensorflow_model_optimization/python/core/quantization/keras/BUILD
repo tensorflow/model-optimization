@@ -5,7 +5,7 @@ package(default_visibility = [
     "//third_party/tensorflow:__subpackages__",
 ])
 
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_strict_library(
     name = "keras",

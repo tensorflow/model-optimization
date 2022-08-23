@@ -2,7 +2,7 @@ load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_st
 
 package(default_visibility = ["//visibility:public"])
 
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_strict_library(
     name = "python",
