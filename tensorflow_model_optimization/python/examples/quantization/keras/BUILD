@@ -1,6 +1,6 @@
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
 
-licenses(["notice"])  # Apache 2.0
+licenses(["notice"])
 
 py_strict_binary(
     name = "mnist_cnn",
