@@ -144,6 +144,7 @@ py_strict_library(
 # TODO(b/185543626): Fix keras dependency
 py_test(
     name = "quantize_numerical_test",
+    size = "large",
     srcs = ["quantize_numerical_test.py"],
     python_version = "PY3",
     deps = [
