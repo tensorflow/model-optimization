@@ -16,6 +16,7 @@
 
 import os
 import tempfile
+import unittest
 
 import tensorflow as tf
 
@@ -87,6 +88,8 @@ def _get_directory_size_in_bytes(directory):
 
 class FunctionalTest(tf.test.TestCase):
 
+  # TODO(b/246652360): Re-Enable the test once it is fixed.
+  @unittest.skip('Test needs to be fixed')
   def testWeightClustering_TrainingE2E(self):
     number_of_clusters = 8
     model = _build_model()
