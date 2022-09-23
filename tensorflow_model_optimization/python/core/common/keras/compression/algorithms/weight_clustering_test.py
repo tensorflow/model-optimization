@@ -16,7 +16,7 @@
 
 import os
 import tempfile
-import unittest
+import zipfile
 
 import tensorflow as tf
 
@@ -63,33 +63,27 @@ def _train_model(model):
 
 def _save_as_saved_model(model):
   saved_model_dir = tempfile.mkdtemp()
-  model.save(saved_model_dir)
+  model.save(saved_model_dir, include_optimizer=False)
   return saved_model_dir
 
 
-def _get_directory_size_in_bytes(directory):
-  total = 0
-  try:
-    for entry in os.scandir(directory):
-      if entry.is_file():
-        # if it's a file, use stat() function
-        total += entry.stat().st_size
-      elif entry.is_dir():
-        # if it's a directory, recursively call this function
-        total += _get_directory_size_in_bytes(entry.path)
-  except NotADirectoryError:
-    # if `directory` isn't a directory, get the file size then
-    return os.path.getsize(directory)
-  except PermissionError:
-    # if for whatever reason we can't open the folder, return 0
-    return 0
-  return total
+def _get_zipped_directory_size(directory):
+  """Measures the compressed size of a directory."""
+  with tempfile.TemporaryFile(suffix='.zip') as zipped_file:
+    for root, _, files in os.walk(directory):
+      for file in files:
+        with zipfile.ZipFile(
+            zipped_file, 'w', compression=zipfile.ZIP_DEFLATED) as f:
+          f.write(os.path.join(root, file),
+                  os.path.relpath(os.path.join(root, file),
+                                  os.path.join(directory, '..')))
+
+    zipped_file.seek(0, 2)
+    return os.fstat(zipped_file.fileno()).st_size
 
 
 class FunctionalTest(tf.test.TestCase):
 
-  # TODO(b/246652360): Re-Enable the test once it is fixed.
-  @unittest.skip('Test needs to be fixed')
   def testWeightClustering_TrainingE2E(self):
     number_of_clusters = 8
     model = _build_model()
@@ -118,12 +112,11 @@ class FunctionalTest(tf.test.TestCase):
     # Accuracy test.
     self.assertGreater(results[1], 0.85)  # 0.8708
 
-    original_size = _get_directory_size_in_bytes(original_saved_model_dir)
-    compressed_size = _get_directory_size_in_bytes(saved_model_dir)
+    original_size = _get_zipped_directory_size(original_saved_model_dir)
+    compressed_size = _get_zipped_directory_size(saved_model_dir)
 
     # Compressed model size test.
-    # TODO(tfmot): gzip compression can reduce file size much better.
-    self.assertLess(compressed_size, original_size / 1.3)
+    self.assertLess(compressed_size, original_size / 4.0)
 
   def testWeightClustering_SingleLayer(self):
     number_of_clusters = 8
