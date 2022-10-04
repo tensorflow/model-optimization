@@ -44,7 +44,7 @@ class PruneRegistry(object):
       layers.Cropping1D: [],
       layers.Cropping2D: [],
       layers.Cropping3D: [],
-      layers.DepthwiseConv2D: [],
+      layers.DepthwiseConv2D: ['depthwise_kernel'],
       layers.SeparableConv1D: ['pointwise_kernel'],
       layers.SeparableConv2D: ['pointwise_kernel'],
       layers.UpSampling1D: [],
@@ -100,6 +100,7 @@ class PruneRegistry(object):
       ],
       layers.experimental.SyncBatchNormalization: [],
       layers.experimental.preprocessing.Rescaling.__class__: [],
+      layers.experimental.SyncBatchNormalization: [],
       TensorFlowOpLayer: [],
       layers_compat_v1.BatchNormalization: [],
   }
