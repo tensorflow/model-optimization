@@ -324,9 +324,7 @@ class PruneLowMagnitude(Wrapper):
         'PolynomialDecay': pruning_sched.PolynomialDecay
     }
     config['pruning_schedule'] = deserialize_keras_object(
-        pruning_schedule,
-        module_objects=globals(),
-        custom_objects=custom_objects)
+        pruning_schedule, custom_objects=custom_objects)
 
     layer = keras.layers.deserialize(config.pop('layer'))
     config['layer'] = layer

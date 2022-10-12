@@ -108,9 +108,7 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
     config = config.copy()
 
     quantize_config = deserialize_keras_object(
-        config.pop('quantize_config'),
-        module_objects=globals(),
-        custom_objects=None)
+        config.pop('quantize_config'), custom_objects=None)
 
     layer = tf.keras.layers.deserialize(config.pop('layer'))
 

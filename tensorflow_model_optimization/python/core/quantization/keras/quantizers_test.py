@@ -97,9 +97,7 @@ class QuantizersTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(expected_config, serialized_quantizer)
 
     quantizer_from_config = deserialize_keras_object(
-        serialized_quantizer,
-        module_objects=globals(),
-        custom_objects=quantizers._types_dict())
+        serialized_quantizer, custom_objects=quantizers._types_dict())
 
     self.assertEqual(quantizer, quantizer_from_config)
 
