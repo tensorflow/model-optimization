@@ -18,7 +18,6 @@ from absl.testing import parameterized
 
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
@@ -29,7 +28,6 @@ QuantizeConfig = quantize_config.QuantizeConfig
 layers = tf.keras.layers
 
 
-@keras_parameterized.run_all_keras_modes
 class ClusterPreserveQuantizeRegistryTest(tf.test.TestCase,
                                           parameterized.TestCase):
 

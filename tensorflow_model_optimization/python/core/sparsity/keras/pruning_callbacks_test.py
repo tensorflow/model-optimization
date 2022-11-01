@@ -22,7 +22,6 @@ import numpy as np
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
@@ -55,7 +54,6 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
       pruned_model.compile(loss=loss, optimizer=optimizer, metrics=['accuracy'])
       return pruned_model, x_train, y_train
 
-  @keras_parameterized.run_all_keras_modes
   def testUpdatePruningStepsAndLogsSummaries(self):
     log_dir = tempfile.mkdtemp()
     pruned_model, x_train, y_train = self._pruned_model_setup()
@@ -77,7 +75,6 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
     self._assertLogsExist(log_dir)
 
   # This style of custom training loop isn't available in graph mode.
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testUpdatePruningStepsAndLogsSummaries_CustomTrainingLoop(self):
     log_dir = tempfile.mkdtemp()
     pruned_model, loss, optimizer, x_train, y_train = self._pruned_model_setup(
@@ -116,7 +113,6 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
         3, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
     self._assertLogsExist(log_dir)
 
-  @keras_parameterized.run_all_keras_modes
   def testUpdatePruningStepsAndLogsSummaries_RunInference(self):
     pruned_model, _, _, x_train, _ = self._pruned_model_setup(
         custom_training_loop=True)
@@ -128,7 +124,6 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
     self.assertEqual(
         -1, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
 
-  @keras_parameterized.run_all_keras_modes
   def testPruneTrainingRaisesError_PruningStepCallbackMissing(self):
     pruned_model, x_train, y_train = self._pruned_model_setup()
 
@@ -137,7 +132,6 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
       pruned_model.fit(x_train, y_train)
 
   # This style of custom training loop isn't available in graph mode.
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testPruneTrainingLoopRaisesError_PruningStepCallbackMissing_CustomTrainingLoop(
       self):
     pruned_model, _, _, x_train, _ = self._pruned_model_setup(
@@ -149,7 +143,6 @@ class PruneCallbacksTest(tf.test.TestCase, parameterized.TestCase):
       with tf.GradientTape():
         pruned_model(inp, training=True)
 
-  @keras_parameterized.run_all_keras_modes
   def testPruningSummariesRaisesError_LogDirNotNonEmptyString(self):
     with self.assertRaises(ValueError):
       pruning_callbacks.PruningSummaries(log_dir='')

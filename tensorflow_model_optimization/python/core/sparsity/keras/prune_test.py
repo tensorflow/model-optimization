@@ -22,7 +22,6 @@ import numpy as np
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
@@ -202,7 +201,6 @@ class PruneTest(test.TestCase, parameterized.TestCase):
     for layer, pruned_layer in zip(model_layers, pruned_layers):
       self._validate_pruned_layer(layer, pruned_layer)
 
-  @keras_parameterized.run_all_keras_modes
   def testPruneInferenceWorks_PruningStepCallbackNotRequired(self):
     model = prune.prune_low_magnitude(
         keras.Sequential([

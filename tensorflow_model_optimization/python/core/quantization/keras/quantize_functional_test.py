@@ -25,7 +25,6 @@ import numpy as np
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.keras.testing import test_utils_mnist
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
@@ -34,7 +33,6 @@ from tensorflow_model_optimization.python.core.quantization.keras import utils a
 layers = tf.keras.layers
 
 
-@keras_parameterized.run_all_keras_modes(always_skip_v1=True)
 class QuantizeFunctionalTest(tf.test.TestCase, parameterized.TestCase):
 
   # TODO(pulkitb): Parameterize test and include functional mnist, and
