@@ -105,7 +105,7 @@ py_strict_library(
         ":pruning_schedule",
         ":pruning_utils",
         # numpy dep1,
-        # tensorflow dep1,
+        # tensorflow:tensorflow_no_contrib dep1,
         # python/keras/utils:generic_utils tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras:metrics",

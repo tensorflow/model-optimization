@@ -22,12 +22,10 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils
 
 
-@keras_parameterized.run_all_keras_modes(always_skip_v1=True)
 class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
 
   def _batch(self, dims, batch_size):

@@ -17,7 +17,6 @@ from absl.testing import parameterized
 
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
 from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
     prune_preserve_quantize_registry,)
@@ -28,7 +27,6 @@ QuantizeConfig = quantize_config.QuantizeConfig
 layers = tf.keras.layers
 
 
-@keras_parameterized.run_all_keras_modes
 class PrunePreserveQuantizeRegistryTest(tf.test.TestCase,
                                         parameterized.TestCase):
 

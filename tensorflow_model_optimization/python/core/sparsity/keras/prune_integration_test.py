@@ -21,7 +21,6 @@ import numpy as np
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
@@ -37,7 +36,6 @@ list_to_named_parameters = test_utils.list_to_named_parameters
 ModelCompare = keras_test_utils.ModelCompare
 
 
-@keras_parameterized.run_all_keras_modes
 class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
                            ModelCompare):
 
@@ -691,7 +689,6 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     self._check_strip_pruning_matches_original(model, 0.6)
 
 
-@keras_parameterized.run_all_keras_modes(always_skip_v1=True)
 class PruneIntegrationCustomTrainingLoopTest(tf.test.TestCase,
                                              parameterized.TestCase):
 

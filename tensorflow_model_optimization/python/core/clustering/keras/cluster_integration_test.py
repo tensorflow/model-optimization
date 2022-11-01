@@ -21,7 +21,6 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
@@ -153,7 +152,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         )["cluster_centroids_init"]
         self.assertEqual(init_method, CentroidInitialization.KMEANS_PLUS_PLUS)
 
-  @keras_parameterized.run_all_keras_modes
   def testValuesRemainClusteredAfterTraining(self):
     """Verifies that training a clustered model does not destroy the clusters."""
     original_model = keras.Sequential([
@@ -175,7 +173,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     unique_weights = set(weights_as_list)
     self.assertLessEqual(len(unique_weights), self.params["number_of_clusters"])
 
-  @keras_parameterized.run_all_keras_modes
   def testSparsityIsPreservedDuringTraining(self):
     """Set a specific random seed.
 
@@ -230,7 +227,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
         nr_of_unique_weights_after,
         clustering_params["number_of_clusters"])
 
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndSequential(self):
     """Test End to End clustering - sequential model."""
     original_model = keras.Sequential([
@@ -247,7 +243,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndConv1DAndConv1DTranspose(self):
     """Test End to End clustering - model with Conv1D and Conv1DTranspose."""
     inp = layers.Input(batch_shape=(1, 16))
@@ -372,7 +367,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndFunctional(self):
     """Test End to End clustering - functional model."""
     inputs = keras.layers.Input(shape=(5,))
@@ -389,7 +383,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndDeepLayer(self):
     """Test End to End clustering for the model with deep layer."""
     internal_model = tf.keras.Sequential(
@@ -416,7 +409,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
-  @keras_parameterized.run_all_keras_modes(always_skip_v1=True)
   def testEndToEndDeepLayer2(self):
     """Test End to End clustering for the model with 2 deep layers."""
     internal_model = tf.keras.Sequential(
@@ -454,7 +446,6 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
     self.end_to_end_testing(original_model, clusters_check)
 
-  @keras_parameterized.run_all_keras_modes
   def testWeightsAreLearningDuringClustering(self):
     """Verifies that weights are updated during training a clustered model.
 
@@ -541,7 +532,6 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     nr_unique_weights = len(np.unique(weight.numpy().flatten()))
     assert nr_unique_weights == expected_unique_weights
 
-  @keras_parameterized.run_all_keras_modes
   def testClusterSimpleRNN(self):
     model = keras.models.Sequential()
     model.add(keras.layers.Embedding(self.max_features, 16,
@@ -564,7 +554,6 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     self._train(stripped_model)
 
-  @keras_parameterized.run_all_keras_modes
   def testClusterLSTM(self):
     model = keras.models.Sequential()
     model.add(keras.layers.Embedding(self.max_features, 16,
@@ -587,7 +576,6 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     self._train(stripped_model)
 
-  @keras_parameterized.run_all_keras_modes
   def testClusterGRU(self):
     model = keras.models.Sequential()
     model.add(keras.layers.Embedding(self.max_features, 16,
@@ -610,7 +598,6 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
     self._train(stripped_model)
 
-  @keras_parameterized.run_all_keras_modes
   def testClusterBidirectional(self):
     model = keras.models.Sequential()
     model.add(
@@ -634,7 +621,6 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         expected_unique_weights=self.params_clustering["number_of_clusters"],
     )
 
-  @keras_parameterized.run_all_keras_modes
   def testClusterStackedRNNCells(self):
     model = keras.models.Sequential()
     model.add(
@@ -685,7 +671,6 @@ class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     model = tf.keras.Model(inputs=inp, outputs=out)
     return model
 
-  @keras_parameterized.run_all_keras_modes
   def testMHA(self):
     model = self._get_model()
 
@@ -736,7 +721,6 @@ class ClusterPerChannelIntegrationTest(tf.test.TestCase,
     model = tf.keras.Model(inputs=inp, outputs=out)
     return model
 
-  @keras_parameterized.run_all_keras_modes
   def testPerChannel(self):
     model = self._get_model()
 

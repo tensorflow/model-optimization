@@ -17,7 +17,6 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
@@ -30,7 +29,6 @@ from tensorflow_model_optimization.python.core.quantization.keras.collaborative_
 layers = tf.keras.layers
 
 
-@keras_parameterized.run_all_keras_modes
 class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):

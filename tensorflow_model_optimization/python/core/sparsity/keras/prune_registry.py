@@ -14,11 +14,12 @@
 # ==============================================================================
 """Registry responsible for built-in keras classes."""
 
+import keras
 import tensorflow as tf
 
-# TODO(b/139939526): move to public API.
-from tensorflow.python.keras.engine.base_layer import TensorFlowOpLayer
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
+
+# TODO(b/139939526): move to public API.
 
 layers = tf.keras.layers
 layers_compat_v1 = tf.compat.v1.keras.layers
@@ -100,7 +101,7 @@ class PruneRegistry(object):
       ],
       layers.experimental.SyncBatchNormalization: [],
       layers.experimental.preprocessing.Rescaling.__class__: [],
-      TensorFlowOpLayer: [],
+      keras.layers.Lambda: [],
       layers_compat_v1.BatchNormalization: [],
   }
 

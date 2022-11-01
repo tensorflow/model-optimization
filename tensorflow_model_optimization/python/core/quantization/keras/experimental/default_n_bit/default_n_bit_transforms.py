@@ -17,10 +17,10 @@
 import collections
 import inspect
 
+from keras import backend
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras import backend
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
