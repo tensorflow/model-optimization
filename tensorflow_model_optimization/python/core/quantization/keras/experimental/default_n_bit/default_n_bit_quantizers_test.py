@@ -22,7 +22,6 @@ from absl.testing import parameterized
 
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantizers
 
 DefaultNBitConvWeightsQuantizer = default_n_bit_quantizers.DefaultNBitConvWeightsQuantizer
@@ -30,7 +29,6 @@ DefaultNBitConvWeightsQuantizer = default_n_bit_quantizers.DefaultNBitConvWeight
 keras = tf.keras
 
 
-@keras_parameterized.run_all_keras_modes
 class DefaultNBitConvWeightsQuantizerTest(tf.test.TestCase,
                                           parameterized.TestCase):
 

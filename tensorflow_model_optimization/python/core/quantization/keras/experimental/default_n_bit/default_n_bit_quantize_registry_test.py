@@ -24,7 +24,6 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_registry as n_bit_registry
 
@@ -73,7 +72,6 @@ class _TestHelper(object):
     self.assertAllEqual(a.numpy(), b.numpy())
 
 
-@keras_parameterized.run_all_keras_modes
 class QuantizeRegistryTest(
     tf.test.TestCase, parameterized.TestCase, _TestHelper):
 
