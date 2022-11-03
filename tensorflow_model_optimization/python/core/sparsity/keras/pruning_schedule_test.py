@@ -18,7 +18,6 @@ from absl.testing import parameterized
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
@@ -155,7 +154,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
 
   # Tests to ensure begin_step, end_step, frequency are used correctly.
 
-  @keras_parameterized.run_all_keras_modes
   @parameterized.named_parameters(
       {
           'testcase_name': 'ConstantSparsity',
@@ -189,7 +187,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
     self.assertFalse(self.evaluate(sparsity(step_201))[0])
     self.assertFalse(self.evaluate(sparsity(step_210))[0])
 
-  @keras_parameterized.run_all_keras_modes
   @parameterized.named_parameters(
       {
           'testcase_name': 'ConstantSparsity',
@@ -216,7 +213,6 @@ class PruningScheduleTest(tf.test.TestCase, parameterized.TestCase):
 
 class ConstantSparsityTest(tf.test.TestCase, parameterized.TestCase):
 
-  @keras_parameterized.run_all_keras_modes
   def testPrunesForeverIfEndStepIsNegativeOne(self):
     sparsity = pruning_schedule.ConstantSparsity(0.5, 0, -1, 10)
 
@@ -230,7 +226,6 @@ class ConstantSparsityTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(0.5, self.evaluate(sparsity(step_10000))[1])
     self.assertAllClose(0.5, self.evaluate(sparsity(step_100000000))[1])
 
-  @keras_parameterized.run_all_keras_modes
   def testPrunesWithConstantSparsity(self):
     sparsity = pruning_schedule.ConstantSparsity(0.5, 100, 200, 10)
 
@@ -263,7 +258,6 @@ class PolynomialDecayTest(tf.test.TestCase, parameterized.TestCase):
     with self.assertRaises(ValueError):
       pruning_schedule.PolynomialDecay(0.4, 0.8, 10, -1)
 
-  @keras_parameterized.run_all_keras_modes
   def testPolynomialDecay_PrunesCorrectly(self):
     sparsity = pruning_schedule.PolynomialDecay(0.2, 0.8, 100, 110, 3, 2)
 

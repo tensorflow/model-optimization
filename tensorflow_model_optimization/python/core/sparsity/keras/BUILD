@@ -51,8 +51,8 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
+        # keras/engine:base_layer dep1,
         # tensorflow dep1,
-        # python/keras:base_layer tensorflow dep2,
     ],
 )
 
@@ -104,9 +104,9 @@ py_strict_library(
         ":pruning_impl",
         ":pruning_schedule",
         ":pruning_utils",
+        # keras/utils:generic_utils dep1,
         # numpy dep1,
-        # tensorflow dep1,
-        # python/keras/utils:generic_utils tensorflow dep2,
+        # tensorflow:tensorflow_no_contrib dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/keras:utils",

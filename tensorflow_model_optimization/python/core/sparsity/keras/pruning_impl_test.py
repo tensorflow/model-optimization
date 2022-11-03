@@ -25,11 +25,9 @@ import numpy as np
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
-from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 
 K = tf.keras.backend
 dtypes = tf.dtypes
@@ -43,7 +41,6 @@ def assign_add(ref, value):
     return ref.assign_add(value)
 
 
-@keras_parameterized.run_all_keras_modes
 class PruningTest(test.TestCase, parameterized.TestCase):
 
   def setUp(self):

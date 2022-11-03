@@ -20,12 +20,14 @@ from __future__ import division
 from __future__ import print_function
 
 import inspect
+
 # import g3
+
+from keras.utils import generic_utils
 import numpy as np
 import tensorflow as tf
 
 # TODO(b/139939526): update to use public API.
-from tensorflow.python.keras.utils import generic_utils
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.keras import utils
