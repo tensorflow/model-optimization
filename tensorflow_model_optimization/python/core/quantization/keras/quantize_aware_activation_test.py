@@ -23,7 +23,6 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
@@ -37,7 +36,8 @@ QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 MovingAverageQuantizer = quantizers.MovingAverageQuantizer
 
 
-@keras_parameterized.run_all_keras_modes
+@tf.__internal__.distribute.combinations.generate(
+    tf.__internal__.test.combinations.combine(mode=['graph', 'eager']))
 class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
 
   def setUp(self):

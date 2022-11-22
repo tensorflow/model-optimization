@@ -18,19 +18,16 @@ from __future__ import absolute_import
 from __future__ import division
 from __future__ import print_function
 
-from absl.testing import parameterized
 import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 
 _SYMMETRIC_RANGE_RATIO = 0.9921875  # 127 / 128
 
 
-@keras_parameterized.run_all_keras_modes
-class QuantOpsTest(tf.test.TestCase, parameterized.TestCase):
+class QuantOpsTest(tf.test.TestCase):
 
   def testAllValuesQuantiize_TrainingAssign(self):
     min_value, max_value = self._GetMinMaxValues(

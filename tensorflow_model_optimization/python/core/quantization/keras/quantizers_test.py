@@ -23,7 +23,6 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
-from tensorflow.python.keras import keras_parameterized
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
@@ -31,7 +30,6 @@ deserialize_keras_object = tf.keras.utils.deserialize_keras_object
 serialize_keras_object = tf.keras.utils.serialize_keras_object
 
 
-@keras_parameterized.run_all_keras_modes
 @parameterized.parameters(
     quantizers.LastValueQuantizer,
     quantizers.MovingAverageQuantizer,
