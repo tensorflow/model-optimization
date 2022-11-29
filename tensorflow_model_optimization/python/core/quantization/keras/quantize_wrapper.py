@@ -41,16 +41,21 @@ serialize_keras_object = tf.keras.utils.serialize_keras_object
 class QuantizeWrapper(tf.keras.layers.Wrapper):
   """Quantizes the weights and activations of the keras layer it wraps."""
 
-  def __init__(self, layer, quantize_config, **kwargs):
+  def __init__(self, layer, quantize_config, name_prefix='quant_', **kwargs):
     """Create a quantize emulate wrapper for a keras layer.
 
     Args:
       layer: The keras layer to be quantized.
       quantize_config: `QuantizeConfig` to quantize layer.
+      name_prefix: Prefix for quantized keras layer name. The default is
+        `quant_`.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
     """
     if layer is None:
       raise ValueError('`layer` cannot be None.')
+
+    if name_prefix is None:
+      name_prefix = ''
 
     # Check against keras.Model since it is an instance of keras.layers.Layer.
     if not isinstance(layer, tf.keras.layers.Layer) or isinstance(
@@ -65,7 +70,7 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
                        'quantize a layer.')
 
     if 'name' not in kwargs:
-      kwargs['name'] = self._make_layer_name(layer)
+      kwargs['name'] = self._make_layer_name(layer, name_prefix)
 
     super(QuantizeWrapper, self).__init__(layer, **kwargs)
     self.quantize_config = quantize_config
@@ -74,8 +79,8 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
     metrics.MonitorBoolGauge('quantize_wrapper_usage').set(
         layer.__class__.__name__)
 
-  def _make_layer_name(self, layer):
-    return '{}_{}'.format('quant', layer.name)
+  def _make_layer_name(self, layer, name_prefix):
+    return '{}{}'.format(name_prefix, layer.name)
 
   def _weight_name(self, name):
     """Extracts the weight name from the full TensorFlow variable name.
@@ -100,8 +105,8 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
         trainable=False)
 
     self._weight_vars = []
-    for weight, quantizer in \
-        self.quantize_config.get_weights_and_quantizers(self.layer):
+    for weight, quantizer in (
+        self.quantize_config.get_weights_and_quantizers(self.layer)):
       quantizer_vars = quantizer.build(weight.shape,
                                        self._weight_name(weight.name), self)
 
@@ -110,8 +115,8 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
       self._trainable_weights.append(weight)
 
     self._quantize_activations = []
-    for activation, quantizer in \
-        self.quantize_config.get_activations_and_quantizers(self.layer):
+    for activation, quantizer in (
+        self.quantize_config.get_activations_and_quantizers(self.layer)):
       quantize_activation = quantize_aware_activation.QuantizeAwareActivation(
           activation, quantizer, self.optimizer_step, self)
 

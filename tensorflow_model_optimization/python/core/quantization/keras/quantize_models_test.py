@@ -22,7 +22,6 @@ import inspect
 import tempfile
 
 from absl.testing import parameterized
-
 import numpy as np
 import tensorflow as tf
 
@@ -108,13 +107,55 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
     model.fit(x_train, y_train)
 
     # 3. Ensure conversion to TFLite works.
-    _, tflite_file = tempfile.mkstemp('.tflite')
-    print('TFLite File: ', tflite_file)
-    with quantize.quantize_scope():
-      utils.convert_keras_to_tflite(model, tflite_file)
+    with tempfile.NamedTemporaryFile(suffix='.tflite') as t:
+      with quantize.quantize_scope():
+        utils.convert_keras_to_tflite(model, t.name)
 
-    # 4. Verify input runs on converted model.
-    self._verify_tflite(tflite_file, x_train, y_train)
+      # 4. Verify input runs on converted model.
+      self._verify_tflite(t.name, x_train, y_train)
+
+  # Test the model with custom layer name prefix.
+  @parameterized.product(
+      model_type=_KERAS_APPLICATION_MODELS,
+      name_prefix=['', 'custom_prefix_'])
+  def testModelEndToEndCustomNamePrefix(self, model_type, name_prefix):
+    # 1. Check whether quantized model graph can be constructed.
+    model = self._get_model(model_type)
+    original_layer_names = set([layer.name for layer in model.layers])
+
+    model = quantize.quantize_model(
+        model, quantized_layer_name_prefix=name_prefix)
+    quantized_layer_names = set([layer.name for layer in model.layers])
+
+    # Remove the name of layer which is newly added to quantize the input.
+    quantized_layer_names.remove('quantize_layer')
+
+    if not name_prefix or name_prefix is None:
+      # The set of layer names should be the same.
+      self.assertEqual(original_layer_names, quantized_layer_names)
+    else:
+      self.assertNotEqual(original_layer_names, quantized_layer_names)
+      for name in original_layer_names:
+        if name in quantized_layer_names:
+          quantized_layer_names.remove(name)
+        elif name_prefix + name in quantized_layer_names:
+          quantized_layer_names.remove(name_prefix + name)
+
+      self.assertEmpty(quantized_layer_names)
+
+    # 2. Sanity check to ensure basic training on random data works.
+    x_train, y_train = self._create_test_data(model)
+    model.compile(
+        loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
+    model.fit(x_train, y_train)
+
+    # 3. Ensure conversion to TFLite works.
+    with tempfile.NamedTemporaryFile(suffix='.tflite') as t:
+      with quantize.quantize_scope():
+        utils.convert_keras_to_tflite(model, t.name)
+
+      # 4. Verify input runs on converted model.
+      self._verify_tflite(t.name, x_train, y_train)
 
 
 if __name__ == '__main__':

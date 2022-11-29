@@ -80,7 +80,7 @@ def quantize_scope(*args):
   return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
 
 
-def quantize_model(to_quantize):
+def quantize_model(to_quantize, quantized_layer_name_prefix='quant_'):
   """Quantize a `tf.keras` model with the default quantization implementation.
 
   Quantization constructs a model which emulates quantization during training.
@@ -117,12 +117,17 @@ def quantize_model(to_quantize):
   Args:
     to_quantize: tf.keras model to be quantized. It can have pre-trained
       weights.
+    quantized_layer_name_prefix: Name prefix for the quantized layers. The
+      default is `quant_`.
 
   Returns:
     Returns a new `tf.keras` model prepared for quantization.
   """
   if to_quantize is None:
     raise ValueError('`to_quantize` cannot be None')
+
+  if quantized_layer_name_prefix is None:
+    quantized_layer_name_prefix = ''
 
   if not isinstance(to_quantize, keras.Model):
     raise ValueError(
@@ -138,7 +143,8 @@ def quantize_model(to_quantize):
         'Functional model.')
 
   annotated_model = quantize_annotate_model(to_quantize)
-  return quantize_apply(annotated_model)
+  return quantize_apply(
+      annotated_model, quantized_layer_name_prefix=quantized_layer_name_prefix)
 
 
 def quantize_annotate_model(to_annotate):
@@ -281,7 +287,8 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
 @metrics.MonitorBoolGauge('quantize_apply_usage')
 def quantize_apply(
     model,
-    scheme=default_8bit_quantize_scheme.Default8BitQuantizeScheme()):
+    scheme=default_8bit_quantize_scheme.Default8BitQuantizeScheme(),
+    quantized_layer_name_prefix='quant_'):
   """Quantize a `tf.keras` model that has been annotated for quantization.
 
   Quantization constructs a model which emulates quantization during training.
@@ -319,6 +326,8 @@ def quantize_apply(
       with `quantize_annotate`. It can have pre-trained weights.
     scheme: A `QuantizeScheme` which specifies transformer and quantization
       registry. The default is `Default8BitQuantizeScheme()`.
+    quantized_layer_name_prefix: A name prefix for quantized layers. The default
+      is `quant_`.
 
   Returns:
     Returns a new `tf.keras` model in which the annotated layers have been
@@ -326,6 +335,9 @@ def quantize_apply(
   """
   if model is None:
     raise ValueError('`model` cannot be None')
+
+  if quantized_layer_name_prefix is None:
+    quantized_layer_name_prefix = ''
 
   if not isinstance(model, keras.Model):
     raise ValueError('`model` can only be a `tf.keras.Model` instance.'
@@ -435,7 +447,7 @@ def quantize_apply(
     # `QuantizeAnnotate` wrapper may contain `batch_input_shape` like params.
     # TODO(pulkitb): Ensure this does not affect model cloning.
     return quantize_wrapper.QuantizeWrapperV2(
-        layer, quantize_config)
+        layer, quantize_config, name_prefix=quantized_layer_name_prefix)
 
   # 1. Create a copy of the model with the same weights. This ensures
   # modifications don't affect the original model, or its weights.
@@ -446,7 +458,7 @@ def quantize_apply(
         'Unable to clone model. This generally happens if you used custom '
         'Keras layers or objects in your model. Please specify them via '
         '`quantize_scope` for your calls to `quantize_model` and '
-        '`quantize_apply`. [%s].' % er)
+        '`quantize_apply`. [%s].' % er) from er
 
   # 2. Remove QuantizeAnnotate wrappers from the layers in the model. This
   # extracts the original model structure (easier to transform), and
