@@ -45,7 +45,6 @@ py_strict_test(
         ":quant_ops",
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
@@ -76,7 +75,6 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
@@ -172,7 +170,6 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
     ],
 )
 
@@ -292,7 +289,6 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
@@ -311,7 +307,6 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
     ],
 )
 
@@ -328,7 +323,6 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        # python/keras tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
