@@ -16,9 +16,9 @@
 
 import numpy as np
 import tensorflow as tf
+from tensorflow import keras
 
-from tensorflow.python import keras
-l = keras.layers
+l = tf.keras.layers
 
 
 def layers_list():
