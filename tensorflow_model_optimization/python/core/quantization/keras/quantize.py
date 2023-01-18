@@ -525,7 +525,7 @@ def _wrap_fixed_range(
        'init_min': init_min,
        'init_max': init_max,
        'narrow_range': narrow_range})
-  return tf.keras.utils.serialize_keras_object(config)
+  return tf.keras.utils.legacy.serialize_keras_object(config)
 
 
 def _is_serialized_node_data(nested):
@@ -601,8 +601,9 @@ def fix_input_output_range(
       init_min=input_min,
       init_max=input_max,
       narrow_range=narrow_range)
-  serialized_fixed_input_quantizer = tf.keras.utils.serialize_keras_object(
-      fixed_input_quantizer)
+  serialized_fixed_input_quantizer = (
+      tf.keras.utils.legacy.serialize_keras_object(fixed_input_quantizer)
+  )
 
   if _is_functional_model(model):
     input_layer_list = _nested_to_flatten_node_data_list(config['input_layers'])
@@ -685,8 +686,9 @@ def remove_input_range(model):
   """
   config = model.get_config()
   no_input_quantizer = quantizers.NoQuantizer()
-  serialized_input_quantizer = tf.keras.utils.serialize_keras_object(
-      no_input_quantizer)
+  serialized_input_quantizer = tf.keras.utils.legacy.serialize_keras_object(
+      no_input_quantizer
+  )
 
   if _is_functional_model(model):
     input_layer_list = _nested_to_flatten_node_data_list(config['input_layers'])

@@ -259,13 +259,16 @@ class FixedQuantizeConfig(QuantizeConfig):
 
   def get_config(self):
     return {
-        'config': tf.keras.utils.serialize_keras_object(self.config),
+        'config': tf.keras.utils.legacy.serialize_keras_object(self.config),
         'num_bits': self.num_bits,
         'init_min': self.init_min,
         'init_max': self.init_max,
-        'narrow_range': self.narrow_range}
+        'narrow_range': self.narrow_range,
+    }
 
   @classmethod
   def from_config(cls, config):
-    config['config'] = tf.keras.utils.deserialize_keras_object(config['config'])
+    config['config'] = tf.keras.utils.legacy.deserialize_keras_object(
+        config['config']
+    )
     return cls(**config)

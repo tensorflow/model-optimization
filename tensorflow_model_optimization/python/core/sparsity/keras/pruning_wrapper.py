@@ -318,7 +318,7 @@ class PruneLowMagnitude(Wrapper):
     config = config.copy()
 
     pruning_schedule = config.pop('pruning_schedule')
-    deserialize_keras_object = keras.utils.deserialize_keras_object  # pylint: disable=g-import-not-at-top
+    deserialize_keras_object = keras.utils.legacy.deserialize_keras_object  # pylint: disable=g-import-not-at-top
     # TODO(pulkitb): This should ideally be fetched from pruning_schedule,
     # which should maintain a list of all the pruning_schedules.
     custom_objects = {

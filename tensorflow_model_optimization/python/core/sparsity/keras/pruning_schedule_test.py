@@ -242,12 +242,13 @@ class ConstantSparsityTest(tf.test.TestCase, parameterized.TestCase):
     sparsity = pruning_schedule.ConstantSparsity(0.7, 10, 20, 10)
 
     config = sparsity.get_config()
-    sparsity_deserialized = tf.keras.utils.deserialize_keras_object(
+    sparsity_deserialized = tf.keras.utils.legacy.deserialize_keras_object(
         config,
         custom_objects={
             'ConstantSparsity': pruning_schedule.ConstantSparsity,
-            'PolynomialDecay': pruning_schedule.PolynomialDecay
-        })
+            'PolynomialDecay': pruning_schedule.PolynomialDecay,
+        },
+    )
 
     self.assertEqual(sparsity.__dict__, sparsity_deserialized.__dict__)
 
@@ -278,12 +279,13 @@ class PolynomialDecayTest(tf.test.TestCase, parameterized.TestCase):
     sparsity = pruning_schedule.PolynomialDecay(0.2, 0.6, 10, 20, 5, 10)
 
     config = sparsity.get_config()
-    sparsity_deserialized = tf.keras.utils.deserialize_keras_object(
+    sparsity_deserialized = tf.keras.utils.legacy.deserialize_keras_object(
         config,
         custom_objects={
             'ConstantSparsity': pruning_schedule.ConstantSparsity,
-            'PolynomialDecay': pruning_schedule.PolynomialDecay
-        })
+            'PolynomialDecay': pruning_schedule.PolynomialDecay,
+        },
+    )
 
     self.assertEqual(sparsity.__dict__, sparsity_deserialized.__dict__)
 
