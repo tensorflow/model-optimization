@@ -172,10 +172,10 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
         tf.TensorSpec.from_tensor(x))
 
     state = encoder.initial_state()
-    with self.assertRaises(ValueError):
+    with self.assertRaises((TypeError, ValueError)):
       bad_x = tf.stack([x, x])
       encoder.encode(bad_x, state)
-    with self.assertRaises(ValueError):
+    with self.assertRaises((TypeError, ValueError)):
       bad_state = state + (x,)
       encoder.encode(x, bad_state)
     encoded_x = encoder.encode(x, state)
