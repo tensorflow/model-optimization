@@ -23,8 +23,10 @@ import inspect
 
 import tensorflow as tf
 
-deserialize_keras_object = tf.keras.utils.deserialize_keras_object
-serialize_keras_object = tf.keras.utils.serialize_keras_object
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
+
+deserialize_keras_object = quantize_utils.deserialize_keras_object
+serialize_keras_object = quantize_utils.serialize_keras_object
 
 
 class QuantizeAnnotate(tf.keras.layers.Wrapper):
@@ -112,7 +114,12 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
         module_objects=globals(),
         custom_objects=None)
 
-    layer = tf.keras.layers.deserialize(config.pop('layer'))
+    layer_config = config.pop('layer')
+    use_legacy_format = 'module' not in layer_config
+
+    layer = quantize_utils.deserialize_layer(
+        layer_config, use_legacy_format=use_legacy_format
+    )
 
     return cls(layer=layer, quantize_config=quantize_config, **config)
 

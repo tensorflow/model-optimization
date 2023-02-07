@@ -25,12 +25,13 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 
 keras = tf.keras
 activations = tf.keras.activations
 K = tf.keras.backend
-deserialize_keras_object = tf.keras.utils.deserialize_keras_object
-serialize_keras_object = tf.keras.utils.serialize_keras_object
+deserialize_keras_object = quantize_utils.deserialize_keras_object
+serialize_keras_object = quantize_utils.serialize_keras_object
 
 QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 MovingAverageQuantizer = quantizers.MovingAverageQuantizer
@@ -154,13 +155,13 @@ class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
         'config': activation_config
     }
     self.assertEqual(expected_config, serialized_quantize_activation)
-
-    deserialized_activation = deserialize_keras_object(
-        serialized_quantize_activation,
-        custom_objects={
-            'QuantizeAwareActivation': QuantizeAwareActivation,
-            'NoOpActivation': quantize_aware_activation.NoOpActivation
-        })
+    with tf.keras.utils.custom_object_scope({
+        'QuantizeAwareActivation': QuantizeAwareActivation,
+        'NoOpActivation': quantize_aware_activation.NoOpActivation,
+    }):
+      deserialized_activation = deserialize_keras_object(
+          serialized_quantize_activation
+      )
 
     self.assertEqual(activation, deserialized_activation)
 

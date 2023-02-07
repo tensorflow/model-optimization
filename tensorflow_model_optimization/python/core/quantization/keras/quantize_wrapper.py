@@ -33,9 +33,10 @@ from tensorflow.python.util import tf_inspect
 from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.keras import utils
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 
-deserialize_keras_object = tf.keras.utils.deserialize_keras_object
-serialize_keras_object = tf.keras.utils.serialize_keras_object
+deserialize_keras_object = quantize_utils.deserialize_keras_object
+serialize_keras_object = quantize_utils.serialize_keras_object
 
 
 class QuantizeWrapper(tf.keras.layers.Wrapper):
@@ -206,7 +207,12 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
         module_objects=globals(),
         custom_objects=None)
 
-    layer = tf.keras.layers.deserialize(config.pop('layer'))
+    layer_config = config.pop('layer')
+    use_legacy_format = 'module' not in layer_config
+
+    layer = quantize_utils.deserialize_layer(
+        layer_config, use_legacy_format=use_legacy_format
+    )
 
     return cls(layer=layer, quantize_config=quantize_config, **config)
 

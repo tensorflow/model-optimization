@@ -25,14 +25,15 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_registry as n_bit_registry
 
 keras = tf.keras
 K = tf.keras.backend
 l = tf.keras.layers
 
-deserialize_keras_object = tf.keras.utils.deserialize_keras_object
-serialize_keras_object = tf.keras.utils.serialize_keras_object
+deserialize_keras_object = quantize_utils.deserialize_keras_object
+serialize_keras_object = quantize_utils.serialize_keras_object
 
 
 class _TestHelper(object):

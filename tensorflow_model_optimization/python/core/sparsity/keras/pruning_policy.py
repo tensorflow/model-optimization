@@ -18,6 +18,7 @@
 import abc
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
 layers = tf.keras.layers
@@ -216,9 +217,9 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
     elif isinstance(layer, layers.UpSampling2D):
       return layer.interpolation == 'bilinear'
     elif isinstance(layer, layers.Activation):
-      return activations.serialize(layer.activation) in ('relu', 'relu6',
-                                                         'leaky_relu', 'elu',
-                                                         'sigmoid')
+      return quantize_utils.serialize_activation(
+          layer.activation, use_legacy_format=True
+      ) in ('relu', 'relu6', 'leaky_relu', 'elu', 'sigmoid')
     elif layer.__class__.__name__ == 'TFOpLambda':
       return layer.function in (tf.identity, tf.__operators__.add, tf.math.add,
                                 tf.math.subtract, tf.math.multiply)

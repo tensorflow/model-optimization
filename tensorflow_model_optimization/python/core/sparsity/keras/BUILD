@@ -64,6 +64,7 @@ py_strict_library(
     deps = [
         ":pruning_wrapper",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/quantization/keras:utils",
     ],
 )
 
@@ -89,6 +90,7 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
+        "//tensorflow_model_optimization/python/core/quantization/keras:utils",
     ],
 )
 

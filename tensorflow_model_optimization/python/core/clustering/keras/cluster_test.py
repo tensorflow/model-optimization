@@ -667,7 +667,11 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     stripped_model = cluster.strip_clustering(clustered_model)
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
-    self.assertEqual(model.get_config(), stripped_model.get_config())
+    model_config = model.get_config()
+    for layer in model_config['layers']:
+      # New serialization format includes `build_config` in wrapper
+      layer.pop('build_config', None)
+    self.assertEqual(model_config, stripped_model.get_config())
 
   def testClusterStrippingFunctionalModel(self):
     """Verifies that stripping the clustering wrappers from a functional model produces the expected config."""

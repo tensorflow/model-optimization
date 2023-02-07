@@ -25,9 +25,10 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 
-deserialize_keras_object = tf.keras.utils.deserialize_keras_object
-serialize_keras_object = tf.keras.utils.serialize_keras_object
+deserialize_keras_object = quantize_utils.deserialize_keras_object
+serialize_keras_object = quantize_utils.serialize_keras_object
 
 
 @parameterized.parameters(

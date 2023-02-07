@@ -15,11 +15,78 @@
 # pylint: disable=protected-access
 """Quantization specific utilities for generating, saving, testing, and evaluating models."""
 
+import inspect
 import tempfile
 
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import compat
+
+
+def serialize_keras_object(obj):
+  if hasattr(tf.keras.utils, "legacy"):
+    return tf.keras.utils.legacy.serialize_keras_object(obj)
+  else:
+    return tf.keras.utils.serialize_keras_object(obj)
+
+
+def deserialize_keras_object(
+    config, module_objects=None, custom_objects=None, printable_module_name=None
+):
+  if hasattr(tf.keras.utils, "legacy"):
+    return tf.keras.utils.legacy.deserialize_keras_object(
+        config, custom_objects, module_objects, printable_module_name
+    )
+  else:
+    return tf.keras.utils.deserialize_keras_object(
+        config, custom_objects, module_objects, printable_module_name
+    )
+
+
+def serialize_layer(layer, use_legacy_format=False):
+  if (
+      "use_legacy_format"
+      in inspect.getfullargspec(tf.keras.layers.serialize).args
+  ):
+    return tf.keras.layers.serialize(layer, use_legacy_format=use_legacy_format)
+  else:
+    return tf.keras.layers.serialize(layer)
+
+
+def deserialize_layer(config, use_legacy_format=False):
+  if (
+      "use_legacy_format"
+      in inspect.getfullargspec(tf.keras.layers.deserialize).args
+  ):
+    return tf.keras.layers.deserialize(
+        config, use_legacy_format=use_legacy_format
+    )
+  else:
+    return tf.keras.layers.deserialize(config)
+
+
+def serialize_activation(activation, use_legacy_format=False):
+  if (
+      "use_legacy_format"
+      in inspect.getfullargspec(tf.keras.activations.serialize).args
+  ):
+    return tf.keras.activations.serialize(
+        activation, use_legacy_format=use_legacy_format
+    )
+  else:
+    return tf.keras.activations.serialize(activation)
+
+
+def deserialize_activation(config, use_legacy_format=False):
+  if (
+      "use_legacy_format"
+      in inspect.getfullargspec(tf.keras.activations.deserialize).args
+  ):
+    return tf.keras.activations.deserialize(
+        config, use_legacy_format=use_legacy_format
+    )
+  else:
+    return tf.keras.activations.deserialize(config)
 
 
 def convert_keras_to_tflite(model,

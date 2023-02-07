@@ -21,6 +21,7 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import utils
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 
 activations = tf.keras.activations
 
@@ -38,6 +39,10 @@ class NoOpActivation(object):
 
   def get_config(self):
     return {}
+
+  @classmethod
+  def from_config(cls, config):
+    return cls(**config)
 
   def __eq__(self, other):
     if not other or not isinstance(other, NoOpActivation):
@@ -183,9 +188,13 @@ class QuantizeAwareActivation(object):
 
   @classmethod
   def from_config(cls, config):
-    return activations.deserialize(config['activation'])
+    return quantize_utils.deserialize_activation(
+        config['activation'], use_legacy_format=True
+    )
 
   def get_config(self):
     return {
-        'activation': activations.serialize(self.activation)
+        'activation': quantize_utils.serialize_activation(
+            self.activation, use_legacy_format=True
+        )
     }
