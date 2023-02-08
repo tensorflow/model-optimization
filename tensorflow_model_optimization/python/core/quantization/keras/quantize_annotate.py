@@ -23,8 +23,8 @@ import inspect
 
 import tensorflow as tf
 
-deserialize_keras_object = tf.keras.utils.deserialize_keras_object
-serialize_keras_object = tf.keras.utils.serialize_keras_object
+deserialize_keras_object = tf.keras.utils.legacy.deserialize_keras_object
+serialize_keras_object = tf.keras.utils.legacy.serialize_keras_object
 
 
 class QuantizeAnnotate(tf.keras.layers.Wrapper):
