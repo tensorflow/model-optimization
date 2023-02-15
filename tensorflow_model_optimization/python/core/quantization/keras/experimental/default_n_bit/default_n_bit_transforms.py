@@ -24,6 +24,7 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_configs as configs
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
@@ -67,13 +68,17 @@ def _get_params(conv_layer, bn_layer, relu_layer=None):
       list(conv_layer['config'].items()) + list(bn_layer['config'].items()))
 
   if relu_layer is not None:
-    params['post_activation'] = keras.layers.deserialize(relu_layer)
+    params['post_activation'] = quantize_utils.deserialize_layer(
+        relu_layer, use_legacy_format=True
+    )
 
   return params
 
 
 def _get_layer_node(fused_layer, weights):
-  layer_config = keras.layers.serialize(fused_layer)
+  layer_config = quantize_utils.serialize_layer(
+      fused_layer, use_legacy_format=True
+  )
   layer_config['name'] = layer_config['config']['name']
   # This config tracks which layers get quantized, and whether they have a
   # custom QuantizeConfig.
@@ -118,7 +123,10 @@ class Conv2DBatchNormQuantize(transforms.Transform):
       return bn_layer_node
 
     conv_layer_node.layer['config']['activation'] = (
-        keras.activations.serialize(quantize_aware_activation.NoOpActivation()))
+        quantize_utils.serialize_activation(
+            quantize_aware_activation.NoOpActivation(), use_legacy_format=True
+        )
+    )
     bn_layer_node.metadata['quantize_config'] = (
         configs.DefaultNBitOutputQuantizeConfig(
             num_bits_weight=self._num_bits_weight,
@@ -190,7 +198,10 @@ class Conv2DBatchNormReLUQuantize(Conv2DBatchNormQuantize):
       return relu_layer_node
 
     conv_layer_node.layer['config']['activation'] = (
-        keras.activations.serialize(quantize_aware_activation.NoOpActivation()))
+        quantize_utils.serialize_activation(
+            quantize_aware_activation.NoOpActivation(), use_legacy_format=True
+        )
+    )
     bn_layer_node.metadata['quantize_config'] = (
         configs.NoOpQuantizeConfig())
 
@@ -284,7 +295,10 @@ class DenseBatchNormQuantize(transforms.Transform):
       return bn_layer_node
 
     dense_layer_node.layer['config']['activation'] = (
-        keras.activations.serialize(quantize_aware_activation.NoOpActivation()))
+        quantize_utils.serialize_activation(
+            quantize_aware_activation.NoOpActivation(), use_legacy_format=True
+        )
+    )
     bn_layer_node.metadata['quantize_config'] = (
         configs.DefaultNBitOutputQuantizeConfig(
             num_bits_weight=self._num_bits_weight,
@@ -324,7 +338,10 @@ class DenseBatchNormReLUQuantize(DenseBatchNormQuantize):
       return relu_layer_node
 
     dense_layer_node.layer['config']['activation'] = (
-        keras.activations.serialize(quantize_aware_activation.NoOpActivation()))
+        quantize_utils.serialize_activation(
+            quantize_aware_activation.NoOpActivation(), use_legacy_format=True
+        )
+    )
     bn_layer_node.metadata['quantize_config'] = (
         configs.NoOpQuantizeConfig())
 
@@ -439,7 +456,9 @@ class SeparableConv1DQuantize(transforms.Transform):
     else:
       spatial_dim = 2
 
-    sepconv2d_layer_config = keras.layers.serialize(sepconv2d_layer)
+    sepconv2d_layer_config = quantize_utils.serialize_layer(
+        sepconv2d_layer, use_legacy_format=True
+    )
     sepconv2d_layer_config['name'] = sepconv2d_layer.name
 
     # Needed to ensure these new layers are considered for quantization.
@@ -451,7 +470,9 @@ class SeparableConv1DQuantize(transforms.Transform):
     expand_layer = tf.keras.layers.Lambda(
         lambda x: tf.expand_dims(x, spatial_dim),
         name=self._get_name('sepconv1d_expand'))
-    expand_layer_config = keras.layers.serialize(expand_layer)
+    expand_layer_config = quantize_utils.serialize_layer(
+        expand_layer, use_legacy_format=True
+    )
     expand_layer_config['name'] = expand_layer.name
     expand_layer_metadata = {
         'quantize_config':
@@ -460,7 +481,9 @@ class SeparableConv1DQuantize(transforms.Transform):
     squeeze_layer = tf.keras.layers.Lambda(
         lambda x: tf.squeeze(x, [spatial_dim]),
         name=self._get_name('sepconv1d_squeeze'))
-    squeeze_layer_config = keras.layers.serialize(squeeze_layer)
+    squeeze_layer_config = quantize_utils.serialize_layer(
+        squeeze_layer, use_legacy_format=True
+    )
     squeeze_layer_config['name'] = squeeze_layer.name
     squeeze_layer_metadata = {
         'quantize_config':
@@ -530,7 +553,9 @@ class SeparableConvQuantize(transforms.Transform):
     )
     dconv_weights = collections.OrderedDict()
     dconv_weights['depthwise_kernel:0'] = sepconv_weights[0]
-    dconv_layer_config = keras.layers.serialize(dconv_layer)
+    dconv_layer_config = quantize_utils.serialize_layer(
+        dconv_layer, use_legacy_format=True
+    )
     dconv_layer_config['name'] = dconv_layer.name
     # Needed to ensure these new layers are considered for quantization.
     dconv_metadata = {'quantize_config': None}
@@ -558,7 +583,9 @@ class SeparableConvQuantize(transforms.Transform):
     conv_weights['kernel:0'] = sepconv_weights[1]
     if sepconv_layer['config']['use_bias']:
       conv_weights['bias:0'] = sepconv_weights[2]
-    conv_layer_config = keras.layers.serialize(conv_layer)
+    conv_layer_config = quantize_utils.serialize_layer(
+        conv_layer, use_legacy_format=True
+    )
     conv_layer_config['name'] = conv_layer.name
     # Needed to ensure these new layers are considered for quantization.
     conv_metadata = {'quantize_config': None}
@@ -634,7 +661,9 @@ class InputLayerQuantize(transforms.Transform):
         quantizers.AllValuesQuantizer(
             num_bits=self._num_bits_activation, per_axis=False,
             symmetric=False, narrow_range=False))  # activation/output
-    layer_config = keras.layers.serialize(quant_layer)
+    layer_config = quantize_utils.serialize_layer(
+        quant_layer, use_legacy_format=True
+    )
     layer_config['name'] = quant_layer.name
 
     quant_layer_node = LayerNode(

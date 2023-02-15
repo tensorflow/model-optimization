@@ -24,6 +24,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_scheme
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_registry
@@ -525,7 +526,7 @@ def _wrap_fixed_range(
        'init_min': init_min,
        'init_max': init_max,
        'narrow_range': narrow_range})
-  return tf.keras.utils.serialize_keras_object(config)
+  return quantize_utils.serialize_keras_object(config)
 
 
 def _is_serialized_node_data(nested):
@@ -601,8 +602,9 @@ def fix_input_output_range(
       init_min=input_min,
       init_max=input_max,
       narrow_range=narrow_range)
-  serialized_fixed_input_quantizer = tf.keras.utils.serialize_keras_object(
-      fixed_input_quantizer)
+  serialized_fixed_input_quantizer = quantize_utils.serialize_keras_object(
+      fixed_input_quantizer
+  )
 
   if _is_functional_model(model):
     input_layer_list = _nested_to_flatten_node_data_list(config['input_layers'])
@@ -685,8 +687,9 @@ def remove_input_range(model):
   """
   config = model.get_config()
   no_input_quantizer = quantizers.NoQuantizer()
-  serialized_input_quantizer = tf.keras.utils.serialize_keras_object(
-      no_input_quantizer)
+  serialized_input_quantizer = quantize_utils.serialize_keras_object(
+      no_input_quantizer
+  )
 
   if _is_functional_model(model):
     input_layer_list = _nested_to_flatten_node_data_list(config['input_layers'])

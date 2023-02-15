@@ -580,4 +580,6 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
+  if hasattr(tf.keras.__internal__, 'enable_unsafe_deserialization'):
+    tf.keras.__internal__.enable_unsafe_deserialization()
   tf.test.main()

@@ -72,6 +72,7 @@ py_strict_test(
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
+        ":utils",
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -87,9 +88,10 @@ py_strict_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        ":quantizers",
+        ":utils",
         # six dep1,
         # tensorflow dep1,
-        "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
 )
 
@@ -125,6 +127,7 @@ py_strict_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        ":utils",
         # tensorflow dep1,
     ],
 )
@@ -152,6 +155,7 @@ py_strict_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
+        ":utils",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:utils",
     ],
@@ -167,6 +171,7 @@ py_strict_test(
     deps = [
         ":quantize_aware_activation",
         ":quantizers",
+        ":utils",
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -182,6 +187,7 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
+        ":utils",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:utils",
     ],
@@ -211,6 +217,7 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
+        ":utils",
         # tensorflow dep1,
         # python/util tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:metrics",
@@ -249,6 +256,7 @@ py_strict_library(
         ":quantize_layer",
         ":quantize_wrapper",
         ":quantizers",
+        ":utils",
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",

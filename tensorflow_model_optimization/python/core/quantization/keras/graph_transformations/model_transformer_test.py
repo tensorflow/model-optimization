@@ -23,6 +23,7 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
 
@@ -159,7 +160,9 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
       match_layer_config = match_layer.layer['config']
       my_dense_layer = self.MyDense(**match_layer_config)
 
-      replace_layer = keras.layers.serialize(my_dense_layer)
+      replace_layer = quantize_utils.serialize_layer(
+          my_dense_layer, use_legacy_format=True
+      )
       replace_layer['name'] = replace_layer['config']['name']
 
       return LayerNode(replace_layer, match_layer.weights, [])
@@ -176,8 +179,11 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
 
     # build_input_shape is a TensorShape object and the two objects are not
     # considered the same even though the shapes are the same.
-    self._assert_config(model.get_config(), transformed_model.get_config(),
-                        ['class_name', 'build_input_shape'])
+    self._assert_config(
+        model.get_config(),
+        transformed_model.get_config(),
+        ['class_name', 'build_input_shape', 'module', 'registered_name'],
+    )
 
     self.assertEqual(
         'MyDense',
@@ -209,8 +215,11 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
 
     # build_input_shape is a TensorShape object and the two objects are not
     # considered the same even though the shapes are the same.
-    self._assert_config(model.get_config(), transformed_model.get_config(),
-                        ['class_name', 'build_input_shape'])
+    self._assert_config(
+        model.get_config(),
+        transformed_model.get_config(),
+        ['class_name', 'build_input_shape', 'module', 'registered_name'],
+    )
 
     self.assertEqual(
         'MyDense',
@@ -268,7 +277,9 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
         match_layer_config['use_bias'] = False
         new_dense_layer = keras.layers.Dense(**match_layer_config)
 
-        replace_layer = keras.layers.serialize(new_dense_layer)
+        replace_layer = quantize_utils.serialize_layer(
+            new_dense_layer, use_legacy_format=True
+        )
         replace_layer['name'] = replace_layer['config']['name']
 
         return LayerNode(replace_layer, match_layer_weights, [])
@@ -311,7 +322,9 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
         match_layer_config = match_layer.layer['config']
         my_dense_layer = QuantizedCustomDense(**match_layer_config)
 
-        replace_layer = keras.layers.serialize(my_dense_layer)
+        replace_layer = quantize_utils.serialize_layer(
+            my_dense_layer, use_legacy_format=True
+        )
         replace_layer['name'] = replace_layer['config']['name']
 
         return LayerNode(replace_layer, match_layer.weights, [])
@@ -355,7 +368,9 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
 
       def replacement(self, match_layer):
         activation_layer = keras.layers.Activation('linear')
-        layer_config = keras.layers.serialize(activation_layer)
+        layer_config = quantize_utils.serialize_layer(
+            activation_layer, use_legacy_format=True
+        )
         layer_config['name'] = activation_layer.name
 
         activation_layer_node = LayerNode(
@@ -397,7 +412,9 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
 
       def replacement(self, match_layer):
         activation_layer = keras.layers.Activation('linear')
-        layer_config = keras.layers.serialize(activation_layer)
+        layer_config = quantize_utils.serialize_layer(
+            activation_layer, use_legacy_format=True
+        )
         layer_config['name'] = activation_layer.name
 
         activation_layer_node = LayerNode(
@@ -435,7 +452,9 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
 
         new_dense_layer = keras.layers.Dense(**dense_layer_config)
 
-        replace_layer = keras.layers.serialize(new_dense_layer)
+        replace_layer = quantize_utils.serialize_layer(
+            new_dense_layer, use_legacy_format=True
+        )
         replace_layer['name'] = replace_layer['config']['name']
 
         return LayerNode(replace_layer, dense_layer_weights, [])
@@ -569,7 +588,9 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
         return LayerPattern('ReLU')
 
       def replacement(self, match_layer):
-        replace_layer = keras.layers.serialize(keras.layers.Softmax())
+        replace_layer = quantize_utils.serialize_layer(
+            keras.layers.Softmax(), use_legacy_format=True
+        )
         replace_layer['name'] = replace_layer['config']['name']
         return LayerNode(replace_layer)
 
@@ -579,7 +600,9 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
         return LayerPattern('Softmax')
 
       def replacement(self, match_layer):
-        replace_layer = keras.layers.serialize(keras.layers.ELU())
+        replace_layer = quantize_utils.serialize_layer(
+            keras.layers.ELU(), use_legacy_format=True
+        )
         replace_layer['name'] = replace_layer['config']['name']
         return LayerNode(replace_layer)
 
