@@ -20,8 +20,8 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster a
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config as tfmot_cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as exp_tfmot_cluster
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import cluster_utils
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
+from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import cluster_utils
+from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import (
     default_8bit_cluster_preserve_quantize_scheme,)
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks

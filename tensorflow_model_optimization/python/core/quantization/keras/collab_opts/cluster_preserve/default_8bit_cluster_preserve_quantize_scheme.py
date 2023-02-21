@@ -15,7 +15,7 @@
 
 """Default 8 bit Cluster Preserve Quantization scheme."""
 
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
+from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import (
     cluster_preserve_quantize_registry,)
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_scheme
 
