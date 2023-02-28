@@ -1,7 +1,7 @@
 This directory is modified based on default_8bit, which allows you to manually
 change the number of bits of weight and activation in QAT.
 
-Code example given a Keras float `model`:
+Code example for quantization of a Keras float `model`:
 
 ```
 # Imports.
@@ -15,13 +15,13 @@ from tensorflow_model_optimization.python.core.quantization.keras.experimental.d
 
 # TODO(user): define Keras float model.
 
-# Specify scheme with 4-bit weights and 8-bit activations.
+# Specify quantization scheme with 4-bit weights and 8-bit activations.
 qat_scheme_4w8a = default_n_bit_quantize_scheme.DefaultNBitQuantizeScheme(
   num_bits_weight=4,
   num_bits_activation=8,
 )
 
-# Annotate the model for quantized aware training.
+# Prepare the model for quantized aware training.
 with tfmot.quantization.keras.quantize_scope():
   quantized_aware_model = quantize_apply(
     quantize_annotate_model(model),
@@ -31,7 +31,7 @@ with tfmot.quantization.keras.quantize_scope():
 # TODO(user): compile and train quantized_aware_model using standard Keras methods.
 ```
 
-The recommended activation precision is 8-bit for TF Lite conversion.
+Recommended activation precision is 8-bit for TF Lite conversion.
 
 Before TF 2.11.0 the TF Lite converted weight value is stored one per byte in the weight tensor, so a 4-bit weight using default_n_bit scheme will be integer [-7, 7] occupying a byte.  With TF 2.11.0 and release candidate TF 2.12.0 weight packing for 4-bit weights is added for selected operators, so two 4-bit weights are packed per byte for the regular convolution operator in TF 2.11.0.
 
