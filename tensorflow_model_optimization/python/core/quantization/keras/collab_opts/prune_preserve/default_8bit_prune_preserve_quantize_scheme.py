@@ -12,8 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Module containing collaborative optimization code."""
+"""Default 8 bit Prune Preserve Quantization scheme which specifies how quantization should be applied."""
 
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve.default_8bit_prune_preserve_quantize_scheme import (
-    Default8BitPrunePreserveQuantizeScheme,)
+from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.prune_preserve import (
+    prune_preserve_quantize_registry)
+from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
+    default_8bit_quantize_scheme,)
+
+
+class Default8BitPrunePreserveQuantizeScheme(
+    default_8bit_quantize_scheme.Default8BitQuantizeScheme):
+  """Default 8 bit Prune Preserve Quantization Scheme."""
+
+  def get_quantize_registry(self):
+    return (prune_preserve_quantize_registry
+            .Default8bitPrunePreserveQuantizeRegistry())
 

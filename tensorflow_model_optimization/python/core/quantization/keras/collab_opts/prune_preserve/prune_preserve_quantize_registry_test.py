@@ -16,7 +16,7 @@
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.prune_preserve import (
+from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.prune_preserve import (
     prune_preserve_quantize_registry,)
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry

@@ -20,7 +20,7 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/quantization/keras/layers",  # buildcleaner: keep
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit",  # buildcleaner: keep
         "//tensorflow_model_optimization/python/core/quantization/keras/experimental/default_n_bit",  # buildcleaner: keep
-        "//tensorflow_model_optimization/python/core/quantization/keras/collaborative_optimizations",  # buildcleaner: keep
+        "//tensorflow_model_optimization/python/core/quantization/keras/collab_opts",  # buildcleaner: keep
     ],
 )
 

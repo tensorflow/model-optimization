@@ -21,9 +21,9 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import (
+from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import (
     default_8bit_cluster_preserve_quantize_scheme,)
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve.cluster_utils import (
+from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve.cluster_utils import (
     strip_clustering_cqat,)
 
 layers = tf.keras.layers

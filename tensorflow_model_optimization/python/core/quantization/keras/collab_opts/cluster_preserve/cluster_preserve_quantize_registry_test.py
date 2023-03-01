@@ -19,7 +19,7 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
-from tensorflow_model_optimization.python.core.quantization.keras.collaborative_optimizations.cluster_preserve import cluster_preserve_quantize_registry
+from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import cluster_preserve_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 
 QuantizeConfig = quantize_config.QuantizeConfig
