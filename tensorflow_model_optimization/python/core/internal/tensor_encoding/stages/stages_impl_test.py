@@ -102,21 +102,23 @@ class HadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
     """See base class."""
     return True
 
-  def common_asserts_for_test_data(self, data):
+  def common_asserts_for_test_data(self, data, rtol=1e-6, atol=1e-6):
     """See base class."""
     encoded_x = data.encoded_x[
         stages_impl.HadamardEncodingStage.ENCODED_VALUES_KEY]
-    self.assertAllClose(data.x, data.decoded_x)
+    self.assertAllClose(data.x, data.decoded_x, rtol=rtol, atol=atol)
     self.assertLen(encoded_x.shape, 2)
     # This is a rotation, hence, the norms should be the same.
     # If the input has dimension 1, the transform is applied to the whole input.
     # If the input has dimension 2, the transform is applied to every single
     # vector separately.
     if len(data.x.shape) == 1:
-      self.assertAllClose(np.linalg.norm(data.x), np.linalg.norm(encoded_x))
+      self.assertAllClose(np.linalg.norm(data.x), np.linalg.norm(encoded_x),
+                          rtol=rtol, atol=atol)
     else:
       for x, y in zip(data.x, encoded_x):
-        self.assertAllClose(np.linalg.norm(x), np.linalg.norm(y))
+        self.assertAllClose(np.linalg.norm(x), np.linalg.norm(y),
+                            rtol=rtol, atol=atol)
 
   def test_encoding_randomized(self):
     # The encoding stage declares a source of randomness (a random seed) in the
@@ -174,12 +176,15 @@ class HadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
     self.assertEqual(test_data.x.shape[0], encoded_shape[0])
     self.assertEqual(8, encoded_shape[1])
 
-  @parameterized.parameters([tf.float32, tf.float64])
-  def test_input_types(self, x_dtype):
+  @parameterized.parameters([(tf.float16, 1e-3, 1e-3),
+                             (tf.bfloat16, 1e-1, 1e-1),
+                             (tf.float32, 1e-6, 1e-6),
+                             (tf.float64, 1e-6, 1e-6)])
+  def test_input_types(self, x_dtype, rtol, atol):
     test_data = self.run_one_to_many_encode_decode(
         self.default_encoding_stage(),
         lambda: tf.random.normal([1, 12], dtype=x_dtype))
-    self.common_asserts_for_test_data(test_data)
+    self.common_asserts_for_test_data(test_data, rtol=rtol, atol=atol)
 
   def test_unknown_shape_raises(self):
     x = test_utils.get_tensor_with_random_shape()

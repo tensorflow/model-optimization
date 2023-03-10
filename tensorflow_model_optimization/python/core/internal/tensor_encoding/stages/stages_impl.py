@@ -475,10 +475,10 @@ class BitpackingEncodingStage(encoding_stage.EncodingStageInterface):
     # type to be able to recover the type from encoded_tensors in decode method.
     if x.dtype == tf.float32:
       return collections.OrderedDict([(self.ENCODED_VALUES_KEY, packed_x)])
-    elif x.dtype == tf.float64:
+    elif x.dtype in [tf.float16, tf.bfloat16, tf.float64]:
       return collections.OrderedDict([(self.ENCODED_VALUES_KEY, packed_x),
                                       (self.DUMMY_TYPE_VALUES_KEY,
-                                       tf.constant(0.0, dtype=tf.float64))])
+                                       tf.constant(0.0, dtype=x.dtype))])
     else:
       raise TypeError(
           'Unsupported packing type: %s. Supported types are tf.float32 and '
