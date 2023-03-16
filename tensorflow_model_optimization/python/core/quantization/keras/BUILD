@@ -219,7 +219,7 @@ py_strict_library(
         ":quantize_aware_activation",
         ":utils",
         # tensorflow dep1,
-        # python/util tensorflow dep2,
+        # python/util:tf_inspect tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/keras:utils",
     ],
