@@ -41,7 +41,7 @@ py_strict_library(
     srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
-        # python:control_flow_ops tensorflow dep2,
+        # tensorflow dep1,
         # python:smart_cond tensorflow dep2,
         # python:variables tensorflow dep2,
     ],
