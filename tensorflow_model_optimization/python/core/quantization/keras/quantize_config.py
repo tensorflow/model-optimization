@@ -189,6 +189,18 @@ class QuantizeConfig(object):
     """Returns the config used to serialize `QuantizeConfig`."""
     raise NotImplementedError('QuantizeConfig should implement get_config().')
 
+  @classmethod
+  def from_config(cls, config):
+    """Instantiates a `QuantizeConfig` from its config.
+
+    Args:
+        config: Output of `get_config()`.
+
+    Returns:
+        A `QuantizeConfig` instance.
+    """
+    return cls(**config)
+
 
 class OutputOnlyConfig(QuantizeConfig):
   """QuantizeConfig that only quantizes output."""
