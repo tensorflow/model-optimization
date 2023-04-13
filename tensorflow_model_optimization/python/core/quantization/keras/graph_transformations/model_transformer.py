@@ -554,6 +554,9 @@ class ModelTransformer(object):
     #   'output_layers': [ ... ],
     #   'name': 'MODEL_NAME',
     #
+
+    # Ensures old Keras serialization format
+    self.model.use_legacy_config = True
     self._config = self.model.get_config()
 
     # Stores map of Transform -> List of layer names matched by transform.
@@ -631,4 +634,6 @@ class ModelTransformer(object):
         if names_and_weights:
           self._set_layer_names_and_weights(layer, names_and_weights)
 
+    # Ensures old Keras serialization format
+    transformed_model.use_legacy_config = True
     return transformed_model, copy.deepcopy(self._layer_metadata_map)

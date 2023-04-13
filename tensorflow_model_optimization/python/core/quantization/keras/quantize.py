@@ -461,11 +461,15 @@ def quantize_apply(
         '`quantize_scope` for your calls to `quantize_model` and '
         '`quantize_apply`. [%s].' % er) from er
 
+  if hasattr(model, 'use_legacy_config'):
+    model_copy.use_legacy_config = model.use_legacy_config
+
   # 2. Remove QuantizeAnnotate wrappers from the layers in the model. This
   # extracts the original model structure (easier to transform), and
   # stores relevant quantization information in a map.
-  (unwrapped_model, layer_quantize_map,
-   requires_output_quantize) = _extract_original_model(model_copy)
+  (unwrapped_model, layer_quantize_map, requires_output_quantize) = (
+      _extract_original_model(model_copy)
+  )
   # Model cloning excludes input layers. Add input layers into the map
   # since they need to be matched for patterns as well.
   # pylint: disable=protected-access

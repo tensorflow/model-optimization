@@ -463,6 +463,8 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
       inp = keras.layers.Input((3,))
       out = keras.layers.Dense(2, activation='relu')(inp)
       model_fused = keras.Model(inp, out)
+      # Ensures old Keras serialization format
+      model_fused.use_legacy_config = True
     else:
       model_fused = keras.Sequential(
           [keras.layers.Dense(2, activation='relu', input_shape=(3,))])

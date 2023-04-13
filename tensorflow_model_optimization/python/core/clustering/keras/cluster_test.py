@@ -686,6 +686,10 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     stripped_model = cluster.strip_clustering(clustered_model)
 
     self.assertEqual(self._count_clustered_layers(stripped_model), 0)
+
+    # Ensures old Keras serialization format
+    model.use_legacy_config = True
+    stripped_model.use_legacy_config = True
     self.assertEqual(model.get_config(), stripped_model.get_config())
 
   def testClusterWeightsStrippedWeights(self):
