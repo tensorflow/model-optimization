@@ -144,7 +144,14 @@ class PruningWrapperTest(tf.test.TestCase):
     layer = CustomLayerPrunable(input_dim=16, output_dim=32)
     inputs = keras.layers.Input(shape=(16))
     _ = layer(inputs)
-    pruning_wrapper.PruneLowMagnitude(layer, block_pooling_type='MAX')
+    pruned_layer = pruning_wrapper.PruneLowMagnitude(
+        layer, block_pooling_type='MAX'
+    )
+    # The name is the layer's name prefixed by the snake_case version of the
+    # `PruneLowMagnitude` class's name.
+    self.assertEqual(
+        pruned_layer.name, 'prune_low_magnitude_custom_layer_prunable'
+    )
 
   def testCollectPrunableLayers(self):
     lstm_layer = keras.layers.RNN(

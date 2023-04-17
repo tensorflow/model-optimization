@@ -20,10 +20,10 @@ from __future__ import division
 from __future__ import print_function
 
 import inspect
+import re
 
 # import g3
 
-from keras.utils import generic_utils
 import numpy as np
 import tensorflow as tf
 
@@ -40,6 +40,26 @@ from tensorflow_model_optimization.python.core.sparsity.keras.pruning_utils impo
 keras = tf.keras
 K = keras.backend
 Wrapper = keras.layers.Wrapper
+
+
+def _to_snake_case(name: str) -> str:
+  """Converts `name` to snake case.
+
+  Example: "TensorFlow" -> "tensor_flow"
+
+  Args:
+    name: The name of some python class.
+
+  Returns:
+    `name` converted to snake case.
+  """
+  intermediate = re.sub('(.)([A-Z][a-z]+)', r'\1_\2', name)
+  insecure = re.sub('([a-z])([A-Z])', r'\1_\2', intermediate).lower()
+  # If the class is private the name starts with "_" which is not secure
+  # for creating scopes. We prefix the name with "private" in this case.
+  if insecure[0] != '_':
+    return insecure
+  return 'private' + insecure
 
 
 class PruneLowMagnitude(Wrapper):
@@ -154,8 +174,9 @@ class PruneLowMagnitude(Wrapper):
     # TODO(pulkitb): This should be pushed up to the wrappers.py
     # Name the layer using the wrapper and underlying layer name.
     # Prune(Dense) becomes prune_dense_1
-    kwargs.update({'name': '{}_{}'.format(
-        generic_utils.to_snake_case(self.__class__.__name__), layer.name)})
+    kwargs.update(
+        {'name': f'{_to_snake_case(self.__class__.__name__)}_{layer.name}'}
+    )
 
     if isinstance(layer, prunable_layer.PrunableLayer) or hasattr(
         layer, 'get_prunable_weights'):
