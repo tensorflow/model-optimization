@@ -38,7 +38,7 @@ To use:
 
 Note:
   If duplicate or spurious docs are generated (e.g. internal names), consider
-  blacklisting them via the `private_map` argument below.
+  denylisting them via the `private_map` argument below.
 """
 
 
