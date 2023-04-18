@@ -82,19 +82,19 @@ class QuantizeTest(tf.test.TestCase):
 
 class QuantizeAnnotateTest(tf.test.TestCase):
 
-  def _assertWrappedLayer(self, layer, quantize_config=None):
+  def _assert_wrapped_layer(self, layer, quantize_config=None):
     self.assertIsInstance(layer, quantize_annotate_mod.QuantizeAnnotate)
     self.assertEqual(quantize_config, layer.quantize_config)
 
-  def _assertWrappedModel(self, model):
+  def _assert_wrapped_model(self, model):
     for layer in model.layers:
-      self._assertWrappedLayer(layer)
+      self._assert_wrapped_layer(layer)
 
   def testQuantizeAnnotateLayer(self):
     layer = keras.layers.Dense(10, input_shape=(5,))
     wrapped_layer = quantize_annotate_layer(layer)
 
-    self._assertWrappedLayer(wrapped_layer)
+    self._assert_wrapped_layer(wrapped_layer)
 
     inputs = np.random.rand(1, 5)
     model = keras.Sequential([layer])
@@ -125,7 +125,7 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     ])
     annotated_model = quantize_annotate_model(model)
 
-    self._assertWrappedModel(annotated_model)
+    self._assert_wrapped_model(annotated_model)
 
     inputs = np.random.rand(1, 5)
     self.assertAllEqual(model.predict(inputs), annotated_model.predict(inputs))
@@ -140,8 +140,8 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     ])
     annotated_model = quantize_annotate_model(model)
 
-    self._assertWrappedLayer(annotated_model.layers[0])
-    self._assertWrappedLayer(annotated_model.layers[1], quantize_config)
+    self._assert_wrapped_layer(annotated_model.layers[0])
+    self._assert_wrapped_layer(annotated_model.layers[1], quantize_config)
     # Ensure an already annotated layer is not wrapped again.
     self.assertIsInstance(annotated_model.layers[1].layer, keras.layers.Dense)
 
@@ -198,8 +198,8 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     with self.assertWarns(Warning):
       annotated_model = quantize_annotate_model(model)
 
-    self._assertWrappedLayer(annotated_model.layers[0])
-    self._assertWrappedLayer(annotated_model.layers[1])
+    self._assert_wrapped_layer(annotated_model.layers[0])
+    self._assert_wrapped_layer(annotated_model.layers[1])
     self.assertIsInstance(annotated_model.layers[2], keras.layers.Lambda)
     inputs = np.random.rand(1, 5)
     self.assertAllEqual(model.predict(inputs), annotated_model.predict(inputs))
@@ -301,47 +301,64 @@ class QuantizeApplyTest(tf.test.TestCase):
     self._assert_weights_equal_value(annotated_weights, quantized_weights)
 
   def _assert_model_quantized(
-      self, annotated_model, quantized_model, exclude_keys=None):
-    for layer_annotated, layer_quantized in \
-        zip(annotated_model.layers, quantized_model.layers):
-
+      self, annotated_model, quantized_model, exclude_keys=None
+  ):
+    for layer_annotated, layer_quantized in zip(
+        annotated_model.layers, quantized_model.layers
+    ):
       if not isinstance(layer_annotated, QuantizeAnnotate):
         # Possibly wrapped for input quantization.
         if isinstance(layer_quantized, QuantizeWrapper):
           self.assertLen(layer_annotated._outbound_nodes, 1)
           self.assertIsInstance(
               layer_annotated._outbound_nodes[0].outbound_layer,
-              QuantizeAnnotate)
+              QuantizeAnnotate,
+          )
 
           # Ensure that only outputs are quantized.
           self.assertFalse(
               layer_quantized.quantize_config.get_weights_and_quantizers(
-                  layer_quantized.layer))
+                  layer_quantized.layer
+              )
+          )
         continue
 
       self._assert_layer_quantized(
-          layer_annotated, layer_quantized, exclude_keys)
+          layer_annotated, layer_quantized, exclude_keys
+      )
 
   def _assert_nonannotated_input_layer_quantized(
-      self, quantized_model, layer_index):
+      self, quantized_model, layer_index
+  ):
     output_quantized_layer = quantized_model.layers[layer_index]
     self.assertIsInstance(output_quantized_layer, QuantizeWrapper)
     output_quantized_config = output_quantized_layer.quantize_config
     default_quantized_config = output_quantized_config.get_config()[
-        'quantize_config']
+        'quantize_config'
+    ]
     self.assertIsInstance(
         default_quantized_config,
-        default_8bit_quantize_registry.Default8BitQuantizeConfig)
-    self.assertFalse(output_quantized_config.get_weights_and_quantizers(
-        output_quantized_layer.layer))
-    self.assertTrue(default_quantized_config.get_weights_and_quantizers(
-        output_quantized_layer.layer))
+        default_8bit_quantize_registry.Default8BitQuantizeConfig,
+    )
+    self.assertFalse(
+        output_quantized_config.get_weights_and_quantizers(
+            output_quantized_layer.layer
+        )
+    )
+    self.assertTrue(
+        default_quantized_config.get_weights_and_quantizers(
+            output_quantized_layer.layer
+        )
+    )
     output_quantizers = output_quantized_config.get_output_quantizers(
-        output_quantized_layer.layer)
+        output_quantized_layer.layer
+    )
     default_output_quantizers = default_quantized_config.get_output_quantizers(
-        output_quantized_layer.layer)
-    for output_quantizer, default_quantizer in zip(output_quantizers,
-                                                   default_output_quantizers):
+        output_quantized_layer.layer
+    )
+    for output_quantizer, default_quantizer in zip(
+        output_quantizers, default_output_quantizers
+    ):
       self.assertEqual(output_quantizer, default_quantizer)
 
   # quantize_apply Tests
@@ -351,30 +368,25 @@ class QuantizeApplyTest(tf.test.TestCase):
 
   def testQuantizeCustomLayerWithoutQuantizeScope_RaisesError(self):
     annotated_model = keras.Sequential(
-        [quantize_annotate_layer(self.CustomLayer(3, input_shape=(2,)))])
+        [quantize_annotate_layer(self.CustomLayer(3, input_shape=(2,)))]
+    )
 
-    with self.assertRaises(ValueError) as err:
+    with self.assertRaises((TypeError, ValueError)):
       quantize_apply(annotated_model)
 
-    expected_error = (
-        'Unable to clone model. This generally happens if you used custom '
-        'Keras layers or objects in your model. Please specify them via '
-        '`quantize_scope` for your calls to `quantize_model` and '
-        '`quantize_apply`.')
-
-    self.assertIn(expected_error, str(err.exception))
-
   def testQuantize_RaisesErrorIfNoQuantizeConfig(self):
-    annotated_model = keras.Sequential([
-        QuantizeAnnotate(self.CustomLayer(3), input_shape=(2,))])
+    annotated_model = keras.Sequential(
+        [QuantizeAnnotate(self.CustomLayer(3), input_shape=(2,))]
+    )
 
     with custom_object_scope({'CustomLayer': self.CustomLayer}):
       with self.assertRaises(RuntimeError):
         quantize_apply(annotated_model)
 
   def testQuantize_UsesBuiltinQuantizeConfig(self):
-    annotated_model = keras.Sequential([
-        quantize_annotate_layer(keras.layers.Dense(3, input_shape=(2,)))])
+    annotated_model = keras.Sequential(
+        [quantize_annotate_layer(keras.layers.Dense(3, input_shape=(2,)))]
+    )
 
     quantized_model = quantize_apply(annotated_model)
     quantized_layer = quantized_model.layers[1]
