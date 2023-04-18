@@ -454,7 +454,7 @@ def quantize_apply(
   # modifications don't affect the original model, or its weights.
   try:
     model_copy = _clone_model_with_weights(model)
-  except ValueError as er:
+  except (ValueError, TypeError) as er:
     raise ValueError(
         'Unable to clone model. This generally happens if you used custom '
         'Keras layers or objects in your model. Please specify them via '
