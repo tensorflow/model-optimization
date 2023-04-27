@@ -91,7 +91,7 @@ class _TrainingWrapper(tf.keras.layers.Wrapper):
     self.dummy_name_to_tensor[name] = dummy_zeros
     return dummy_zeros
 
-  def build(self, input_shape):
+  def build(self, input_shape):  # pytype: disable=signature-mismatch  # overriding-parameter-count-checks
     # Building nested layer via `super` must happen first
     # so that the nested layer's variables
     # are available to `init_training_weights`.
@@ -206,7 +206,7 @@ class _InferenceWrapper(tf.keras.layers.Wrapper):
 
     return tf.zeros(shape)
 
-  def build(self, input_shape):
+  def build(self, input_shape):  # pytype: disable=signature-mismatch  # overriding-parameter-count-checks
     super(_InferenceWrapper, self).build(input_shape)
 
     # Add weights needed by algorithm during inference.
