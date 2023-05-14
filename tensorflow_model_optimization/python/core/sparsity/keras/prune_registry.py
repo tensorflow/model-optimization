@@ -19,8 +19,6 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 
-# TODO(b/139939526): move to public API.
-
 layers = tf.keras.layers
 layers_compat_v1 = tf.compat.v1.keras.layers
 
@@ -226,3 +224,7 @@ class PruneRegistry(object):
       layer.get_prunable_weights = get_prunable_weights
 
     return layer
+
+  @classmethod
+  def register_prunable_layer(cls, layer: layers.Layer, prunable_weights: list[str]):
+    cls._LAYERS_WEIGHTS_MAP[layer] = prunable_weights
