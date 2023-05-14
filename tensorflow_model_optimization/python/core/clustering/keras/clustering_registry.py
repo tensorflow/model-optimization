@@ -220,3 +220,7 @@ class ClusteringRegistry(object):
       layer.get_clusterable_weights = get_clusterable_weights
 
     return layer
+
+  @classmethod
+  def register_clusterable_layer(cls, layer: layers.Layer, clusterable_weights: list[str]):
+      cls._LAYERS_WEIGHTS_MAP[layer] = clusterable_weights

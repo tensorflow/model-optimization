@@ -19,8 +19,6 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 
-# TODO(b/139939526): move to public API.
-
 layers = tf.keras.layers
 layers_compat_v1 = tf.compat.v1.keras.layers
 
@@ -201,7 +199,7 @@ class PruneRegistry(object):
           return cell.get_prunable_weights()
 
         raise ValueError(cls._RNN_CELL_ERROR_MSG.format(
-            layer.__class__, cell.__class__, cls._RNN_CELLS_WEIGHTS_MAP.keys()))
+          layer.__class__, cell.__class__, cls._RNN_CELLS_WEIGHTS_MAP.keys()))
 
       prunable_weights = []
       for rnn_cell in cls._get_rnn_cells(layer):
@@ -226,3 +224,7 @@ class PruneRegistry(object):
       layer.get_prunable_weights = get_prunable_weights
 
     return layer
+
+  @classmethod
+  def register_prunable_layer(cls, layer: layers.Layer, prunable_weights: list[str]):
+    cls._LAYERS_WEIGHTS_MAP[layer] = prunable_weights
