@@ -25,4 +25,5 @@ from tensorflow_model_optimization.python.core.clustering.keras.cluster_config i
 from tensorflow_model_optimization.python.core.clustering.keras.clustering_algorithm import ClusteringAlgorithm
 from tensorflow_model_optimization.python.core.clustering.keras.clustering_callbacks import ClusteringSummaries
 from tensorflow_model_optimization.python.core.clustering.keras.clusterable_layer import ClusterableLayer
+from tensorflow_model_optimization.python.core.clustering.keras.clustering_registry import ClusteringRegistry
 # pylint: enable=g-bad-import-order
