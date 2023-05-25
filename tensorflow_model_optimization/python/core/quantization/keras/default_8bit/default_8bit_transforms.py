@@ -17,7 +17,6 @@
 import collections
 import inspect
 
-from keras import backend
 import numpy as np
 import tensorflow as tf
 
@@ -28,6 +27,12 @@ from tensorflow_model_optimization.python.core.quantization.keras import utils a
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_configs
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
+
+try:
+  from keras.backend import unique_object_name  # pylint: disable=g-import-not-at-top
+except ImportError:
+  # Path as seen in pip packages as of TF/Keras 2.13.
+  from keras.src.backend import unique_object_name  # pylint: disable=g-import-not-at-top
 
 LayerNode = transforms.LayerNode
 LayerPattern = transforms.LayerPattern
@@ -364,9 +369,9 @@ class SeparableConv1DQuantize(transforms.Transform):
     return LayerPattern('SeparableConv1D')
 
   def _get_name(self, prefix):
-    # TODO(pulkitb): Move away from `backend.unique_object_name` since it isn't
+    # TODO(pulkitb): Move away from `unique_object_name` since it isn't
     # exposed as externally usable.
-    return backend.unique_object_name(prefix)
+    return unique_object_name(prefix)
 
   def replacement(self, match_layer):
     if _has_custom_quantize_config(match_layer):
