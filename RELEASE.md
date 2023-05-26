@@ -32,6 +32,14 @@ Keras pruning API:
 
 # TensorFlow Model Optimization next release TBD
 
+# TensorFlow Model Optimization 0.7.5
+
+TFMOT 0.7.5 fixes compatibility issues with new keras.
+ * Fixed improper serialization code route for functional models.
+ * Created a local copy of keras.utils.generic_utils.to_snake_case.
+ * Handled the error type reflect to the keras update.
+ * Fixed compatibility issues for the TF/Keras 2.13.
+
 # TensorFlow Model Optimization 0.7.4
 
 TFMOT 0.7.4 add from_config method to QuantizeConfig class since the new keras serialization enforces it.
