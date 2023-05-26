@@ -22,7 +22,10 @@ py_strict_test(
     srcs = ["epr_test.py"],
     python_version = "PY3",
     shard_count = 4,
-    tags = ["requires-net:external"],
+    tags = [
+        "manual",  # TODO(b/284376360): Remove manual after resolve kokoro test deps issue.
+        "requires-net:external",
+    ],
     deps = [
         ":epr",
         # absl/testing:parameterized dep1,
