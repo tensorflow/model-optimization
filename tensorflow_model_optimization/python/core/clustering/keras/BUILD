@@ -70,7 +70,7 @@ py_strict_library(
         ":cluster_config",
         # six dep1,
         # tensorflow dep1,
-        # python:clustering_ops tensorflow dep2,
+        # python/ops:clustering_ops tensorflow dep2,
     ],
 )
 

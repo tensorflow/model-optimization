@@ -31,7 +31,7 @@ py_strict_library(
     deps = [
         # absl/logging dep1,
         # tensorflow dep1,
-        # python:training tensorflow dep2,
+        # python/training tensorflow dep2,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )

@@ -42,8 +42,8 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
-        # python:smart_cond tensorflow dep2,
-        # python:variables tensorflow dep2,
+        # python/framework:smart_cond tensorflow dep2,
+        # python/ops:variables tensorflow dep2,
     ],
 )
 

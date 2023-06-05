@@ -89,7 +89,7 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # numpy dep1,
         # tensorflow dep1,
-        # python:framework_test_lib tensorflow dep2,
+        # python/framework:test_lib tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
     ],
 )
@@ -114,7 +114,7 @@ py_strict_test(
         ":simple_encoder",
         # absl/testing:parameterized dep1,
         # tensorflow dep1,
-        # python:framework_test_lib tensorflow dep2,
+        # python/framework:test_lib tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
     ],
 )
