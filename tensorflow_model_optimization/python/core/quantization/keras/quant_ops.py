@@ -20,8 +20,6 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-# TODO(b/139939526): move to public API.
-from tensorflow.python.training import moving_averages
 from tensorflow_model_optimization.python.core.keras import compat as tf_compat
 
 
@@ -297,9 +295,9 @@ def MovingAvgQuantize(inputs,
       range_min = tf.minimum(batch_min, 0.0)
       range_max = tf.maximum(batch_max, 0.0)
 
-    assign_min = moving_averages.assign_moving_average(
+    assign_min = tf.__internal__.train.assign_moving_average(
         min_var, range_min, ema_decay, zero_debias=False, name='AssignMinEma')
-    assign_max = moving_averages.assign_moving_average(
+    assign_max = tf.__internal__.train.assign_moving_average(
         max_var, range_max, ema_decay, zero_debias=False, name='AssignMaxEma')
 
     return _FakeQuantWithMinMaxVars(
