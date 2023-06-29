@@ -79,10 +79,12 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
             if isinstance(item, dict):
               _remove_keys(item)
 
+    # Ensure the same config format
+    model1.use_legacy_config, model2.use_legacy_config = True, True
     model1_config = model1.get_config()
     model2_config = model2.get_config()
     exclude_keys = exclude_keys or []
-    exclude_keys += ['build_input_shape', 'build_config']
+    exclude_keys += ['build_config']  # Exclude model build information
     _remove_keys(model1_config)
     _remove_keys(model2_config)
     self.assertEqual(model1_config, model2_config)
