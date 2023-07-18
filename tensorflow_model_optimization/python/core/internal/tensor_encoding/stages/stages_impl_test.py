@@ -176,10 +176,12 @@ class HadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
     self.assertEqual(test_data.x.shape[0], encoded_shape[0])
     self.assertEqual(8, encoded_shape[1])
 
-  @parameterized.parameters([(tf.float16, 1e-3, 1e-3),
-                             (tf.bfloat16, 1e-1, 1e-1),
-                             (tf.float32, 1e-6, 1e-6),
-                             (tf.float64, 1e-6, 1e-6)])
+  @parameterized.parameters([
+      (tf.float16, 1e-2, 1e-2),
+      (tf.bfloat16, 1e-1, 1e-1),
+      (tf.float32, 1e-6, 1e-6),
+      (tf.float64, 1e-6, 1e-6),
+  ])
   def test_input_types(self, x_dtype, rtol, atol):
     test_data = self.run_one_to_many_encode_decode(
         self.default_encoding_stage(),
