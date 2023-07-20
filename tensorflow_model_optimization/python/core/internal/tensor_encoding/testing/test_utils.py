@@ -521,7 +521,7 @@ class BaseEncodingStageTest(tf.test.TestCase, parameterized.TestCase):
     for i, value in enumerate(eval_fetches):
       if isinstance(value, dict):
         eval_fetches[i] = py_utils.merge_dicts(value, py_fetches[i])
-      elif value == placeholder_empty_tuple:
+      elif isinstance(value, tuple) and value == placeholder_empty_tuple:
         eval_fetches[i] = py_fetches[i]
     return eval_fetches
 
