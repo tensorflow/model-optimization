@@ -1,3 +1,4 @@
+# Placeholder: load py_test
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 
 package(default_visibility = [
