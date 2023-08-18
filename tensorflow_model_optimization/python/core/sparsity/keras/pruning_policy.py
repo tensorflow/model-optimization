@@ -124,8 +124,6 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
         found_layers.add(layer)
       else:
         next_layers = next_fn(layer)
-        if not next_layers:
-          return set()
         for next_layer in next_layers:
           if next_layer not in used_layers:
             used_layers.add(next_layer)
