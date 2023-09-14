@@ -52,7 +52,6 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
-        # keras/engine:base_layer dep1,
         # tensorflow dep1,
     ],
 )
