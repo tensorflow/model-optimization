@@ -37,6 +37,7 @@ py_strict_test(
     deps = [
         ":core_encoder",
         ":encoding_stage",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
@@ -60,6 +61,7 @@ py_strict_test(
     deps = [
         ":encoding_stage",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # mock dep1,
         # numpy dep1,
         # tensorflow dep1,
@@ -87,6 +89,7 @@ py_strict_test(
         ":encoding_stage",
         ":gather_encoder",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         # python/framework:test_lib tensorflow dep2,
@@ -113,6 +116,7 @@ py_strict_test(
         ":core_encoder",
         ":simple_encoder",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         # python/framework:test_lib tensorflow dep2,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",

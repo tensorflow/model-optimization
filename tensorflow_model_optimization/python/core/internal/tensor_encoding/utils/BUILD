@@ -35,6 +35,7 @@ py_strict_test(
     deps = [
         ":py_utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -57,6 +58,7 @@ py_strict_test(
     deps = [
         ":tf_utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # scipy dep1,
         # tensorflow dep1,

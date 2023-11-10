@@ -57,6 +57,7 @@ py_test(
     deps = [
         ":cluster_preserve_quantize_registry",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
@@ -74,6 +75,7 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":default_8bit_cluster_preserve_quantize_scheme",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
@@ -103,6 +105,7 @@ py_test(
     visibility = ["//visibility:private"],
     deps = [
         ":default_8bit_cluster_preserve_quantize_scheme",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",

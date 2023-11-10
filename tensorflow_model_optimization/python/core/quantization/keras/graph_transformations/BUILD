@@ -36,6 +36,7 @@ py_strict_test(
     visibility = ["//visibility:public"],
     deps = [
         ":transforms",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )
@@ -64,6 +65,7 @@ py_strict_test(
         ":model_transformer",
         ":transforms",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:utils",

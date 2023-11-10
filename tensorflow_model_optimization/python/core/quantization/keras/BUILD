@@ -43,6 +43,7 @@ py_strict_test(
     deps = [
         ":quant_ops",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
@@ -73,6 +74,7 @@ py_strict_test(
         ":quantizers",
         ":utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -141,6 +143,7 @@ py_strict_test(
     deps = [
         ":quantize_annotate",
         ":quantize_config",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -172,6 +175,7 @@ py_strict_test(
         ":quantizers",
         ":utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -202,6 +206,7 @@ py_strict_test(
     deps = [
         ":quantize_layer",
         ":quantizers",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -235,6 +240,7 @@ py_strict_test(
         ":quantize_aware_activation",
         ":quantize_wrapper",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
@@ -277,6 +283,7 @@ py_strict_test(
         ":quantize_wrapper",
         ":quantizers",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
@@ -294,6 +301,7 @@ py_strict_test(
         ":quantizers",
         ":utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -312,6 +320,7 @@ py_strict_test(
         ":quantize",
         ":utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -328,6 +337,7 @@ py_strict_test(
         ":quantize",
         ":utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",

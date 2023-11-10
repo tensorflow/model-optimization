@@ -29,6 +29,7 @@ py_strict_test(
     deps = [
         ":epr",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )
@@ -51,6 +52,7 @@ py_strict_test(
     tags = ["requires-net:external"],
     deps = [
         ":same_training_and_inference",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
@@ -74,6 +76,7 @@ py_strict_test(
     tags = ["requires-net:external"],
     deps = [
         ":different_training_and_inference",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
@@ -97,6 +100,7 @@ py_strict_test(
     tags = ["requires-net:external"],
     deps = [
         ":bias_only",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
@@ -122,6 +126,7 @@ py_strict_test(
     tags = ["requires-net:external"],
     deps = [
         ":weight_clustering",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
     ],
@@ -145,6 +150,7 @@ py_strict_test(
     tags = ["requires-net:external"],
     deps = [
         ":periodical_update_and_scheduling",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],

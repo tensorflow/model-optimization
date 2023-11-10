@@ -88,6 +88,7 @@ py_strict_test(
     deps = [
         ":pruning_schedule",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:utils",
@@ -137,6 +138,7 @@ py_strict_test(
         ":prune",
         ":pruning_callbacks",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
@@ -206,6 +208,7 @@ py_strict_test(
         ":pruning_schedule",
         ":pruning_wrapper",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
@@ -227,6 +230,7 @@ py_strict_test(
         ":pruning_wrapper",
         ":test_utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
@@ -246,6 +250,7 @@ py_strict_test(
         ":pruning_schedule",
         ":test_utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:test_utils",
@@ -262,6 +267,7 @@ py_strict_test(
         ":prunable_layer",
         ":prune_registry",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )
@@ -275,6 +281,7 @@ py_strict_test(
     deps = [
         ":pruning_schedule",
         ":pruning_wrapper",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )
@@ -290,6 +297,7 @@ py_strict_test(
         ":pruning_schedule",
         ":pruning_utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -305,6 +313,7 @@ py_strict_test(
     deps = [
         ":pruning_utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
     ],
@@ -321,6 +330,7 @@ py_test(
         ":pruning_policy",
         ":pruning_schedule",
         ":pruning_wrapper",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )

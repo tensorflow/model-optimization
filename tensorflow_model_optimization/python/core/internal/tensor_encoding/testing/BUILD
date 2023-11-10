@@ -36,6 +36,7 @@ py_strict_test(
     deps = [
         ":test_utils",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # mock dep1,
         # numpy dep1,
         # six dep1,

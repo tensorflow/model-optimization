@@ -125,6 +125,7 @@ py_test(
         ":clusterable_layer",
         ":clustering_registry",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
     ],
@@ -140,6 +141,7 @@ py_strict_test(
         ":cluster_config",
         ":clustering_centroids",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -157,6 +159,7 @@ py_strict_test(
         ":cluster_wrapper",
         ":clusterable_layer",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )
@@ -172,6 +175,7 @@ py_strict_test(
         ":clusterable_layer",
         ":clustering_registry",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )
@@ -186,6 +190,7 @@ py_test(
         ":cluster",
         ":cluster_config",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
@@ -202,6 +207,7 @@ py_strict_test(
         ":cluster_config",
         ":cluster_wrapper",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
@@ -220,6 +226,7 @@ py_strict_test(
         ":cluster_config",
         ":clusterable_layer",
         ":clustering_algorithm",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )
@@ -234,6 +241,7 @@ py_strict_test(
         ":cluster",
         ":cluster_config",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
     ],

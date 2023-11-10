@@ -35,6 +35,7 @@ py_strict_test(
     deps = [
         ":common_encoders",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:core_encoder",
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:gather_encoder",

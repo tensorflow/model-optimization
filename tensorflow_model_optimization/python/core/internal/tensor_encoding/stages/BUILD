@@ -35,6 +35,7 @@ py_strict_test(
     deps = [
         ":stages_impl",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",

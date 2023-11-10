@@ -43,6 +43,7 @@ py_test(
     deps = [
         ":prune_preserve_quantize_registry",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune_registry",

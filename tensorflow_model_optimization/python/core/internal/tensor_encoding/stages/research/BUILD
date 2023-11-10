@@ -35,6 +35,7 @@ py_strict_test(
     deps = [
         ":clipping",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
@@ -60,6 +61,7 @@ py_strict_test(
     deps = [
         ":kashin",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
@@ -84,6 +86,7 @@ py_strict_test(
     deps = [
         ":quantization",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",
@@ -107,6 +110,7 @@ py_strict_test(
     deps = [
         ":misc",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",

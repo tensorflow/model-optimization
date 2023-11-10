@@ -31,6 +31,7 @@ py_strict_test(
     python_version = "PY3",
     deps = [
         ":schedules",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )

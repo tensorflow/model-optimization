@@ -62,6 +62,7 @@ py_strict_test(
     python_version = "PY3",
     deps = [
         ":metrics",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # mock dep1,
         # tensorflow dep1,
         # python/eager:monitoring tensorflow dep2,

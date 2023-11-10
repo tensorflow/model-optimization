@@ -39,6 +39,7 @@ py_test(
     deps = [
         ":default_8bit_quantizers",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
     ],
 )
@@ -81,6 +82,7 @@ py_test(
     deps = [
         ":default_8bit_quantize_registry",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
@@ -118,6 +120,7 @@ py_strict_test(
         ":default_8bit_quantize_registry",
         ":default_8bit_transforms",
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
@@ -151,6 +154,7 @@ py_test(
     python_version = "PY3",
     deps = [
         # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
