@@ -18,6 +18,7 @@ py_strict_binary(
     ],
     python_version = "PY3",
     deps = [
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",

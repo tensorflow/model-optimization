@@ -20,6 +20,7 @@ py_strict_binary(
     deps = [
         # absl:app dep1,
         # absl/flags dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",

@@ -31,6 +31,7 @@ py_strict_binary(
     deps = [
         # absl:app dep1,
         # absl/flags dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow_docs/api_generator:generate_lib dep1,
         "//third_party/tensorflow_model_optimization",
     ],

@@ -10,6 +10,7 @@ py_strict_binary(
     python_version = "PY3",
     deps = [
         # absl:app dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",

@@ -44,6 +44,7 @@ py_binary(
     python_version = "PY3",
     deps = [
         ":sparsity_tooling",
+        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
     ],
