@@ -50,7 +50,7 @@ def quantize_scope(*args):
 
   # If your quantized model uses custom objects such as a specific `Quantizer`,
   # you can pass them to quantize_scope to deserialize your model.
-  with quantize_scope({'FixedRangeQuantizer', FixedRangeQuantizer}
+  with quantize_scope({'FixedRangeQuantizer': FixedRangeQuantizer}):
     loaded_model = tf.keras.models.load_model(keras_file)
   ```
 
