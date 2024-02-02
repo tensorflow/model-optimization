@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-keras = tf.keras
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 class DenseModel(object):
@@ -55,4 +55,4 @@ class DenseModel(object):
     out = normalization(axis=-1)(x)
     if post_bn_activation is not None:
       out = post_bn_activation(out)
-    return tf.keras.Model(inp, out)
+    return keras.Model(inp, out)

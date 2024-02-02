@@ -18,6 +18,7 @@ from typing import List
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 class SVD(algorithm.WeightCompressor):
@@ -42,12 +43,14 @@ class SVD(algorithm.WeightCompressor):
         name='w',
         shape=pretrained_weight.shape,
         dtype=pretrained_weight.dtype,
-        initializer=tf.keras.initializers.Constant(pretrained_weight))
+        initializer=keras.initializers.Constant(pretrained_weight),
+    )
     self.add_training_weight(
         name='step',
         shape=(),
         dtype=tf.int32,
-        initializer=tf.keras.initializers.Constant(0))
+        initializer=keras.initializers.Constant(0),
+    )
 
   def decompress_weights(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
     return tf.matmul(u, sv)
@@ -109,13 +112,13 @@ class SVD(algorithm.WeightCompressor):
     return [u, sv]
 
   def get_compressible_weights(
-      self, original_layer: tf.keras.layers.Layer) -> List[str]:
-    if isinstance(original_layer, (tf.keras.layers.Conv2D,
-                                   tf.keras.layers.Dense)):
+      self, original_layer: keras.layers.Layer
+  ) -> List[str]:
+    if isinstance(original_layer, (keras.layers.Conv2D, keras.layers.Dense)):
       return [original_layer.kernel]
     return []
 
-  def optimize_model(self, to_optimize: tf.keras.Model) -> tf.keras.Model:
+  def optimize_model(self, to_optimize: keras.Model) -> keras.Model:
     """Model developer API for optimizing a model for training.
 
     The returned model should be used for compression aware training.
@@ -125,11 +128,14 @@ class SVD(algorithm.WeightCompressor):
       A wrapped model that has compression optimizers.
     """
     # pylint: disable=protected-access
-    if not isinstance(
-        to_optimize, tf.keras.Sequential) and not to_optimize._is_graph_network:
+    if (
+        not isinstance(to_optimize, keras.Sequential)
+        and not to_optimize._is_graph_network
+    ):
       raise ValueError(
-          '`optimize_model` can only either be a tf.keras Sequential or '
-          'Functional model.')
+          '`optimize_model` can only either be a keras Sequential or '
+          'Functional model.'
+      )
     # pylint: enable=protected-access
 
     def _optimize_layer(layer):
@@ -141,10 +147,9 @@ class SVD(algorithm.WeightCompressor):
 
       return algorithm.create_layer_for_training(layer, algorithm=self)
 
-    return tf.keras.models.clone_model(
-        to_optimize, clone_function=_optimize_layer)
+    return keras.models.clone_model(to_optimize, clone_function=_optimize_layer)
 
-  def compress_model(self, to_compress: tf.keras.Model) -> tf.keras.Model:
+  def compress_model(self, to_compress: keras.Model) -> keras.Model:
     """Model developer API for optimizing a model for inference.
 
     Args:
@@ -162,5 +167,4 @@ class SVD(algorithm.WeightCompressor):
 
       return algorithm.create_layer_for_inference(layer, algorithm=self)
 
-    return tf.keras.models.clone_model(
-        to_compress, clone_function=_optimize_layer)
+    return keras.models.clone_model(to_compress, clone_function=_optimize_layer)

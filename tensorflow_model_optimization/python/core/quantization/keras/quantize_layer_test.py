@@ -21,12 +21,14 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
+
 QuantizeLayer = quantize_layer.QuantizeLayer
-deserialize_layer = tf.keras.layers.deserialize
-serialize_layer = tf.keras.layers.serialize
+deserialize_layer = keras.layers.deserialize
+serialize_layer = keras.layers.serialize
 
 
 class QuantizeLayerTest(tf.test.TestCase):
@@ -41,11 +43,9 @@ class QuantizeLayerTest(tf.test.TestCase):
         per_axis=False, symmetric=True, **self.quant_params)
 
   def testQuantizesTensors(self):
-    model = tf.keras.Sequential([
-        QuantizeLayer(
-            quantizer=self.quantizer,
-            input_shape=(4,)
-        )])
+    model = keras.Sequential(
+        [QuantizeLayer(quantizer=self.quantizer, input_shape=(4,))]
+    )
 
     x = np.random.rand(1, 4)
     quant_x = tf.quantization.fake_quant_with_min_max_vars(
@@ -64,14 +64,14 @@ class QuantizeLayerTest(tf.test.TestCase):
     }
 
     serialized_layer = serialize_layer(layer)
-    with tf.keras.utils.custom_object_scope(custom_objects):
+    with keras.utils.custom_object_scope(custom_objects):
       layer_from_config = deserialize_layer(serialized_layer)
 
     self.assertEqual(layer_from_config.get_config(), layer.get_config())
 
   def testNoQuantizeLayer(self):
     layer = QuantizeLayer(quantizer=None, input_shape=(4,))
-    model = tf.keras.Sequential([layer])
+    model = keras.Sequential([layer])
     x = np.random.rand(1, 4)
     self.assertAllClose(x, model.predict(x))
 
@@ -80,7 +80,7 @@ class QuantizeLayerTest(tf.test.TestCase):
     }
 
     serialized_layer = serialize_layer(layer)
-    with tf.keras.utils.custom_object_scope(custom_objects):
+    with keras.utils.custom_object_scope(custom_objects):
       layer_from_config = deserialize_layer(serialized_layer)
 
     self.assertEqual(layer_from_config.get_config(), layer.get_config())

@@ -21,6 +21,7 @@ py_strict_library(
     srcs = ["test_utils.py"],
     srcs_version = "PY3",
     deps = [
+        ":compat",
         # numpy dep1,
         # tensorflow dep1,
     ],
@@ -61,6 +62,7 @@ py_strict_test(
     srcs = ["metrics_test.py"],
     python_version = "PY3",
     deps = [
+        ":compat",
         ":metrics",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # mock dep1,

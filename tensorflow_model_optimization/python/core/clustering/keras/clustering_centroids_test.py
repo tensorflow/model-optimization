@@ -20,8 +20,10 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-K = tf.keras.backend
+
+K = keras.backend
 errors_impl = tf.errors
 
 CentroidInitialization = cluster_config.CentroidInitialization

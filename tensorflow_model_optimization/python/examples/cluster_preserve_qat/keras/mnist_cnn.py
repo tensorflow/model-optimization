@@ -24,25 +24,28 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster as tfmot_cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config as tfmot_cluster_config
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import (
     default_8bit_cluster_preserve_quantize_scheme,)
 from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve.cluster_utils import (
     strip_clustering_cqat,)
 
-layers = tf.keras.layers
+
+layers = keras.layers
 
 
 def setup_model(input_shape, image_train, label_train):
   """Baseline model."""
-  model = tf.keras.Sequential([
-      tf.keras.layers.InputLayer(input_shape),
-      tf.keras.layers.Reshape(target_shape=(28, 28, 1)),
-      tf.keras.layers.Conv2D(filters=12, kernel_size=(3, 3),
-                             activation=tf.nn.relu),
-      tf.keras.layers.MaxPooling2D(pool_size=(2, 2)),
-      tf.keras.layers.Flatten(),
-      tf.keras.layers.Dense(10)
+  model = keras.Sequential([
+      keras.layers.InputLayer(input_shape),
+      keras.layers.Reshape(target_shape=(28, 28, 1)),
+      keras.layers.Conv2D(
+          filters=12, kernel_size=(3, 3), activation=tf.nn.relu
+      ),
+      keras.layers.MaxPooling2D(pool_size=(2, 2)),
+      keras.layers.Flatten(),
+      keras.layers.Dense(10),
   ])
   compile_and_fit(model, image_train, label_train, 5)
 
@@ -51,12 +54,12 @@ def setup_model(input_shape, image_train, label_train):
 
 def _get_callback(model_dir):
   """Create callbacks for Keras model training."""
-  check_point = tf.keras.callbacks.ModelCheckpoint(
+  check_point = keras.callbacks.ModelCheckpoint(
       save_best_only=True,
       filepath=os.path.join(model_dir, 'model.ckpt-{epoch:04d}'),
-      verbose=1)
-  tensorboard = tf.keras.callbacks.TensorBoard(
-      log_dir=model_dir, update_freq=100)
+      verbose=1,
+  )
+  tensorboard = keras.callbacks.TensorBoard(log_dir=model_dir, update_freq=100)
   return [check_point, tensorboard]
 
 
@@ -66,8 +69,8 @@ def compile_and_fit(model,
                     epochs):
   model.compile(
       optimizer='adam',
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-      metrics=['accuracy']
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=['accuracy'],
   )
 
   callbacks_to_use = _get_callback(model_dir='./logs')
@@ -126,11 +129,13 @@ def evaluate_model_fp32(model, image_test, label_test):
 def print_unique_weights(model):
   """Check Dense and Conv2D layers."""
   for layer in model.layers:
-    if (isinstance(layer, tf.keras.layers.Conv2D)
-        or isinstance(layer, tf.keras.layers.Dense)
-        or isinstance(layer, quantize.quantize_wrapper.QuantizeWrapper)):
+    if (
+        isinstance(layer, keras.layers.Conv2D)
+        or isinstance(layer, keras.layers.Dense)
+        or isinstance(layer, quantize.quantize_wrapper.QuantizeWrapper)
+    ):
       for weights in layer.trainable_weights:
-        np_weights = tf.keras.backend.get_value(weights)
+        np_weights = keras.backend.get_value(weights)
         unique_weights = len(np.unique(np_weights))
         if isinstance(layer, quantize.quantize_wrapper.QuantizeWrapper):
           print(layer.layer.__class__.__name__, ' (', weights.name,
@@ -172,7 +177,7 @@ def evaluate_model(interpreter, test_images, test_labels):
 
 def main(unused_args):
   # Load the MNIST dataset.
-  mnist = tf.keras.datasets.mnist
+  mnist = keras.datasets.mnist
   # Shuffle and split data to generate training and testing datasets
   (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
   # Normalize the input images so that each pixel value is between 0 and 1.

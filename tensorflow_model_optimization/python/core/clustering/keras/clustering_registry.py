@@ -18,8 +18,10 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_algorithm
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-layers = tf.keras.layers
+
+layers = keras.layers
 ClusteringAlgorithm = clustering_algorithm.ClusteringAlgorithm
 ClusteringAlgorithmPerChannel = clustering_algorithm.ClusteringAlgorithmPerChannel
 
@@ -42,7 +44,7 @@ class ClusteringLookupRegistry(object):
 
     # Per-channel clustering is only applied if the layer is a Conv2D,
     # ignored otherwise
-    if cluster_per_channel and isinstance(layer, tf.keras.layers.Conv2D):
+    if cluster_per_channel and isinstance(layer, keras.layers.Conv2D):
       return ClusteringAlgorithmPerChannel
 
     # Clusterable layer could provide own implementation of get_pulling_indices
@@ -90,6 +92,13 @@ class ClusteringRegistry(object):
       tf.compat.v2.keras.layers.SimpleRNNCell,
       tf.compat.v1.keras.layers.StackedRNNCells,
       tf.compat.v2.keras.layers.StackedRNNCells,
+      tf.compat.v1.keras.layers.Bidirectional,
+      tf.compat.v2.keras.layers.Bidirectional,
+      layers.GRUCell,
+      layers.LSTMCell,
+      layers.SimpleRNNCell,
+      layers.StackedRNNCells,
+      layers.Bidirectional,
   })
 
   _SUPPORTED_RNN_LAYERS = frozenset([
@@ -101,7 +110,7 @@ class ClusteringRegistry(object):
   ])
 
   _SUPPORTED_MHA_LAYERS = {
-      tf.keras.layers.MultiHeadAttention,
+      keras.layers.MultiHeadAttention,
   }
 
   @classmethod
@@ -141,9 +150,9 @@ class ClusteringRegistry(object):
   def _get_rnn_cells(rnn_layer):  # pylint: disable=no-self-argument
     """Get rnn cells from layer."""
 
-    if isinstance(rnn_layer, tf.keras.layers.Bidirectional):
+    if isinstance(rnn_layer, keras.layers.Bidirectional):
       return [rnn_layer.forward_layer.cell, rnn_layer.backward_layer.cell]
-    if isinstance(rnn_layer.cell, tf.keras.layers.StackedRNNCells):
+    if isinstance(rnn_layer.cell, keras.layers.StackedRNNCells):
       return rnn_layer.cell.cells
     # The case when RNN contains multiple cells
     if isinstance(rnn_layer.cell, (list, tuple)):

@@ -51,6 +51,7 @@ py_strict_library(
     deps = [
         ":transforms",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -68,6 +69,7 @@ py_strict_test(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:utils",
     ],
 )

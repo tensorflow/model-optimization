@@ -20,15 +20,15 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layout_transform
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_transforms
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 
-keras = tf.keras
-
 
 class Default8BitQuantizeLayoutTransform(
-    quantize_layout_transform.QuantizeLayoutTransform):
+    quantize_layout_transform.QuantizeLayoutTransform
+):
   """Default model transformations."""
 
   def apply(self, model, layer_quantize_map):
@@ -72,5 +72,5 @@ class Default8BitQuantizeLayoutTransform(
         default_8bit_transforms.LayerReluActivationQuantize(),
     ]
     return model_transformer.ModelTransformer(
-        model, transforms,
-        set(layer_quantize_map.keys()), layer_quantize_map).transform()
+        model, transforms, set(layer_quantize_map.keys()), layer_quantize_map
+    ).transform()

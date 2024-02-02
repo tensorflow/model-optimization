@@ -1,5 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 
 licenses(["notice"])
 
@@ -11,6 +11,7 @@ pytype_strict_library(
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/common/keras/compression/internal:optimize",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 

@@ -12,15 +12,16 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for tf.keras pruning tools in sparsity_tooling.py."""
+"""Tests for keras pruning tools in sparsity_tooling.py."""
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 from tensorflow_model_optimization.python.core.sparsity.keras import test_utils
 from tensorflow_model_optimization.python.core.sparsity.keras.tools import sparsity_tooling
 
-keras = tf.keras
+
 test = tf.test
 
 

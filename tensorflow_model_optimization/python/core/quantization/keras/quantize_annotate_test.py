@@ -21,12 +21,13 @@ from __future__ import print_function
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
 
-keras = tf.keras
-deserialize_layer = tf.keras.layers.deserialize
-serialize_layer = tf.keras.layers.serialize
+
+deserialize_layer = keras.layers.deserialize
+serialize_layer = keras.layers.serialize
 
 
 class QuantizeAnnotateTest(tf.test.TestCase):
@@ -53,7 +54,7 @@ class QuantizeAnnotateTest(tf.test.TestCase):
 
   def testAnnotateLayerCallPassesTraningBoolean(self):
 
-    class MockLayer(tf.keras.layers.Layer):
+    class MockLayer(keras.layers.Layer):
       self.training = None
 
       def call(self, training=None):
@@ -98,7 +99,7 @@ class QuantizeAnnotateTest(tf.test.TestCase):
     }
 
     serialized_wrapper = serialize_layer(wrapper)
-    with tf.keras.utils.custom_object_scope(custom_objects):
+    with keras.utils.custom_object_scope(custom_objects):
       wrapper_from_config = deserialize_layer(serialized_wrapper)
 
     self.assertEqual(wrapper_from_config.get_config(), wrapper.get_config())

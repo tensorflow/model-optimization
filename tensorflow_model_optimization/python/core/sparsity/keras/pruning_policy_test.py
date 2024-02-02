@@ -18,12 +18,13 @@ import distutils.version as version
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_policy
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-keras = tf.keras
+
 layers = keras.layers
 
 
@@ -316,8 +317,9 @@ class PruningPolicyTest(tf.test.TestCase):
     o = layers.GlobalAveragePooling2D()(x)
     original_model = keras.Model(inputs=[i], outputs=[o])
 
-    cloned_model = tf.keras.models.clone_model(
-        original_model, clone_function=lambda l: l)
+    cloned_model = keras.models.clone_model(
+        original_model, clone_function=lambda l: l
+    )
     pruned_model = prune.prune_low_magnitude(
         cloned_model,
         pruning_policy=pruning_policy.PruneForLatencyOnXNNPack(),

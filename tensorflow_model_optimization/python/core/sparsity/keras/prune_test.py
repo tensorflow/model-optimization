@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Tests for tf.keras pruning APIs under prune.py."""
+"""Tests for keras pruning APIs under prune.py."""
 
 import json
 import tempfile
@@ -22,12 +22,13 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-keras = tf.keras
+
 errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
@@ -57,18 +58,20 @@ class CustomNonPrunableLayer(layers.Dense):
 
 class PruneTest(test.TestCase):
 
-  INVALID_TO_PRUNE_PARAM_ERROR = ('`prune_low_magnitude` can only prune an '
-                                  'object of the following types: '
-                                  'tf.keras.models.Sequential, tf.keras '
-                                  'functional model, tf.keras.layers.Layer, '
-                                  'list of tf.keras.layers.Layer. You passed an'
-                                  ' object of type: {input}.')
+  INVALID_TO_PRUNE_PARAM_ERROR = (
+      '`prune_low_magnitude` can only prune an '
+      'object of the following types: '
+      'keras.models.Sequential, keras '
+      'functional model, keras.layers.Layer, '
+      'list of keras.layers.Layer. You passed an'
+      ' object of type: {input}.'
+  )
 
   def setUp(self):
     super(PruneTest, self).setUp()
 
     # Layers passed in for Pruning can either be standard Keras layers provided
-    # by the tf.keras API (these fall under the `keras.layers` namespace), or
+    # by the keras API (these fall under the `keras.layers` namespace), or
     # custom layers provided by the user which inherit the base
     # `keras.layers.Layer`.
     # Standard Keras layers can either be Prunable (we know how to prune them),
@@ -362,11 +365,11 @@ class PruneTest(test.TestCase):
     pruned_model.save(keras_model)
 
     with self.assertRaises(ValueError):
-      tf.keras.models.load_model(keras_model)
+      keras.models.load_model(keras_model)
 
     # works with `prune_scope`
     with prune.prune_scope():
-      tf.keras.models.load_model(keras_model)
+      keras.models.load_model(keras_model)
 
   def testPruneScope_NotNeededForKerasCheckpoint(self):
     model = keras_test_utils.build_simple_dense_model()
@@ -421,13 +424,13 @@ class PruneTest(test.TestCase):
 
     saved_model_dir = tempfile.mkdtemp()
 
-    tf.keras.experimental.export_saved_model(pruned_model, saved_model_dir)
+    keras.experimental.export_saved_model(pruned_model, saved_model_dir)
     with self.assertRaises(ValueError):
-      tf.keras.experimental.load_from_saved_model(saved_model_dir)
+      keras.experimental.load_from_saved_model(saved_model_dir)
 
     # works with `prune_scope`
     with prune.prune_scope():
-      tf.keras.experimental.load_from_saved_model(saved_model_dir)
+      keras.experimental.load_from_saved_model(saved_model_dir)
 
 
 if __name__ == '__main__':

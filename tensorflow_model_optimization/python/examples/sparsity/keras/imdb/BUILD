@@ -21,6 +21,7 @@ py_strict_binary(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_callbacks",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",

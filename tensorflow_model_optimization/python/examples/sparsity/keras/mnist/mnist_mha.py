@@ -19,18 +19,20 @@ and prune it.
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
+
 tf.random.set_seed(42)
 
 ConstantSparsity = pruning_schedule.ConstantSparsity
 
 # Load MNIST dataset
-mnist = tf.keras.datasets.mnist
+mnist = keras.datasets.mnist
 (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
 # Normalize the input image so that each pixel value is between 0 to 1.
@@ -38,18 +40,18 @@ train_images = train_images / 255.0
 test_images = test_images / 255.0
 
 # define model
-input = tf.keras.layers.Input(shape=(28, 28))
-x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16, name='mha')(
+input = keras.layers.Input(shape=(28, 28))
+x = keras.layers.MultiHeadAttention(num_heads=2, key_dim=16, name='mha')(
     query=input, value=input
 )
-x = tf.keras.layers.Flatten()(x)
-out = tf.keras.layers.Dense(10)(x)
-model = tf.keras.Model(inputs=input, outputs=out)
+x = keras.layers.Flatten()(x)
+out = keras.layers.Dense(10)(x)
+model = keras.Model(inputs=input, outputs=out)
 
 # Train the digit classification model
 model.compile(
     optimizer='adam',
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=['accuracy'],
 )
 
@@ -81,7 +83,7 @@ model_for_pruning = prune.prune_low_magnitude(model, **pruning_params)
 # `prune_low_magnitude` requires a recompile.
 model_for_pruning.compile(
     optimizer='adam',
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
     metrics=['accuracy'],
 )
 

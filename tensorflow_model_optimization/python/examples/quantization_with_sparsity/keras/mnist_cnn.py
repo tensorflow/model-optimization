@@ -24,6 +24,7 @@ from absl import app as absl_app
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.prune_preserve import (
     default_8bit_prune_preserve_quantize_scheme,)
@@ -32,26 +33,24 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_cal
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
 
-layers = tf.keras.layers
+layers = keras.layers
 
 
 def build_sequential_model(input_shape=(28, 28)):
   num_classes = 12
 
-  return tf.keras.Sequential([
+  return keras.Sequential([
       layers.InputLayer(input_shape=input_shape),
-      layers.Conv2D(32,
-                    5,
-                    padding='same',
-                    activation='relu',
-                    input_shape=input_shape),
+      layers.Conv2D(
+          32, 5, padding='same', activation='relu', input_shape=input_shape
+      ),
       layers.MaxPooling2D((2, 2), (2, 2), padding='same'),
       layers.Conv2D(64, 5, padding='same', activation='relu'),
       layers.MaxPooling2D((2, 2), (2, 2), padding='same'),
       layers.Flatten(),
       layers.Dense(1024, activation='relu'),
       layers.Dropout(0.4),
-      layers.Dense(num_classes, activation='softmax')
+      layers.Dense(num_classes, activation='softmax'),
   ])
 
 
@@ -85,7 +84,7 @@ def evaluate_and_show_sparsity(model, image_test, label_test):
                   prune.pruning_wrapper.PruneLowMagnitude) or isinstance(
                       layer, quantize.quantize_wrapper.QuantizeWrapper):
       for weights in layer.trainable_weights:
-        np_weights = tf.keras.backend.get_value(weights)
+        np_weights = keras.backend.get_value(weights)
         sparsity = 1.0 - np.count_nonzero(np_weights) / float(np_weights.size)
         print(layer.layer.__class__.__name__, ' (', weights.name,
               ') sparsity: ', sparsity)
@@ -145,7 +144,7 @@ def prune_preserve_quantize_model(pruned_model, train_images, train_labels):
 
 def main(unused_args):
   # Load the MNIST dataset.
-  mnist = tf.keras.datasets.mnist
+  mnist = keras.datasets.mnist
   (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
   # data preprocessing
   # normalize the input images so that each pixel value is between 0 and 1.

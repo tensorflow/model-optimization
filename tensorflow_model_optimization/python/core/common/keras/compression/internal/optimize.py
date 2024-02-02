@@ -14,7 +14,10 @@
 # ==============================================================================
 """Internal APIs and core implementation of weight compression API."""
 from typing import List, Mapping
+
 import tensorflow as tf
+
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 # Workaround to prevent MLIR from constant folding the
@@ -35,7 +38,7 @@ def _prevent_constant_folding(tensor, dummy_inputs):
   return outputs
 
 
-class _TrainingWrapper(tf.keras.layers.Wrapper):
+class _TrainingWrapper(keras.layers.Wrapper):
   """Represent modifications to training graph for weight compression."""
 
   def __init__(self, layer, algorithm, compressible_weights: List[str]):
@@ -156,7 +159,7 @@ class _TrainingWrapper(tf.keras.layers.Wrapper):
 
 
 # TODO(tfmot): deduplicate code with _TrainingWrapper.
-class _InferenceWrapper(tf.keras.layers.Wrapper):
+class _InferenceWrapper(keras.layers.Wrapper):
   """Represent modifications to inference graph for weight compression."""
 
   def __init__(self, layer, algorithm,
@@ -218,8 +221,11 @@ class _InferenceWrapper(tf.keras.layers.Wrapper):
       weights = []
       for t in compressed_tensors:
         weight = self.add_weight(
-            name='TODO', dtype=t.dtype, shape=t.shape,
-            initializer=tf.keras.initializers.Constant(t))
+            name='TODO',
+            dtype=t.dtype,
+            shape=t.shape,
+            initializer=keras.initializers.Constant(t),
+        )
         weights.append(weight)
 
       self.compressed_weights[attr_name] = weights
@@ -254,7 +260,7 @@ def _map_to_training_weights(
   """Construct the training weight values from the layer's pretrained weights.
 
     The weight values have the same structure as the output of
-    `tf.keras.layers.Layer.get_weights`.
+    `keras.layers.Layer.get_weights`.
 
   Args:
     algorithm: weight compression algorithm
@@ -271,17 +277,18 @@ def _map_to_training_weights(
   # TODO(tfmot): see if Keras can introduce changes to simplify this.
   original_weights = []
   training_weights = []
-  if isinstance(layer, tf.keras.layers.Conv2D) or \
-     isinstance(layer, tf.keras.layers.Dense):
+  if isinstance(layer, keras.layers.Conv2D) or isinstance(
+      layer, keras.layers.Dense
+  ):
     for weight in layer.weights:
       if _find(weight, compressible_weights):
         algorithm.weight_reprs = []
         algorithm.init_training_weights(weight)
         for weight_repr in algorithm.weight_reprs:
-          # Assumes initializer is tf.keras.initializers.Constant.
+          # Assumes initializer is keras.initializers.Constant.
           # TODO(tfmot): add check for this assumption.
           # TODO(tfmot): the documentation for
-          # tf.keras.initializers.Constant(value)
+          # keras.initializers.Constant(value)
           # suggests that the `value` cannot be any arbitrary shape and
           # only a single scalar value. It works in this implementation
           # to make `value` any tensor - check this.
@@ -298,7 +305,7 @@ def _map_to_inference_weights(training_weights, algorithm, training_tensors):
   """Construct the inference weight values from the weights after training.
 
     The weight values have the same structure as the output of
-    `tf.keras.layers.Layer.get_weights`.
+    `keras.layers.Layer.get_weights`.
 
   Args:
     training_weights: layer's weights from training, retrieved via

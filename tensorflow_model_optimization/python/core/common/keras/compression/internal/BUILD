@@ -12,5 +12,6 @@ pytype_strict_library(
     srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )

@@ -18,16 +18,16 @@ from __future__ import print_function
 
 from absl import app as absl_app
 from absl import flags
-
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
+
 ConstantSparsity = pruning_schedule.ConstantSparsity
-keras = tf.keras
 l = keras.layers
 
 FLAGS = flags.FLAGS
@@ -40,9 +40,10 @@ flags.DEFINE_float('sparsity', '0.0', 'Target sparsity level.')
 
 
 def build_layerwise_model(input_shape, **pruning_params):
-  return tf.keras.Sequential([
+  return keras.Sequential([
       l.Conv2D(
-          32, 5, padding='same', activation='relu', input_shape=input_shape),
+          32, 5, padding='same', activation='relu', input_shape=input_shape
+      ),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.Conv2D(64, 5, padding='same'),
       l.BatchNormalization(),
@@ -50,18 +51,21 @@ def build_layerwise_model(input_shape, **pruning_params):
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.Flatten(),
       prune.prune_low_magnitude(
-          l.Dense(1024, activation='relu'), **pruning_params),
+          l.Dense(1024, activation='relu'), **pruning_params
+      ),
       l.Dropout(0.4),
       prune.prune_low_magnitude(
-          l.Dense(num_classes, activation='softmax'), **pruning_params)
+          l.Dense(num_classes, activation='softmax'), **pruning_params
+      ),
   ])
 
 
 def train(model, x_train, y_train, x_test, y_test):
   model.compile(
-      loss=tf.keras.losses.categorical_crossentropy,
+      loss=keras.losses.categorical_crossentropy,
       optimizer='adam',
-      metrics=['accuracy'])
+      metrics=['accuracy'],
+  )
 
   # Print the model summary.
   model.summary()

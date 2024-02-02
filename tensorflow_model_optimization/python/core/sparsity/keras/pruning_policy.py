@@ -16,13 +16,16 @@
 """Pruning Policy classes to control application of pruning wrapper."""
 
 import abc
+
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-layers = tf.keras.layers
-activations = tf.keras.activations
+
+layers = keras.layers
+activations = keras.activations
 
 
 class PruningPolicy(abc.ABC):
@@ -71,7 +74,7 @@ class PruningPolicy(abc.ABC):
     """Checks that the model contains only supported layers.
 
     Args:
-      model: A `tf.keras.Model` instance which is going to be pruned.
+      model: A `keras.Model` instance which is going to be pruned.
 
     Raises:
       ValueError: if the keras model doesn't support pruning policy, i.e. keras
@@ -108,8 +111,11 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
   def _get_consumers(self, layer):
 
     def unpack(layer):
-      return (unpack(layer.layers[0])
-              if isinstance(layer, tf.keras.Sequential) else layer)
+      return (
+          unpack(layer.layers[0])
+          if isinstance(layer, keras.Sequential)
+          else layer
+      )
 
     return [unpack(node.outbound_layer) for node in layer._outbound_nodes]
 
@@ -221,8 +227,20 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
           layer.activation, use_legacy_format=True
       ) in ('relu', 'relu6', 'leaky_relu', 'elu', 'sigmoid')
     elif layer.__class__.__name__ == 'TFOpLambda':
-      return layer.function in (tf.identity, tf.__operators__.add, tf.math.add,
-                                tf.math.subtract, tf.math.multiply)
+      if layer.function in (
+          tf.identity,
+          tf.__operators__.add,
+          tf.math.add,
+          tf.math.subtract,
+          tf.math.multiply,
+      ):
+        return True
+      return layer.function.__name__ in [
+          'identity',
+          'add',
+          'subtract',
+          'multiply',
+      ]
     elif isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       return self._check_layer_support(layer.layer)
     return False
@@ -231,8 +249,9 @@ class PruneForLatencyOnXNNPack(PruningPolicy):
     """Ensures that the model contains only supported layers."""
 
     # Check whether the model is a subclass model.
-    if (not model._is_graph_network and
-        not isinstance(model, tf.keras.models.Sequential)):
+    if not model._is_graph_network and not isinstance(
+        model, keras.models.Sequential
+    ):
       raise ValueError('Subclassed models are not supported currently.')
 
     if not model.built:

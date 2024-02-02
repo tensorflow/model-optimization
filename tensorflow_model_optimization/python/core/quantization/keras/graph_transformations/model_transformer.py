@@ -13,7 +13,7 @@
 # limitations under the License.
 # ==============================================================================
 # pylint: disable=g-explicit-length-test
-"""Apply graph transformations to a tf.keras model."""
+"""Apply graph transformations to a keras model."""
 
 import collections
 import copy
@@ -21,16 +21,17 @@ import re
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms as transforms_mod
+
 
 LayerNode = transforms_mod.LayerNode
 
-keras = tf.keras
-K = tf.keras.backend
+K = keras.backend
 
 
 class ModelTransformer(object):
-  """Matches patterns to apply transforms in a tf.keras model graph."""
+  """Matches patterns to apply transforms in a keras model graph."""
 
   def __init__(self,
                model,
@@ -50,7 +51,8 @@ class ModelTransformer(object):
     """
     if not self._is_sequential_or_functional_model(model):
       raise ValueError(
-          'Only tf.keras sequential or functional models can be transformed.')
+          'Only keras sequential or functional models can be transformed.'
+      )
 
     if layer_metadata is None:
       layer_metadata = {}

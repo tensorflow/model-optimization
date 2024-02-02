@@ -33,9 +33,7 @@ set -o pipefail  # Treat the failure of a command in a pipeline as error.
 # set -x
 
 pip install --requirement "requirements.txt"
-# TODO(b/232345872): Not in list of requirements, but needed for EPR test.
-# The EPR test relies on a feature (PowerLawEntropyModel) introduced in 2.10.0.
-pip install tensorflow-compression~=2.11.0
+pip install tensorflow-compression>=2.11.0
 
 # Run the tests.
 # Some tests requiring more RAM than the CI machine provides are disabled.

@@ -18,11 +18,12 @@
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import metrics
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-keras = tf.keras
-custom_object_scope = tf.keras.utils.custom_object_scope
+
+custom_object_scope = keras.utils.custom_object_scope
 
 
 def prune_scope():
@@ -31,7 +32,7 @@ def prune_scope():
   For TF 2.X: this is not needed for SavedModel or TF checkpoints, which are
   the recommended serialization formats.
 
-  For TF 1.X: if a tf.keras h5 model or layer has been pruned, it needs to be
+  For TF 1.X: if a keras h5 model or layer has been pruned, it needs to be
   within this
   scope to be successfully deserialized. This is not needed for loading just
   keras weights.
@@ -61,15 +62,15 @@ def prune_low_magnitude(to_prune,
                         pruning_policy=None,
                         sparsity_m_by_n=None,
                         **kwargs):
-  """Modify a tf.keras layer or model to be pruned during training.
+  """Modify a keras layer or model to be pruned during training.
 
-  This function wraps a tf.keras model or layer with pruning functionality which
+  This function wraps a keras model or layer with pruning functionality which
   sparsifies the layer's weights during training. For example, using this with
   50% sparsity will ensure that 50% of the layer's weights are zero.
 
   The function accepts either a single keras layer
-  (subclass of `tf.keras.layers.Layer`), list of keras layers or a Sequential
-  or Functional tf.keras model and handles them appropriately.
+  (subclass of `keras.layers.Layer`), list of keras layers or a Sequential
+  or Functional keras model and handles them appropriately.
 
   If it encounters a layer it does not know how to handle, it will throw an
   error. While pruning an entire model, even a single unknown layer would lead
@@ -127,8 +128,8 @@ def prune_low_magnitude(to_prune,
   (https://github.com/tensorflow/model-optimization/issues/206).
 
   Arguments:
-      to_prune: A single keras layer, list of keras layers, or a
-        `tf.keras.Model` instance.
+      to_prune: A single keras layer, list of keras layers, or a `keras.Model`
+        instance.
       pruning_schedule: A `PruningSchedule` object that controls pruning rate
         throughout training.
       block_size: (optional) The dimensions (height, weight) for the block
@@ -140,8 +141,8 @@ def prune_low_magnitude(to_prune,
         and is subject to change.
       sparsity_m_by_n: default None, otherwise a tuple of 2 integers, indicates
         pruning with m_by_n sparsity, e.g., (2, 4): 2 zeros out of 4 consecutive
-        elements. It check whether we can do pruning with m_by_n sparsity.
-        If this type of sparsity is not applicable, then an error is thrown.
+        elements. It check whether we can do pruning with m_by_n sparsity. If
+        this type of sparsity is not applicable, then an error is thrown.
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_prune is not a keras layer.
 
@@ -214,9 +215,10 @@ def prune_low_magnitude(to_prune,
   else:
     raise ValueError(
         '`prune_low_magnitude` can only prune an object of the following '
-        'types: tf.keras.models.Sequential, tf.keras functional model, '
-        'tf.keras.layers.Layer, list of tf.keras.layers.Layer. You passed '
-        'an object of type: {input}.'.format(input=to_prune.__class__.__name__))
+        'types: keras.models.Sequential, keras functional model, '
+        'keras.layers.Layer, list of keras.layers.Layer. You passed '
+        'an object of type: {input}.'.format(input=to_prune.__class__.__name__)
+    )
 
 
 def strip_pruning(model):
@@ -228,19 +230,19 @@ def strip_pruning(model):
   Only sequential and functional models are supported for now.
 
   Arguments:
-      model: A `tf.keras.Model` instance with pruned layers.
+      model: A `keras.Model` instance with pruned layers.
 
   Returns:
     A keras model with pruning wrappers removed.
 
   Raises:
-    ValueError: if the model is not a `tf.keras.Model` instance.
+    ValueError: if the model is not a `keras.Model` instance.
     NotImplementedError: if the model is a subclass model.
 
   Usage:
 
   ```python
-  orig_model = tf.keras.Model(inputs, outputs)
+  orig_model = keras.Model(inputs, outputs)
   pruned_model = prune_low_magnitude(orig_model)
   exported_model = strip_pruning(pruned_model)
   ```
@@ -249,10 +251,11 @@ def strip_pruning(model):
 
   if not isinstance(model, keras.Model):
     raise ValueError(
-        'Expected model to be a `tf.keras.Model` instance but got: ', model)
+        'Expected model to be a `keras.Model` instance but got: ', model
+    )
 
   def _strip_pruning_wrapper(layer):
-    if isinstance(layer, tf.keras.Model):
+    if isinstance(layer, keras.Model):
       # A keras model with prunable layers
       return keras.models.clone_model(
           layer, input_tensors=None, clone_function=_strip_pruning_wrapper)

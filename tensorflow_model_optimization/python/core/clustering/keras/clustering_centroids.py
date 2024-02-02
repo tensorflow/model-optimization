@@ -19,8 +19,10 @@ import six
 import tensorflow as tf
 from tensorflow.python.ops import clustering_ops
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-k = tf.keras.backend
+
+k = keras.backend
 CentroidInitialization = cluster_config.CentroidInitialization
 
 

@@ -18,7 +18,10 @@
 import numpy as np
 import tensorflow as tf
 
-l = tf.keras.layers
+from tensorflow_model_optimization.python.core.keras.compat import keras
+
+
+l = keras.layers
 
 
 class ModelCompare(object):
@@ -45,8 +48,8 @@ class ModelCompare(object):
     self.assertEqual(
         len(model1.trainable_weights), len(model2.trainable_weights))
 
-    model1_weights = tf.keras.backend.batch_get_value(model1.trainable_weights)
-    model2_weights = tf.keras.backend.batch_get_value(model2.trainable_weights)
+    model1_weights = keras.backend.batch_get_value(model1.trainable_weights)
+    model2_weights = keras.backend.batch_get_value(model2.trainable_weights)
     for w1, w2 in zip(model1_weights, model2_weights):
       self.assertAllClose(w1, w2)
 
@@ -54,16 +57,16 @@ class ModelCompare(object):
     self.assertEqual(
         len(model1.trainable_weights), len(model2.trainable_weights))
 
-    model1_weights = tf.keras.backend.batch_get_value(model1.trainable_weights)
-    model2_weights = tf.keras.backend.batch_get_value(model2.trainable_weights)
+    model1_weights = keras.backend.batch_get_value(model1.trainable_weights)
+    model2_weights = keras.backend.batch_get_value(model2.trainable_weights)
     for w1, w2 in zip(model1_weights, model2_weights):
       self.assertNotAllClose(w1, w2)
 
 
 def build_simple_dense_model():
-  return tf.keras.Sequential([
+  return keras.Sequential([
       l.Dense(8, activation='relu', input_shape=(10,)),
-      l.Dense(5, activation='softmax')
+      l.Dense(5, activation='softmax'),
   ])
 
 
@@ -72,9 +75,9 @@ def get_preprocessed_mnist_data(img_rows=28,
                                 num_classes=10,
                                 is_quantized_model=False):
   """Get data for mnist training and evaluation."""
-  (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+  (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
-  if tf.keras.backend.image_data_format() == 'channels_first':
+  if keras.backend.image_data_format() == 'channels_first':
     x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
     x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
     input_shape = (1, img_rows, img_cols)
@@ -90,8 +93,8 @@ def get_preprocessed_mnist_data(img_rows=28,
     x_test /= 255
 
   # convert class vectors to binary class matrices
-  y_train = tf.keras.utils.to_categorical(y_train, num_classes)
-  y_test = tf.keras.utils.to_categorical(y_test, num_classes)
+  y_train = keras.utils.to_categorical(y_train, num_classes)
+  y_test = keras.utils.to_categorical(y_test, num_classes)
 
   return (x_train, y_train), (x_test, y_test), input_shape
 

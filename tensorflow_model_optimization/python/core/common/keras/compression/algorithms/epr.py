@@ -31,6 +31,7 @@ from typing import Callable, List, Tuple
 import tensorflow as tf
 import tensorflow_compression as tfc
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 @tf.custom_gradient
@@ -76,9 +77,9 @@ class EPRBase(algorithm.WeightCompressor):
   """Defines how to apply the EPR algorithm."""
 
   _compressible_classes = (
-      tf.keras.layers.Dense,
-      tf.keras.layers.Conv1D,
-      tf.keras.layers.Conv2D,
+      keras.layers.Dense,
+      keras.layers.Conv1D,
+      keras.layers.Conv2D,
   )
 
   def __init__(self, regularization_weight: float):
@@ -108,7 +109,8 @@ class EPRBase(algorithm.WeightCompressor):
           name=weight_name,
           shape=shape,
           dtype=dtype,
-          initializer=tf.keras.initializers.Constant(pretrained_weight))
+          initializer=keras.initializers.Constant(pretrained_weight),
+      )
       prior_shape = tf.TensorShape(())
     elif 3 <= shape.rank <= 4:
       # Convolution kernel.
@@ -125,7 +127,8 @@ class EPRBase(algorithm.WeightCompressor):
           name="kernel_rdft",
           shape=kernel_rdft.shape,
           dtype=kernel_rdft.dtype,
-          initializer=tf.keras.initializers.Constant(kernel_rdft))
+          initializer=keras.initializers.Constant(kernel_rdft),
+      )
       self.add_training_weight(
           name="kernel_shape",
           shape=kernel_shape.shape,
@@ -133,7 +136,8 @@ class EPRBase(algorithm.WeightCompressor):
           # TODO(jballe): If False, breaks optimize.create_layer_for_training().
           # If True, throws warnings that int tensors have no gradient.
           # trainable=False,
-          initializer=tf.keras.initializers.Constant(kernel_shape))
+          initializer=keras.initializers.Constant(kernel_shape),
+      )
       prior_shape = kernel_rdft.shape[2:]
     else:
       raise ValueError(
@@ -146,18 +150,22 @@ class EPRBase(algorithm.WeightCompressor):
         name=f"{weight_name}_log_step",
         shape=log_step.shape,
         dtype=log_step.dtype,
-        initializer=tf.keras.initializers.Constant(log_step))
+        initializer=keras.initializers.Constant(log_step),
+    )
 
     return prior_shape, dtype, weight_name
 
-  def get_training_model(self, model: tf.keras.Model) -> tf.keras.Model:
+  def get_training_model(self, model: keras.Model) -> keras.Model:
     """Augments a model for training with EPR."""
-    if not (isinstance(model, tf.keras.Sequential) or model._is_graph_network):  # pylint: disable=protected-access
+    if not (isinstance(model, keras.Sequential) or model._is_graph_network):  # pylint: disable=protected-access
       raise ValueError("`model` must be either sequential or functional.")
 
-    training_model = tf.keras.models.clone_model(
-        model, clone_function=functools.partial(
-            algorithm.create_layer_for_training, algorithm=self))
+    training_model = keras.models.clone_model(
+        model,
+        clone_function=functools.partial(
+            algorithm.create_layer_for_training, algorithm=self
+        ),
+    )
     training_model.build(model.input.shape)
 
     # Divide regularization weight by number of original model parameters to
@@ -178,13 +186,16 @@ class EPRBase(algorithm.WeightCompressor):
     # different optimizer/learning rate. How to do this?
     return training_model
 
-  def compress_model(self, model: tf.keras.Model) -> tf.keras.Model:
+  def compress_model(self, model: keras.Model) -> keras.Model:
     """Compresses a model after training with EPR."""
-    if not (isinstance(model, tf.keras.Sequential) or model._is_graph_network):  # pylint: disable=protected-access
+    if not (isinstance(model, keras.Sequential) or model._is_graph_network):  # pylint: disable=protected-access
       raise ValueError("`model` must be either sequential or functional.")
-    return tf.keras.models.clone_model(
-        model, clone_function=functools.partial(
-            algorithm.create_layer_for_inference, algorithm=self))
+    return keras.models.clone_model(
+        model,
+        clone_function=functools.partial(
+            algorithm.create_layer_for_inference, algorithm=self
+        ),
+    )
 
 
 class EPR(EPRBase):
@@ -201,7 +212,8 @@ class EPR(EPRBase):
         name=f"{weight_name}_log_scale",
         shape=log_scale.shape,
         dtype=log_scale.dtype,
-        initializer=tf.keras.initializers.Constant(log_scale))
+        initializer=keras.initializers.Constant(log_scale),
+    )
 
   def project_training_weights(self, *training_weights: tf.Tensor) -> tf.Tensor:
     if len(training_weights) == 3:

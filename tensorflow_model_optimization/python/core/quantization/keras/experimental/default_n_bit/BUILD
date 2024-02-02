@@ -1,6 +1,6 @@
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 # Placeholder: load py_library
 # Placeholder: load py_test
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -25,6 +25,7 @@ py_strict_library(
     srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
 )
@@ -40,6 +41,7 @@ py_test(
         # absl/testing:parameterized dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -63,6 +65,7 @@ py_strict_library(
     srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
@@ -83,6 +86,7 @@ py_test(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
 )
@@ -97,6 +101,7 @@ py_library(
     deps = [
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_layer",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
@@ -115,6 +120,7 @@ py_strict_library(
     deps = [
         ":default_n_bit_transforms",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_layout_transform",
         "//tensorflow_model_optimization/python/core/quantization/keras/graph_transformations:model_transformer",
     ],
@@ -134,6 +140,7 @@ py_strict_test(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_aware_activation",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_layer",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",

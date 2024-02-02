@@ -22,29 +22,30 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.common.keras.compression.algorithms import weight_clustering
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 def _build_model():
-  i = tf.keras.layers.Input(shape=(28, 28), name='input')
-  x = tf.keras.layers.Reshape((28, 28, 1))(i)
-  x = tf.keras.layers.Conv2D(
-      20, 5, activation='relu', padding='valid', name='conv1')(
-          x)
-  x = tf.keras.layers.MaxPool2D(2, 2)(x)
-  x = tf.keras.layers.Conv2D(
-      50, 5, activation='relu', padding='valid', name='conv2')(
-          x)
-  x = tf.keras.layers.MaxPool2D(2, 2)(x)
-  x = tf.keras.layers.Flatten()(x)
-  x = tf.keras.layers.Dense(500, activation='relu', name='fc1')(x)
-  output = tf.keras.layers.Dense(10, name='fc2')(x)
+  i = keras.layers.Input(shape=(28, 28), name='input')
+  x = keras.layers.Reshape((28, 28, 1))(i)
+  x = keras.layers.Conv2D(
+      20, 5, activation='relu', padding='valid', name='conv1'
+  )(x)
+  x = keras.layers.MaxPool2D(2, 2)(x)
+  x = keras.layers.Conv2D(
+      50, 5, activation='relu', padding='valid', name='conv2'
+  )(x)
+  x = keras.layers.MaxPool2D(2, 2)(x)
+  x = keras.layers.Flatten()(x)
+  x = keras.layers.Dense(500, activation='relu', name='fc1')(x)
+  output = keras.layers.Dense(10, name='fc2')(x)
 
-  model = tf.keras.Model(inputs=[i], outputs=[output])
+  model = keras.Model(inputs=[i], outputs=[output])
   return model
 
 
 def _get_dataset():
-  mnist = tf.keras.datasets.mnist
+  mnist = keras.datasets.mnist
   (x_train, y_train), (x_test, y_test) = mnist.load_data()
   x_train, x_test = x_train / 255.0, x_test / 255.0
   # Use subset of 60000 examples to keep unit test speed fast.
@@ -55,7 +56,7 @@ def _get_dataset():
 
 
 def _train_model(model):
-  loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+  loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
   model.compile(optimizer='adam', loss=loss_fn, metrics=['accuracy'])
   (x_train, y_train), _ = _get_dataset()
   model.fit(x_train, y_train, epochs=1)
@@ -102,7 +103,7 @@ class FunctionalTest(tf.test.TestCase):
 
     _, (x_test, y_test) = _get_dataset()
 
-    loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+    loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
     compressed_model.compile(
         optimizer='adam', loss=loss_fn, metrics=['accuracy'])
@@ -120,9 +121,9 @@ class FunctionalTest(tf.test.TestCase):
 
   def testWeightClustering_SingleLayer(self):
     number_of_clusters = 8
-    i = tf.keras.layers.Input(shape=(2), name='input')
-    output = tf.keras.layers.Dense(3, name='fc1')(i)
-    model = tf.keras.Model(inputs=[i], outputs=[output])
+    i = keras.layers.Input(shape=(2), name='input')
+    output = keras.layers.Dense(3, name='fc1')(i)
+    model = keras.Model(inputs=[i], outputs=[output])
 
     dense_layer_weights = model.layers[1].get_weights()
 

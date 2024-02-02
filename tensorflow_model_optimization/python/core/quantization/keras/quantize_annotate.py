@@ -23,13 +23,15 @@ import inspect
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
+
 
 deserialize_keras_object = quantize_utils.deserialize_keras_object
 serialize_keras_object = quantize_utils.serialize_keras_object
 
 
-class QuantizeAnnotate(tf.keras.layers.Wrapper):
+class QuantizeAnnotate(keras.layers.Wrapper):
   """Annotates layers which quantization should be applied to.
 
   QuantizeAnnotate does not actually apply quantization to the underlying
@@ -60,12 +62,15 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
       raise ValueError('`layer` cannot be None.')
 
     # Check against keras.Model since it is an instance of keras.layers.Layer.
-    if not isinstance(layer, tf.keras.layers.Layer) or isinstance(
-        layer, tf.keras.Model):
+    if not isinstance(layer, keras.layers.Layer) or isinstance(
+        layer, keras.Model
+    ):
       raise ValueError(
-          '`layer` can only be a `tf.keras.layers.Layer` instance. '
+          '`layer` can only be a `keras.layers.Layer` instance. '
           'You passed an instance of type: {input}.'.format(
-              input=layer.__class__.__name__))
+              input=layer.__class__.__name__
+          )
+      )
 
     self.quantize_config = quantize_config
 
@@ -73,14 +78,14 @@ class QuantizeAnnotate(tf.keras.layers.Wrapper):
     # Enables end-user to annotate the first layer in Sequential models, while
     # passing the input shape to the original layer.
     #
-    # tf.keras.Sequential(
-    #   quantize_annotate_layer(tf.keras.layers.Dense(2, input_shape=(3,)))
+    # keras.Sequential(
+    #   quantize_annotate_layer(keras.layers.Dense(2, input_shape=(3,)))
     # )
     #
     # as opposed to
     #
-    # tf.keras.Sequential(
-    #   quantize_annotate_layer(tf.keras.layers.Dense(2), input_shape=(3,))
+    # keras.Sequential(
+    #   quantize_annotate_layer(keras.layers.Dense(2), input_shape=(3,))
     # )
     #
     # Without this code, the QuantizeAnnotate wrapper doesn't have an input

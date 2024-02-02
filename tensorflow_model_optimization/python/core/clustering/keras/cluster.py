@@ -21,12 +21,14 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-k = tf.keras.backend
-CustomObjectScope = tf.keras.utils.CustomObjectScope
+
+k = keras.backend
+CustomObjectScope = keras.utils.CustomObjectScope
 CentroidInitialization = cluster_config.CentroidInitialization
-Layer = tf.keras.layers.Layer
-InputLayer = tf.keras.layers.InputLayer
+Layer = keras.layers.Layer
+InputLayer = keras.layers.InputLayer
 
 
 def cluster_scope():
@@ -42,10 +44,10 @@ def cluster_scope():
 
   ```python
   clustered_model = cluster_weights(model, **self.params)
-  tf.keras.models.save_model(clustered_model, keras_file)
+  keras.models.save_model(clustered_model, keras_file)
 
   with cluster_scope():
-    loaded_model = tf.keras.models.load_model(keras_file)
+    loaded_model = keras.models.load_model(keras_file)
   ```
   """
   return CustomObjectScope({'ClusterWeights': cluster_wrapper.ClusterWeights})
@@ -93,29 +95,27 @@ def cluster_weights(
     'cluster_centroids_init': CentroidInitialization.DENSITY_BASED
   }
 
-  model = tf.keras.Sequential([
+  model = keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
       cluster_weights(layers.Dense(2, activation='tanh'), **clustering_params)
   ])
   ```
 
   Arguments:
-      to_cluster: A single keras layer, list of keras layers, or a
-        `tf.keras.Model` instance.
+      to_cluster: A single keras layer, list of keras layers, or a `keras.Model`
+        instance.
       number_of_clusters: the number of cluster centroids to form when
         clustering a layer/model. For example, if number_of_clusters=8 then only
         8 unique values will be used in each weight array.
       cluster_centroids_init: enum value that determines how the cluster
-        centroids will be initialized.
-        Can have following values:
-          1. RANDOM : centroids are sampled using the uniform distribution
-            between the minimum and maximum weight values in a given layer
-          2. DENSITY_BASED : density-based sampling. First, cumulative
-            distribution function is built for weights, then y-axis is evenly
-            spaced into number_of_clusters regions. After this the corresponding
-            x values are obtained and used to initialize clusters centroids.
-          3. LINEAR : cluster centroids are evenly spaced between the minimum
-            and maximum values of a given weight
+        centroids will be initialized. Can have following values: 1. RANDOM :
+        centroids are sampled using the uniform distribution between the minimum
+        and maximum weight values in a given layer 2. DENSITY_BASED :
+        density-based sampling. First, cumulative distribution function is built
+        for weights, then y-axis is evenly spaced into number_of_clusters
+        regions. After this the corresponding x values are obtained and used to
+        initialize clusters centroids. 3. LINEAR : cluster centroids are evenly
+        spaced between the minimum and maximum values of a given weight
       **kwargs: Additional keyword arguments to be passed to the keras layer.
         Ignored when to_cluster is not a keras layer.
 
@@ -177,7 +177,7 @@ def _cluster_weights(to_cluster,
     'preserve_sparsity': False
   }
 
-  model = tf.keras.Sequential([
+  model = keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
       cluster_weights(layers.Dense(2, activation='tanh'), **clustering_params)
   ])
@@ -192,15 +192,15 @@ def _cluster_weights(to_cluster,
     'preserve_sparsity': True
   }
 
-  model = tf.keras.Sequential([
+  model = keras.Sequential([
       layers.Dense(10, activation='relu', input_shape=(100,)),
       cluster_weights(layers.Dense(2, activation='tanh'), **clustering_params)
   ])
   ```
 
   Arguments:
-      to_cluster: A single keras layer, list of keras layers, or a
-        `tf.keras.Model` instance.
+      to_cluster: A single keras layer, list of keras layers, or a `keras.Model`
+        instance.
       number_of_clusters: the number of cluster centroids to form when
         clustering a layer/model. For example, if number_of_clusters=8 then only
         8 unique values will be used in each weight array.
@@ -235,23 +235,26 @@ def _cluster_weights(to_cluster,
         cluster_centroids_init))
 
   def _add_clustering_wrapper(layer):
-    if isinstance(layer, tf.keras.Model):
+    if isinstance(layer, keras.Model):
       # Check whether the model is a subclass.
       # NB: This check is copied from keras.py file in tensorflow.
       # There is no available public API to do this check.
       # pylint: disable=protected-access
-      if (not layer._is_graph_network and
-          not isinstance(layer, tf.keras.models.Sequential)):
+      if not layer._is_graph_network and not isinstance(
+          layer, keras.models.Sequential
+      ):
         raise ValueError('Subclassed models are not supported currently.')
 
-      return tf.keras.models.clone_model(
-          layer, input_tensors=None, clone_function=_add_clustering_wrapper)
+      return keras.models.clone_model(
+          layer, input_tensors=None, clone_function=_add_clustering_wrapper
+      )
     if isinstance(layer, cluster_wrapper.ClusterWeights):
       return layer
     if isinstance(layer, InputLayer):
       return layer.__class__.from_config(layer.get_config())
-    if isinstance(layer, tf.keras.layers.RNN) or isinstance(
-        layer, tf.keras.layers.Bidirectional):
+    if isinstance(layer, keras.layers.RNN) or isinstance(
+        layer, keras.layers.Bidirectional
+    ):
       return cluster_wrapper.ClusterWeightsRNN(
           layer,
           number_of_clusters,
@@ -259,7 +262,7 @@ def _cluster_weights(to_cluster,
           preserve_sparsity,
           **kwargs,
       )
-    if isinstance(layer, tf.keras.layers.MultiHeadAttention):
+    if isinstance(layer, keras.layers.MultiHeadAttention):
       return cluster_wrapper.ClusterWeightsMHA(
           layer,
           number_of_clusters,
@@ -271,9 +274,10 @@ def _cluster_weights(to_cluster,
     # Skip clustering if Conv2D layer has insufficient number of weights
     # for type of clustering
     if isinstance(
-        layer,
-        tf.keras.layers.Conv2D) and not layer_has_enough_weights_to_cluster(
-            layer, number_of_clusters, cluster_per_channel):
+        layer, keras.layers.Conv2D
+    ) and not layer_has_enough_weights_to_cluster(
+        layer, number_of_clusters, cluster_per_channel
+    ):
       return layer
 
     return cluster_wrapper.ClusterWeights(layer, number_of_clusters,
@@ -288,9 +292,10 @@ def _cluster_weights(to_cluster,
 
     return output
 
-  if isinstance(to_cluster, tf.keras.Model):
-    return tf.keras.models.clone_model(
-        to_cluster, input_tensors=None, clone_function=_add_clustering_wrapper)
+  if isinstance(to_cluster, keras.Model):
+    return keras.models.clone_model(
+        to_cluster, input_tensors=None, clone_function=_add_clustering_wrapper
+    )
   if isinstance(to_cluster, Layer):
     return _add_clustering_wrapper(layer=to_cluster)
   if isinstance(to_cluster, list):
@@ -306,32 +311,34 @@ def strip_clustering(model):
   Only sequential and functional models are supported for now.
 
   Arguments:
-      model: A `tf.keras.Model` instance with clustered layers.
+      model: A `keras.Model` instance with clustered layers.
 
   Returns:
     A keras model with clustering wrappers removed.
 
   Raises:
-    ValueError: if the model is not a `tf.keras.Model` instance.
+    ValueError: if the model is not a `keras.Model` instance.
     NotImplementedError: if the model is a subclass model.
 
   Usage:
 
   ```python
-  orig_model = tf.keras.Model(inputs, outputs)
+  orig_model = keras.Model(inputs, outputs)
   clustered_model = cluster_weights(orig_model)
   exported_model = strip_clustering(clustered_model)
   ```
   The exported_model and the orig_model have the same structure.
   """
-  if not isinstance(model, tf.keras.Model):
+  if not isinstance(model, keras.Model):
     raise ValueError(
-        'Expected model to be a `tf.keras.Model` instance but got: ', model)
+        'Expected model to be a `keras.Model` instance but got: ', model
+    )
 
   def _strip_clustering_wrapper(layer):
-    if isinstance(layer, tf.keras.Model):
-      return tf.keras.models.clone_model(
-          layer, input_tensors=None, clone_function=_strip_clustering_wrapper)
+    if isinstance(layer, keras.Model):
+      return keras.models.clone_model(
+          layer, input_tensors=None, clone_function=_strip_clustering_wrapper
+      )
 
     elif isinstance(layer, cluster_wrapper.ClusterWeightsMHA):
       # Update cluster associations in order to get the latest weights
@@ -363,8 +370,9 @@ def strip_clustering(model):
     return layer
 
   # Just copy the model with the right callback
-  return tf.keras.models.clone_model(
-      model, input_tensors=None, clone_function=_strip_clustering_wrapper)
+  return keras.models.clone_model(
+      model, input_tensors=None, clone_function=_strip_clustering_wrapper
+  )
 
 
 def layer_has_enough_weights_to_cluster(layer, number_of_clusters,
@@ -379,7 +387,7 @@ def layer_has_enough_weights_to_cluster(layer, number_of_clusters,
     number_of_clusters: A number of cluster centroids to form clusters.
     cluster_per_channel: An optional boolean value.
   """
-  if not isinstance(layer, tf.keras.layers.Conv2D):
+  if not isinstance(layer, keras.layers.Conv2D):
     raise ValueError(f'Input layer should be Conv2D layer: {layer.name} given.')
 
   if not layer.trainable_weights:

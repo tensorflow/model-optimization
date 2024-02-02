@@ -56,8 +56,9 @@ landing_page:
         <pre class = "prettyprint">
         import tensorflow as tf
         import tensorflow_model_optimization as tfmot
+        import tf_keras as keras
 
-        model = tf.keras.Sequential([...])
+        model = keras.Sequential([...])
 
         pruning_schedule = tfmot.sparsity.keras.PolynomialDecay(
                               initial_sparsity=0.0, final_sparsity=0.5,

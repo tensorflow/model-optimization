@@ -22,15 +22,17 @@ from typing import Any, Dict
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_configs as n_bit_configs
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantizers as n_bit_quantizers
 
+
 QuantizeConfig = quantize_config.QuantizeConfig
 
-layers = tf.keras.layers
+layers = keras.layers
 
 
 class _QuantizeInfo(object):
@@ -92,13 +94,10 @@ class DefaultNBitQuantizeRegistry(
       _QuantizeInfo(layers.LeakyReLU, [], [], True),
       # layers.PReLU,
       # layers.ThresholdedReLU,
-
       # Convolution Layers
       # _QuantizeInfo(layers.Conv1D, ['kernel'], ['activation']),
-
       # layers.Conv2D is supported and handled in code below.
       # layers.DepthwiseConv2D is supported and handled in code below.
-
       # _QuantizeInfo(layers.Conv3D, ['kernel'], ['activation']),
       # _QuantizeInfo(layers.Conv3DTranspose, ['kernel'], ['activation']),
       _QuantizeInfo(layers.Concatenate, [], [], True),
@@ -106,7 +105,6 @@ class DefaultNBitQuantizeRegistry(
       _no_quantize(layers.Cropping2D),
       _no_quantize(layers.Cropping3D),
       # _no_quantize(layers.UpSampling1D),
-
       # TODO(tfmot): Reduce the quantization errors for bilinear interpolation
       # type for UpSampling2D op. UpSampling2D supports two interpolation types,
       # nearest and bilinear. we convert the op to ResizeBilnear integer op on
@@ -120,15 +118,12 @@ class DefaultNBitQuantizeRegistry(
       # (Note that the nearest case just copies the number so there’s no more
       # errors even if the quantization order is different.)
       _QuantizeInfo(layers.UpSampling2D, [], [], True),
-
       # _no_quantize(layers.UpSampling3D),
       _no_quantize(layers.ZeroPadding1D),
       _no_quantize(layers.ZeroPadding2D),
       # _no_quantize(layers.ZeroPadding3D),
-
       # Supported via modifications in Transforms.
       # layers.SeparableConv1D, layers.SeparableConv2D,
-
       # Core Layers
       _no_quantize(layers.ActivityRegularization),
       _QuantizeInfo(layers.Dense, ['kernel'], ['activation']),
@@ -142,7 +137,6 @@ class DefaultNBitQuantizeRegistry(
       _no_quantize(layers.SpatialDropout2D),
       _no_quantize(layers.SpatialDropout3D),
       # layers.Lambda needs custom handling by the user.
-
       # Pooling Layers
       _QuantizeInfo(layers.AveragePooling1D, [], [], True),
       _QuantizeInfo(layers.AveragePooling2D, [], [], True),
@@ -156,34 +150,29 @@ class DefaultNBitQuantizeRegistry(
       # _no_quantize(layers.MaxPooling1D),
       _no_quantize(layers.MaxPooling2D),
       # _no_quantize(layers.MaxPooling3D),
-
       # _QuantizeInfo(layers.LocallyConnected1D, ['kernel'], ['activation']),
       # _QuantizeInfo(layers.LocallyConnected2D, ['kernel'], ['activation']),
       _QuantizeInfo(layers.Add, [], [], True),
-
       # Enable once verified with TFLite behavior.
       # layers.Embedding: ['embeddings'],
-
       # BatchNormalization is handled elsewhere, in the cases
       # where it's preceded by convolutional layers.
       #   layers.BatchNormalization: [],
-
       # Merge layers to be added.
-
       # RNN Cells
       # TODO(pulkitb): Verify RNN layers behavior.
       # TODO(tfmot): check if we still need to allowlist via compat.v1 and
       # compat.v2 to support legacy TensorFlow 2.X
       # behavior where the v2 RNN uses the v1 RNNCell instead of the v2 RNNCell.
       # See b/145939875 for details.
-      # _QuantizeInfo(tf.keras.layers.GRUCell, ['kernel', 'recurrent_kernel'],
+      # _QuantizeInfo(keras.layers.GRUCell, ['kernel', 'recurrent_kernel'],
       #               ['activation', 'recurrent_activation']),
-      # _QuantizeInfo(tf.keras.layers.LSTMCell, ['kernel', 'recurrent_kernel'],
+      # _QuantizeInfo(keras.layers.LSTMCell, ['kernel', 'recurrent_kernel'],
       #               ['activation', 'recurrent_activation']),
-      # _QuantizeInfo(tf.keras.experimental.PeepholeLSTMCell,
+      # _QuantizeInfo(keras.experimental.PeepholeLSTMCell,
       #               ['kernel', 'recurrent_kernel'],
       #               ['activation', 'recurrent_activation']),
-      # _QuantizeInfo(tf.keras.layers.SimpleRNNCell,
+      # _QuantizeInfo(keras.layers.SimpleRNNCell,
       #               ['kernel', 'recurrent_kernel'],
       #               ['activation', 'recurrent_activation']),
   ]

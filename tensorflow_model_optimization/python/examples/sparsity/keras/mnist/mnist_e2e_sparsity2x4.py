@@ -20,18 +20,18 @@
 from __future__ import print_function
 
 from absl import app as absl_app
-
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
+
 ConstantSparsity = pruning_schedule.ConstantSparsity
-keras = tf.keras
 l = keras.layers
 
 tf.random.set_seed(42)
@@ -40,7 +40,7 @@ batch_size = 128
 num_classes = 10
 epochs = 1
 
-PRUNABLE_2x4_LAYERS = (tf.keras.layers.Conv2D, tf.keras.layers.Dense)
+PRUNABLE_2x4_LAYERS = (keras.layers.Conv2D, keras.layers.Dense)
 
 
 def check_model_sparsity_2x4(model):
@@ -54,30 +54,35 @@ def check_model_sparsity_2x4(model):
 
 
 def build_layerwise_model(input_shape, **pruning_params):
-  return tf.keras.Sequential([
+  return keras.Sequential([
       prune.prune_low_magnitude(
           l.Conv2D(
-              32, 5, padding='same', activation='relu',
-              input_shape=input_shape), **pruning_params),
+              32, 5, padding='same', activation='relu', input_shape=input_shape
+          ),
+          **pruning_params
+      ),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       prune.prune_low_magnitude(
-          l.Conv2D(64, 5, padding='same'), **pruning_params),
+          l.Conv2D(64, 5, padding='same'), **pruning_params
+      ),
       l.BatchNormalization(),
       l.ReLU(),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.Flatten(),
       prune.prune_low_magnitude(
-          l.Dense(1024, activation='relu'), **pruning_params),
+          l.Dense(1024, activation='relu'), **pruning_params
+      ),
       l.Dropout(0.4),
-      l.Dense(num_classes, activation='softmax')
+      l.Dense(num_classes, activation='softmax'),
   ])
 
 
 def train(model, x_train, y_train, x_test, y_test):
   model.compile(
-      loss=tf.keras.losses.categorical_crossentropy,
+      loss=keras.losses.categorical_crossentropy,
       optimizer='adam',
-      metrics=['accuracy'])
+      metrics=['accuracy'],
+  )
   model.run_eagerly = True
 
   # Print the model summary.

@@ -23,6 +23,8 @@ from __future__ import print_function
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
+from tensorflow_model_optimization.python.core.keras.compat import keras
+
 
 batch_size = 128
 num_classes = 10
@@ -32,9 +34,9 @@ epochs = 12
 img_rows, img_cols = 28, 28
 
 # the data, shuffled and split between train and test sets
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
-if tf.keras.backend.image_data_format() == 'channels_first':
+if keras.backend.image_data_format() == 'channels_first':
   x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
   x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
   input_shape = (1, img_rows, img_cols)
@@ -52,17 +54,21 @@ print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
 
 # convert class vectors to binary class matrices
-y_train = tf.keras.utils.to_categorical(y_train, num_classes)
-y_test = tf.keras.utils.to_categorical(y_test, num_classes)
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
 
-l = tf.keras.layers
+l = keras.layers
 
-model = tf.keras.Sequential([
+model = keras.Sequential([
     quantize.quantize_annotate_layer(
-        l.Conv2D(32, 5, padding='same', activation='relu', input_shape=input_shape)),
+        l.Conv2D(
+            32, 5, padding='same', activation='relu', input_shape=input_shape
+        )
+    ),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
     quantize.quantize_annotate_layer(
-        l.Conv2D(64, 5, padding='same', activation='relu')),
+        l.Conv2D(64, 5, padding='same', activation='relu')
+    ),
     l.MaxPooling2D((2, 2), (2, 2), padding='same'),
     l.Flatten(),
     quantize.quantize_annotate_layer(l.Dense(1024, activation='relu')),
@@ -80,9 +86,10 @@ with open('/tmp/mnist_model.pbtxt', 'w') as f:
   f.write(str(graph_def))
 
 model.compile(
-    loss=tf.keras.losses.categorical_crossentropy,
-    optimizer=tf.keras.optimizers.Adadelta(),
-    metrics=['accuracy'])
+    loss=keras.losses.categorical_crossentropy,
+    optimizer=keras.optimizers.Adadelta(),
+    metrics=['accuracy'],
+)
 
 model.fit(x_train, y_train,
           batch_size=batch_size,
@@ -95,7 +102,7 @@ print('Test accuracy:', score[1])
 
 # Export to Keras.
 keras_file = '/tmp/quantized_mnist.h5'
-tf.keras.models.save_model(model, keras_file)
+keras.models.save_model(model, keras_file)
 
 # Convert to TFLite model.
 with quantize.quantize_scope():

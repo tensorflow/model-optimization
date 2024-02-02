@@ -26,11 +26,10 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import metrics
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
-
-keras = tf.keras
 
 
 class StepIndependentConstantSparsity(pruning_schedule.PruningSchedule):
@@ -70,16 +69,17 @@ def _apply_pruning(prunable_object):
 def prune_for_benchmark(keras_model,
                         target_sparsity,
                         block_size=(1, 1)):
-  """Prunes a tf.keras model in a single step, without re-training.
+  """Prunes a keras model in a single step, without re-training.
 
   This function is intented to quickly apply sparsity to a model, without
   consideration for accuracy.
 
   Args:
-    keras_model: A `tf.keras.Model` instance.
+    keras_model: A `keras.Model` instance.
     target_sparsity: Target sparsity as float, in [0, 1] interval.
-    block_size: The dimensions (height, weight) for the block sparse
-      pattern in rank-2 weight tensors.
+    block_size: The dimensions (height, weight) for the block sparse pattern in
+      rank-2 weight tensors.
+
   Returns:
     A pruned model, modified with pruning wrappers.
   """

@@ -24,8 +24,9 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-keras = tf.keras
+
 layers = keras.layers
 test = tf.test
 
@@ -355,7 +356,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     original_model = keras.Sequential([
         layers.Dense(5, input_shape=(5,)),
-        layers.Dense(5, kernel_regularizer=tf.keras.regularizers.L1(0.01)),
+        layers.Dense(5, kernel_regularizer=keras.regularizers.L1(0.01)),
     ])
 
     def clusters_check(stripped_model):
@@ -385,8 +386,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
   def testEndToEndDeepLayer(self):
     """Test End to End clustering for the model with deep layer."""
-    internal_model = tf.keras.Sequential(
-        [tf.keras.layers.Dense(5, input_shape=(5,))])
+    internal_model = keras.Sequential([keras.layers.Dense(5, input_shape=(5,))])
     original_model = keras.Sequential([
         internal_model,
         layers.Dense(5),
@@ -411,8 +411,7 @@ class ClusterIntegrationTest(test.TestCase, parameterized.TestCase):
 
   def testEndToEndDeepLayer2(self):
     """Test End to End clustering for the model with 2 deep layers."""
-    internal_model = tf.keras.Sequential(
-        [tf.keras.layers.Dense(5, input_shape=(5,))])
+    internal_model = keras.Sequential([keras.layers.Dense(5, input_shape=(5,))])
     intermediate_model = keras.Sequential([
         internal_model,
         layers.Dense(5),
@@ -626,9 +625,12 @@ class ClusterRNNIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     model.add(
         keras.layers.Embedding(self.max_features, 16, input_length=self.maxlen))
     model.add(
-        tf.keras.layers.RNN(
-            tf.keras.layers.StackedRNNCells(
-                [keras.layers.SimpleRNNCell(16) for _ in range(2)])))
+        keras.layers.RNN(
+            keras.layers.StackedRNNCells(
+                [keras.layers.SimpleRNNCell(16) for _ in range(2)]
+            )
+        )
+    )
     model.add(keras.layers.Dense(1))
     model.add(keras.layers.Activation("sigmoid"))
 
@@ -664,11 +666,12 @@ class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
   def _get_model(self):
     """Returns functional model with MHA layer."""
-    inp = tf.keras.layers.Input(shape=(32, 32), batch_size=100)
-    x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16)(
-        query=inp, value=inp)
-    out = tf.keras.layers.Flatten()(x)
-    model = tf.keras.Model(inputs=inp, outputs=out)
+    inp = keras.layers.Input(shape=(32, 32), batch_size=100)
+    x = keras.layers.MultiHeadAttention(num_heads=2, key_dim=16)(
+        query=inp, value=inp
+    )
+    out = keras.layers.Flatten()(x)
+    model = keras.Model(inputs=inp, outputs=out)
     return model
 
   def testMHA(self):
@@ -677,9 +680,10 @@ class ClusterMHAIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     clustered_model = cluster.cluster_weights(model, **self.params_clustering)
 
     clustered_model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")])
+        optimizer=keras.optimizers.Adam(learning_rate=1e-4),
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
+    )
     clustered_model.fit(
         self.x_train, self.y_train, epochs=1, batch_size=100, verbose=1)
 
@@ -711,14 +715,14 @@ class ClusterPerChannelIntegrationTest(tf.test.TestCase,
 
   def _get_model(self):
     """Returns functional model with Conv2D layer."""
-    inp = tf.keras.layers.Input(shape=(32, 32), batch_size=100)
-    x = tf.keras.layers.Reshape((32, 32, 1))(inp)
-    x = tf.keras.layers.Conv2D(
-        filters=self.num_channels, kernel_size=(3, 3),
-        activation="relu")(x)
-    x = tf.keras.layers.MaxPool2D(2, 2)(x)
-    out = tf.keras.layers.Flatten()(x)
-    model = tf.keras.Model(inputs=inp, outputs=out)
+    inp = keras.layers.Input(shape=(32, 32), batch_size=100)
+    x = keras.layers.Reshape((32, 32, 1))(inp)
+    x = keras.layers.Conv2D(
+        filters=self.num_channels, kernel_size=(3, 3), activation="relu"
+    )(x)
+    x = keras.layers.MaxPool2D(2, 2)(x)
+    out = keras.layers.Flatten()(x)
+    model = keras.Model(inputs=inp, outputs=out)
     return model
 
   def testPerChannel(self):
@@ -727,9 +731,10 @@ class ClusterPerChannelIntegrationTest(tf.test.TestCase,
     clustered_model = cluster.cluster_weights(model, **self.params_clustering)
 
     clustered_model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")])
+        optimizer=keras.optimizers.Adam(learning_rate=1e-4),
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
+    )
     clustered_model.fit(
         self.x_train, self.y_train, epochs=2, batch_size=100, verbose=1)
 

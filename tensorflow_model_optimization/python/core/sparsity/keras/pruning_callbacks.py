@@ -19,15 +19,18 @@ from __future__ import division
 from __future__ import print_function
 
 # import g3
+
 import numpy as np
 import six
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import compat
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-K = tf.keras.backend
-callbacks = tf.keras.callbacks
+
+K = keras.backend
+callbacks = keras.callbacks
 
 
 class UpdatePruningStep(callbacks.Callback):

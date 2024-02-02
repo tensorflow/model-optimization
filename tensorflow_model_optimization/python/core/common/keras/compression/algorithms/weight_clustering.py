@@ -23,6 +23,7 @@ from tensorflow_model_optimization.python.core.clustering.keras import clusterin
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import GradientAggregation
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 class ConvolutionalWeightsCA(clustering_registry.ClusteringAlgorithm):
@@ -79,12 +80,14 @@ class WeightClustering(algorithm.WeightCompressor):
         name='cluster_centroids',
         shape=cluster_centroids.shape,
         dtype=cluster_centroids.dtype,
-        initializer=tf.keras.initializers.Constant(cluster_centroids))
+        initializer=keras.initializers.Constant(cluster_centroids),
+    )
     self.add_training_weight(
         name='pulling_indices',
         shape=pulling_indices.shape,
         dtype=pulling_indices.dtype,
-        initializer=tf.keras.initializers.Constant(pulling_indices))
+        initializer=keras.initializers.Constant(pulling_indices),
+    )
 
   def decompress_weights(self,
                          cluster_centroids: tf.Tensor,
@@ -100,15 +103,15 @@ class WeightClustering(algorithm.WeightCompressor):
     return self.decompress_weights(cluster_centroids, pulling_indices)
 
   def get_compressible_weights(
-      self, original_layer: tf.keras.layers.Layer) -> List[str]:
-    if (isinstance(original_layer, tf.keras.layers.Conv2D) or
-        isinstance(original_layer, tf.keras.layers.Dense)):
+      self, original_layer: keras.layers.Layer
+  ) -> List[str]:
+    if isinstance(original_layer, keras.layers.Conv2D) or isinstance(
+        original_layer, keras.layers.Dense
+    ):
       return [original_layer.kernel]
     return []
 
-  def compress_model(
-      self,
-      to_optimize: tf.keras.Model) -> tf.keras.Model:
+  def compress_model(self, to_optimize: keras.Model) -> keras.Model:
     """Model developer API for optimizing a model."""
 
     def _optimize_layer(layer):
@@ -122,5 +125,4 @@ class WeightClustering(algorithm.WeightCompressor):
       return algorithm.create_layer_for_training(
           layer, algorithm=self)
 
-    return tf.keras.models.clone_model(
-        to_optimize, clone_function=_optimize_layer)
+    return keras.models.clone_model(to_optimize, clone_function=_optimize_layer)

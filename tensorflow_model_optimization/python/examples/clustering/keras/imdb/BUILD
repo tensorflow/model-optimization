@@ -1,5 +1,5 @@
-# Placeholder: load py_binary
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+# Placeholder: load py_binary
 
 package(
     default_visibility = ["//visibility:public"],
@@ -67,6 +67,7 @@ py_strict_library(
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -82,5 +83,6 @@ py_binary(
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )

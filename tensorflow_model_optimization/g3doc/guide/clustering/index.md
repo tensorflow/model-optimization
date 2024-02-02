@@ -21,7 +21,7 @@ Please note that clustering will provide reduced benefits for convolution and de
 
 Users can apply clustering with the following APIs:
 
-*   Model building: `tf.keras` with only Sequential and Functional models
+*   Model building: `keras` with only Sequential and Functional models
 *   TensorFlow versions: TF 1.x for versions 1.14+ and 2.x.
     *   `tf.compat.v1` with a TF 2.X package and `tf.compat.v2` with a TF 1.X
         package are not supported.

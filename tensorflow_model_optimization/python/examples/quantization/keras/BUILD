@@ -11,6 +11,7 @@ py_strict_binary(
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
     ],
 )
@@ -25,6 +26,7 @@ py_strict_binary(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize",
     ],
 )

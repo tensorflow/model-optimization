@@ -29,17 +29,18 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow.python.util import tf_inspect
-
 from tensorflow_model_optimization.python.core.keras import metrics
 from tensorflow_model_optimization.python.core.keras import utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
+
 
 deserialize_keras_object = quantize_utils.deserialize_keras_object
 serialize_keras_object = quantize_utils.serialize_keras_object
 
 
-class QuantizeWrapper(tf.keras.layers.Wrapper):
+class QuantizeWrapper(keras.layers.Wrapper):
   """Quantizes the weights and activations of the keras layer it wraps."""
 
   def __init__(self, layer, quantize_config, name_prefix='quant_', **kwargs):
@@ -59,12 +60,15 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
       name_prefix = ''
 
     # Check against keras.Model since it is an instance of keras.layers.Layer.
-    if not isinstance(layer, tf.keras.layers.Layer) or isinstance(
-        layer, tf.keras.Model):
+    if not isinstance(layer, keras.layers.Layer) or isinstance(
+        layer, keras.Model
+    ):
       raise ValueError(
-          '`layer` can only be a `tf.keras.layers.Layer` instance. '
+          '`layer` can only be a `keras.layers.Layer` instance. '
           'You passed an instance of type: {input}.'.format(
-              input=layer.__class__.__name__))
+              input=layer.__class__.__name__
+          )
+      )
 
     if quantize_config is None:
       raise ValueError('quantize_config cannot be None. It is needed to '
@@ -101,9 +105,10 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
 
     self.optimizer_step = self.add_weight(
         'optimizer_step',
-        initializer=tf.keras.initializers.Constant(-1),
+        initializer=keras.initializers.Constant(-1),
         dtype=tf.dtypes.int32,
-        trainable=False)
+        trainable=False,
+    )
 
     self._weight_vars = []
     for weight, quantizer in (
@@ -142,7 +147,7 @@ class QuantizeWrapper(tf.keras.layers.Wrapper):
 
   def call(self, inputs, training=None, **kwargs):
     if training is None:
-      training = tf.keras.backend.learning_phase()
+      training = keras.backend.learning_phase()
 
     # Quantize all weights, and replace them in the underlying layer.
 

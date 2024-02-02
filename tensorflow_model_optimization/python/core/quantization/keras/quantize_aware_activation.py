@@ -21,9 +21,11 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 
-activations = tf.keras.activations
+
+activations = keras.activations
 
 
 class NoOpActivation(object):
@@ -92,9 +94,10 @@ class QuantizeAwareActivation(object):
   _NO_QUANTIZE_ACTIVATIONS = frozenset({'NoOpActivation'})
 
   _CUSTOM_ACTIVATION_ERR_MSG = (
-      'Only some Keras activations under `tf.keras.activations` are supported. '
+      'Only some Keras activations under `keras.activations` are supported. '
       'For other activations, use `Quantizer` directly, and update layer '
-      'config using `QuantizeConfig`.')
+      'config using `QuantizeConfig`.'
+  )
 
   def __init__(self, activation, quantizer, step, quantize_wrapper):
     """Constructs object, and initializes weights for quantization.

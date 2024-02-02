@@ -22,6 +22,7 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
@@ -29,7 +30,7 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_sch
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 from tensorflow_model_optimization.python.core.sparsity.keras import test_utils
 
-keras = tf.keras
+
 layers = keras.layers
 
 list_to_named_parameters = test_utils.list_to_named_parameters
@@ -41,10 +42,13 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
 
   # Fetch all the prunable layers from the registry.
   _PRUNABLE_LAYERS = [
-      layer for layer, weights in
-      prune_registry.PruneRegistry._LAYERS_WEIGHTS_MAP.items()
-      if (weights and layer != tf.keras.layers.Conv3DTranspose and
-          layer != tf.keras.layers.Conv2DTranspose)
+      layer
+      for layer, weights in prune_registry.PruneRegistry._LAYERS_WEIGHTS_MAP.items()
+      if (
+          weights
+          and layer != keras.layers.Conv3DTranspose
+          and layer != keras.layers.Conv2DTranspose
+      )
   ]
 
   # Fetch all the non-prunable layers from the registry.
@@ -206,8 +210,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     for layer in model.layers:
       if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
         for weight in layer.layer.get_prunable_weights():
-          self.assertEqual(1,
-                           np.count_nonzero(tf.keras.backend.get_value(weight)))
+          self.assertEqual(1, np.count_nonzero(keras.backend.get_value(weight)))
 
   ###################################################################
   # Tests for training with pruning with pretrained models or weights.
@@ -335,40 +338,40 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
   @parameterized.named_parameters(
       {
           'testcase_name': 'Conv2D',
-          'layer_type': tf.keras.layers.Conv2D,
+          'layer_type': keras.layers.Conv2D,
           'layer_arg': [16, (5, 7)],
           'input_shape': (10, 10, 8),
       },
       {
           'testcase_name': 'Dense',
-          'layer_type': tf.keras.layers.Dense,
+          'layer_type': keras.layers.Dense,
           'layer_arg': [16],
           'input_shape': [(8)],
       },
       {
           'testcase_name': 'Conv2D_not_multiple_4',
-          'layer_type': tf.keras.layers.Conv2D,
+          'layer_type': keras.layers.Conv2D,
           'layer_arg': [16, (5, 7)],
           'input_shape': (10, 10, 7),
           'sparsity_ratio': 0.428571,
       },
       {
           'testcase_name': 'Conv2D_1by2',
-          'layer_type': tf.keras.layers.Conv2D,
+          'layer_type': keras.layers.Conv2D,
           'layer_arg': [16, (5, 7)],
           'input_shape': (10, 10, 8),
           'm_by_n': (1, 2),
       },
       {
           'testcase_name': 'Dense_1by2',
-          'layer_type': tf.keras.layers.Dense,
+          'layer_type': keras.layers.Dense,
           'layer_arg': [16],
           'input_shape': [(8)],
           'm_by_n': (1, 2),
       },
       {
           'testcase_name': 'DepthwiseConv_2by4',
-          'layer_type': tf.keras.layers.DepthwiseConv2D,
+          'layer_type': keras.layers.DepthwiseConv2D,
           'layer_arg': [3],
           'input_shape': (7, 7, 32),
           'm_by_n': (2, 4),
@@ -405,13 +408,14 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     m_by_n = (2, 4)
     self.params.update({'sparsity_m_by_n': m_by_n})
 
-    class SubclassLayer(tf.keras.layers.Layer):
+    class SubclassLayer(keras.layers.Layer):
 
       def __init__(self):
         super(SubclassLayer, self).__init__()
-        self.conv1 = tf.keras.layers.Conv2D(
-            2, 3, activation='relu', padding='same', input_shape=[7, 7, 3])
-        self.conv2 = tf.keras.layers.DepthwiseConv2D(3)
+        self.conv1 = keras.layers.Conv2D(
+            2, 3, activation='relu', padding='same', input_shape=[7, 7, 3]
+        )
+        self.conv2 = keras.layers.DepthwiseConv2D(3)
         self.flatten = keras.layers.Flatten()
         self.dense = layers.Dense(10, activation='sigmoid')
 
@@ -529,17 +533,20 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
     self._check_strip_pruning_matches_original(model, 0.5, input_data)
 
   def testMHALayerReachesTargetSparsity(self):
-    inp = tf.keras.layers.Input(shape=(32,32), batch_size=100)
-    x = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=16)(query=inp, value=inp)
-    out = tf.keras.layers.Flatten()(x)
-    model = tf.keras.Model(inputs=inp, outputs=out)
+    inp = keras.layers.Input(shape=(32, 32), batch_size=100)
+    x = keras.layers.MultiHeadAttention(num_heads=2, key_dim=16)(
+        query=inp, value=inp
+    )
+    out = keras.layers.Flatten()(x)
+    model = keras.Model(inputs=inp, outputs=out)
     model = prune.prune_low_magnitude(model, **self.params)
     x_train = np.random.uniform(size=(500, 32, 32))
     y_train = np.random.randint(low=0, high=1024, size=(500,))
     model.compile(
-      optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-      metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')])
+        optimizer=keras.optimizers.Adam(learning_rate=1e-4),
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[keras.metrics.SparseCategoricalAccuracy(name='accuracy')],
+    )
     test_utils.assert_model_sparsity(self, 0.0, model)
     model.fit(
         x_train,
@@ -595,8 +602,9 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
 
       callbacks = [
           pruning_callbacks.UpdatePruningStep(),
-          tf.keras.callbacks.ModelCheckpoint(
-              filepath=checkpoint_path, save_weights_only=True, save_freq=1)
+          keras.callbacks.ModelCheckpoint(
+              filepath=checkpoint_path, save_weights_only=True, save_freq=1
+          ),
       ]
 
       # Train one step. Sparsity reaches final sparsity.

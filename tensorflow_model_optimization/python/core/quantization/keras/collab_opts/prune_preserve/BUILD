@@ -1,5 +1,5 @@
-# Placeholder: load py_test
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+# Placeholder: load py_test
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -26,6 +26,7 @@ py_strict_library(
     srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras:quant_ops",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
@@ -45,6 +46,7 @@ py_test(
         # absl/testing:parameterized dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_registry",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune_registry",
     ],

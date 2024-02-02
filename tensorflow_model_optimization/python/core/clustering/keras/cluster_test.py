@@ -27,8 +27,9 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster_w
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-keras = tf.keras
+
 errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
@@ -345,7 +346,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
-        layers.Dense(10, kernel_regularizer=tf.keras.regularizers.L1(0.01)),
+        layers.Dense(10, kernel_regularizer=keras.regularizers.L1(0.01)),
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     stripped_model = cluster.strip_clustering(clustered_model)
@@ -359,7 +360,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
-        layers.Dense(10, bias_regularizer=tf.keras.regularizers.L1(0.01)),
+        layers.Dense(10, bias_regularizer=keras.regularizers.L1(0.01)),
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     stripped_model = cluster.strip_clustering(clustered_model)
@@ -373,7 +374,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
-        layers.Dense(10, activity_regularizer=tf.keras.regularizers.L1(0.01)),
+        layers.Dense(10, activity_regularizer=keras.regularizers.L1(0.01)),
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     stripped_model = cluster.strip_clustering(clustered_model)
@@ -387,7 +388,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
-        layers.Dense(10, kernel_constraint=tf.keras.constraints.max_norm(2.)),
+        layers.Dense(10, kernel_constraint=keras.constraints.max_norm(2.0)),
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     stripped_model = cluster.strip_clustering(clustered_model)
@@ -401,7 +402,7 @@ class ClusterTest(test.TestCase, parameterized.TestCase):
     """Verifies that stripping the clustering wrappers from a sequential model produces the expected config."""
     model = keras.Sequential([
         layers.Dense(10, input_shape=(10,)),
-        layers.Dense(10, bias_constraint=tf.keras.constraints.max_norm(2.)),
+        layers.Dense(10, bias_constraint=keras.constraints.max_norm(2.0)),
     ])
     clustered_model = cluster.cluster_weights(model, **self.params)
     stripped_model = cluster.strip_clustering(clustered_model)

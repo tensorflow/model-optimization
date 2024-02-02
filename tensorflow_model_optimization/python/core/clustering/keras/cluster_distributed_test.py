@@ -25,8 +25,9 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster_c
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-keras = tf.keras
+
 CentroidInitialization = cluster_config.CentroidInitialization
 
 

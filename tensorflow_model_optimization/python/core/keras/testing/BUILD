@@ -15,5 +15,6 @@ py_strict_library(
     deps = [
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )

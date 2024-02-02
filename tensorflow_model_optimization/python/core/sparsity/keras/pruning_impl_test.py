@@ -26,10 +26,12 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow_model_optimization.python.core.keras import compat
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
-K = tf.keras.backend
+
+K = keras.backend
 dtypes = tf.dtypes
 test = tf.test
 

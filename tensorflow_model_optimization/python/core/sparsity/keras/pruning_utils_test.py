@@ -19,13 +19,16 @@ from __future__ import division
 from __future__ import print_function
 
 # import g3
-from absl.testing import parameterized
 
+from absl.testing import parameterized
 import tensorflow as tf
+
 from tensorflow_model_optimization.python.core.keras import compat
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 
-glorot_uniform_initializer = tf.keras.initializers.glorot_uniform
+
+glorot_uniform_initializer = keras.initializers.glorot_uniform
 
 
 @parameterized.named_parameters(

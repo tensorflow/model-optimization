@@ -16,6 +16,7 @@
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
@@ -23,7 +24,8 @@ from tensorflow_model_optimization.python.core.quantization.keras.default_8bit i
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import (
     default_8bit_quantizers,)
 
-layers = tf.keras.layers
+
+layers = keras.layers
 
 
 class _PrunePreserveInfo(object):

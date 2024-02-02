@@ -16,6 +16,7 @@
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 
 
@@ -37,13 +38,15 @@ class DefaultNBitConvWeightsQuantizer(quantizers.LastValueQuantizer):
     min_weight = layer.add_weight(
         name + '_min',
         shape=(tensor_shape[-1],),
-        initializer=tf.keras.initializers.Constant(-6.0),
-        trainable=False)
+        initializer=keras.initializers.Constant(-6.0),
+        trainable=False,
+    )
     max_weight = layer.add_weight(
         name + '_max',
         shape=(tensor_shape[-1],),
-        initializer=tf.keras.initializers.Constant(6.0),
-        trainable=False)
+        initializer=keras.initializers.Constant(6.0),
+        trainable=False,
+    )
 
     return {'min_var': min_weight, 'max_var': max_weight}
 

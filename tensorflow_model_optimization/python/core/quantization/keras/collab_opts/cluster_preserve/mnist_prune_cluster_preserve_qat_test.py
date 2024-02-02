@@ -19,6 +19,7 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import cluster as tfmot_cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config as tfmot_cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as exp_tfmot_cluster
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import cluster_utils
 from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import (
@@ -28,27 +29,28 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_cal
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
 
-layers = tf.keras.layers
+layers = keras.layers
 np.random.seed(1)
 tf.random.set_seed(3)
 
 
 def _build_model():
   """Create the baseline model."""
-  i = tf.keras.layers.Input(shape=(28, 28), name='input')
-  x = tf.keras.layers.Reshape((28, 28, 1))(i)
-  x = tf.keras.layers.Conv2D(
-      filters=12, kernel_size=(3, 3), activation='relu', name='conv1')(x)
-  x = tf.keras.layers.MaxPool2D(2, 2)(x)
-  x = tf.keras.layers.Flatten()(x)
-  output = tf.keras.layers.Dense(10, name='fc2')(x)
-  model = tf.keras.Model(inputs=[i], outputs=[output])
+  i = keras.layers.Input(shape=(28, 28), name='input')
+  x = keras.layers.Reshape((28, 28, 1))(i)
+  x = keras.layers.Conv2D(
+      filters=12, kernel_size=(3, 3), activation='relu', name='conv1'
+  )(x)
+  x = keras.layers.MaxPool2D(2, 2)(x)
+  x = keras.layers.Flatten()(x)
+  output = keras.layers.Dense(10, name='fc2')(x)
+  model = keras.Model(inputs=[i], outputs=[output])
 
   return model
 
 
 def _get_dataset():
-  mnist = tf.keras.datasets.mnist
+  mnist = keras.datasets.mnist
   (x_train, y_train), (x_test, y_test) = mnist.load_data()
   x_train, x_test = x_train / 255.0, x_test / 255.0
   # Use subset of 60000 examples to keep unit test speed fast.
@@ -59,7 +61,7 @@ def _get_dataset():
 
 
 def _train_model(model, callback_to_use, num_of_epochs):
-  loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+  loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
   model.compile(optimizer='adam',
                 loss=loss_fn,
                 metrics=['accuracy'],)
@@ -134,11 +136,11 @@ def selective_cluster_model(original_model, sparsity_flag):
   }
 
   def apply_clustering_to_conv2d(layer):
-    if isinstance(layer, tf.keras.layers.Conv2D):
+    if isinstance(layer, keras.layers.Conv2D):
       return exp_tfmot_cluster.cluster_weights(layer, **clustering_params)
     return layer
 
-  cluster_model = tf.keras.models.clone_model(
+  cluster_model = keras.models.clone_model(
       original_model,
       clone_function=apply_clustering_to_conv2d,
   )
@@ -177,13 +179,17 @@ def _get_num_unique_weights_kernel(model):
 
   num_unique_weights_list = []
   for layer in model.layers:
-    if isinstance(layer,
-                  (tf.keras.layers.Conv2D,
-                   tf.keras.layers.Dense,
-                   quantize.quantize_wrapper.QuantizeWrapper)):
+    if isinstance(
+        layer,
+        (
+            keras.layers.Conv2D,
+            keras.layers.Dense,
+            quantize.quantize_wrapper.QuantizeWrapper,
+        ),
+    ):
       for weights in layer.trainable_weights:
         if 'kernel' in weights.name:
-          np_weights = tf.keras.backend.get_value(weights)
+          np_weights = keras.backend.get_value(weights)
           unique_weights = len(np.unique(np_weights))
           num_unique_weights_list.append(unique_weights)
 
@@ -198,7 +204,7 @@ def _check_sparsity_kernel(model):
                    quantize.quantize_wrapper.QuantizeWrapper)):
       for weights in layer.trainable_weights:
         if 'kernel' in weights.name:
-          np_weights = tf.keras.backend.get_value(weights)
+          np_weights = keras.backend.get_value(weights)
           sparsity = 1.0 - np.count_nonzero(np_weights) / float(
               np_weights.size)
           sparsity_list.append(sparsity)

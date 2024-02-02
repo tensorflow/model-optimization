@@ -34,6 +34,7 @@ from absl import app
 from absl import flags
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras.tools import sparsity_tooling
 
@@ -100,7 +101,7 @@ def run(input_model_path, output_dir, target_sparsity, block_size):
              are not intended to be served in production, but to be used for
              performance benchmarking."""))
 
-  input_model = tf.keras.models.load_model(input_model_path)
+  input_model = keras.models.load_model(input_model_path)
 
   os.makedirs(output_dir, exist_ok=True)
   unpruned_tflite_path = os.path.join(

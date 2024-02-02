@@ -19,27 +19,28 @@ import shutil
 from absl.testing import parameterized
 import tensorflow as tf
 from tensorflow_model_optimization.python.core.common.keras.compression.algorithms import epr
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 def build_model():
-  inputs = tf.keras.layers.Input(shape=(28, 28), name="input")
-  x = tf.keras.layers.Reshape((28, 28, 1))(inputs)
-  x = tf.keras.layers.Conv2D(
-      20, 5, use_bias=True, activation="relu", padding="valid", name="conv1")(x)
-  x = tf.keras.layers.MaxPool2D(2, 2)(x)
-  x = tf.keras.layers.Conv2D(
-      50, 5, use_bias=True, activation="relu", padding="valid", name="conv2")(x)
-  x = tf.keras.layers.MaxPool2D(2, 2)(x)
-  x = tf.keras.layers.Flatten()(x)
-  x = tf.keras.layers.Dense(
-      500, use_bias=True, activation="relu", name="fc1")(x)
-  outputs = tf.keras.layers.Dense(
-      10, use_bias=True, name="fc2")(x)
-  return tf.keras.Model(inputs=[inputs], outputs=[outputs])
+  inputs = keras.layers.Input(shape=(28, 28), name="input")
+  x = keras.layers.Reshape((28, 28, 1))(inputs)
+  x = keras.layers.Conv2D(
+      20, 5, use_bias=True, activation="relu", padding="valid", name="conv1"
+  )(x)
+  x = keras.layers.MaxPool2D(2, 2)(x)
+  x = keras.layers.Conv2D(
+      50, 5, use_bias=True, activation="relu", padding="valid", name="conv2"
+  )(x)
+  x = keras.layers.MaxPool2D(2, 2)(x)
+  x = keras.layers.Flatten()(x)
+  x = keras.layers.Dense(500, use_bias=True, activation="relu", name="fc1")(x)
+  outputs = keras.layers.Dense(10, use_bias=True, name="fc2")(x)
+  return keras.Model(inputs=[inputs], outputs=[outputs])
 
 
 def get_dataset():
-  (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+  (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
   x_train = (x_train / 255).astype("float32")
   x_test = (x_test / 255).astype("float32")
   return (x_train, y_train), (x_test, y_test)
@@ -47,9 +48,9 @@ def get_dataset():
 
 def train_model(model):
   model.compile(
-      optimizer=tf.keras.optimizers.Adam(1e-2),
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-      metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
+      optimizer=keras.optimizers.Adam(1e-2),
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=[keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
   )
   (x_train, y_train), _ = get_dataset()
   model.fit(x_train, y_train, batch_size=128, epochs=3)
@@ -57,7 +58,7 @@ def train_model(model):
 
 def evaluate_model(model):
   model.compile(
-      metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
+      metrics=[keras.metrics.SparseCategoricalAccuracy(name="accuracy")],
   )
   _, (x_test, y_test) = get_dataset()
   results = model.evaluate(x_test, y_test, batch_size=128, return_dict=True)
@@ -90,7 +91,7 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
     algorithm = self.get_algorithm()
     init = tf.ones(shape, dtype=tf.float32)
     algorithm.init_training_weights(init)
-    layer = tf.keras.layers.Layer()
+    layer = keras.layers.Layer()
     for weight_repr in algorithm.weight_reprs:
       layer.add_weight(*weight_repr.args, **weight_repr.kwargs)
     with tf.GradientTape() as tape:
@@ -106,7 +107,7 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
     algorithm = self.get_algorithm()
     init = tf.ones(shape, dtype=tf.float32)
     algorithm.init_training_weights(init)
-    layer = tf.keras.layers.Layer()
+    layer = keras.layers.Layer()
     for weight_repr in algorithm.weight_reprs:
       layer.add_weight(*weight_repr.args, **weight_repr.kwargs)
     with tf.GradientTape() as tape:
@@ -117,16 +118,16 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
         [w.dtype.is_floating for w in layer.weights])
 
   @parameterized.parameters(
-      ((2, 3), tf.keras.layers.Dense, 5),
+      ((2, 3), keras.layers.Dense, 5),
       # TODO(jballe): This fails with: 'You called `set_weights(weights)` on
       # layer "private__training_wrapper" with a weight list of length 0, but
       # the layer was expecting 5 weights.' Find fix.
-      # ((3, 10, 2), tf.keras.layers.Conv1D, 5, 3),
-      ((1, 8, 9, 2), tf.keras.layers.Conv2D, 5, 3),
+      # ((3, 10, 2), keras.layers.Conv1D, 5, 3),
+      ((1, 8, 9, 2), keras.layers.Conv2D, 5, 3),
   )
   def test_model_has_gradients(self, input_shape, layer_cls, *args):
     algorithm = self.get_algorithm()
-    model = tf.keras.Sequential([layer_cls(*args, use_bias=True)])
+    model = keras.Sequential([layer_cls(*args, use_bias=True)])
     inputs = tf.random.normal(input_shape)
     model(inputs)
     training_model = algorithm.get_training_model(model)
@@ -145,7 +146,7 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
     algorithm = self.get_algorithm()
     init = tf.random.uniform(shape, dtype=tf.float32)
     algorithm.init_training_weights(init)
-    layer = tf.keras.layers.Layer()
+    layer = keras.layers.Layer()
     for weight_repr in algorithm.weight_reprs:
       layer.add_weight(*weight_repr.args, **weight_repr.kwargs)
     train_weight = algorithm.project_training_weights(*layer.weights)
@@ -158,7 +159,7 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
     algorithm = self.get_algorithm()
     init = tf.random.uniform(shape, -10., 10., dtype=tf.float32)
     algorithm.init_training_weights(init)
-    layer = tf.keras.layers.Layer()
+    layer = keras.layers.Layer()
     for weight_repr in algorithm.weight_reprs:
       layer.add_weight(*weight_repr.args, **weight_repr.kwargs)
     weight = algorithm.project_training_weights(*layer.weights)
@@ -200,7 +201,7 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
       self.assertLess(compressed_size, 0.2 * original_size)
 
     with self.subTest("compressed_model_has_reasonable_accuracy"):
-      compressed_model = tf.keras.models.load_model(compressed_model_dir)
+      compressed_model = keras.models.load_model(compressed_model_dir)
       accuracy = evaluate_model(compressed_model)
       self.assertGreater(accuracy, .9)
 

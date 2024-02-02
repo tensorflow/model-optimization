@@ -21,13 +21,15 @@ compared to simpler, much faster methods such as TF-IDF+LogReg.
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-keras = tf.keras
-K = tf.keras.backend
+
+keras = keras
+K = keras.backend
 
 
 def print_model_sparsity(pruned_model):

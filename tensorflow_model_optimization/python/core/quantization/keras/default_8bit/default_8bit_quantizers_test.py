@@ -19,14 +19,15 @@ from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
-
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
-Default8BitConvWeightsQuantizer = default_8bit_quantizers.Default8BitConvWeightsQuantizer
 
-keras = tf.keras
+Default8BitConvWeightsQuantizer = (
+    default_8bit_quantizers.Default8BitConvWeightsQuantizer
+)
 
 
 class Default8BitConvWeightsQuantizerTest(tf.test.TestCase,

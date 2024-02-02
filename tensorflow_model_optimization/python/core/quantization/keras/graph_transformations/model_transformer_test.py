@@ -19,20 +19,19 @@ from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
-
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
+
 
 ModelTransformer = model_transformer.ModelTransformer
 Transform = transforms.Transform
 LayerPattern = transforms.LayerPattern
 LayerNode = transforms.LayerNode
-
-keras = tf.keras
 
 
 class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
@@ -558,10 +557,10 @@ class ModelTransformerTest(tf.test.TestCase, parameterized.TestCase):
         match_layer.metadata['key'] = 'value'
         return match_layer
 
-    model = tf.keras.Sequential([
-        tf.keras.layers.Conv2D(32, 5, input_shape=(28, 28, 1)),
-        tf.keras.layers.BatchNormalization(),
-        tf.keras.layers.ReLU(),
+    model = keras.Sequential([
+        keras.layers.Conv2D(32, 5, input_shape=(28, 28, 1)),
+        keras.layers.BatchNormalization(),
+        keras.layers.ReLU(),
     ])
     model_layer_names = [layer.name for layer in model.layers]
 

@@ -17,19 +17,20 @@
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import compat
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
-class ClusteringSummaries(tf.keras.callbacks.TensorBoard):
+class ClusteringSummaries(keras.callbacks.TensorBoard):
   """Helper class to create tensorboard summaries for the clustering progress.
 
-    This class is derived from tf.keras.callbacks.TensorBoard and just adds
-    functionality to write histograms with batch-wise frequency.
+  This class is derived from keras.callbacks.TensorBoard and just adds
+  functionality to write histograms with batch-wise frequency.
 
-    Arguments:
-        log_dir: The path to the directory where the log files are saved
-        cluster_update_freq: determines the frequency of updates of the
-          clustering histograms. Same behaviour as parameter update_freq of the
-          base class, i.e. it accepts `'batch'`, `'epoch'` or integer.
+  Arguments:
+      log_dir: The path to the directory where the log files are saved
+      cluster_update_freq: determines the frequency of updates of the clustering
+        histograms. Same behaviour as parameter update_freq of the base class,
+        i.e. it accepts `'batch'`, `'epoch'` or integer.
   """
 
   def __init__(self, log_dir='logs', cluster_update_freq='epoch', **kwargs):

@@ -36,8 +36,9 @@ from tensorflow_model_optimization.python.core.sparsity.keras import prune_regis
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_impl
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule as pruning_sched
 from tensorflow_model_optimization.python.core.sparsity.keras.pruning_utils import convert_to_tuple_of_two_int
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-keras = tf.keras
+
 K = keras.backend
 Wrapper = keras.layers.Wrapper
 
@@ -166,7 +167,7 @@ class PruneLowMagnitude(Wrapper):
           'Unsupported pooling type \'{}\'. Should be \'AVG\' or \'MAX\'.'
           .format(block_pooling_type))
 
-    if not isinstance(layer, tf.keras.layers.Layer):
+    if not isinstance(layer, keras.layers.Layer):
       raise ValueError(
           'Please initialize `Prune` layer with a '
           '`Layer` instance. You passed: {input}'.format(input=layer))
@@ -203,14 +204,14 @@ class PruneLowMagnitude(Wrapper):
     # Enables end-user to prune the first layer in Sequential models, while
     # passing the input shape to the original layer.
     #
-    # tf.keras.Sequential(
-    #   prune_low_magnitude(tf.keras.layers.Dense(2, input_shape=(3,)))
+    # keras.Sequential(
+    #   prune_low_magnitude(keras.layers.Dense(2, input_shape=(3,)))
     # )
     #
     # as opposed to
     #
-    # tf.keras.Sequential(
-    #   prune_low_magnitude(tf.keras.layers.Dense(2), input_shape=(3,))
+    # keras.Sequential(
+    #   prune_low_magnitude(keras.layers.Dense(2), input_shape=(3,))
     # )
     #
     # Without this code, the pruning wrapper doesn't have an input
@@ -235,17 +236,19 @@ class PruneLowMagnitude(Wrapper):
       mask = self.add_weight(
           'mask',
           shape=weight.shape,
-          initializer=tf.keras.initializers.get('ones'),
+          initializer=keras.initializers.get('ones'),
           dtype=weight.dtype,
           trainable=False,
-          aggregation=tf.VariableAggregation.MEAN)
+          aggregation=tf.VariableAggregation.MEAN,
+      )
       threshold = self.add_weight(
           'threshold',
           shape=[],
-          initializer=tf.keras.initializers.get('zeros'),
+          initializer=keras.initializers.get('zeros'),
           dtype=weight.dtype,
           trainable=False,
-          aggregation=tf.VariableAggregation.MEAN)
+          aggregation=tf.VariableAggregation.MEAN,
+      )
 
       weight_vars.append(weight)
       mask_vars.append(mask)
@@ -256,9 +259,10 @@ class PruneLowMagnitude(Wrapper):
     self.pruning_step = self.add_weight(
         'pruning_step',
         shape=[],
-        initializer=tf.keras.initializers.Constant(-1),
+        initializer=keras.initializers.Constant(-1),
         dtype=tf.int64,
-        trainable=False)
+        trainable=False,
+    )
 
     def training_step_fn():
       return self.pruning_step
@@ -392,7 +396,7 @@ def collect_prunable_layers(model):
   prunable_layers = []
   for layer in model.layers:
     # A keras model may have other models as layers.
-    if isinstance(layer, tf.keras.Model):
+    if isinstance(layer, keras.Model):
       prunable_layers += collect_prunable_layers(layer)
     if isinstance(layer, PruneLowMagnitude):
       prunable_layers.append(layer)

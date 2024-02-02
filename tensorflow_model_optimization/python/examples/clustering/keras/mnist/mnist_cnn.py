@@ -20,18 +20,19 @@ https://www.tensorflow.org/model_optimization/guide/quantization/training_exampl
 """
 
 from __future__ import print_function
+
 import datetime
 import os
 
 from absl import app as absl_app
 from absl import flags
-
 import tensorflow as tf
+
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_callbacks
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-keras = tf.keras
 
 FLAGS = flags.FLAGS
 
@@ -69,9 +70,10 @@ def build_sequential_model():
 
 def train_model(model, x_train, y_train, x_test, y_test):
   model.compile(
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       optimizer='adam',
-      metrics=['accuracy'])
+      metrics=['accuracy'],
+  )
 
   # Print the model summary.
   model.summary()
@@ -106,12 +108,13 @@ def cluster_model(model, x_train, y_train, x_test, y_test):
 
   # Use smaller learning rate for fine-tuning
   # clustered model
-  opt = tf.keras.optimizers.Adam(learning_rate=1e-5)
+  opt = keras.optimizers.Adam(learning_rate=1e-5)
 
   clustered_model.compile(
-  loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-  optimizer=opt,
-  metrics=['accuracy'])
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      optimizer=opt,
+      metrics=['accuracy'],
+  )
 
   # Add callback for tensorboard summaries
   log_dir = os.path.join(
@@ -157,9 +160,10 @@ def test_clustered_model(clustered_model, x_test, y_test):
   # Ensure accuracy persists after stripping the model
   stripped_model = cluster.strip_clustering(loaded_clustered_model)
   stripped_model.compile(
-    loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    optimizer='adam',
-    metrics=['accuracy'])
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      optimizer='adam',
+      metrics=['accuracy'],
+  )
 
   # Checking that the stripped model's accuracy matches the clustered model
   score = stripped_model.evaluate(x_test, y_test, verbose=0)

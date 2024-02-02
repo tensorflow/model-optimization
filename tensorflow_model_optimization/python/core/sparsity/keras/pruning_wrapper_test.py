@@ -20,10 +20,11 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-keras = tf.keras
+
 layers = keras.layers
 Prune = pruning_wrapper.PruneLowMagnitude
 

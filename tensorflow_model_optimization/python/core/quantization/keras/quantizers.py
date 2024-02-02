@@ -22,13 +22,12 @@ from __future__ import division
 from __future__ import print_function
 
 import abc
-import six
 
+import six
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
-
-keras = tf.keras
 
 
 @six.add_metaclass(abc.ABCMeta)
@@ -59,7 +58,7 @@ class Quantizer(object):
       }
 
     def __call__(self, inputs, training, weights, **kwargs):
-      return tf.keras.backend.clip(
+      return keras.backend.clip(
           inputs, 0.0, weights['range_var'])
 
     def get_config(self):

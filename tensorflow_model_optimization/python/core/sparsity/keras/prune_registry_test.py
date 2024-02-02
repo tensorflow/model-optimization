@@ -17,10 +17,11 @@
 from absl.testing import parameterized
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
 from tensorflow_model_optimization.python.core.sparsity.keras import prune_registry
 
-keras = tf.keras
+
 layers = keras.layers
 PruneRegistry = prune_registry.PruneRegistry
 
@@ -87,6 +88,17 @@ class PruneRegistryTest(tf.test.TestCase, parameterized.TestCase):
       ]),
       keras.layers.RNN(MinimalRNNCellPrunable(32)),
   ]
+  if hasattr(layers, 'experimental'):
+    if hasattr(layers.experimental, 'SyncBatchNormalization'):
+      _PRUNE_REGISTRY_SUPPORTED_LAYERS += [
+          layers.experimental.SyncBatchNormalization()
+      ]
+    if hasattr(layers.experimental, 'preprocessing') and hasattr(
+        layers.experimental.preprocessing, 'Rescaling'
+    ):
+      _PRUNE_REGISTRY_SUPPORTED_LAYERS += [
+          layers.experimental.preprocessing.Rescaling
+      ]
 
   @parameterized.parameters(_PRUNE_REGISTRY_SUPPORTED_LAYERS)
   def testSupportsLayer(self, layer):

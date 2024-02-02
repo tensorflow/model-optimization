@@ -22,9 +22,10 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster_c
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_centroids
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+from tensorflow_model_optimization.python.core.keras.compat import keras
+
 
 attrgetter = operator.attrgetter  # pylint: disable=invalid-name
-keras = tf.keras
 k = keras.backend
 Layer = keras.layers.Layer
 Wrapper = keras.layers.Wrapper
@@ -106,8 +107,8 @@ class ClusterWeights(Wrapper):
     # Whether to cluster Conv2D kernels per-channel.
     # In case the layer isn't a Conv2D, this isn't applicable
     self.cluster_per_channel = (
-        cluster_per_channel if isinstance(layer, tf.keras.layers.Conv2D)
-        else False)
+        cluster_per_channel if isinstance(layer, keras.layers.Conv2D) else False
+    )
 
     # Number of channels in a Conv2D layer, to be used the case of per-channel
     # clustering.
@@ -226,15 +227,16 @@ class ClusterWeights(Wrapper):
           shape=(cluster_centroids.shape),
           dtype=weight.dtype,
           trainable=True,
-          initializer=tf.keras.initializers.Constant(value=cluster_centroids))
+          initializer=keras.initializers.Constant(value=cluster_centroids),
+      )
 
       # Init the weight clustering algorithm
-      if isinstance(self.layer, tf.keras.layers.RNN):
-        if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+      if isinstance(self.layer, keras.layers.RNN):
+        if isinstance(self.layer.cell, keras.layers.StackedRNNCells):
           weight_name_no_index = weight_name.split('/')[0]
         else:
           weight_name_no_index = weight_name
-      elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+      elif isinstance(self.layer, keras.layers.Bidirectional):
         weight_name_no_index = weight_name.split('/')[0]
       else:
         weight_name_no_index = weight_name
@@ -258,7 +260,8 @@ class ClusterWeights(Wrapper):
           trainable=False,
           synchronization=tf.VariableSynchronization.ON_READ,
           aggregation=tf.VariableAggregation.ONLY_FIRST_REPLICA,
-          initializer=tf.keras.initializers.Constant(value=pulling_indices))
+          initializer=keras.initializers.Constant(value=pulling_indices),
+      )
 
       if self.preserve_sparsity:
         # Init the sparsity mask
@@ -360,8 +363,9 @@ class ClusterWeights(Wrapper):
     config['cluster_gradient_aggregation'] = cluster_gradient_aggregation
     config['cluster_per_channel'] = cluster_per_channel
 
-    layer = tf.keras.layers.deserialize(
-        config.pop('layer'), custom_objects=custom_objects)
+    layer = keras.layers.deserialize(
+        config.pop('layer'), custom_objects=custom_objects
+    )
     config['layer'] = layer
 
     return cls(**config)
@@ -417,11 +421,11 @@ class ClusterWeightsRNN(ClusterWeights):
   def get_weight_from_layer(self, weight_name):
     weight_name_no_index, i = self.get_weight_name_without_index(weight_name)
     if hasattr(self.layer, 'cell'):
-      if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+      if isinstance(self.layer.cell, keras.layers.StackedRNNCells):
         return getattr(self.layer.cell.cells[i], weight_name_no_index)
       else:
         return getattr(self.layer.cell, weight_name_no_index)
-    elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+    elif isinstance(self.layer, keras.layers.Bidirectional):
       if i < 0 or i > 1:
         raise ValueError(
             'Unsupported number of cells in the layer to get weights from.')
@@ -433,13 +437,13 @@ class ClusterWeightsRNN(ClusterWeights):
   def set_weight_to_layer(self, weight_name, new_weight):
     weight_name_no_index, i = self.get_weight_name_without_index(weight_name)
     if hasattr(self.layer, 'cell'):
-      if isinstance(self.layer.cell, tf.keras.layers.StackedRNNCells):
+      if isinstance(self.layer.cell, keras.layers.StackedRNNCells):
         return setattr(self.layer.cell.cells[i],
                        weight_name_no_index,
                        new_weight)
       else:
         return setattr(self.layer.cell, weight_name_no_index, new_weight)
-    elif isinstance(self.layer, tf.keras.layers.Bidirectional):
+    elif isinstance(self.layer, keras.layers.Bidirectional):
       if i < 0 or i > 1:
         raise ValueError(
             'Unsupported number of cells in the layer to set weights for.')
@@ -481,4 +485,3 @@ class ClusterWeightsMHA(ClusterWeights):
       setattr(self.layer, weight_name, original_weight)
 
     return self.layer
-

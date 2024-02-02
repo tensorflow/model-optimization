@@ -26,10 +26,10 @@
 # run CI against.
 
 # Latest Ubuntu LTS (Focal), at the moment.
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
-ARG BAZEL_VERSION=4.2.2
-ARG TENSORFLOW_VERSION=2.12.0
+ARG BAZEL_VERSION=7.0.2
+ARG TENSORFLOW_VERSION=2.15.0
 
 
 RUN apt-get update -y

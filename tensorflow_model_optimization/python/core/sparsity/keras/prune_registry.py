@@ -16,7 +16,9 @@
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prunable_layer
+
 
 try:
   # OSS case.
@@ -28,11 +30,14 @@ try:
     from keras.engine import base_layer  # pylint: disable=g-import-not-at-top,g-importing-member
 except ImportError:
   # Internal case.
-  base_layer = tf._keras_internal.engine.base_layer  # pylint: disable=protected-access
+  try:
+    base_layer = tf._keras_internal.engine.base_layer  # pylint: disable=protected-access
+  except:
+    base_layer = None
 
 # TODO(b/139939526): move to public API.
 
-layers = tf.keras.layers
+layers = keras.layers
 layers_compat_v1 = tf.compat.v1.keras.layers
 
 
@@ -107,14 +112,26 @@ class PruneRegistry(object):
       layers.MaxPooling2D: [],
       layers.MaxPooling3D: [],
       layers.MultiHeadAttention: [
-          '_query_dense.kernel', '_key_dense.kernel', '_value_dense.kernel',
-          '_output_dense.kernel'
+          '_query_dense.kernel',
+          '_key_dense.kernel',
+          '_value_dense.kernel',
+          '_output_dense.kernel',
       ],
-      layers.experimental.SyncBatchNormalization: [],
-      layers.experimental.preprocessing.Rescaling.__class__: [],
-      base_layer.TensorFlowOpLayer: [],
       layers_compat_v1.BatchNormalization: [],
   }
+
+  if hasattr(layers, 'experimental'):
+    if hasattr(layers.experimental, 'SyncBatchNormalization'):
+      _LAYERS_WEIGHTS_MAP[layers.experimental.SyncBatchNormalization] = []
+    if hasattr(layers.experimental, 'preprocessing') and hasattr(
+        layers.experimental.preprocessing, 'Rescaling'
+    ):
+      _LAYERS_WEIGHTS_MAP[
+          layers.experimental.preprocessing.Rescaling.__class__
+      ] = []
+
+  if base_layer:
+    _LAYERS_WEIGHTS_MAP[base_layer.TensorFlowOpLayer] = []
 
   _RNN_CELLS_WEIGHTS_MAP = {
       # Allowlist via compat.v1 and compat.v2 to support legacy TensorFlow 2.X

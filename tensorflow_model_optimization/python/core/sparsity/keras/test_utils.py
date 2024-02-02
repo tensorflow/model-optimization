@@ -15,15 +15,16 @@
 """Test utility to generate models for testing."""
 
 import tempfile
-import numpy as np
 
+import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-keras = tf.keras
+
 l = keras.layers
 
 
@@ -148,9 +149,9 @@ def _save_restore_keras_model(model):
 
 def _save_restore_tf_model(model):
   tmpdir = tempfile.mkdtemp()
-  tf.keras.models.save_model(model, tmpdir, save_format='tf')
+  keras.models.save_model(model, tmpdir, save_format='tf')
   with prune.prune_scope():
-    loaded_model = tf.keras.models.load_model(tmpdir)
+    loaded_model = keras.models.load_model(tmpdir)
   return loaded_model
 
 
@@ -171,9 +172,10 @@ def assert_model_sparsity(test_case, sparsity, model, rtol=1e-6, atol=1e-6):
       for weight in layer.layer.get_prunable_weights():
         test_case.assertAllClose(
             sparsity,
-            _get_sparsity(tf.keras.backend.get_value(weight)),
+            _get_sparsity(keras.backend.get_value(weight)),
             rtol=rtol,
-            atol=atol)
+            atol=atol,
+        )
 
 
 # Check if model does not have target sparsity.
@@ -181,7 +183,7 @@ def is_model_sparsity_not(sparsity, model):
   for layer in model.layers:
     if isinstance(layer, pruning_wrapper.PruneLowMagnitude):
       for weight in layer.layer.get_prunable_weights():
-        if sparsity != _get_sparsity(tf.keras.backend.get_value(weight)):
+        if sparsity != _get_sparsity(keras.backend.get_value(weight)):
           return True
   return False
 

@@ -18,6 +18,7 @@ from typing import List
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.common.keras.compression import algorithm
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 class SVD(algorithm.WeightCompressor):
@@ -35,7 +36,8 @@ class SVD(algorithm.WeightCompressor):
         name='w',
         shape=pretrained_weight.shape,
         dtype=pretrained_weight.dtype,
-        initializer=tf.keras.initializers.Constant(pretrained_weight))
+        initializer=keras.initializers.Constant(pretrained_weight),
+    )
 
   def decompress_weights(self, u: tf.Tensor, sv: tf.Tensor) -> tf.Tensor:
     return tf.matmul(u, sv)
@@ -66,22 +68,27 @@ class SVD(algorithm.WeightCompressor):
     return weight
 
   def get_compressible_weights(
-      self, original_layer: tf.keras.layers.Layer) -> List[str]:
-    if isinstance(original_layer, tf.keras.layers.Conv2D) or \
-       isinstance(original_layer, tf.keras.layers.Dense):
+      self, original_layer: keras.layers.Layer
+  ) -> List[str]:
+    if isinstance(original_layer, keras.layers.Conv2D) or isinstance(
+        original_layer, keras.layers.Dense
+    ):
       return [original_layer.kernel]
     return []
 
   # TODO(tfmot): consider if we can simplify `create_model_for_training` and
   # `create_model_for_inference` into a single API for algorithm developers.
-  def compress_model(self, to_optimize: tf.keras.Model) -> tf.keras.Model:
+  def compress_model(self, to_optimize: keras.Model) -> keras.Model:
     """Model developer API for optimizing a model."""
     # pylint: disable=protected-access
-    if not isinstance(to_optimize, tf.keras.Sequential) \
-        and not to_optimize._is_graph_network:
+    if (
+        not isinstance(to_optimize, keras.Sequential)
+        and not to_optimize._is_graph_network
+    ):
       raise ValueError(
-          '`compress_model` can only either be a tf.keras Sequential or '
-          'Functional model.')
+          '`compress_model` can only either be a keras Sequential or '
+          'Functional model.'
+      )
     # pylint: enable=protected-access
 
     def _create_layer_for_training(layer):
@@ -96,8 +103,10 @@ class SVD(algorithm.WeightCompressor):
     def _create_layer_for_inference(layer):
       return algorithm.create_layer_for_inference(layer, algorithm=self)
 
-    intermediate_model = tf.keras.models.clone_model(
-        to_optimize, clone_function=_create_layer_for_training)
+    intermediate_model = keras.models.clone_model(
+        to_optimize, clone_function=_create_layer_for_training
+    )
 
-    return tf.keras.models.clone_model(
-        intermediate_model, clone_function=_create_layer_for_inference)
+    return keras.models.clone_model(
+        intermediate_model, clone_function=_create_layer_for_inference
+    )

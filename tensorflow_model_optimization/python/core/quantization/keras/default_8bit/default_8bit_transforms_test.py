@@ -22,6 +22,7 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
@@ -32,13 +33,12 @@ from tensorflow_model_optimization.python.core.quantization.keras.graph_transfor
 from tensorflow_model_optimization.python.core.quantization.keras.layers import conv_batchnorm_test_utils
 from tensorflow_model_optimization.python.core.quantization.keras.layers import dense_batchnorm_test_utils
 
+
 ModelTransformer = model_transformer.ModelTransformer
 
 Conv2DModel = conv_batchnorm_test_utils.Conv2DModel
 DepthwiseConv2DModel = conv_batchnorm_test_utils.DepthwiseConv2DModel
 DenseModel = dense_batchnorm_test_utils.DenseModel
-
-keras = tf.keras
 
 Conv2DBatchNormActivationQuantize = default_8bit_transforms.Conv2DBatchNormActivationQuantize
 Conv2DBatchNormReLUQuantize = default_8bit_transforms.Conv2DBatchNormReLUQuantize
@@ -287,15 +287,23 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
       ('strides', {'strides': 2}),
       ('dilation_rate', {'dilation_rate': 2}),
       ('depth_multiplier', {'depth_multiplier': 2}),
-      ('regularizer', {
-          'depthwise_regularizer': 'l2',
-          'pointwise_regularizer': 'l2',
-          'bias_regularizer': 'l2',
-          'activity_regularizer': 'l2'}),
-      ('constraint', {
-          'depthwise_constraint': tf.keras.constraints.max_norm(2.),
-          'pointwise_constraint': tf.keras.constraints.min_max_norm(0., 2.),
-          'bias_constraint': tf.keras.constraints.unit_norm()}),
+      (
+          'regularizer',
+          {
+              'depthwise_regularizer': 'l2',
+              'pointwise_regularizer': 'l2',
+              'bias_regularizer': 'l2',
+              'activity_regularizer': 'l2',
+          },
+      ),
+      (
+          'constraint',
+          {
+              'depthwise_constraint': keras.constraints.max_norm(2.0),
+              'pointwise_constraint': keras.constraints.min_max_norm(0.0, 2.0),
+              'bias_constraint': keras.constraints.unit_norm(),
+          },
+      ),
       ('activation_relu', {'activation': 'relu'}),
       # TODO(pulkitb): Temporarily disabling due to numerical errors resulting
       # from caching of activation logits in TF code.
@@ -308,10 +316,10 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     stack_size = 3
     num_row = 7
 
-    sepconv_model = tf.keras.Sequential([
-        tf.keras.Input(
-            shape=(num_row, stack_size), batch_size=num_samples),
-        tf.keras.layers.SeparableConv1D(**kwargs)])
+    sepconv_model = keras.Sequential([
+        keras.Input(shape=(num_row, stack_size), batch_size=num_samples),
+        keras.layers.SeparableConv1D(**kwargs),
+    ])
 
     transformed_model, updated_metadata = ModelTransformer(
         sepconv_model,
@@ -344,21 +352,28 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
   @parameterized.named_parameters(
       ('padding_valid', {'padding': 'valid'}),
       ('padding_same', {'padding': 'same'}),
-      ('padding_same_dilation_2',
-       {'padding': 'same', 'dilation_rate': 2}),
+      ('padding_same_dilation_2', {'padding': 'same', 'dilation_rate': 2}),
       ('strides', {'strides': 2}),
       ('dilation_rate', {'dilation_rate': 2}),
       ('depth_multiplier', {'depth_multiplier': 2}),
-      ('regularizer', {
-          'depthwise_regularizer': 'l2',
-          'pointwise_regularizer': 'l2',
-          'bias_regularizer': 'l2',
-          'activity_regularizer': 'l2'}),
+      (
+          'regularizer',
+          {
+              'depthwise_regularizer': 'l2',
+              'pointwise_regularizer': 'l2',
+              'bias_regularizer': 'l2',
+              'activity_regularizer': 'l2',
+          },
+      ),
       ('use_bias', {'use_bias': False}),
-      ('constraint', {
-          'depthwise_constraint': tf.keras.constraints.max_norm(2.),
-          'pointwise_constraint': tf.keras.constraints.min_max_norm(0., 2.),
-          'bias_constraint': tf.keras.constraints.unit_norm()})
+      (
+          'constraint',
+          {
+              'depthwise_constraint': keras.constraints.max_norm(2.0),
+              'pointwise_constraint': keras.constraints.min_max_norm(0.0, 2.0),
+              'bias_constraint': keras.constraints.unit_norm(),
+          },
+      ),
   )
   def testSeparableConvQuantize_(self, kwargs):
     kwargs['filters'] = 2
@@ -368,10 +383,12 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
     num_row = 7
     num_col = 6
 
-    sepconv_model = tf.keras.Sequential([
-        tf.keras.Input(
-            shape=(num_row, num_col, stack_size), batch_size=num_samples),
-        tf.keras.layers.SeparableConv2D(**kwargs)])
+    sepconv_model = keras.Sequential([
+        keras.Input(
+            shape=(num_row, num_col, stack_size), batch_size=num_samples
+        ),
+        keras.layers.SeparableConv2D(**kwargs),
+    ])
 
     transformed_model, updated_metadata = ModelTransformer(
         sepconv_model,
@@ -439,13 +456,13 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
   def testLayerReLUQuantize(self, activation_type, transform_type):
     # TODO(b/185727342): Add tests for DepthConv and Dense
     input_shape = (3, 3, 3)
-    conv_layer = tf.keras.layers.Conv2D(5, 2, input_shape=input_shape)
+    conv_layer = keras.layers.Conv2D(5, 2, input_shape=input_shape)
     if activation_type == 'relu':
       act_layer = keras.layers.ReLU(6.0)
     elif activation_type == 'act_relu':
       act_layer = keras.layers.Activation('relu')
 
-    model = tf.keras.Sequential([conv_layer, act_layer])
+    model = keras.Sequential([conv_layer, act_layer])
 
     transformed_model, updated_metadata = ModelTransformer(
         model,
@@ -707,6 +724,6 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  if hasattr(tf.keras.__internal__, 'enable_unsafe_deserialization'):
-    tf.keras.__internal__.enable_unsafe_deserialization()
+  if hasattr(keras.__internal__, 'enable_unsafe_deserialization'):
+    keras.__internal__.enable_unsafe_deserialization()
   tf.test.main()

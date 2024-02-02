@@ -18,15 +18,15 @@ from __future__ import print_function
 
 from absl import app as absl_app
 from absl import flags
-
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 
+
 PolynomialDecay = pruning_schedule.PolynomialDecay
-keras = tf.keras
 l = keras.layers
 
 FLAGS = flags.FLAGS
@@ -40,9 +40,10 @@ flags.DEFINE_string('output_dir', '/tmp/mnist_train/',
 
 
 def build_sequential_model(input_shape):
-  return tf.keras.Sequential([
+  return keras.Sequential([
       l.Conv2D(
-          32, 5, padding='same', activation='relu', input_shape=input_shape),
+          32, 5, padding='same', activation='relu', input_shape=input_shape
+      ),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.BatchNormalization(),
       l.Conv2D(64, 5, padding='same', activation='relu'),
@@ -50,12 +51,12 @@ def build_sequential_model(input_shape):
       l.Flatten(),
       l.Dense(1024, activation='relu'),
       l.Dropout(0.4),
-      l.Dense(num_classes, activation='softmax')
+      l.Dense(num_classes, activation='softmax'),
   ])
 
 
 def build_functional_model(input_shape):
-  inp = tf.keras.Input(shape=input_shape)
+  inp = keras.Input(shape=input_shape)
   x = l.Conv2D(32, 5, padding='same', activation='relu')(inp)
   x = l.MaxPooling2D((2, 2), (2, 2), padding='same')(x)
   x = l.BatchNormalization()(x)
@@ -66,35 +67,40 @@ def build_functional_model(input_shape):
   x = l.Dropout(0.4)(x)
   out = l.Dense(num_classes, activation='softmax')(x)
 
-  return tf.keras.models.Model([inp], [out])
+  return keras.models.Model([inp], [out])
 
 
 def build_layerwise_model(input_shape, **pruning_params):
-  return tf.keras.Sequential([
+  return keras.Sequential([
       prune.prune_low_magnitude(
           l.Conv2D(32, 5, padding='same', activation='relu'),
           input_shape=input_shape,
-          **pruning_params),
+          **pruning_params
+      ),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.BatchNormalization(),
       prune.prune_low_magnitude(
-          l.Conv2D(64, 5, padding='same', activation='relu'), **pruning_params),
+          l.Conv2D(64, 5, padding='same', activation='relu'), **pruning_params
+      ),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.Flatten(),
       prune.prune_low_magnitude(
-          l.Dense(1024, activation='relu'), **pruning_params),
+          l.Dense(1024, activation='relu'), **pruning_params
+      ),
       l.Dropout(0.4),
       prune.prune_low_magnitude(
-          l.Dense(num_classes, activation='softmax'), **pruning_params)
+          l.Dense(num_classes, activation='softmax'), **pruning_params
+      ),
   ])
 
 
 def train_and_save(models, x_train, y_train, x_test, y_test):
   for model in models:
     model.compile(
-        loss=tf.keras.losses.categorical_crossentropy,
+        loss=keras.losses.categorical_crossentropy,
         optimizer='adam',
-        metrics=['accuracy'])
+        metrics=['accuracy'],
+    )
 
     # Print the model summary.
     model.summary()
@@ -121,9 +127,9 @@ def train_and_save(models, x_train, y_train, x_test, y_test):
     # Export and import the model. Check that accuracy persists.
     saved_model_dir = '/tmp/saved_model'
     print('Saving model to: ', saved_model_dir)
-    tf.keras.models.save_model(model, saved_model_dir, save_format='tf')
+    keras.models.save_model(model, saved_model_dir, save_format='tf')
     print('Loading model from: ', saved_model_dir)
-    loaded_model = tf.keras.models.load_model(saved_model_dir)
+    loaded_model = keras.models.load_model(saved_model_dir)
 
     score = loaded_model.evaluate(x_test, y_test, verbose=0)
     print('Test loss:', score[0])
@@ -135,9 +141,9 @@ def main(unused_argv):
   img_rows, img_cols = 28, 28
 
   # the data, shuffled and split between train and test sets
-  (x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+  (x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
-  if tf.keras.backend.image_data_format() == 'channels_first':
+  if keras.backend.image_data_format() == 'channels_first':
     x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
     x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
     input_shape = (1, img_rows, img_cols)
@@ -155,8 +161,8 @@ def main(unused_argv):
   print(x_test.shape[0], 'test samples')
 
   # convert class vectors to binary class matrices
-  y_train = tf.keras.utils.to_categorical(y_train, num_classes)
-  y_test = tf.keras.utils.to_categorical(y_test, num_classes)
+  y_train = keras.utils.to_categorical(y_train, num_classes)
+  y_test = keras.utils.to_categorical(y_test, num_classes)
 
   pruning_params = {
       'pruning_schedule':

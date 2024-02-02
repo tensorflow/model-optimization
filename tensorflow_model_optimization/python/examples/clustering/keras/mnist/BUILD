@@ -25,5 +25,6 @@ py_strict_binary(
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_callbacks",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )

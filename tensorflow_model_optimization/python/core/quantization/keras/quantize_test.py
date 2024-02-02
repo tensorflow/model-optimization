@@ -23,6 +23,7 @@ import numpy as np
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
@@ -31,6 +32,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import quantiz
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 
+
 quantize_annotate_layer = quantize.quantize_annotate_layer
 quantize_annotate_model = quantize.quantize_annotate_model
 quantize_apply = quantize.quantize_apply
@@ -38,9 +40,8 @@ fix_input_output_range = quantize.fix_input_output_range
 QuantizeAnnotate = quantize_annotate_mod.QuantizeAnnotate
 QuantizeWrapper = quantize_wrapper_mod.QuantizeWrapper
 
-keras = tf.keras
-K = tf.keras.backend
-custom_object_scope = tf.keras.utils.custom_object_scope
+K = keras.backend
+custom_object_scope = keras.utils.custom_object_scope
 
 
 class _TestQuantizeConfig(quantize_config_mod.QuantizeConfig):
@@ -531,11 +532,11 @@ class QuantizeApplyTest(tf.test.TestCase):
 
     quantize_apply(annotated_model)
 
-  class CustomConvLayer(tf.keras.layers.Layer):
+  class CustomConvLayer(keras.layers.Layer):
 
     def __init__(self, name=None, **kwargs):
       super().__init__(name=name, **kwargs)
-      self.conv1 = tf.keras.layers.Conv2D(2, 2)
+      self.conv1 = keras.layers.Conv2D(2, 2)
 
     def build(self, input_shape):
       self.conv1.build(input_shape)
@@ -578,7 +579,7 @@ class QuantizeApplyTest(tf.test.TestCase):
             layer, quantize_config=self.CustomConvQuantizeConfig())
       return layer
 
-    annotated_model = tf.keras.models.clone_model(
+    annotated_model = keras.models.clone_model(
         model,
         clone_function=apply_quantization_to_dense,
     )

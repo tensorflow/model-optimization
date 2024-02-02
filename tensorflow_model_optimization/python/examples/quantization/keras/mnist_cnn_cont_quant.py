@@ -25,6 +25,8 @@ import numpy as np
 import tensorflow as tf  # pylint: disable=g-bad-import-order
 
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
+from tensorflow_model_optimization.python.core.keras.compat import keras
+
 
 batch_size = 128
 num_classes = 10
@@ -34,9 +36,9 @@ epochs = 12
 img_rows, img_cols = 28, 28
 
 # the data, shuffled and split between train and test sets
-(x_train, y_train), (x_test, y_test) = tf.keras.datasets.mnist.load_data()
+(x_train, y_train), (x_test, y_test) = keras.datasets.mnist.load_data()
 
-if tf.keras.backend.image_data_format() == 'channels_first':
+if keras.backend.image_data_format() == 'channels_first':
   x_train = x_train.reshape(x_train.shape[0], 1, img_rows, img_cols)
   x_test = x_test.reshape(x_test.shape[0], 1, img_rows, img_cols)
   input_shape = (1, img_rows, img_cols)
@@ -56,20 +58,21 @@ print(x_train.shape[0], 'train samples')
 print(x_test.shape[0], 'test samples')
 
 # convert class vectors to binary class matrices
-y_train = tf.keras.utils.to_categorical(y_train, num_classes)
-y_test = tf.keras.utils.to_categorical(y_test, num_classes)
+y_train = keras.utils.to_categorical(y_train, num_classes)
+y_test = keras.utils.to_categorical(y_test, num_classes)
 
-l = tf.keras.layers
+l = keras.layers
 
 keras_file = '/tmp/quantized_mnist.h5'
 if not os.path.exists(keras_file):
-  model = tf.keras.Sequential([
+  model = keras.Sequential([
       # Only the fisrt layer is quantized trained.
       # The rest of the layers are not quantization-aware.
       quantize.quantize_annotate_layer(
           l.Conv2D(
-              32, 5, padding='same', activation='relu',
-              input_shape=input_shape)),
+              32, 5, padding='same', activation='relu', input_shape=input_shape
+          )
+      ),
       l.MaxPooling2D((2, 2), (2, 2), padding='same'),
       l.Conv2D(64, 5, padding='same', activation='relu'),
       l.BatchNormalization(),
@@ -82,9 +85,10 @@ if not os.path.exists(keras_file):
   ])
   model = quantize.quantize_apply(model)
   model.compile(
-      loss=tf.keras.losses.categorical_crossentropy,
-      optimizer=tf.keras.optimizers.Adadelta(),
-      metrics=['accuracy'])
+      loss=keras.losses.categorical_crossentropy,
+      optimizer=keras.optimizers.Adadelta(),
+      metrics=['accuracy'],
+  )
 
   model.fit(
       x_train,
@@ -95,10 +99,10 @@ if not os.path.exists(keras_file):
       validation_data=(x_test, y_test))
 
   # Export to Keras.
-  tf.keras.models.save_model(model, keras_file)
+  keras.models.save_model(model, keras_file)
 
 with quantize.quantize_scope():
-  model = tf.keras.models.load_model(keras_file)
+  model = keras.models.load_model(keras_file)
 
 score = model.evaluate(x_test, y_test, verbose=1)
 print('Test loss:', score[0])
@@ -130,7 +134,7 @@ with quantize.quantize_scope():
   # }  # mean, std_dev values for float [0, 1] quantized to [-128, 127]
   # Set the representative dataset for post-training quantization.
 
-  model = tf.keras.models.load_model(keras_file)
+  model = keras.models.load_model(keras_file)
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
 converter.representative_dataset = calibration_gen
@@ -174,4 +178,3 @@ print('Quantized accuracy:', quantized_score)
 # model. There is no clear way to measure quantization, but for MNIST
 # results which differ a lot likely suggest an error in quantization.
 np.testing.assert_allclose(score[1], quantized_score, rtol=0.2, atol=0.2)
-

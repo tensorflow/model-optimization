@@ -12,12 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ==============================================================================
-"""Quantization API functions for tf.keras models."""
+"""Quantization API functions for keras models."""
 import warnings
 
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import metrics
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_annotate as quantize_annotate_mod
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config as quantize_config_mod
@@ -29,32 +30,30 @@ from tensorflow_model_optimization.python.core.quantization.keras.default_8bit i
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_scheme
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_registry
 
-keras = tf.keras
-
 
 def quantize_scope(*args):
   """Scope which can be used to deserialize quantized Keras models and layers.
 
-  Under `quantize_scope`, Keras methods such as `tf.keras.load_model` and
-  `tf.keras.models.model_from_config` will be able to deserialize Keras models
+  Under `quantize_scope`, Keras methods such as `keras.load_model` and
+  `keras.models.model_from_config` will be able to deserialize Keras models
   and layers which contain quantization classes such as `QuantizeConfig`
   and `Quantizer`.
 
   Example:
 
   ```python
-  tf.keras.models.save_model(quantized_model, keras_file)
+  keras.models.save_model(quantized_model, keras_file)
 
   with quantize_scope():
-    loaded_model = tf.keras.models.load_model(keras_file)
+    loaded_model = keras.models.load_model(keras_file)
 
   # If your quantized model uses custom objects such as a specific `Quantizer`,
   # you can pass them to quantize_scope to deserialize your model.
   with quantize_scope({'FixedRangeQuantizer', FixedRangeQuantizer}
-    loaded_model = tf.keras.models.load_model(keras_file)
+    loaded_model = keras.models.load_model(keras_file)
   ```
 
-  For further understanding, see `tf.keras.utils.custom_object_scope`.
+  For further understanding, see `keras.utils.custom_object_scope`.
 
   Args:
     *args: Variable length list of dictionaries of `{name, class}` pairs to add
@@ -78,11 +77,11 @@ def quantize_scope(*args):
   quantization_objects.update(default_n_bit_quantize_registry._types_dict())  # pylint: disable=protected-access
   quantization_objects.update(quantizers._types_dict())  # pylint: disable=protected-access
 
-  return tf.keras.utils.custom_object_scope(*(args + (quantization_objects,)))
+  return keras.utils.custom_object_scope(*(args + (quantization_objects,)))
 
 
 def quantize_model(to_quantize, quantized_layer_name_prefix='quant_'):
-  """Quantize a `tf.keras` model with the default quantization implementation.
+  """Quantize a `keras` model with the default quantization implementation.
 
   Quantization constructs a model which emulates quantization during training.
   This allows the model to learn parameters robust to quantization loss, and
@@ -102,9 +101,9 @@ def quantize_model(to_quantize, quantized_layer_name_prefix='quant_'):
       ]))
 
   # Quantize functional model
-  in = tf.keras.Input((3,))
-  out = tf.keras.Dense(2)(in)
-  model = tf.keras.Model(in, out)
+  in = keras.Input((3,))
+  out = keras.Dense(2)(in)
+  model = keras.Model(in, out)
 
   quantized_model = quantize_model(model)
   ```
@@ -116,13 +115,12 @@ def quantize_model(to_quantize, quantized_layer_name_prefix='quant_'):
   of the original model.
 
   Args:
-    to_quantize: tf.keras model to be quantized. It can have pre-trained
-      weights.
+    to_quantize: keras model to be quantized. It can have pre-trained weights.
     quantized_layer_name_prefix: Name prefix for the quantized layers. The
       default is `quant_`.
 
   Returns:
-    Returns a new `tf.keras` model prepared for quantization.
+    Returns a new `keras` model prepared for quantization.
   """
   if to_quantize is None:
     raise ValueError('`to_quantize` cannot be None')
@@ -130,18 +128,14 @@ def quantize_model(to_quantize, quantized_layer_name_prefix='quant_'):
   if quantized_layer_name_prefix is None:
     quantized_layer_name_prefix = ''
 
-  if not isinstance(to_quantize, keras.Model):
+  if not isinstance(to_quantize, keras.Sequential) and not (
+      hasattr(to_quantize, '_is_graph_network')
+      and to_quantize._is_graph_network
+  ):  # pylint: disable=protected-access
     raise ValueError(
-        '`to_quantize` can only be a `tf.keras.Model` instance. Use '
-        'the `quantize_annotate_layer` API to handle individual layers.'
-        'You passed an instance of type: {input}.'.format(
-            input=to_quantize.__class__.__name__))
-
-  if not isinstance(
-      to_quantize, keras.Sequential) and not to_quantize._is_graph_network:  # pylint: disable=protected-access
-    raise ValueError(
-        '`to_quantize` can only either be a tf.keras Sequential or '
-        'Functional model.')
+        '`to_quantize` can only either be a keras Sequential or '
+        'Functional model.'
+    )
 
   annotated_model = quantize_annotate_model(to_quantize)
   return quantize_apply(
@@ -149,7 +143,7 @@ def quantize_model(to_quantize, quantized_layer_name_prefix='quant_'):
 
 
 def quantize_annotate_model(to_annotate):
-  """Annotate a `tf.keras` model to be quantized.
+  """Annotate a `keras` model to be quantized.
 
   This function does not actually quantize the model. It merely specifies
   that the model needs to be quantized. `quantize_apply` can then be used
@@ -180,10 +174,10 @@ def quantize_annotate_model(to_annotate):
   Note that this function removes the optimizer from the original model.
 
   Args:
-    to_annotate: `tf.keras` model which needs to be quantized.
+    to_annotate: `keras` model which needs to be quantized.
 
   Returns:
-    New tf.keras model with each layer in the model wrapped with
+    New keras model with each layer in the model wrapped with
     `QuantizeAnnotate`. The new model preserves weights from the original
     model.
 
@@ -195,16 +189,19 @@ def quantize_annotate_model(to_annotate):
 
   if not isinstance(to_annotate, keras.Model):
     raise ValueError(
-        '`to_annotate` can only be a `tf.keras.Model` instance. Use '
+        '`to_annotate` can only be a `keras.Model` instance. Use '
         'the `quantize_annotate_layer` API to handle individual layers. '
         'You passed an instance of type: {input}.'.format(
-            input=to_annotate.__class__.__name__))
+            input=to_annotate.__class__.__name__
+        )
+    )
 
   if not isinstance(
       to_annotate, keras.Sequential) and not to_annotate._is_graph_network:  # pylint: disable=protected-access
     raise ValueError(
-        '`to_annotate` can only either be a tf.keras Sequential or '
-        'Functional model.')
+        '`to_annotate` can only either be a keras Sequential or '
+        'Functional model.'
+    )
 
   def _add_quant_wrapper(layer):
     """Add annotation wrapper."""
@@ -212,7 +209,7 @@ def quantize_annotate_model(to_annotate):
     if isinstance(layer, quantize_annotate_mod.QuantizeAnnotate):
       return layer
 
-    if isinstance(layer, tf.keras.layers.Lambda):
+    if isinstance(layer, keras.layers.Lambda):
       warnings.warn(
           'Lambda layers are not supported by automatic model annotation '
           'because the internal functionality cannot always be determined by '
@@ -221,9 +218,10 @@ def quantize_annotate_model(to_annotate):
           'be quantized which may lead to unexpected results.')
       return layer
 
-    if isinstance(layer, tf.keras.Model):
+    if isinstance(layer, keras.Model):
       raise ValueError(
-          'Quantizing a tf.keras Model inside another tf.keras Model is not supported.'
+          'Quantizing a keras Model inside another keras Model is not'
+          ' supported.'
       )
 
     return quantize_annotate_mod.QuantizeAnnotate(layer)
@@ -233,7 +231,7 @@ def quantize_annotate_model(to_annotate):
 
 
 def quantize_annotate_layer(to_annotate, quantize_config=None):
-  """Annotate a `tf.keras` layer to be quantized.
+  """Annotate a `keras` layer to be quantized.
 
   This function does not actually quantize the layer. It is merely used to
   specify that the layer should be quantized. The layer then gets quantized
@@ -256,12 +254,12 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
   ```
 
   Args:
-    to_annotate: `tf.keras` layer which needs to be quantized.
+    to_annotate: `keras` layer which needs to be quantized.
     quantize_config: optional `QuantizeConfig` which controls how the layer is
       quantized. In its absence, the default behavior for the layer is used.
 
   Returns:
-    `tf.keras` layer wrapped with `QuantizeAnnotate`.
+    `keras` layer wrapped with `QuantizeAnnotate`.
   """
   if to_annotate is None:
     raise ValueError('`to_annotate` cannot be None')
@@ -270,9 +268,11 @@ def quantize_annotate_layer(to_annotate, quantize_config=None):
   if not isinstance(to_annotate, keras.layers.Layer) or isinstance(
       to_annotate, keras.Model):
     raise ValueError(
-        '`to_annotate` can only be a `tf.keras.layers.Layer` instance. '
+        '`to_annotate` can only be a `keras.layers.Layer` instance. '
         'You passed an instance of type: {input}.'.format(
-            input=to_annotate.__class__.__name__))
+            input=to_annotate.__class__.__name__
+        )
+    )
 
   if quantize_config is not None and not isinstance(
       quantize_config, quantize_config_mod.QuantizeConfig):
@@ -290,7 +290,7 @@ def quantize_apply(
     model,
     scheme=default_8bit_quantize_scheme.Default8BitQuantizeScheme(),
     quantized_layer_name_prefix='quant_'):
-  """Quantize a `tf.keras` model that has been annotated for quantization.
+  """Quantize a `keras` model that has been annotated for quantization.
 
   Quantization constructs a model which emulates quantization during training.
   This allows the model to learn parameters robust to quantization loss, and
@@ -300,7 +300,7 @@ def quantize_apply(
   https://www.tensorflow.org/model_optimization/guide/quantization/training
   TODO(tfmot): Link blog once launched.
 
-  This function takes a `tf.keras` model in which the desired layers for
+  This function takes a `keras` model in which the desired layers for
   quantization have already been annotated. See `quantize_annotate_model`
   and `quantize_annotate_layer`.
 
@@ -323,7 +323,7 @@ def quantize_apply(
   of the original model.
 
   Args:
-    model: A `tf.keras` Sequential or Functional model which has been annotated
+    model: A `keras` Sequential or Functional model which has been annotated
       with `quantize_annotate`. It can have pre-trained weights.
     scheme: A `QuantizeScheme` which specifies transformer and quantization
       registry. The default is `Default8BitQuantizeScheme()`.
@@ -331,7 +331,7 @@ def quantize_apply(
       is `quant_`.
 
   Returns:
-    Returns a new `tf.keras` model in which the annotated layers have been
+    Returns a new `keras` model in which the annotated layers have been
     prepared for quantization.
   """
   if model is None:
@@ -341,13 +341,17 @@ def quantize_apply(
     quantized_layer_name_prefix = ''
 
   if not isinstance(model, keras.Model):
-    raise ValueError('`model` can only be a `tf.keras.Model` instance.'
-                     'You passed an instance of type: {input}.'.format(
-                         input=model.__class__.__name__))
+    raise ValueError(
+        '`model` can only be a `keras.Model` instance.'
+        'You passed an instance of type: {input}.'.format(
+            input=model.__class__.__name__
+        )
+    )
 
   if not isinstance(model, keras.Sequential) and not model._is_graph_network:  # pylint: disable=protected-access
-    raise ValueError('`model` can only either be a tf.keras Sequential or '
-                     'Functional model.')
+    raise ValueError(
+        '`model` can only either be a keras Sequential or Functional model.'
+    )
 
   # Have at least 1 layer annotated with QuantizeAnnotate
   if not any(isinstance(layer, quantize_annotate_mod.QuantizeAnnotate)
@@ -586,18 +590,18 @@ def fix_input_output_range(
   altered during training. To set these values, use the arguments as follows:
 
   Args:
-    model: A `tf.keras` Sequential or Functional model which has been quantized.
+    model: A `keras` Sequential or Functional model which has been quantized.
     num_bits: Number of bits for quantization
     input_min: The lower end of quantization interval for the input.
     input_max: The upper end of quantization interval for the input.
     output_min: The lower end of quantization interval for the output.
     output_max: The upper end of quantization interval for the output.
-    narrow_range: In case of 8 bits, narrow_range nudges the quantized range
-      to be [-127, 127] instead of [-128, 127]. This ensures symmetric
-      range has 0 as the centre.
+    narrow_range: In case of 8 bits, narrow_range nudges the quantized range to
+      be [-127, 127] instead of [-128, 127]. This ensures symmetric range has 0
+      as the centre.
 
   Returns:
-    Returns a new `tf.keras` model fixed input range set to (input_min,
+    Returns a new `keras` model fixed input range set to (input_min,
     input_max) and fixed output range set to (output_min, output_max).
   """
   config = model.get_config()
@@ -684,10 +688,10 @@ def remove_input_range(model):
   internally used.
 
   Args:
-    model: A `tf.keras` Sequential or Functional model which has been quantized.
+    model: A `keras` Sequential or Functional model which has been quantized.
 
   Returns:
-    Returns a new `tf.keras` model removed input range.
+    Returns a new `keras` model removed input range.
   """
   config = model.get_config()
   no_input_quantizer = quantizers.NoQuantizer()

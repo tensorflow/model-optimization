@@ -1,6 +1,6 @@
-# Placeholder: load py_test
-# Placeholder: load py_binary
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+# Placeholder: load py_binary
+# Placeholder: load py_test
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -15,6 +15,7 @@ py_strict_library(
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras:metrics",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
         "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
@@ -46,6 +47,7 @@ py_binary(
         ":sparsity_tooling",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
     ],
 )

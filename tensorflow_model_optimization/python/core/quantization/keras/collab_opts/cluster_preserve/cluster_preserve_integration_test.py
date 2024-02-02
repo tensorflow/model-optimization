@@ -20,13 +20,15 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras.experimental import cluster as experimental_cluster
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve import (
     default_8bit_cluster_preserve_quantize_scheme,)
 from tensorflow_model_optimization.python.core.quantization.keras.collab_opts.cluster_preserve.cluster_utils import (
     strip_clustering_cqat,)
 
-layers = tf.keras.layers
+
+layers = keras.layers
 
 
 class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
@@ -41,14 +43,15 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
   def compile_and_fit(self, model):
     """Here we compile and fit the model."""
     model.compile(
-        loss=tf.keras.losses.categorical_crossentropy,
+        loss=keras.losses.categorical_crossentropy,
         optimizer='adam',
         metrics=['accuracy'],
     )
     model.fit(
         np.random.rand(20, 10),
-        tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
-        batch_size=20)
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        batch_size=20,
+    )
 
   def _get_number_of_unique_weights(self, stripped_model, layer_nr,
                                     weight_name):
@@ -68,7 +71,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     for layer in model.layers:
       for weights in layer.trainable_weights:
         if 'kernel' in weights.name:
-          np_weights = tf.keras.backend.get_value(weights)
+          np_weights = keras.backend.get_value(weights)
           sparsity = 1.0 - np.count_nonzero(np_weights) / float(
               np_weights.size)
           sparsity_list.append(sparsity)
@@ -78,7 +81,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
   def _get_clustered_model(self, preserve_sparsity):
     """Cluster the (sparse) model and return clustered_model."""
     tf.random.set_seed(1)
-    original_model = tf.keras.Sequential([
+    original_model = keras.Sequential([
         layers.Dense(5, activation='softmax', input_shape=(10,)),
         layers.Flatten(),
     ])
@@ -106,18 +109,18 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
                       data_format=None,
                       kernel_size=(3, 3)):
     """Returns functional model with Conv2D layer."""
-    inp = tf.keras.layers.Input(shape=(32, 32), batch_size=100)
+    inp = keras.layers.Input(shape=(32, 32), batch_size=100)
     shape = (1, 32, 32) if data_format == 'channels_first' else (32, 32, 1)
-    x = tf.keras.layers.Reshape(shape)(inp)
-    x = tf.keras.layers.Conv2D(
+    x = keras.layers.Reshape(shape)(inp)
+    x = keras.layers.Conv2D(
         filters=nr_of_channels,
         kernel_size=kernel_size,
         data_format=data_format,
-        activation='relu')(
-            x)
-    x = tf.keras.layers.MaxPool2D(2, 2)(x)
-    out = tf.keras.layers.Flatten()(x)
-    model = tf.keras.Model(inputs=inp, outputs=out)
+        activation='relu',
+    )(x)
+    x = keras.layers.MaxPool2D(2, 2)(x)
+    out = keras.layers.Flatten()(x)
+    model = keras.Model(inputs=inp, outputs=out)
     return model
 
   def _compile_and_fit_conv_model(self, model, nr_epochs=1):
@@ -125,9 +128,10 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     x_train = np.random.uniform(size=(500, 32, 32))
     y_train = np.random.randint(low=0, high=1024, size=(500,))
     model.compile(
-        optimizer=tf.keras.optimizers.Adam(learning_rate=1e-4),
-        loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-        metrics=[tf.keras.metrics.SparseCategoricalAccuracy(name='accuracy')])
+        optimizer=keras.optimizers.Adam(learning_rate=1e-4),
+        loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+        metrics=[keras.metrics.SparseCategoricalAccuracy(name='accuracy')],
+    )
 
     model.fit(x_train, y_train, epochs=nr_epochs, batch_size=100, verbose=1)
 
@@ -197,9 +201,9 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
   def testEndToEndClusterPreserve(self):
     """Runs CQAT end to end and whole model is quantized."""
-    original_model = tf.keras.Sequential([
-        layers.Dense(5, activation='softmax', input_shape=(10,))
-    ])
+    original_model = keras.Sequential(
+        [layers.Dense(5, activation='softmax', input_shape=(10,))]
+    )
     clustered_model = cluster.cluster_weights(
         original_model,
         **self.cluster_params)
@@ -228,9 +232,9 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
   def testEndToEndClusterPreservePerLayer(self):
     """Runs CQAT end to end and model is quantized per layers."""
-    original_model = tf.keras.Sequential([
+    original_model = keras.Sequential([
         layers.Dense(5, activation='relu', input_shape=(10,)),
-        layers.Dense(5, activation='softmax', input_shape=(10,))
+        layers.Dense(5, activation='softmax', input_shape=(10,)),
     ])
     clustered_model = cluster.cluster_weights(
         original_model,
@@ -241,11 +245,11 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         clustered_model, 1, 'kernel')
 
     def apply_quantization_to_dense(layer):
-      if isinstance(layer, tf.keras.layers.Dense):
+      if isinstance(layer, keras.layers.Dense):
         return quantize.quantize_annotate_layer(layer)
       return layer
 
-    quant_aware_annotate_model = tf.keras.models.clone_model(
+    quant_aware_annotate_model = keras.models.clone_model(
         clustered_model,
         clone_function=apply_quantization_to_dense,
     )
@@ -268,9 +272,9 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
 
   def testEndToEndClusterPreserveOneLayer(self):
     """Runs CQAT end to end and model is quantized only for a single layer."""
-    original_model = tf.keras.Sequential([
+    original_model = keras.Sequential([
         layers.Dense(5, activation='relu', input_shape=(10,)),
-        layers.Dense(5, activation='softmax', input_shape=(10,), name='qat')
+        layers.Dense(5, activation='softmax', input_shape=(10,), name='qat'),
     ])
     clustered_model = cluster.cluster_weights(
         original_model,
@@ -281,12 +285,12 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         clustered_model, 1, 'kernel')
 
     def apply_quantization_to_dense(layer):
-      if isinstance(layer, tf.keras.layers.Dense):
+      if isinstance(layer, keras.layers.Dense):
         if layer.name == 'qat':
           return quantize.quantize_annotate_layer(layer)
       return layer
 
-    quant_aware_annotate_model = tf.keras.models.clone_model(
+    quant_aware_annotate_model = keras.models.clone_model(
         clustered_model,
         clone_function=apply_quantization_to_dense,
     )
@@ -591,7 +595,7 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
   def testPassingModelWithUniformWeightsToPCQAT(self, uniform_weights):
     """If pruned_clustered_model has uniform weights, it won't break PCQAT."""
     preserve_sparsity = True
-    original_model = tf.keras.Sequential([
+    original_model = keras.Sequential([
         layers.Dense(5, activation='softmax', input_shape=(10,)),
         layers.Flatten(),
     ])
@@ -643,12 +647,12 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         .Default8BitClusterPreserveQuantizeScheme(True))
 
     quant_aware_model.compile(
-        loss=tf.keras.losses.categorical_crossentropy,
+        loss=keras.losses.categorical_crossentropy,
         optimizer='adam',
         metrics=['accuracy'],
     )
 
-    class CheckCentroidsAndTrainableVarsCallback(tf.keras.callbacks.Callback):
+    class CheckCentroidsAndTrainableVarsCallback(keras.callbacks.Callback):
       """Check the updates of trainable variables and centroid masks."""
 
       def on_epoch_begin(self, batch, logs=None):
@@ -692,12 +696,13 @@ class ClusterPreserveIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     # Use many epochs to verify layer's kernel weights are updating because
     # they can stay the same after being trained using only the first batch
     # of data for instance
-    quant_aware_model.fit(np.random.rand(20, 10),
-                          tf.keras.utils.to_categorical(
-                              np.random.randint(5, size=(20, 1)), 5),
-                          steps_per_epoch=5,
-                          epochs=3,
-                          callbacks=[CheckCentroidsAndTrainableVarsCallback()])
+    quant_aware_model.fit(
+        np.random.rand(20, 10),
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        steps_per_epoch=5,
+        epochs=3,
+        callbacks=[CheckCentroidsAndTrainableVarsCallback()],
+    )
 
 
 if __name__ == '__main__':

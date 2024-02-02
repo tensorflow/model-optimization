@@ -20,8 +20,9 @@ import tensorflow as tf
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
 from tensorflow_model_optimization.python.core.clustering.keras.cluster_config import GradientAggregation
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-keras = tf.keras
+
 k = keras.backend
 layers = keras.layers
 
@@ -525,7 +526,7 @@ class ClusterRegistryTest(test.TestCase):
     """A built-in RNN layer with built-in RNN cells is clusterable."""
     cell1 = layers.LSTMCell(10)
     cell2 = layers.GRUCell(5)
-    cell_list = tf.keras.layers.StackedRNNCells([cell1, cell2])
+    cell_list = keras.layers.StackedRNNCells([cell1, cell2])
 
     layer = layers.RNN(cell_list)
     with self.assertRaises(AttributeError):
@@ -553,7 +554,7 @@ class ClusterRegistryTest(test.TestCase):
     Verifies that make_clusterable() works as expected on a Bidirectional
     wrapper with a LSTM layer
     """
-    layer = tf.keras.layers.Bidirectional(layers.LSTM(10))
+    layer = keras.layers.Bidirectional(layers.LSTM(10))
     with self.assertRaises(AttributeError):
       layer.get_clusterable_weights()
 
@@ -593,7 +594,7 @@ class ClusterRegistryTest(test.TestCase):
 
   def testSupportsMultiHeadAttentionLayer(self):
     """Verifies that ClusterRegistry supports a MultiHeadAttention layer."""
-    layer = tf.keras.layers.MultiHeadAttention(num_heads=2, key_dim=2)
+    layer = keras.layers.MultiHeadAttention(num_heads=2, key_dim=2)
     self.assertTrue(ClusterRegistry.supports(layer))
     ClusterRegistry.make_clusterable(layer)
 

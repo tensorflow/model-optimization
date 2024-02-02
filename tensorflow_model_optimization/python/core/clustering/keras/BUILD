@@ -1,5 +1,5 @@
-# Placeholder: load py_test
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+# Placeholder: load py_test
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -30,6 +30,7 @@ py_strict_library(
         ":cluster_wrapper",
         ":clustering_centroids",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -49,6 +50,7 @@ py_strict_library(
         ":clusterable_layer",
         ":clustering_algorithm",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -72,6 +74,7 @@ py_strict_library(
         # six dep1,
         # tensorflow dep1,
         # python/ops:clustering_ops tensorflow dep2,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -86,6 +89,7 @@ py_strict_library(
         ":clustering_centroids",
         ":clustering_registry",
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -128,6 +132,7 @@ py_test(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -144,6 +149,7 @@ py_strict_test(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -161,6 +167,7 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -177,6 +184,7 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -194,6 +202,7 @@ py_test(
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -211,6 +220,7 @@ py_strict_test(
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras:test_utils",
     ],
 )
@@ -228,6 +238,7 @@ py_strict_test(
         ":clustering_algorithm",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -244,5 +255,6 @@ py_strict_test(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras/experimental:cluster",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )

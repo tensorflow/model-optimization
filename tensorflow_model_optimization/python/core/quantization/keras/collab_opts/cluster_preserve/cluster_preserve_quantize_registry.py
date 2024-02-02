@@ -21,13 +21,15 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import clustering_registry
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quant_ops
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantizers
 
-layers = tf.keras.layers
-K = tf.keras.backend
+
+layers = keras.layers
+K = keras.backend
 
 CLUSTER_CENTROIDS = 'cluster_centroids_tf'
 PULLING_INDICES = 'pulling_indices_tf'
@@ -77,8 +79,9 @@ def get_centroids(layer, weight, data_format):
     A 4-tuple of centroids (unique values), number of centroids, lookup index,
     whether to cluster per channel (boolean).
   """
-  cluster_per_channel = (
-      layer.layer and isinstance(layer.layer, tf.keras.layers.Conv2D))
+  cluster_per_channel = layer.layer and isinstance(
+      layer.layer, keras.layers.Conv2D
+  )
 
   if not cluster_per_channel:
     centroids, index = get_unique(weight)
@@ -373,18 +376,22 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       clst_centroids_tf = layer.add_weight(
           CLUSTER_CENTROIDS,
           shape=centroids.shape,
-          initializer=tf.keras.initializers.Constant(
-              value=K.batch_get_value([centroids])[0]),
+          initializer=keras.initializers.Constant(
+              value=K.batch_get_value([centroids])[0]
+          ),
           dtype=centroids.dtype,
-          trainable=True)
+          trainable=True,
+      )
 
       ori_weights_tf = layer.add_weight(
           ORIGINAL_WEIGHTS,
           shape=weights.shape,
-          initializer=tf.keras.initializers.Constant(
-              value=K.batch_get_value([weights])[0]),
+          initializer=keras.initializers.Constant(
+              value=K.batch_get_value([weights])[0]
+          ),
           dtype=weights.dtype,
-          trainable=True)
+          trainable=True,
+      )
 
       # Get clustering implementation according to layer type
       clustering_impl_cls = clustering_registry.ClusteringLookupRegistry(
@@ -402,10 +409,12 @@ class ClusterPreserveDefaultWeightsQuantizer(quantizers.LastValueQuantizer):
       pulling_indices_tf = layer.add_weight(
           PULLING_INDICES,
           shape=lookup.shape,
-          initializer=tf.keras.initializers.Constant(
-              value=K.batch_get_value([pulling_indices])[0]),
+          initializer=keras.initializers.Constant(
+              value=K.batch_get_value([pulling_indices])[0]
+          ),
           dtype=lookup.dtype,
-          trainable=False)
+          trainable=False,
+      )
 
       result_clst = {
           CLUSTER_CENTROIDS: clst_centroids_tf,

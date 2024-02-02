@@ -20,16 +20,15 @@ from __future__ import print_function
 
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layout_transform
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_transforms
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import model_transformer
 
 
-keras = tf.keras
-
-
 class DefaultNBitQuantizeLayoutTransform(
-    quantize_layout_transform.QuantizeLayoutTransform):
+    quantize_layout_transform.QuantizeLayoutTransform
+):
   """Default model transformations."""
 
   def __init__(self, num_bits_weight: int = 8, num_bits_activation: int = 8):
@@ -58,62 +57,81 @@ class DefaultNBitQuantizeLayoutTransform(
     transforms = [
         default_n_bit_transforms.InputLayerQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.SeparableConv1DQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.SeparableConvQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.Conv2DReshapeBatchNormReLUQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.Conv2DReshapeBatchNormActivationQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.Conv2DBatchNormReLUQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.Conv2DBatchNormActivationQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.Conv2DReshapeBatchNormQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.Conv2DBatchNormQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.ConcatTransform6Inputs(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.ConcatTransform5Inputs(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.ConcatTransform4Inputs(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.ConcatTransform3Inputs(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.ConcatTransform(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.LayerReLUQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.LayerReluActivationQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.DenseBatchNormQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.DenseBatchNormReLUQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
         default_n_bit_transforms.DenseBatchNormActivationQuantize(
             num_bits_weight=self._num_bits_weight,
-            num_bits_activation=self._num_bits_activation),
+            num_bits_activation=self._num_bits_activation,
+        ),
     ]
     return model_transformer.ModelTransformer(
-        model, transforms,
-        set(layer_quantize_map.keys()), layer_quantize_map).transform()
+        model, transforms, set(layer_quantize_map.keys()), layer_quantize_map
+    ).transform()

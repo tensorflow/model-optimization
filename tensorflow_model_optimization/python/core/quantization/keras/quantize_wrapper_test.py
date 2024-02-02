@@ -19,24 +19,24 @@ from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
-
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_wrapper
 from tensorflow_model_optimization.python.core.quantization.keras.default_8bit import default_8bit_quantize_registry
+
 
 QuantizeAwareActivation = quantize_aware_activation.QuantizeAwareActivation
 QuantizeWrapper = quantize_wrapper.QuantizeWrapper
 QuantizeRegistry = default_8bit_quantize_registry.Default8BitQuantizeRegistry
 
-keras = tf.keras
-layers = tf.keras.layers
+layers = keras.layers
 
-custom_object_scope = tf.keras.utils.custom_object_scope
-deserialize_layer = tf.keras.layers.deserialize
-serialize_layer = tf.keras.layers.serialize
+custom_object_scope = keras.utils.custom_object_scope
+deserialize_layer = keras.layers.deserialize
+serialize_layer = keras.layers.serialize
 
 
 class QuantizeWrapperTest(tf.test.TestCase, parameterized.TestCase):

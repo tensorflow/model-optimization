@@ -21,7 +21,6 @@ from __future__ import print_function
 import tempfile
 
 from absl.testing import parameterized
-
 import numpy as np
 import tensorflow as tf
 
@@ -29,15 +28,17 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import compat
 from tensorflow_model_optimization.python.core.keras import test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_config
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
+
 
 QuantizeConfig = quantize_config.QuantizeConfig
 Quantizer = quantizers.Quantizer
 MovingAverageQuantizer = quantizers.MovingAverageQuantizer
 
-l = tf.keras.layers
+l = keras.layers
 
 
 # TODO(tfmot): enable for v1. Currently fails because the decorator
@@ -106,8 +107,9 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
         loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy'])
     model.fit(
         np.random.rand(20, 10),
-        tf.keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
-        batch_size=20)
+        keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
+        batch_size=20,
+    )
 
   ####################################################################
   # Tests for research with quantization.
@@ -121,7 +123,7 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
       return {}
 
     def __call__(self, inputs, training, weights, **kwargs):
-      return tf.keras.backend.clip(inputs, -1.0, 1.0)
+      return keras.backend.clip(inputs, -1.0, 1.0)
 
     def get_config(self):
       return {}
@@ -173,11 +175,11 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
       def get_config(self):
         return {}
 
-    annotated_model = tf.keras.Sequential([
+    annotated_model = keras.Sequential([
         quantize.quantize_annotate_layer(
-            l.Dense(8, input_shape=(10,)), DenseQuantizeConfig()),
-        quantize.quantize_annotate_layer(
-            l.Dense(5), DenseQuantizeConfig())
+            l.Dense(8, input_shape=(10,)), DenseQuantizeConfig()
+        ),
+        quantize.quantize_annotate_layer(l.Dense(5), DenseQuantizeConfig()),
     ])
 
     with quantize.quantize_scope(
@@ -197,9 +199,9 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     self._train_model(quantized_model)
 
     _, model_file = tempfile.mkstemp('.h5')
-    tf.keras.models.save_model(quantized_model, model_file)
+    keras.models.save_model(quantized_model, model_file)
     with quantize.quantize_scope():
-      loaded_model = tf.keras.models.load_model(model_file)
+      loaded_model = keras.models.load_model(model_file)
 
     self._assert_models_equal(quantized_model, loaded_model)
 
@@ -226,8 +228,8 @@ class QuantizeIntegrationTest(tf.test.TestCase, parameterized.TestCase):
     self._train_model(quantized_model)
 
     model_dir = tempfile.mkdtemp()
-    tf.keras.models.save_model(quantized_model, model_dir)
-    loaded_model = tf.keras.models.load_model(model_dir)
+    keras.models.save_model(quantized_model, model_dir)
+    loaded_model = keras.models.load_model(model_dir)
 
     self._assert_outputs_equal(quantized_model, loaded_model)
 

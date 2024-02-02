@@ -14,12 +14,13 @@
 # ==============================================================================
 """Public APIs for algorithm developer using weight compression API."""
 import abc
-from typing import List, Any
 import dataclasses
+from typing import Any, List
 
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.common.keras.compression.internal import optimize
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 @dataclasses.dataclass
@@ -41,12 +42,13 @@ class WeightCompressor(metaclass=abc.ABCMeta):
 
   # TODO(tfmot): Consider separate from algorithm API for custom layer supports.
   def get_compressible_weights(
-      self, original_layer: tf.keras.layers.Layer) -> List[tf.Variable]:
+      self, original_layer: keras.layers.Layer
+  ) -> List[tf.Variable]:
     """Define compressible weights for each layer.
 
     Args:
-       original_layer: tf.keras.layers.Layer representing a layer from the
-       original model.
+       original_layer: keras.layers.Layer representing a layer from the original
+         model.
 
     Returns:
        List of compressible weights for the given layer.
@@ -175,12 +177,12 @@ class WeightCompressor(metaclass=abc.ABCMeta):
 
 
 def create_layer_for_training(
-    layer: tf.keras.layers.Layer,
-    algorithm: WeightCompressor) -> tf.keras.layers.Layer:
+    layer: keras.layers.Layer, algorithm: WeightCompressor
+) -> keras.layers.Layer:
   return optimize.create_layer_for_training(layer, algorithm)
 
 
 def create_layer_for_inference(
-    layer_for_training: tf.keras.layers.Layer,
-    algorithm: WeightCompressor) -> tf.keras.layers.Layer:
+    layer_for_training: keras.layers.Layer, algorithm: WeightCompressor
+) -> keras.layers.Layer:
   return optimize.create_layer_for_inference(layer_for_training, algorithm)

@@ -49,7 +49,7 @@ compatibility.
 
 Users can apply quantization with the following APIs:
 
-*   Model building: `tf.keras` with only Sequential and Functional models.
+*   Model building: `keras` with only Sequential and Functional models.
 *   TensorFlow versions: TF 2.x for tf-nightly.
     *   `tf.compat.v1` with a TF 2.X package is not supported.
 *   TensorFlow execution mode: eager execution

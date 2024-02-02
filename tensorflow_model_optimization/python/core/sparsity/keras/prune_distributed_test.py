@@ -15,17 +15,17 @@
 """Distributed pruning test."""
 
 import tempfile
+
 from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_schedule
 from tensorflow_model_optimization.python.core.sparsity.keras import test_utils
-
-keras = tf.keras
 
 
 def _distribution_strategies():
@@ -45,18 +45,18 @@ class PruneDistributedTest(tf.test.TestCase, parameterized.TestCase):
     self.params = {
         'pruning_schedule': pruning_schedule.ConstantSparsity(0.5, 0, -1, 1),
         'block_size': (1, 1),
-        'block_pooling_type': 'AVG'
+        'block_pooling_type': 'AVG',
     }
 
   @parameterized.parameters(_distribution_strategies())
   def testPrunesSimpleDenseModel(self, distribution):
     with distribution.scope():
       model = prune.prune_low_magnitude(
-          keras_test_utils.build_simple_dense_model(), **self.params)
+          keras_test_utils.build_simple_dense_model(), **self.params
+      )
       model.compile(
-          loss='categorical_crossentropy',
-          optimizer='sgd',
-          metrics=['accuracy'])
+          loss='categorical_crossentropy', optimizer='sgd', metrics=['accuracy']
+      )
 
     # Model hasn't been trained yet. Sparsity 0.0
     test_utils.assert_model_sparsity(self, 0.0, model)
@@ -67,7 +67,8 @@ class PruneDistributedTest(tf.test.TestCase, parameterized.TestCase):
         keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5),
         epochs=2,
         callbacks=[pruning_callbacks.UpdatePruningStep()],
-        batch_size=20)
+        batch_size=20,
+    )
     model.predict(np.random.rand(20, 10))
     test_utils.assert_model_sparsity(self, 0.5, model)
 

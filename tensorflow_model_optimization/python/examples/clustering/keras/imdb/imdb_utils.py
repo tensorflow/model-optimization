@@ -20,11 +20,13 @@ compared to simpler, much faster methods such as TF-IDF+LogReg.
 from __future__ import print_function
 
 import tensorflow as tf
+
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
-sequence = tf.keras.preprocessing.sequence
+sequence = keras.preprocessing.sequence
 
 
 def prepare_dataset():
@@ -34,9 +36,9 @@ def prepare_dataset():
   maxlen = 100  # cut texts after this number of words
 
   print("Loading data...")
-  (x_train,
-   y_train), (x_test,
-              y_test) = tf.keras.datasets.imdb.load_data(num_words=max_features)
+  (x_train, y_train), (x_test, y_test) = keras.datasets.imdb.load_data(
+      num_words=max_features
+  )
   print(len(x_train), "train sequences")
   print(len(x_test), "test sequences")
 

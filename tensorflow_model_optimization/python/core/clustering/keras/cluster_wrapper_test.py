@@ -25,8 +25,9 @@ from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_wrapper
 from tensorflow_model_optimization.python.core.clustering.keras import clusterable_layer
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
-keras = tf.keras
+
 errors_impl = tf.errors
 layers = keras.layers
 test = tf.test
@@ -146,7 +147,7 @@ class ClusterWeightsTest(test.TestCase, parameterized.TestCase):
                                            number_of_clusters,
                                            cluster_centroids_init):
     """Verifies that, for any number of clusters and any centroid initialization  method, the number of unique weight values after stripping is always less or equal to number_of_clusters."""
-    original_model = tf.keras.Sequential([
+    original_model = keras.Sequential([
         layers.Dense(32, input_shape=(10,)),
     ])
     self.assertGreater(

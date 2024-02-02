@@ -1,5 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -13,6 +13,7 @@ pytype_strict_library(
         # tensorflow dep1,
         # tensorflow_compression dep1,
         "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -31,6 +32,7 @@ py_strict_test(
         # absl/testing:parameterized dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -41,6 +43,7 @@ pytype_strict_library(
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -54,6 +57,7 @@ py_strict_test(
         ":same_training_and_inference",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
 )
@@ -65,6 +69,7 @@ pytype_strict_library(
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -78,6 +83,7 @@ py_strict_test(
         ":different_training_and_inference",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
 )
@@ -89,6 +95,7 @@ pytype_strict_library(
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -102,6 +109,7 @@ py_strict_test(
         ":bias_only",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
 )
@@ -116,6 +124,7 @@ py_strict_library(
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_centroids",
         "//tensorflow_model_optimization/python/core/clustering/keras:clustering_registry",
         "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -129,6 +138,7 @@ py_strict_test(
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -139,6 +149,7 @@ pytype_strict_library(
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/common/keras/compression:algorithm",
+        "//tensorflow_model_optimization/python/core/keras:compat",
     ],
 )
 
@@ -152,6 +163,7 @@ py_strict_test(
         ":periodical_update_and_scheduling",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras/testing:test_utils_mnist",
     ],
 )

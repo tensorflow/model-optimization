@@ -18,10 +18,10 @@
 import tempfile
 
 from absl.testing import parameterized
-
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils
 
@@ -57,104 +57,108 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
     return y_
 
   def _get_single_conv_model(self):
-    i = tf.keras.Input(shape=(32, 32, 3))
-    x = tf.keras.layers.Conv2D(2, kernel_size=(3, 3), strides=(2, 2))(i)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(32, 32, 3))
+    x = keras.layers.Conv2D(2, kernel_size=(3, 3), strides=(2, 2))(i)
+    return keras.Model(i, x)
 
   def _get_single_dense_model(self):
-    i = tf.keras.Input(shape=(5,))
-    x = tf.keras.layers.Dense(3)(i)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(5,))
+    x = keras.layers.Dense(3)(i)
+    return keras.Model(i, x)
 
   def _get_single_conv_relu_model(self):
-    i = tf.keras.Input(shape=(6, 6, 3))
-    x = tf.keras.layers.Conv2D(
-        2, kernel_size=(3, 3), strides=(2, 2), activation='relu')(i)
-    x = tf.keras.layers.ReLU()(x)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(6, 6, 3))
+    x = keras.layers.Conv2D(
+        2, kernel_size=(3, 3), strides=(2, 2), activation='relu'
+    )(i)
+    x = keras.layers.ReLU()(x)
+    return keras.Model(i, x)
 
   def _get_stacked_convs_model(self):
-    i = tf.keras.Input(shape=(64, 64, 3))
-    x = tf.keras.layers.Conv2D(
-        10, kernel_size=(3, 3), strides=(1, 1), activation='relu')(i)
-    x = tf.keras.layers.Conv2D(
+    i = keras.Input(shape=(64, 64, 3))
+    x = keras.layers.Conv2D(
+        10, kernel_size=(3, 3), strides=(1, 1), activation='relu'
+    )(i)
+    x = keras.layers.Conv2D(
         # Setting strides to (1, 1) passes test, (2, 2) fails test?
         # Somehow one value is at border.
         # Train over 100 epochs, and issue goes away.
         # Why are all the first values zero?
-        10, kernel_size=(3, 3), strides=(2, 2), activation='relu')(x)
-    x = tf.keras.layers.Conv2D(
-        10, kernel_size=(3, 3), strides=(2, 2), activation='relu')(x)
-    x = tf.keras.layers.Conv2D(
-        5, kernel_size=(3, 3), strides=(2, 2), activation='relu')(x)
-    x = tf.keras.layers.Conv2D(
-        2, kernel_size=(3, 3), strides=(2, 2), activation='relu')(x)
-    return tf.keras.Model(i, x)
+        10,
+        kernel_size=(3, 3),
+        strides=(2, 2),
+        activation='relu',
+    )(x)
+    x = keras.layers.Conv2D(
+        10, kernel_size=(3, 3), strides=(2, 2), activation='relu'
+    )(x)
+    x = keras.layers.Conv2D(
+        5, kernel_size=(3, 3), strides=(2, 2), activation='relu'
+    )(x)
+    x = keras.layers.Conv2D(
+        2, kernel_size=(3, 3), strides=(2, 2), activation='relu'
+    )(x)
+    return keras.Model(i, x)
 
   def _get_conv_bn_relu_model(self):
-    i = tf.keras.Input(shape=(6, 6, 3))
-    x = tf.keras.layers.Conv2D(3, kernel_size=(3, 3), strides=(2, 2))(i)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.ReLU()(x)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(6, 6, 3))
+    x = keras.layers.Conv2D(3, kernel_size=(3, 3), strides=(2, 2))(i)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.ReLU()(x)
+    return keras.Model(i, x)
 
   def _get_depthconv_bn_relu_model(self):
-    i = tf.keras.Input(shape=(6, 6, 3))
-    x = tf.keras.layers.DepthwiseConv2D(kernel_size=(3, 3), strides=(2, 2))(i)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.ReLU()(x)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(6, 6, 3))
+    x = keras.layers.DepthwiseConv2D(kernel_size=(3, 3), strides=(2, 2))(i)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.ReLU()(x)
+    return keras.Model(i, x)
 
   def _get_separable_conv2d_model(self):
-    i = tf.keras.Input(shape=(12, 12, 3))
-    x = tf.keras.layers.SeparableConv2D(
-        filters=5, kernel_size=(3, 3), strides=(2, 2))(i)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.ReLU()(x)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(12, 12, 3))
+    x = keras.layers.SeparableConv2D(
+        filters=5, kernel_size=(3, 3), strides=(2, 2)
+    )(i)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.ReLU()(x)
+    return keras.Model(i, x)
 
   def _get_sepconv1d_bn_relu_model(self):
-    i = tf.keras.Input(shape=(8, 3))
-    x = tf.keras.layers.SeparableConv1D(
-        filters=5, kernel_size=3, strides=2)(i)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.ReLU()(x)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(8, 3))
+    x = keras.layers.SeparableConv1D(filters=5, kernel_size=3, strides=2)(i)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.ReLU()(x)
+    return keras.Model(i, x)
 
   def _get_sepconv1d_bn_model(self):
-    i = tf.keras.Input(shape=(8, 3))
-    x = tf.keras.layers.SeparableConv1D(
-        filters=5, kernel_size=3, strides=2)(i)
-    x = tf.keras.layers.BatchNormalization()(x)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(8, 3))
+    x = keras.layers.SeparableConv1D(filters=5, kernel_size=3, strides=2)(i)
+    x = keras.layers.BatchNormalization()(x)
+    return keras.Model(i, x)
 
   def _get_sepconv1d_stacked_model(self):
-    i = tf.keras.Input(shape=(8, 3))
-    x = tf.keras.layers.SeparableConv1D(
-        filters=5, kernel_size=3, strides=2)(i)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.SeparableConv1D(
-        filters=5, kernel_size=3, strides=2)(x)
-    x = tf.keras.layers.BatchNormalization()(x)
-    x = tf.keras.layers.ReLU()(x)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(8, 3))
+    x = keras.layers.SeparableConv1D(filters=5, kernel_size=3, strides=2)(i)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.SeparableConv1D(filters=5, kernel_size=3, strides=2)(x)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.ReLU()(x)
+    return keras.Model(i, x)
 
   def _get_upsampling2d_nearest_model(self):
-    i = tf.keras.Input(shape=(32, 32, 3))
-    x = tf.keras.layers.UpSampling2D(size=(3, 4), interpolation='nearest')(i)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(32, 32, 3))
+    x = keras.layers.UpSampling2D(size=(3, 4), interpolation='nearest')(i)
+    return keras.Model(i, x)
 
   def _get_upsampling2d_bilinear_model(self):
-    i = tf.keras.Input(shape=(1, 3, 1))
-    x = tf.keras.layers.UpSampling2D(size=(1, 5), interpolation='bilinear')(i)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(1, 3, 1))
+    x = keras.layers.UpSampling2D(size=(1, 5), interpolation='bilinear')(i)
+    return keras.Model(i, x)
 
   def _get_conv2d_transpose_model(self):
-    i = tf.keras.Input(shape=(32, 32, 3))
-    x = tf.keras.layers.Conv2DTranspose(
-        2, kernel_size=(3, 3), strides=(2, 2))(
-            i)
-    return tf.keras.Model(i, x)
+    i = keras.Input(shape=(32, 32, 3))
+    x = keras.layers.Conv2DTranspose(2, kernel_size=(3, 3), strides=(2, 2))(i)
+    return keras.Model(i, x)
 
   @parameterized.parameters([
       _get_single_conv_model, _get_single_dense_model,
@@ -200,6 +204,6 @@ class QuantizeNumericalTest(tf.test.TestCase, parameterized.TestCase):
 
 
 if __name__ == '__main__':
-  if hasattr(tf.keras.__internal__, 'enable_unsafe_deserialization'):
-    tf.keras.__internal__.enable_unsafe_deserialization()
+  if hasattr(keras.__internal__, 'enable_unsafe_deserialization'):
+    keras.__internal__.enable_unsafe_deserialization()
   tf.test.main()

@@ -19,6 +19,7 @@ import tensorflow as tf
 
 from tensorflow.python.eager import monitoring
 from tensorflow_model_optimization.python.core.keras import metrics
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 class MetricsTest(tf.test.TestCase):
@@ -27,7 +28,7 @@ class MetricsTest(tf.test.TestCase):
 
   def setUp(self):
     super(MetricsTest, self).setUp()
-    self.test_label = tf.keras.layers.Conv2D(1, 1).__class__.__name__
+    self.test_label = keras.layers.Conv2D(1, 1).__class__.__name__
     for label in [
         self.test_label, metrics.MonitorBoolGauge._SUCCESS_LABEL,
         metrics.MonitorBoolGauge._FAILURE_LABEL

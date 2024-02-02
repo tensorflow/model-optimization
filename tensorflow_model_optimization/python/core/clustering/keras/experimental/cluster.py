@@ -88,8 +88,8 @@ def cluster_weights(
   ```
 
   Arguments:
-      to_cluster: A single keras layer, list of keras layers, or a
-        `tf.keras.Model` instance.
+      to_cluster: A single keras layer, list of keras layers, or a `keras.Model`
+        instance.
       number_of_clusters: the number of cluster centroids to form when
         clustering a layer/model. For example, if number_of_clusters=8 then only
         8 unique values will be used in each weight array.

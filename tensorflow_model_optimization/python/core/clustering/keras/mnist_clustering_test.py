@@ -19,10 +19,10 @@ import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.clustering.keras import cluster
 from tensorflow_model_optimization.python.core.clustering.keras import cluster_config
+from tensorflow_model_optimization.python.core.keras.compat import keras
+
 
 tf.random.set_seed(42)
-
-keras = tf.keras
 
 EPOCHS = 7
 EPOCHS_FINE_TUNING = 4
@@ -32,21 +32,24 @@ NUMBER_OF_CHANNELS = 12
 
 def _build_model():
   """Builds a simple CNN model."""
-  i = tf.keras.layers.Input(shape=(28, 28), name='input')
-  x = tf.keras.layers.Reshape((28, 28, 1))(i)
-  x = tf.keras.layers.Conv2D(
-      filters=NUMBER_OF_CHANNELS, kernel_size=(3, 3),
-      activation='relu', name='conv1')(x)
-  x = tf.keras.layers.MaxPool2D(2, 2)(x)
-  x = tf.keras.layers.Flatten()(x)
-  output = tf.keras.layers.Dense(units=10)(x)
+  i = keras.layers.Input(shape=(28, 28), name='input')
+  x = keras.layers.Reshape((28, 28, 1))(i)
+  x = keras.layers.Conv2D(
+      filters=NUMBER_OF_CHANNELS,
+      kernel_size=(3, 3),
+      activation='relu',
+      name='conv1',
+  )(x)
+  x = keras.layers.MaxPool2D(2, 2)(x)
+  x = keras.layers.Flatten()(x)
+  output = keras.layers.Dense(units=10)(x)
 
-  model = tf.keras.Model(inputs=[i], outputs=[output])
+  model = keras.Model(inputs=[i], outputs=[output])
   return model
 
 
 def _get_dataset():
-  mnist = tf.keras.datasets.mnist
+  mnist = keras.datasets.mnist
   (x_train, y_train), (x_test, y_test) = mnist.load_data()
   x_train, x_test = x_train / 255.0, x_test / 255.0
   # Use subset of 60000 examples to keep unit test speed fast.
@@ -56,7 +59,7 @@ def _get_dataset():
 
 
 def _train_model(model):
-  loss_fn = tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True)
+  loss_fn = keras.losses.SparseCategoricalCrossentropy(from_logits=True)
 
   model.compile(optimizer='adam', loss=loss_fn, metrics=['accuracy'])
 
@@ -89,21 +92,23 @@ def _cluster_model(model,
 
   # Use smaller learning rate for fine-tuning
   # clustered model
-  opt = tf.keras.optimizers.Adam(learning_rate=1e-5)
+  opt = keras.optimizers.Adam(learning_rate=1e-5)
 
   clustered_model.compile(
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       optimizer=opt,
-      metrics=['accuracy'])
+      metrics=['accuracy'],
+  )
 
   # Fine-tune clustered model
   clustered_model.fit(x_train, y_train, epochs=EPOCHS_FINE_TUNING)
 
   stripped_model = cluster.strip_clustering(clustered_model)
   stripped_model.compile(
-      loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
       optimizer=opt,
-      metrics=['accuracy'])
+      metrics=['accuracy'],
+  )
 
   return stripped_model
 
@@ -174,8 +179,9 @@ class FunctionalTest(tf.test.TestCase, parameterized.TestCase):
     for i in layer_indices:
       nr_of_unique_weights = _get_number_of_unique_weights(
           clustered_model, i, 'kernel')
-      if (cluster_per_channel
-          and isinstance(clustered_model.layers[i], tf.keras.layers.Conv2D)):
+      if cluster_per_channel and isinstance(
+          clustered_model.layers[i], keras.layers.Conv2D
+      ):
         self.assertLessEqual(nr_of_unique_weights,
                              NUMBER_OF_CLUSTERS * NUMBER_OF_CHANNELS)
       else:

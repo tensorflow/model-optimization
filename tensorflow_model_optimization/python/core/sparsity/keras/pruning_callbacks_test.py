@@ -22,10 +22,11 @@ import tensorflow as tf
 
 # TODO(b/139939526): move to public API.
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.sparsity.keras import prune
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_callbacks
 
-keras = tf.keras
+
 errors_impl = tf.errors
 
 
@@ -67,9 +68,11 @@ class PruneCallbacksTest(tf.test.TestCase):
         ])
 
     self.assertEqual(
-        3, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))
+        3, keras.backend.get_value(pruned_model.layers[0].pruning_step)
+    )
     self.assertEqual(
-        3, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
+        3, keras.backend.get_value(pruned_model.layers[1].pruning_step)
+    )
 
     self._assertLogsExist(log_dir)
 
@@ -107,9 +110,11 @@ class PruneCallbacksTest(tf.test.TestCase):
       step_callback.on_epoch_end(batch=unused_arg)
 
     self.assertEqual(
-        3, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))
+        3, keras.backend.get_value(pruned_model.layers[0].pruning_step)
+    )
     self.assertEqual(
-        3, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
+        3, keras.backend.get_value(pruned_model.layers[1].pruning_step)
+    )
     self._assertLogsExist(log_dir)
 
   def testUpdatePruningStepsAndLogsSummaries_RunInference(self):
@@ -119,9 +124,11 @@ class PruneCallbacksTest(tf.test.TestCase):
     del model_output
 
     self.assertEqual(
-        -1, tf.keras.backend.get_value(pruned_model.layers[0].pruning_step))
+        -1, keras.backend.get_value(pruned_model.layers[0].pruning_step)
+    )
     self.assertEqual(
-        -1, tf.keras.backend.get_value(pruned_model.layers[1].pruning_step))
+        -1, keras.backend.get_value(pruned_model.layers[1].pruning_step)
+    )
 
   def testPruneTrainingRaisesError_PruningStepCallbackMissing(self):
     pruned_model, x_train, y_train = self._pruned_model_setup()

@@ -20,7 +20,7 @@ from __future__ import print_function
 
 import tensorflow as tf
 
-keras = tf.keras
+from tensorflow_model_optimization.python.core.keras.compat import keras
 
 
 def _get_conv2d_params():
@@ -74,8 +74,9 @@ class Conv2DModel(object):
       normalization = keras.layers.experimental.SyncBatchNormalization
 
     if squeeze_type == 'sepconv1d_squeeze':
-      squeeze_layer = tf.keras.layers.Lambda(
-          lambda x: tf.squeeze(x, [1]), name='sepconv1d_squeeze_1')
+      squeeze_layer = keras.layers.Lambda(
+          lambda x: tf.squeeze(x, [1]), name='sepconv1d_squeeze_1'
+      )
     else:
       squeeze_layer = None
 
@@ -91,7 +92,7 @@ class Conv2DModel(object):
       layers.append(normalization(axis=-1))
       if post_bn_activation is not None:
         layers += post_bn_activation
-      return tf.keras.Sequential(layers)
+      return keras.Sequential(layers)
     else:
       inp = keras.layers.Input(cls.params['input_shape'],
                                cls.params['batch_size'])
@@ -106,7 +107,7 @@ class Conv2DModel(object):
       out = normalization(axis=-1)(x)
       if post_bn_activation is not None:
         out = post_bn_activation(out)
-      return tf.keras.Model(inp, out)
+      return keras.Model(inp, out)
 
 
 class DepthwiseConv2DModel(Conv2DModel):
@@ -135,8 +136,9 @@ class DepthwiseConv2DModel(Conv2DModel):
       normalization = keras.layers.experimental.SyncBatchNormalization
 
     if squeeze_type == 'sepconv1d_squeeze':
-      squeeze_layer = tf.keras.layers.Lambda(
-          lambda x: tf.squeeze(x, [1]), name='sepconv1d_squeeze_1')
+      squeeze_layer = keras.layers.Lambda(
+          lambda x: tf.squeeze(x, [1]), name='sepconv1d_squeeze_1'
+      )
     else:
       squeeze_layer = None
 
@@ -152,7 +154,7 @@ class DepthwiseConv2DModel(Conv2DModel):
       layers.append(normalization(axis=-1))
       if post_bn_activation is not None:
         layers += post_bn_activation
-      return tf.keras.Sequential(layers)
+      return keras.Sequential(layers)
     else:
       inp = keras.layers.Input(cls.params['input_shape'],
                                cls.params['batch_size'])
@@ -166,4 +168,4 @@ class DepthwiseConv2DModel(Conv2DModel):
       out = normalization(axis=-1)(x)
       if post_bn_activation is not None:
         out = post_bn_activation(out)
-      return tf.keras.Model(inp, out)
+      return keras.Model(inp, out)

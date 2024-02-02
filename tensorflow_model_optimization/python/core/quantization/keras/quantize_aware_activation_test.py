@@ -19,17 +19,17 @@ from __future__ import division
 from __future__ import print_function
 
 from absl.testing import parameterized
-
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
 
-keras = tf.keras
-activations = tf.keras.activations
-K = tf.keras.backend
+
+activations = keras.activations
+K = keras.backend
 deserialize_keras_object = quantize_utils.deserialize_keras_object
 serialize_keras_object = quantize_utils.serialize_keras_object
 
@@ -155,7 +155,7 @@ class QuantizeAwareQuantizationTest(tf.test.TestCase, parameterized.TestCase):
         'config': activation_config
     }
     self.assertEqual(expected_config, serialized_quantize_activation)
-    with tf.keras.utils.custom_object_scope({
+    with keras.utils.custom_object_scope({
         'QuantizeAwareActivation': QuantizeAwareActivation,
         'NoOpActivation': quantize_aware_activation.NoOpActivation,
     }):

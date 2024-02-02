@@ -24,15 +24,16 @@ from __future__ import print_function
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import utils
-
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
 from tensorflow_model_optimization.python.core.quantization.keras import utils as quantize_utils
+
 
 serialize_keras_object = quantize_utils.serialize_keras_object
 deserialize_keras_object = quantize_utils.deserialize_keras_object
 
 
-class QuantizeLayer(tf.keras.layers.Layer):
+class QuantizeLayer(keras.layers.Layer):
   """Emulate quantization of tensors passed through the layer."""
 
   def __init__(self, quantizer, **kwargs):
@@ -59,16 +60,17 @@ class QuantizeLayer(tf.keras.layers.Layer):
 
     self.optimizer_step = self.add_weight(
         'optimizer_step',
-        initializer=tf.keras.initializers.Constant(-1),
+        initializer=keras.initializers.Constant(-1),
         dtype=tf.dtypes.int32,
-        trainable=False)
+        trainable=False,
+    )
 
   def call(self, inputs, training=None):
     if not self.quantizer:
       return inputs
 
     if training is None:
-      training = tf.keras.backend.learning_phase()
+      training = keras.backend.learning_phase()
 
     def _make_quantizer_fn(train_var):
       def quantizer_fn():

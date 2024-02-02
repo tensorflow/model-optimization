@@ -20,6 +20,8 @@ import inspect
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
+from tensorflow_model_optimization.python.core.keras.compat import unique_object_name
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_aware_activation
 from tensorflow_model_optimization.python.core.quantization.keras import quantize_layer
 from tensorflow_model_optimization.python.core.quantization.keras import quantizers
@@ -28,20 +30,9 @@ from tensorflow_model_optimization.python.core.quantization.keras.experimental.d
 from tensorflow_model_optimization.python.core.quantization.keras.experimental.default_n_bit import default_n_bit_quantize_registry
 from tensorflow_model_optimization.python.core.quantization.keras.graph_transformations import transforms
 
-try:
-  import keras  # pylint: disable=g-import-not-at-top
-  if hasattr(keras, 'src'):
-    # Path as seen in pip packages as of TF/Keras 2.13.
-    from keras.src.backend import unique_object_name  # pylint: disable=g-import-not-at-top,g-importing-member
-  else:
-    from keras.backend import unique_object_name  # pylint: disable=g-import-not-at-top,g-importing-member
-except ImportError:
-  unique_object_name = tf._keras_internal.backend.unique_object_name  # pylint: disable=protected-access
 
 LayerNode = transforms.LayerNode
 LayerPattern = transforms.LayerPattern
-
-keras = tf.keras
 
 
 def _get_conv_bn_layers(bn_layer_node):
@@ -425,14 +416,14 @@ class SeparableConv1DQuantize(transforms.Transform):
 
     # TODO(pulkitb): Handle other base_layer args such as dtype, input_dim etc.
 
-    sepconv2d_layer = tf.keras.layers.SeparableConv2D(
+    sepconv2d_layer = keras.layers.SeparableConv2D(
         filters=sepconv1d_config['filters'],
         kernel_size=(1,) + _normalize_tuple(sepconv1d_config['kernel_size']),
         strides=_normalize_tuple(sepconv1d_config['strides']) * 2,
         padding=padding,
         data_format=sepconv1d_config['data_format'],
-        dilation_rate=(1,) + _normalize_tuple(
-            sepconv1d_config['dilation_rate']),
+        dilation_rate=(1,)
+        + _normalize_tuple(sepconv1d_config['dilation_rate']),
         depth_multiplier=sepconv1d_config['depth_multiplier'],
         activation=sepconv1d_config['activation'],
         use_bias=sepconv1d_config['use_bias'],
@@ -449,7 +440,7 @@ class SeparableConv1DQuantize(transforms.Transform):
         # TODO(pulkitb): Rethink what to do for name. Using the same name leads
         # to confusion, since it's typically separable_conv1d
         name=sepconv1d_config['name'] + '_QAT_SepConv2D',
-        trainable=sepconv1d_config['trainable']
+        trainable=sepconv1d_config['trainable'],
     )
 
     sepconv2d_weights = collections.OrderedDict()
@@ -476,9 +467,10 @@ class SeparableConv1DQuantize(transforms.Transform):
     # TODO(pulkitb): Consider moving from Lambda to custom ExpandDims/Squeeze.
 
     # Layer before SeparableConv2D which expands input tensors to match 2D.
-    expand_layer = tf.keras.layers.Lambda(
+    expand_layer = keras.layers.Lambda(
         lambda x: tf.expand_dims(x, spatial_dim),
-        name=self._get_name('sepconv1d_expand'))
+        name=self._get_name('sepconv1d_expand'),
+    )
     expand_layer_config = quantize_utils.serialize_layer(
         expand_layer, use_legacy_format=True
     )
@@ -487,9 +479,10 @@ class SeparableConv1DQuantize(transforms.Transform):
         'quantize_config':
             configs.NoOpQuantizeConfig()}
 
-    squeeze_layer = tf.keras.layers.Lambda(
+    squeeze_layer = keras.layers.Lambda(
         lambda x: tf.squeeze(x, [spatial_dim]),
-        name=self._get_name('sepconv1d_squeeze'))
+        name=self._get_name('sepconv1d_squeeze'),
+    )
     squeeze_layer_config = quantize_utils.serialize_layer(
         squeeze_layer, use_legacy_format=True
     )
@@ -546,7 +539,7 @@ class SeparableConvQuantize(transforms.Transform):
     # Needs special handling: weights
     # Unknown: dynamic, autocast
 
-    dconv_layer = tf.keras.layers.DepthwiseConv2D(
+    dconv_layer = keras.layers.DepthwiseConv2D(
         kernel_size=sepconv_layer['config']['kernel_size'],
         strides=sepconv_layer['config']['strides'],
         padding=sepconv_layer['config']['padding'],
@@ -558,7 +551,7 @@ class SeparableConvQuantize(transforms.Transform):
         depthwise_initializer=sepconv_layer['config']['depthwise_initializer'],
         depthwise_regularizer=sepconv_layer['config']['depthwise_regularizer'],
         depthwise_constraint=sepconv_layer['config']['depthwise_constraint'],
-        trainable=sepconv_layer['config']['trainable']
+        trainable=sepconv_layer['config']['trainable'],
     )
     dconv_weights = collections.OrderedDict()
     dconv_weights['depthwise_kernel:0'] = sepconv_weights[0]
@@ -569,7 +562,7 @@ class SeparableConvQuantize(transforms.Transform):
     # Needed to ensure these new layers are considered for quantization.
     dconv_metadata = {'quantize_config': None}
 
-    conv_layer = tf.keras.layers.Conv2D(
+    conv_layer = keras.layers.Conv2D(
         filters=sepconv_layer['config']['filters'],
         kernel_size=(1, 1),  # (1,) * rank
         strides=(1, 1),
@@ -586,7 +579,7 @@ class SeparableConvQuantize(transforms.Transform):
         activity_regularizer=sepconv_layer['config']['activity_regularizer'],
         kernel_constraint=sepconv_layer['config']['pointwise_constraint'],
         bias_constraint=sepconv_layer['config']['bias_constraint'],
-        trainable=sepconv_layer['config']['trainable']
+        trainable=sepconv_layer['config']['trainable'],
     )
     conv_weights = collections.OrderedDict()
     conv_weights['kernel:0'] = sepconv_weights[1]
@@ -704,7 +697,7 @@ class ConcatTransform(transforms.Transform):
         'Concatenate', inputs=[LayerPattern('.*'), LayerPattern('.*')])
 
   def _get_layer_type(self, layer_class_name):
-    keras_layers = inspect.getmembers(tf.keras.layers, inspect.isclass)
+    keras_layers = inspect.getmembers(keras.layers, inspect.isclass)
     for layer_name, layer_type in keras_layers:
       if layer_name == layer_class_name:
         return layer_type

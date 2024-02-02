@@ -25,6 +25,7 @@ from absl.testing import parameterized
 import numpy as np
 import tensorflow as tf
 
+from tensorflow_model_optimization.python.core.keras.compat import keras
 from tensorflow_model_optimization.python.core.quantization.keras import quantize
 from tensorflow_model_optimization.python.core.quantization.keras import utils
 
@@ -32,7 +33,7 @@ from tensorflow_model_optimization.python.core.quantization.keras import utils
 class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
 
   # Derived using
-  # `inspect.getmembers(tf.keras.applications, inspect.isfunction)`
+  # `inspect.getmembers(keras.applications, inspect.isfunction)`
   _KERAS_APPLICATION_MODELS = [
       # 'DenseNet121',
       # 'DenseNet169',
@@ -65,8 +66,7 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
 
   def _get_model(self, model_type):
     model_fn = [
-        y for x, y in inspect.getmembers(tf.keras.applications)
-        if x == model_type
+        y for x, y in inspect.getmembers(keras.applications) if x == model_type
     ][0]
 
     input_shape = QuantizeModelsTest._MODEL_INPUT_SHAPES.get(
@@ -77,8 +77,9 @@ class QuantizeModelsTest(tf.test.TestCase, parameterized.TestCase):
   def _create_test_data(self, model):
     x_train = np.random.randn(
         *self._batch(model.input.get_shape().as_list(), 2)).astype('float32')
-    y_train = tf.keras.utils.to_categorical(
-        np.random.randint(1000, size=(2, 1)), 1000)
+    y_train = keras.utils.to_categorical(
+        np.random.randint(1000, size=(2, 1)), 1000
+    )
 
     return x_train, y_train
 
