@@ -21,8 +21,6 @@ from tensorflow_model_optimization.python.core.sparsity.keras import prunable_la
 
 
 try:
-  # OSS case.
-  import keras  # pylint: disable=g-import-not-at-top
   if hasattr(keras, 'src'):
     # Path as seen in pip packages as of TF/Keras 2.13.
     from keras.src.engine import base_layer  # pylint: disable=g-import-not-at-top,g-importing-member

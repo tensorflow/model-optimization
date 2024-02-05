@@ -19,25 +19,23 @@ from __future__ import division
 from __future__ import print_function
 
 import collections
+import os
 import weakref
 
 import tensorflow as tf
 
 
 def _get_keras_instance():
-  from pkg_resources import parse_version
+  # Keep using keras-2 (tf-keras) rather than keras-3 (keras).
+  os.environ['TF_USE_LEGACY_KERAS'] = '1'
 
-  required_tensorflow_version = '2.16.0'
-  if parse_version(tf.__version__) < parse_version(required_tensorflow_version):
-    return tf.keras
-
+  # Use Keras 2.
   version_fn = getattr(tf.keras, 'version', None)
   if version_fn and version_fn().startswith('3.'):
-    try:
-      import tf_keras as keras
-    except ImportError:
-      pass
-  return tf.keras
+    import tf_keras as keras_internal  # pylint: disable=g-import-not-at-top,unused-import
+  else:
+    keras_internal = tf.keras
+  return keras_internal
 
 
 keras = _get_keras_instance()

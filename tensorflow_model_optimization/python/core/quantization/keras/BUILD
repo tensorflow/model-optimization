@@ -326,7 +326,6 @@ py_strict_test(
     srcs = ["quantize_models_test.py"],
     flaky = True,
     python_version = "PY3",
-    shard_count = 10,
     deps = [
         ":quantize",
         ":utils",
@@ -343,8 +342,6 @@ py_strict_test(
     size = "large",
     srcs = ["quantize_functional_test.py"],
     python_version = "PY3",
-    # To match parallel runs of run_all_keras_modes.
-    shard_count = 4,
     deps = [
         ":quantize",
         ":utils",

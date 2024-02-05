@@ -12,30 +12,6 @@ filegroup(
 )
 
 py_strict_binary(
-    name = "mnist_estimator",
-    srcs = [
-        "dataset.py",
-        "mnist_estimator.py",
-    ],
-    python_version = "PY3",
-    deps = [
-        # absl/flags dep1,
-        # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
-        # numpy dep1,
-        # six dep1,
-        # tensorflow dep1,
-        # tensorflow:tensorflow_compat_v1_estimator dep1,
-        "//tensorflow_model_optimization/python/core/keras:compat",
-        "//tensorflow_model_optimization/python/core/sparsity/keras:estimator_utils",
-        "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
-        "//tensorflow_model_optimization/python/core/sparsity/keras:pruning_schedule",
-        "//third_party/tensorflow_models/official/common:distribute_utils",
-        "//third_party/tensorflow_models/official/r1/utils/logs:hooks_helper",
-        "//third_party/tensorflow_models/official/utils",
-    ],
-)
-
-py_strict_binary(
     name = "mnist_cnn",
     srcs = [
         "mnist_cnn.py",
