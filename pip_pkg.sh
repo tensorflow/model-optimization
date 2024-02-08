@@ -34,7 +34,7 @@ mkdir -p "$1"
 DEST=$(dirname "${1}/does_not_exist")
 DEST=$(cd "$DEST" && pwd)
 
-cd bazel-bin/pip_pkg.runfiles/tensorflow_model_optimization
+cd bazel-bin/pip_pkg.runfiles/_main
 
 # Pass through remaining arguments (following the first argument, which
 # specifies the output dir) to setup.py, e.g.,

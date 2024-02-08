@@ -32,6 +32,15 @@ Keras pruning API:
 
 # TensorFlow Model Optimization next release TBD
 
+# TensorFlow Model Optimization 0.8.0
+
+TFMOT 0.8.0 forces users to use the keras v2 version.
+ * Fix structural pruning sparsity notebook
+ * Remove private Keras imports.
+ * Redirect TF references.
+ * Fix broken tests.
+ * Tested against TensorFlow 2.14.1, and nightly on Python 3.
+
 # TensorFlow Model Optimization 0.7.5
 
 TFMOT 0.7.5 fixes compatibility issues with new keras.
