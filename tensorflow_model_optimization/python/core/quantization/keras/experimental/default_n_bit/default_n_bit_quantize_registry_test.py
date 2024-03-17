@@ -372,9 +372,7 @@ class DefaultNBitQuantizeConfigTest(tf.test.TestCase, _TestHelper):
     self.assertEqual(expected_config, serialized_quantize_config)
 
     quantize_config_from_config = deserialize_keras_object(
-        serialized_quantize_config,
-        module_objects=globals(),
-        custom_objects=n_bit_registry._types_dict())
+        serialized_quantize_config, custom_objects=n_bit_registry._types_dict())
 
     self.assertEqual(quantize_config, quantize_config_from_config)
 
@@ -491,9 +489,7 @@ class DefaultNBitQuantizeConfigRNNTest(tf.test.TestCase, _TestHelper):
     self.assertEqual(expected_config, serialized_quantize_config)
 
     quantize_config_from_config = deserialize_keras_object(
-        serialized_quantize_config,
-        module_objects=globals(),
-        custom_objects=n_bit_registry._types_dict())
+        serialized_quantize_config, custom_objects=n_bit_registry._types_dict())
 
     self.assertEqual(self.quantize_config, quantize_config_from_config)
 
