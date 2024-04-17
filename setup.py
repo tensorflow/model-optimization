@@ -36,8 +36,11 @@ REQUIRED_PACKAGES = [
     'absl-py~=1.2',
     'numpy~=1.23',
     'six~=1.14',
+    'scipy',
     'enum34~=1.1;python_version<"3.4"',
     'dm-tree~=0.1.1',
+    'mock',
+    'tf-keras>=2.14.1'
 ]
 
 if '--release' in sys.argv:
