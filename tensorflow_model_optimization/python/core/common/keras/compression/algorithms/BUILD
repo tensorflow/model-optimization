@@ -1,4 +1,4 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test", "pytype_strict_library")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library", "pytype_strict_test")
 
 package(default_visibility = ["//visibility:private"])
 
@@ -16,7 +16,7 @@ pytype_strict_library(
     ],
 )
 
-py_strict_test(
+pytype_strict_test(
     name = "epr_test",
     timeout = "long",
     srcs = ["epr_test.py"],
@@ -46,7 +46,7 @@ pytype_strict_library(
     ],
 )
 
-py_strict_test(
+pytype_strict_test(
     name = "same_training_and_inference_test",
     timeout = "long",
     srcs = ["same_training_and_inference_test.py"],
@@ -72,7 +72,7 @@ pytype_strict_library(
     ],
 )
 
-py_strict_test(
+pytype_strict_test(
     name = "different_training_and_inference_test",
     timeout = "long",
     srcs = ["different_training_and_inference_test.py"],
@@ -98,7 +98,7 @@ pytype_strict_library(
     ],
 )
 
-py_strict_test(
+pytype_strict_test(
     name = "bias_only_test",
     timeout = "long",
     srcs = ["bias_only_test.py"],
@@ -113,7 +113,7 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+pytype_strict_library(
     name = "weight_clustering",
     srcs = ["weight_clustering.py"],
     srcs_version = "PY3",
@@ -127,7 +127,7 @@ py_strict_library(
     ],
 )
 
-py_strict_test(
+pytype_strict_test(
     name = "weight_clustering_test",
     srcs = ["weight_clustering_test.py"],
     python_version = "PY3",
@@ -152,7 +152,7 @@ pytype_strict_library(
     ],
 )
 
-py_strict_test(
+pytype_strict_test(
     name = "periodical_update_and_scheduling_test",
     timeout = "long",
     srcs = ["periodical_update_and_scheduling_test.py"],

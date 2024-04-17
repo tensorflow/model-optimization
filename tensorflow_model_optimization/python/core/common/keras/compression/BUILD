@@ -1,4 +1,4 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test", "pytype_strict_library")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library", "pytype_strict_test")
 
 licenses(["notice"])
 
@@ -14,7 +14,7 @@ pytype_strict_library(
     ],
 )
 
-py_strict_library(
+pytype_strict_library(
     name = "schedules",
     srcs = ["schedules.py"],
     srcs_version = "PY3ONLY",
@@ -23,7 +23,7 @@ py_strict_library(
     ],
 )
 
-py_strict_test(
+pytype_strict_test(
     name = "schedules_test",
     srcs = [
         "schedules_test.py",
