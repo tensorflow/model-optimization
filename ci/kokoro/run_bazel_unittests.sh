@@ -37,5 +37,5 @@ pip install tensorflow-compression>=2.11.0
 
 # Run the tests.
 # Some tests requiring more RAM than the CI machine provides are disabled.
-bazel test --test_size_filters="-enormous" \
+bazel test --test_size_filters="-enormous" --test_output=errors \
   //tensorflow_model_optimization/python/core/...
