@@ -404,6 +404,9 @@ def create_layer_for_training(layer, algorithm):
   if compressible_weights:
     # Set pretrained weight values.
     wrapped_layer.build(input_shape)
+    # Clear `_build_input_shape` so that `build()` is not immediately called
+    # during reloading. We want the wrapper layer to initiate `build()`.
+    wrapped_layer.layer._build_input_shape = None  # pylint: disable=protected-access
     training_weights = _map_to_training_weights(
         algorithm,
         layer,
@@ -445,6 +448,9 @@ def create_layer_for_inference(layer: _TrainingWrapper, algorithm):
   layer_for_inference = _InferenceWrapper(cloned_layer, algorithm,
                                           compressible_training_tensors)
   layer_for_inference.build(input_shape)
+  # Clear `_build_input_shape` so that `build()` is not immediately called
+  # during reloading. We want the wrapper layer to initiate `build()`.
+  layer_for_inference.layer._build_input_shape = None  # pylint: disable=protected-access
 
   if layer.get_weights():
     # Set weights of layer for inference according to what was trained.

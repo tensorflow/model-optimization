@@ -122,17 +122,17 @@ class PruningWrapperTest(tf.test.TestCase):
 
     # Test serialization
     model_config = self.model.get_config()
+    pruned_model = self.model.__class__.from_config(
+        model_config,
+        custom_objects={'PruneLowMagnitude': pruning_wrapper.PruneLowMagnitude},
+    )
+    pruned_model_config = pruned_model.get_config()
+    # New serialization format includes `build_config` in all layers
     for layer in model_config['layers']:
       layer.pop('build_config', None)
-    self.assertEqual(
-        model_config,
-        self.model.__class__.from_config(
-            self.model.get_config(),
-            custom_objects={
-                'PruneLowMagnitude': pruning_wrapper.PruneLowMagnitude
-            },
-        ).get_config(),
-    )
+    for layer in pruned_model_config['layers']:
+      layer.pop('build_config', None)
+    self.assertEqual(model_config, pruned_model_config)
 
   def testCustomLayerNonPrunable(self):
     layer = CustomLayer(input_dim=16, output_dim=32)
