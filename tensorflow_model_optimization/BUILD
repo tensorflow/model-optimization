@@ -18,6 +18,7 @@ py_strict_library(
     srcs = ["__init__.py"],
     srcs_version = "PY3",
     deps = [
+        # distutils dep1,
         "//tensorflow_model_optimization/python",  # buildcleaner: keep
         "//tensorflow_model_optimization/python/core:version",
         "//tensorflow_model_optimization/python/core/api",
