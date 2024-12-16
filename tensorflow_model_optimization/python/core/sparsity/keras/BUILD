@@ -340,6 +340,7 @@ py_test(
         ":pruning_policy",
         ":pruning_schedule",
         ":pruning_wrapper",
+        # distutils dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
