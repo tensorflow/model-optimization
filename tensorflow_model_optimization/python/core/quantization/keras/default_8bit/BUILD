@@ -2,9 +2,7 @@ load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_st
 # Placeholder: load py_library
 # Placeholder: load py_test
 
-package(default_visibility = [
-    "//tensorflow_model_optimization:__subpackages__",
-])
+package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
