@@ -57,16 +57,18 @@ class FastWalshHadamardTransformTests(tf.test.TestCase, parameterized.TestCase):
   def test_illegal_inputs_shape(self, *dims):
     """Tests incorrect rank of the input."""
     x = tf.random.normal(dims)
-    with self.assertRaisesRegexp(ValueError,
-                                 'Number of dimensions of x must be 2.'):
+    with self.assertRaisesRegex(
+        ValueError, 'Number of dimensions of x must be 2.'
+    ):
       tf_utils.fast_walsh_hadamard_transform(x)
 
   @parameterized.parameters([[1, 3], [1, 7], [1, 9], [4, 3]])
   def test_illegal_inputs_static_power_of_two(self, *dims):
     """Tests incorrect static shape of the rank 2 input."""
     x = tf.random.normal(dims)
-    with self.assertRaisesRegexp(ValueError,
-                                 'The dimension of x must be a power of two.'):
+    with self.assertRaisesRegex(
+        ValueError, 'The dimension of x must be a power of two.'
+    ):
       tf_utils.fast_walsh_hadamard_transform(x)
 
   def test_illegal_inputs_dynamic_power_of_two(self):
@@ -170,20 +172,20 @@ class CMWCRandomSequenceTests(tf.test.TestCase, parameterized.TestCase):
     self.assertAllLessEqual(bucket_counts, 10250)
 
   def test_tensor_num_elements_raises(self):
-    with self.assertRaisesRegexp(TypeError, 'must be a Python integer'):
+    with self.assertRaisesRegex(TypeError, 'must be a Python integer'):
       tf_utils._cmwc_random_sequence(
           tf.constant(10), tf.constant(123, tf.int64))
 
   def test_negative_num_elements_raises(self):
-    with self.assertRaisesRegexp(ValueError, 'must be positive'):
+    with self.assertRaisesRegex(ValueError, 'must be positive'):
       tf_utils._cmwc_random_sequence(-10, tf.constant(123, tf.int64))
 
   def test_python_seed_raises(self):
-    with self.assertRaisesRegexp(TypeError, 'tf.int64 Tensor'):
+    with self.assertRaisesRegex(TypeError, 'tf.int64 Tensor'):
       tf_utils._cmwc_random_sequence(10, 123)
 
   def test_tf_int32_seed_raises(self):
-    with self.assertRaisesRegexp(TypeError, 'tf.int64 Tensor'):
+    with self.assertRaisesRegex(TypeError, 'tf.int64 Tensor'):
       tf_utils._cmwc_random_sequence(10, tf.constant(123, tf.int32))
 
 
@@ -232,9 +234,9 @@ class RandomFloatsCMWCTests(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters([tf.int32, tf.int64])
   def test_type_error_raises(self, dtype):
-    with self.assertRaisesRegexp(
-        TypeError, 'Supported types are tf.float32 and '
-        'tf.float64 values'):
+    with self.assertRaisesRegex(
+        TypeError, 'Supported types are tf.float32 and tf.float64 values'
+    ):
       tf_utils.random_floats_cmwc(10, tf.constant(456, tf.int64), dtype)
 
   def test_differs_given_different_seed(self):
@@ -291,9 +293,9 @@ class RandomFloatsTests(tf.test.TestCase, parameterized.TestCase):
 
   @parameterized.parameters([tf.int32, tf.int64])
   def test_type_error_raises(self, dtype):
-    with self.assertRaisesRegexp(TypeError,
-                                 'Supported types are tf.float32 and '
-                                 'tf.float64 values'):
+    with self.assertRaisesRegex(
+        TypeError, 'Supported types are tf.float32 and tf.float64 values'
+    ):
       tf_utils.random_floats(10, tf.constant([456, 123], tf.int64), dtype)
 
   def test_differs_given_different_seed(self):

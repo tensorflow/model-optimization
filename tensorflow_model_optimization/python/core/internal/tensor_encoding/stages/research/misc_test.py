@@ -176,7 +176,7 @@ class DifferenceBetweenIntegersEncodingStageTest(
   @parameterized.parameters([tf.bool, tf.float32])
   def test_encode_unsupported_type_raises(self, dtype):
     stage = self.default_encoding_stage()
-    with self.assertRaisesRegexp(TypeError, 'Unsupported input type'):
+    with self.assertRaisesRegex(TypeError, 'Unsupported input type'):
       self.run_one_to_many_encode_decode(
           stage, lambda: tf.cast(self.default_input(), dtype))
 
@@ -184,7 +184,7 @@ class DifferenceBetweenIntegersEncodingStageTest(
     x = tf.random.uniform((3, 4), maxval=10, dtype=tf.int32)
     stage = self.default_encoding_stage()
     params, _ = stage.get_params()
-    with self.assertRaisesRegexp(ValueError, 'Number of dimensions must be 1'):
+    with self.assertRaisesRegex(ValueError, 'Number of dimensions must be 1'):
       stage.encode(x, params)
 
 

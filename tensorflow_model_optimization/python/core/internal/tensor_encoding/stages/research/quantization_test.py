@@ -112,7 +112,7 @@ class PRNGUniformQuantizationEncodingStageTest(test_utils.BaseEncodingStageTest
 
   @parameterized.parameters([0, 17, -1, 1.5])
   def test_bits_out_of_range_raises(self, bits):
-    with self.assertRaisesRegexp(ValueError, 'integer between 1 and 16'):
+    with self.assertRaisesRegex(ValueError, 'integer between 1 and 16'):
       quantization.PRNGUniformQuantizationEncodingStage(bits=bits)
 
   def test_dynamic_input_shape(self):
@@ -226,11 +226,11 @@ class PerChannelUniformQuantizationEncodingStageTest(
 
   @parameterized.parameters([0, 17, -1, 1.5])
   def test_bits_out_of_range_raises(self, bits):
-    with self.assertRaisesRegexp(ValueError, 'integer between 1 and 16'):
+    with self.assertRaisesRegex(ValueError, 'integer between 1 and 16'):
       quantization.PerChannelUniformQuantizationEncodingStage(bits=bits)
 
   def test_stochastic_tensor_raises(self):
-    with self.assertRaisesRegexp(TypeError, 'stochastic'):
+    with self.assertRaisesRegex(TypeError, 'stochastic'):
       quantization.PerChannelUniformQuantizationEncodingStage(
           stochastic=tf.constant(True, dtype=tf.bool))
 
@@ -343,7 +343,7 @@ class PerChannelPRNGUniformQuantizationEncodingStageTest(
 
   @parameterized.parameters([0, 17, -1, 1.5])
   def test_bits_out_of_range_raises(self, bits):
-    with self.assertRaisesRegexp(ValueError, 'integer between 1 and 16'):
+    with self.assertRaisesRegex(ValueError, 'integer between 1 and 16'):
       quantization.PerChannelPRNGUniformQuantizationEncodingStage(bits=bits)
 
   def test_dynamic_input_shape(self):

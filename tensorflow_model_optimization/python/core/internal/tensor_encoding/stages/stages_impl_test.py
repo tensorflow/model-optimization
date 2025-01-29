@@ -192,7 +192,7 @@ class HadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
     x = test_utils.get_tensor_with_random_shape()
     stage = self.default_encoding_stage()
     params, _ = stage.get_params()
-    with self.assertRaisesRegexp(ValueError, 'fully known'):
+    with self.assertRaisesRegex(ValueError, 'fully known'):
       stage.encode(x, params)
 
   @parameterized.parameters([((1, 1, 5),), ((1, 1, 1, 5),)])
@@ -200,7 +200,7 @@ class HadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
     x = tf.random.normal(dims)
     stage = self.default_encoding_stage()
     params, _ = stage.get_params()
-    with self.assertRaisesRegexp(ValueError, 'must be 1 or 2.'):
+    with self.assertRaisesRegex(ValueError, 'must be 1 or 2.'):
       stage.encode(x, params)
 
 
@@ -336,27 +336,27 @@ class UniformQuantizationEncodingStageStageTest(
 
   @parameterized.parameters([0, 17, -1, 1.5])
   def test_bits_out_of_range_raises(self, bits):
-    with self.assertRaisesRegexp(ValueError, 'integer between 1 and 16'):
+    with self.assertRaisesRegex(ValueError, 'integer between 1 and 16'):
       stages_impl.UniformQuantizationEncodingStage(bits=bits)
 
   @parameterized.parameters([1.0, ([1.0, 2.0, 3.0],)])
   def test_bad_min_max_tensor_raises(self, bad_min_max):
-    with self.assertRaisesRegexp(ValueError, r'shape \(2\)'):
+    with self.assertRaisesRegex(ValueError, r'shape \(2\)'):
       stages_impl.UniformQuantizationEncodingStage(
           min_max=tf.constant(bad_min_max))
 
   @parameterized.parameters([([1.0],), ([1.0, 2.0, 3.0],)])
   def test_bad_min_max_python_shape_raises(self, bad_min_max):
-    with self.assertRaisesRegexp(ValueError, 'list with two elements'):
+    with self.assertRaisesRegex(ValueError, 'list with two elements'):
       stages_impl.UniformQuantizationEncodingStage(min_max=bad_min_max)
 
   @parameterized.parameters([([1.0, 1.0],), ([2.0, 1.0],)])
   def test_bad_min_max_python_values_raises(self, bad_min_max):
-    with self.assertRaisesRegexp(ValueError, 'smaller than the second'):
+    with self.assertRaisesRegex(ValueError, 'smaller than the second'):
       stages_impl.UniformQuantizationEncodingStage(min_max=bad_min_max)
 
   def test_stochastic_tensor_raises(self):
-    with self.assertRaisesRegexp(TypeError, 'stochastic'):
+    with self.assertRaisesRegex(TypeError, 'stochastic'):
       stages_impl.UniformQuantizationEncodingStage(
           stochastic=tf.constant(True, dtype=tf.bool))
 
@@ -441,16 +441,16 @@ class BitpackingEncodingStageTest(test_utils.BaseEncodingStageTest):
   @parameterized.parameters([tf.bool, tf.int32])
   def test_encode_unsupported_type_raises(self, dtype):
     stage = self.default_encoding_stage()
-    with self.assertRaisesRegexp(TypeError, 'Unsupported packing type'):
+    with self.assertRaisesRegex(TypeError, 'Unsupported packing type'):
       self.run_one_to_many_encode_decode(
           stage, lambda: tf.cast(self.default_input(), dtype))
 
   def test_bad_input_bits_raises(self):
-    with self.assertRaisesRegexp(TypeError, 'cannot be a TensorFlow value'):
+    with self.assertRaisesRegex(TypeError, 'cannot be a TensorFlow value'):
       stages_impl.BitpackingEncodingStage(tf.constant(1, dtype=tf.int32))
-    with self.assertRaisesRegexp(ValueError, 'between 1 and 16'):
+    with self.assertRaisesRegex(ValueError, 'between 1 and 16'):
       stages_impl.BitpackingEncodingStage(0)
-    with self.assertRaisesRegexp(ValueError, 'between 1 and 16'):
+    with self.assertRaisesRegex(ValueError, 'between 1 and 16'):
       stages_impl.BitpackingEncodingStage(17)
 
 

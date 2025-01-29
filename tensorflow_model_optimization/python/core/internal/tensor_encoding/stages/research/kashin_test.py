@@ -204,7 +204,7 @@ class KashinHadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
     x = test_utils.get_tensor_with_random_shape()
     stage = self.default_encoding_stage()
     params, _ = stage.get_params()
-    with self.assertRaisesRegexp(ValueError, 'fully known'):
+    with self.assertRaisesRegex(ValueError, 'fully known'):
       stage.encode(x, params)
 
   @parameterized.parameters([((1, 1, 5),), ((1, 1, 1, 5),)])
@@ -212,41 +212,41 @@ class KashinHadamardEncodingStageTest(test_utils.BaseEncodingStageTest):
     x = tf.random.normal(dims)
     stage = self.default_encoding_stage()
     params, _ = stage.get_params()
-    with self.assertRaisesRegexp(ValueError, 'must be 1 or 2.'):
+    with self.assertRaisesRegex(ValueError, 'must be 1 or 2.'):
       stage.encode(x, params)
 
   @parameterized.parameters([0.0, 1.0, -1.0, 2.5])
   def test_eta_out_of_bounds_raises(self, eta):
-    with self.assertRaisesRegexp(ValueError, 'between 0 and 1'):
+    with self.assertRaisesRegex(ValueError, 'between 0 and 1'):
       kashin.KashinHadamardEncodingStage(eta=eta)
 
   @parameterized.parameters([0.0, -1.0])
   def test_delta_small_raises(self, delta):
-    with self.assertRaisesRegexp(ValueError, 'greater than 0'):
+    with self.assertRaisesRegex(ValueError, 'greater than 0'):
       kashin.KashinHadamardEncodingStage(delta=delta)
 
   @parameterized.parameters([0, -1, -10])
   def test_num_iters_small_raises(self, num_iters):
-    with self.assertRaisesRegexp(ValueError, 'positive'):
+    with self.assertRaisesRegex(ValueError, 'positive'):
       kashin.KashinHadamardEncodingStage(num_iters=num_iters)
 
   def test_num_iters_tensor_raises(self):
-    with self.assertRaisesRegexp(ValueError, 'num_iters'):
+    with self.assertRaisesRegex(ValueError, 'num_iters'):
       kashin.KashinHadamardEncodingStage(
           num_iters=tf.constant(2, dtype=tf.int32))
 
   def test_last_iter_clip_tensor_raises(self):
-    with self.assertRaisesRegexp(ValueError, 'last_iter_clip'):
+    with self.assertRaisesRegex(ValueError, 'last_iter_clip'):
       kashin.KashinHadamardEncodingStage(
           last_iter_clip=tf.constant(True, dtype=tf.bool))
 
   @parameterized.parameters([0, 1, 0.0, 1.0])
   def test_last_iter_clip_not_bool_raises(self, last_iter_clip):
-    with self.assertRaisesRegexp(ValueError, 'last_iter_clip must be a bool'):
+    with self.assertRaisesRegex(ValueError, 'last_iter_clip must be a bool'):
       kashin.KashinHadamardEncodingStage(last_iter_clip=last_iter_clip)
 
   def test_pad_extra_level_threshold_tensor_raises(self):
-    with self.assertRaisesRegexp(ValueError, 'pad_extra_level_threshold'):
+    with self.assertRaisesRegex(ValueError, 'pad_extra_level_threshold'):
       kashin.KashinHadamardEncodingStage(
           pad_extra_level_threshold=tf.constant(0.8, dtype=tf.float32))
 
