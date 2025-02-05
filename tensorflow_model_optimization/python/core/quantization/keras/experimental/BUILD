@@ -11,7 +11,6 @@ py_strict_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY3",
     deps = [
         ":quantization",  # buildcleaner: keep
     ],
@@ -20,7 +19,6 @@ py_strict_library(
 py_strict_library(
     name = "quantization",
     srcs = ["__init__.py"],
-    srcs_version = "PY3",
     deps = [
         "//tensorflow_model_optimization/python/core/quantization/keras",  # buildcleaner: keep
     ],

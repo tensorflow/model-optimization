@@ -7,7 +7,6 @@ py_strict_binary(
     srcs = [
         "mnist_cnn.py",
     ],
-    python_version = "PY3",
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # tensorflow dep1,
@@ -21,7 +20,6 @@ py_strict_binary(
     srcs = [
         "mnist_cnn_cont_quant.py",
     ],
-    python_version = "PY3",
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,

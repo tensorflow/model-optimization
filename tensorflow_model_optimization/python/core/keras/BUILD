@@ -19,7 +19,6 @@ py_strict_library(
 py_strict_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
-    srcs_version = "PY3",
     deps = [
         ":compat",
         # numpy dep1,
@@ -30,7 +29,6 @@ py_strict_library(
 py_strict_library(
     name = "compat",
     srcs = ["compat.py"],
-    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
     ],
@@ -39,7 +37,6 @@ py_strict_library(
 py_strict_library(
     name = "utils",
     srcs = ["utils.py"],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -51,7 +48,6 @@ py_strict_library(
 py_strict_library(
     name = "metrics",
     srcs = ["metrics.py"],
-    srcs_version = "PY3",
     deps = [
         # python/eager:monitoring tensorflow dep2,
     ],
@@ -60,7 +56,6 @@ py_strict_library(
 py_strict_test(
     name = "metrics_test",
     srcs = ["metrics_test.py"],
-    python_version = "PY3",
     deps = [
         ":compat",
         ":metrics",

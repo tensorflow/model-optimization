@@ -7,7 +7,6 @@ licenses(["notice"])
 py_strict_library(
     name = "core",
     srcs = ["__init__.py"],
-    srcs_version = "PY3",
     deps = [
         "//tensorflow_model_optimization/python/core/api",  # buildcleaner: keep
         "//tensorflow_model_optimization/python/core/clustering",  # buildcleaner: keep
@@ -21,5 +20,4 @@ py_strict_library(
 py_strict_library(
     name = "version",
     srcs = ["version.py"],
-    srcs_version = "PY3",
 )

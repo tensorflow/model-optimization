@@ -17,7 +17,6 @@ py_binary(
     srcs = [
         "imdb_lstm.py",
     ],
-    python_version = "PY3",
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
@@ -32,7 +31,6 @@ py_binary(
     srcs = [
         "imdb_rnn.py",
     ],
-    python_version = "PY3",
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
@@ -47,7 +45,6 @@ py_binary(
     srcs = [
         "imdb_gru.py",
     ],
-    python_version = "PY3",
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
@@ -62,7 +59,6 @@ py_strict_library(
     srcs = [
         "imdb_utils.py",
     ],
-    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
@@ -76,7 +72,6 @@ py_binary(
     srcs = [
         "imdb_multiple_cells.py",
     ],
-    python_version = "PY3",
     deps = [
         ":imdb_utils",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added

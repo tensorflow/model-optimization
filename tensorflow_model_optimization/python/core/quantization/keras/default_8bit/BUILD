@@ -13,7 +13,6 @@ py_strict_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY3",
     deps = [],
 )
 
@@ -22,7 +21,6 @@ py_strict_library(
     srcs = [
         "default_8bit_quantizers.py",
     ],
-    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -36,7 +34,6 @@ py_test(
     srcs = [
         "default_8bit_quantizers_test.py",
     ],
-    python_version = "PY3",
     deps = [
         ":default_8bit_quantizers",
         # absl/testing:parameterized dep1,
@@ -51,7 +48,6 @@ py_strict_library(
     srcs = [
         "default_8bit_quantize_configs.py",
     ],
-    srcs_version = "PY3",
     deps = [
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
@@ -63,7 +59,6 @@ py_strict_library(
     srcs = [
         "default_8bit_quantize_registry.py",
     ],
-    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -81,7 +76,6 @@ py_test(
     srcs = [
         "default_8bit_quantize_registry_test.py",
     ],
-    python_version = "PY3",
     deps = [
         ":default_8bit_quantize_registry",
         # absl/testing:parameterized dep1,
@@ -99,7 +93,6 @@ py_library(
     srcs = [
         "default_8bit_transforms.py",
     ],
-    srcs_version = "PY3",
     deps = [
         # numpy dep1,
         # tensorflow dep1,
@@ -119,7 +112,6 @@ py_strict_test(
     srcs = [
         "default_8bit_transforms_test.py",
     ],
-    python_version = "PY3",
     deps = [
         ":default_8bit_quantize_configs",
         ":default_8bit_quantize_registry",
@@ -143,7 +135,6 @@ py_strict_library(
     srcs = [
         "default_8bit_quantize_layout_transform.py",
     ],
-    srcs_version = "PY3",
     deps = [
         ":default_8bit_transforms",
         # tensorflow dep1,
@@ -158,7 +149,6 @@ py_test(
     name = "quantize_numerical_test",
     size = "large",
     srcs = ["quantize_numerical_test.py"],
-    python_version = "PY3",
     deps = [
         # absl/testing:parameterized dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
@@ -175,7 +165,6 @@ py_strict_library(
     srcs = [
         "default_8bit_quantize_scheme.py",
     ],
-    srcs_version = "PY3",
     deps = [
         ":default_8bit_quantize_layout_transform",
         ":default_8bit_quantize_registry",

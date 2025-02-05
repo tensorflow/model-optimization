@@ -31,7 +31,6 @@ py_strict_test(
     name = "common_encoders_test",
     size = "small",
     srcs = ["common_encoders_test.py"],
-    python_version = "PY3",
     deps = [
         ":common_encoders",
         # absl/testing:parameterized dep1,

@@ -12,7 +12,6 @@ py_strict_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY3",
     deps = [
         ":quantize",  # build-cleaner: keep
         # APIs are not exposed, but still needed for internal imports.
@@ -27,7 +26,6 @@ py_strict_library(
 py_strict_library(
     name = "quant_ops",
     srcs = ["quant_ops.py"],
-    srcs_version = "PY3",
     deps = [
         # absl/logging dep1,
         # tensorflow dep1,
@@ -39,7 +37,6 @@ py_strict_test(
     name = "quant_ops_test",
     size = "small",
     srcs = ["quant_ops_test.py"],
-    python_version = "PY3",
     deps = [
         ":quant_ops",
         # absl/testing:parameterized dep1,
@@ -54,7 +51,6 @@ py_strict_library(
     srcs = [
         "quantizers.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quant_ops",
@@ -69,7 +65,6 @@ py_strict_test(
     srcs = [
         "quantizers_test.py",
     ],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -87,7 +82,6 @@ py_strict_library(
     srcs = [
         "quantize_config.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -102,7 +96,6 @@ py_strict_library(
     srcs = [
         "quantize_registry.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -114,7 +107,6 @@ py_strict_library(
     srcs = [
         "quantize_layout_transform.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -126,7 +118,6 @@ py_strict_library(
     srcs = [
         "quantize_annotate.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":utils",
@@ -140,7 +131,6 @@ py_strict_test(
     srcs = [
         "quantize_annotate_test.py",
     ],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
@@ -157,7 +147,6 @@ py_strict_library(
     srcs = [
         "quantize_aware_activation.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":utils",
@@ -172,7 +161,6 @@ py_strict_test(
     srcs = [
         "quantize_aware_activation_test.py",
     ],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
@@ -191,7 +179,6 @@ py_strict_library(
     srcs = [
         "quantize_layer.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -207,7 +194,6 @@ py_strict_test(
     srcs = [
         "quantize_layer_test.py",
     ],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_layer",
@@ -224,7 +210,6 @@ py_strict_library(
     srcs = [
         "quantize_wrapper.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
@@ -242,7 +227,6 @@ py_strict_test(
     srcs = [
         "quantize_wrapper_test.py",
     ],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
@@ -261,7 +245,6 @@ py_strict_library(
     srcs = [
         "quantize.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
@@ -283,7 +266,6 @@ py_strict_library(
 py_strict_test(
     name = "quantize_test",
     srcs = ["quantize_test.py"],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":quantize",
@@ -305,7 +287,6 @@ py_strict_test(
 py_strict_test(
     name = "quantize_integration_test",
     srcs = ["quantize_integration_test.py"],
-    python_version = "PY3",
     deps = [
         ":quantize",
         ":quantize_config",
@@ -325,7 +306,6 @@ py_strict_test(
     size = "enormous",
     srcs = ["quantize_models_test.py"],
     flaky = True,
-    python_version = "PY3",
     deps = [
         ":quantize",
         ":utils",
@@ -341,7 +321,6 @@ py_strict_test(
     name = "quantize_functional_test",
     size = "large",
     srcs = ["quantize_functional_test.py"],
-    python_version = "PY3",
     deps = [
         ":quantize",
         ":utils",
@@ -359,7 +338,6 @@ py_strict_library(
     srcs = [
         "utils.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -372,7 +350,6 @@ py_strict_library(
     srcs = [
         "quantize_scheme.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,

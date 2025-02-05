@@ -11,14 +11,12 @@ py_strict_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY3",
     deps = [],
 )
 
 py_strict_library(
     name = "conv_batchnorm_test_utils",
     srcs = ["conv_batchnorm_test_utils.py"],
-    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -28,7 +26,6 @@ py_strict_library(
 py_strict_library(
     name = "dense_batchnorm_test_utils",
     srcs = ["dense_batchnorm_test_utils.py"],
-    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",

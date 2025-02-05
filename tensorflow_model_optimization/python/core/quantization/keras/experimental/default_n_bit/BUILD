@@ -11,7 +11,6 @@ py_strict_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY3",
     deps = [],
 )
 
@@ -20,7 +19,6 @@ py_strict_library(
     srcs = [
         "default_n_bit_quantizers.py",
     ],
-    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -33,7 +31,6 @@ py_test(
     srcs = [
         "default_n_bit_quantizers_test.py",
     ],
-    python_version = "PY3",
     deps = [
         ":default_n_bit_quantizers",
         # absl/testing:parameterized dep1,
@@ -48,7 +45,6 @@ py_strict_library(
     srcs = [
         "default_n_bit_quantize_configs.py",
     ],
-    srcs_version = "PY3",
     deps = [
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
@@ -60,7 +56,6 @@ py_strict_library(
     srcs = [
         "default_n_bit_quantize_registry.py",
     ],
-    srcs_version = "PY3",
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -77,7 +72,6 @@ py_test(
     srcs = [
         "default_n_bit_quantize_registry_test.py",
     ],
-    python_version = "PY3",
     deps = [
         ":default_n_bit_quantize_registry",
         # absl/testing:parameterized dep1,
@@ -94,7 +88,6 @@ py_library(
     srcs = [
         "default_n_bit_transforms.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
@@ -114,7 +107,6 @@ py_strict_library(
     srcs = [
         "default_n_bit_quantize_layout_transform.py",
     ],
-    srcs_version = "PY3",
     deps = [
         ":default_n_bit_transforms",
         # tensorflow dep1,
@@ -130,7 +122,6 @@ py_strict_test(
     srcs = [
         "default_n_bit_transforms_test.py",
     ],
-    python_version = "PY3",
     deps = [
         ":default_n_bit_quantize_configs",
         ":default_n_bit_transforms",
@@ -153,7 +144,6 @@ py_strict_library(
     srcs = [
         "default_n_bit_quantize_scheme.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":default_n_bit_quantize_layout_transform",

@@ -16,7 +16,6 @@ exports_files(["LICENSE"])
 py_strict_library(
     name = "tensorflow_model_optimization",
     srcs = ["__init__.py"],
-    srcs_version = "PY3",
     deps = [
         # distutils dep1,
         "//tensorflow_model_optimization/python",  # buildcleaner: keep
@@ -28,7 +27,6 @@ py_strict_library(
 py_strict_binary(
     name = "build_docs",
     srcs = ["build_docs.py"],
-    python_version = "PY3",
     deps = [
         # absl:app dep1,
         # absl/flags dep1,

@@ -7,7 +7,6 @@ licenses(["notice"])
 py_strict_library(
     name = "internal",
     srcs = ["__init__.py"],
-    srcs_version = "PY3",
     deps = [
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding",
     ],

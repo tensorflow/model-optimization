@@ -11,7 +11,6 @@ licenses(["notice"])
 py_strict_library(
     name = "sparsity_tooling",
     srcs = ["sparsity_tooling.py"],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -27,7 +26,6 @@ py_test(
     name = "sparsity_tooling_test",
     size = "medium",
     srcs = ["sparsity_tooling_test.py"],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":sparsity_tooling",
@@ -42,7 +40,6 @@ py_test(
 py_binary(
     name = "evaluate_pruning",
     srcs = ["evaluate_pruning.py"],
-    python_version = "PY3",
     deps = [
         ":sparsity_tooling",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
@@ -55,7 +52,6 @@ py_binary(
 py_strict_library(
     name = "check_sparsity_m_by_n",
     srcs = ["check_sparsity_m_by_n.py"],
-    srcs_version = "PY3",
     deps = [
         # absl:app dep1,
         # absl/flags dep1,

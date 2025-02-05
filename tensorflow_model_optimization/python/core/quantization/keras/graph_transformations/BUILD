@@ -11,7 +11,6 @@ py_strict_library(
     srcs = [
         "__init__.py",
     ],
-    srcs_version = "PY3",
     deps = [],
 )
 
@@ -20,7 +19,6 @@ py_strict_library(
     srcs = [
         "transforms.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -32,7 +30,6 @@ py_strict_test(
     srcs = [
         "transforms_test.py",
     ],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":transforms",
@@ -46,7 +43,6 @@ py_strict_library(
     srcs = [
         "model_transformer.py",
     ],
-    srcs_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":transforms",
@@ -60,7 +56,6 @@ py_strict_test(
     srcs = [
         "model_transformer_test.py",
     ],
-    python_version = "PY3",
     visibility = ["//visibility:public"],
     deps = [
         ":model_transformer",

@@ -16,7 +16,6 @@ py_strict_binary(
     srcs = [
         "imdb_lstm.py",
     ],
-    python_version = "PY3",
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,

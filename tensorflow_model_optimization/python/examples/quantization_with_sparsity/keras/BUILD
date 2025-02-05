@@ -7,7 +7,6 @@ py_strict_binary(
     srcs = [
         "mnist_cnn.py",
     ],
-    python_version = "PY3",
     deps = [
         # absl:app dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
