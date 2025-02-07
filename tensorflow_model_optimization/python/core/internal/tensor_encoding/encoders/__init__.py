@@ -22,3 +22,4 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import hadamard_quantization
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import identity
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import uniform_quantization
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.encoders.common_encoders import drive
