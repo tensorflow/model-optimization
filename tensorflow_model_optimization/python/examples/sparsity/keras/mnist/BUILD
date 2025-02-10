@@ -16,7 +16,6 @@ py_strict_binary(
     srcs = [
         "mnist_cnn.py",
     ],
-    python_version = "PY3",
     deps = [
         # absl:app dep1,
         # absl/flags dep1,
@@ -34,7 +33,6 @@ py_strict_binary(
     srcs = [
         "mnist_e2e.py",
     ],
-    python_version = "PY3",
     deps = [
         # absl:app dep1,
         # absl/flags dep1,
@@ -51,7 +49,6 @@ py_strict_binary(
 py_strict_binary(
     name = "mnist_e2e_sparsity2x4",
     srcs = ["mnist_e2e_sparsity2x4.py"],
-    python_version = "PY3",
     deps = [
         # absl:app dep1,
         # tensorflow dep1,
