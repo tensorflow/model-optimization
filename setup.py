@@ -34,13 +34,13 @@ from version import __version__  # pylint: disable=g-import-not-at-top
 # us (and our dependents) to maintain a single package instead of two.
 REQUIRED_PACKAGES = [
     'absl-py~=1.2',
-    'numpy~=1.23',
+    'numpy>=1.23',
     'six~=1.14',
     'scipy',
     'enum34~=1.1;python_version<"3.4"',
     'dm-tree~=0.1.1',
     'mock',
-    'tf-keras>=2.14.1'
+    'tf-keras>=2.14.1',
 ]
 
 if '--release' in sys.argv:
