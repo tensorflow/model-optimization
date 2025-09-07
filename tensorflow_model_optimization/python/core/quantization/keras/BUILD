@@ -1,9 +1,6 @@
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
 
-package(default_visibility = [
-    "//tensorflow_model_optimization:__subpackages__",
-    "//third_party/tensorflow:__subpackages__",
-])
+package(default_visibility = ["//tensorflow_model_optimization:__subpackages__"])
 
 licenses(["notice"])
 
