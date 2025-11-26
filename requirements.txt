@@ -1,5 +1,5 @@
 absl-py>=1.2.0
-numpy~=1.23.0
+numpy>=1.23.0
 six~=1.14
 scipy
 enum34~=1.1
