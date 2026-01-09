@@ -1,4 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+# Placeholder: load py_library
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -6,9 +7,10 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "keras",
     srcs = ["__init__.py"],
+    strict_deps = True,
     deps = [
         ":compat",
         ":utils",
@@ -16,9 +18,10 @@ py_strict_library(
 )
 
 # TODO(alanchiao): split into test_utils and utils.
-py_strict_library(
+py_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
+    strict_deps = True,
     deps = [
         ":compat",
         # numpy dep1,
@@ -26,17 +29,19 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "compat",
     srcs = ["compat.py"],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
     ],
 )
 
-py_strict_library(
+py_library(
     name = "utils",
     srcs = ["utils.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -45,9 +50,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "metrics",
     srcs = ["metrics.py"],
+    strict_deps = True,
     deps = [
         # python/eager:monitoring tensorflow dep2,
     ],

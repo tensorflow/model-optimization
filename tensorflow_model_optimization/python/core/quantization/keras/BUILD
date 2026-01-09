@@ -1,4 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+# Placeholder: load py_library
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -7,11 +8,12 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "keras",
     srcs = [
         "__init__.py",
     ],
+    strict_deps = True,
     deps = [
         ":quantize",  # build-cleaner: keep
         # APIs are not exposed, but still needed for internal imports.
@@ -23,9 +25,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quant_ops",
     srcs = ["quant_ops.py"],
+    strict_deps = True,
     deps = [
         # absl/logging dep1,
         # tensorflow dep1,
@@ -46,11 +49,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantizers",
     srcs = [
         "quantizers.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":quant_ops",
@@ -77,11 +81,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize_config",
     srcs = [
         "quantize_config.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -91,33 +96,36 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize_registry",
     srcs = [
         "quantize_registry.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize_layout_transform",
     srcs = [
         "quantize_layout_transform.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize_annotate",
     srcs = [
         "quantize_annotate.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":utils",
@@ -142,11 +150,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize_aware_activation",
     srcs = [
         "quantize_aware_activation.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":utils",
@@ -174,11 +183,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize_layer",
     srcs = [
         "quantize_layer.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -205,11 +215,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize_wrapper",
     srcs = [
         "quantize_wrapper.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
@@ -240,11 +251,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize",
     srcs = [
         "quantize.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
@@ -333,11 +345,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "utils",
     srcs = [
         "utils.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -345,11 +358,12 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantize_scheme",
     srcs = [
         "quantize_scheme.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
