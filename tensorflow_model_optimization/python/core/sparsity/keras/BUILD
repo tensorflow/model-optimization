@@ -1,4 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+# Placeholder: load py_library
 # Placeholder: load py_test
 
 package(default_visibility = [
@@ -7,11 +8,12 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "keras",
     srcs = [
         "__init__.py",
     ],
+    strict_deps = True,
     deps = [
         ":prunable_layer",  # buildcleaner: keep
         ":prune",  # buildcleaner: keep
@@ -21,9 +23,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "prune",
     srcs = ["prune.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_schedule",
@@ -34,18 +37,20 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "prunable_layer",
     srcs = ["prunable_layer.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
     ],
 )
 
-py_strict_library(
+py_library(
     name = "prune_registry",
     srcs = ["prune_registry.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
@@ -54,9 +59,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "pruning_policy",
     srcs = ["pruning_policy.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
@@ -66,9 +72,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "pruning_schedule",
     srcs = ["pruning_schedule.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -91,9 +98,10 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "pruning_wrapper",
     srcs = ["pruning_wrapper.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
@@ -109,9 +117,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "pruning_callbacks",
     srcs = ["pruning_callbacks.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
@@ -139,9 +148,10 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "pruning_impl",
     srcs = ["pruning_impl.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_utils",
@@ -150,9 +160,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "pruning_utils",
     srcs = ["pruning_utils.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
@@ -160,9 +171,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "estimator_utils",
     srcs = ["estimator_utils.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
@@ -172,10 +184,11 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "test_utils",
     testonly = 1,
     srcs = ["test_utils.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":prune",
