@@ -1,10 +1,10 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+# Placeholder: load py_library
 
 package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "api",
     srcs = [
         "__init__.py",
@@ -27,6 +27,7 @@ py_strict_library(
         "sparsity/__init__.py",
         "sparsity/keras/__init__.py",
     ],
+    strict_deps = True,
     deps = [
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",

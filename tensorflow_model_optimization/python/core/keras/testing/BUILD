@@ -1,4 +1,4 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+# Placeholder: load py_library
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
@@ -6,10 +6,11 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "test_utils_mnist",
     testonly = 1,
     srcs = ["test_utils_mnist.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
