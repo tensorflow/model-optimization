@@ -1,4 +1,4 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
+# Placeholder: load py_library
 # Placeholder: load py_test
 
 package(default_visibility = [
@@ -7,21 +7,23 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "prune_preserve",
     srcs = [
         "__init__.py",
     ],
+    strict_deps = True,
     deps = [
         ":default_8bit_prune_preserve_quantize_scheme",  # buildcleaner: keep
     ],
 )
 
-py_strict_library(
+py_library(
     name = "prune_preserve_quantize_registry",
     srcs = [
         "prune_preserve_quantize_registry.py",
     ],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -49,11 +51,12 @@ py_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_8bit_prune_preserve_quantize_scheme",
     srcs = [
         "default_8bit_prune_preserve_quantize_scheme.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":prune_preserve_quantize_registry",

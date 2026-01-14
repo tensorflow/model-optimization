@@ -1,5 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
 # Placeholder: load py_binary
+# Placeholder: load py_library
 
 package(
     default_visibility = ["//visibility:public"],
@@ -54,11 +54,12 @@ py_binary(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "imdb_utils",
     srcs = [
         "imdb_utils.py",
     ],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",

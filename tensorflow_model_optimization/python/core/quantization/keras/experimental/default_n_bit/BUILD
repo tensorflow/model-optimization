@@ -1,4 +1,4 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 # Placeholder: load py_library
 # Placeholder: load py_test
 
@@ -6,19 +6,21 @@ package(default_visibility = ["//visibility:public"])
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "default_n_bit",
     srcs = [
         "__init__.py",
     ],
+    strict_deps = True,
     deps = [],
 )
 
-py_strict_library(
+py_library(
     name = "default_n_bit_quantizers",
     srcs = [
         "default_n_bit_quantizers.py",
     ],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -40,22 +42,24 @@ py_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_n_bit_quantize_configs",
     srcs = [
         "default_n_bit_quantize_configs.py",
     ],
+    strict_deps = True,
     deps = [
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_n_bit_quantize_registry",
     srcs = [
         "default_n_bit_quantize_registry.py",
     ],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -102,11 +106,12 @@ py_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_n_bit_quantize_layout_transform",
     srcs = [
         "default_n_bit_quantize_layout_transform.py",
     ],
+    strict_deps = True,
     deps = [
         ":default_n_bit_transforms",
         # tensorflow dep1,
@@ -139,11 +144,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_n_bit_quantize_scheme",
     srcs = [
         "default_n_bit_quantize_scheme.py",
     ],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":default_n_bit_quantize_layout_transform",
