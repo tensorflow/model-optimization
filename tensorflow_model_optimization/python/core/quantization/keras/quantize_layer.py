@@ -54,6 +54,7 @@ class QuantizeLayer(keras.layers.Layer):
     self.quantizer = quantizer
 
   def build(self, input_shape):
+    super(QuantizeLayer, self).build(input_shape)
     if self.quantizer:
       self.quantizer_vars = self.quantizer.build(
           input_shape, self.name, self)
