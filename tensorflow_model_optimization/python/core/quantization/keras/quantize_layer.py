@@ -96,8 +96,6 @@ class QuantizeLayer(keras.layers.Layer):
 
     # Deserialization code should ensure Quantizer is in keras scope.
     quantizer = deserialize_keras_object(
-        config.pop('quantizer'),
-        module_objects=globals(),
-        custom_objects=None)
+        config.pop('quantizer'), custom_objects=None)
 
     return cls(quantizer=quantizer, **config)
