@@ -139,3 +139,24 @@ class PruningSummaries(callbacks.TensorBoard):
       pruning_logs.update({threshold.name + '/threshold': threshold_value})
 
     self._log_pruning_metrics(pruning_logs, '', iteration)
+
+  def generate_log(self):
+    pruning_logs = {}
+    params = []
+    prunable_layers = pruning_wrapper.collect_prunable_layers(self.model)
+    for layer in prunable_layers:
+      for _, mask, threshold in layer.pruning_vars:
+        params.append(mask)
+        params.append(threshold)
+
+    values = K.batch_get_value(params)
+
+    param_value_pairs = list(zip(params, values))
+
+    for mask, mask_value in param_value_pairs[::2]:
+      pruning_logs.update({mask.name + '/sparsity': 1 - np.mean(mask_value)})
+
+    for threshold, threshold_value in param_value_pairs[1::2]:
+      pruning_logs.update({threshold.name + '/threshold': threshold_value})
+
+    return pruning_logs
