@@ -29,6 +29,7 @@ _ENCODER_FNS = [
     common_encoders.identity,
     lambda: common_encoders.uniform_quantization(8),
     lambda: common_encoders.hadamard_quantization(8),
+    lambda: common_encoders.drive(),
 ]
 
 
