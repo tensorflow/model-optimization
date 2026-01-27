@@ -1,4 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+# Placeholder: load py_library
 
 package(default_visibility = [
     "//tensorflow_model_optimization/python/core/internal/tensor_encoding:__subpackages__",
@@ -6,18 +7,20 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "testing",
     srcs = ["__init__.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":test_utils",
     ],
 )
 
-py_strict_library(
+py_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
+    strict_deps = True,
     deps = [
         # absl/testing:parameterized dep1,
         # numpy dep1,

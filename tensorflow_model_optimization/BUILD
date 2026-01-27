@@ -5,7 +5,8 @@
 #  used to optimize machine learning models for deployment and execution.
 #
 #  https://github.com/tensorflow/model-optimization
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary", "py_strict_library")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
+# Placeholder: load py_library
 
 package(default_visibility = ["//visibility:public"])
 
@@ -13,9 +14,10 @@ licenses(["notice"])
 
 exports_files(["LICENSE"])
 
-py_strict_library(
+py_library(
     name = "tensorflow_model_optimization",
     srcs = ["__init__.py"],
+    strict_deps = True,
     deps = [
         # distutils dep1,
         "//tensorflow_model_optimization/python",  # buildcleaner: keep

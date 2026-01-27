@@ -1,4 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+# Placeholder: load py_library
 
 package(default_visibility = [
     "//tensorflow_model_optimization/python/core/internal/tensor_encoding:__subpackages__",
@@ -6,9 +7,10 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "research",
     srcs = ["__init__.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":clipping",
@@ -18,9 +20,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "clipping",
     srcs = ["clipping.py"],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:encoding_stage",
@@ -41,9 +44,10 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "kashin",
     srcs = ["kashin.py"],
+    strict_deps = True,
     deps = [
         # numpy dep1,
         # tensorflow dep1,
@@ -66,9 +70,10 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "quantization",
     srcs = ["quantization.py"],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:encoding_stage",
@@ -90,9 +95,10 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "misc",
     srcs = ["misc.py"],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:encoding_stage",

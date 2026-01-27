@@ -1,4 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
+# Placeholder: load py_library
 
 package(default_visibility = [
     "//tensorflow_model_optimization/python/core/internal/tensor_encoding:__subpackages__",
@@ -6,9 +7,10 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "core",
     srcs = ["__init__.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":core_encoder",
@@ -18,9 +20,10 @@ py_strict_library(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "core_encoder",
     srcs = ["core_encoder.py"],
+    strict_deps = True,
     deps = [
         ":encoding_stage",
         # six dep1,
@@ -43,9 +46,10 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "encoding_stage",
     srcs = ["encoding_stage.py"],
+    strict_deps = True,
     deps = [
         # six dep1,
         # tensorflow dep1,
@@ -67,9 +71,10 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "gather_encoder",
     srcs = ["gather_encoder.py"],
+    strict_deps = True,
     deps = [
         ":core_encoder",
         # tensorflow dep1,
@@ -94,9 +99,10 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "simple_encoder",
     srcs = ["simple_encoder.py"],
+    strict_deps = True,
     deps = [
         ":core_encoder",
         # tensorflow dep1,
