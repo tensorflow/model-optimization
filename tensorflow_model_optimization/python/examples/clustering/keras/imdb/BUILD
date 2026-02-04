@@ -17,6 +17,7 @@ py_binary(
     srcs = [
         "imdb_lstm.py",
     ],
+    strict_deps = False,
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
@@ -31,6 +32,7 @@ py_binary(
     srcs = [
         "imdb_rnn.py",
     ],
+    strict_deps = False,
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
@@ -45,6 +47,7 @@ py_binary(
     srcs = [
         "imdb_gru.py",
     ],
+    strict_deps = False,
     deps = [
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
         # numpy dep1,
@@ -72,6 +75,7 @@ py_binary(
     srcs = [
         "imdb_multiple_cells.py",
     ],
+    strict_deps = False,
     deps = [
         ":imdb_utils",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
