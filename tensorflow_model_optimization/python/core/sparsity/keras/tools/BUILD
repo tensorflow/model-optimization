@@ -41,6 +41,7 @@ py_test(
 py_binary(
     name = "evaluate_pruning",
     srcs = ["evaluate_pruning.py"],
+    strict_deps = False,
     deps = [
         ":sparsity_tooling",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
