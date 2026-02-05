@@ -1,4 +1,4 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library", "py_strict_test")
+load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 # Placeholder: load py_library
 # Placeholder: load py_test
 
@@ -8,19 +8,21 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "default_8bit",
     srcs = [
         "__init__.py",
     ],
+    strict_deps = True,
     deps = [],
 )
 
-py_strict_library(
+py_library(
     name = "default_8bit_quantizers",
     srcs = [
         "default_8bit_quantizers.py",
     ],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -43,22 +45,24 @@ py_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_8bit_quantize_configs",
     srcs = [
         "default_8bit_quantize_configs.py",
     ],
+    strict_deps = True,
     deps = [
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_8bit_quantize_registry",
     srcs = [
         "default_8bit_quantize_registry.py",
     ],
+    strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -130,11 +134,12 @@ py_strict_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_8bit_quantize_layout_transform",
     srcs = [
         "default_8bit_quantize_layout_transform.py",
     ],
+    strict_deps = True,
     deps = [
         ":default_8bit_transforms",
         # tensorflow dep1,
@@ -160,11 +165,12 @@ py_test(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "default_8bit_quantize_scheme",
     srcs = [
         "default_8bit_quantize_scheme.py",
     ],
+    strict_deps = True,
     deps = [
         ":default_8bit_quantize_layout_transform",
         ":default_8bit_quantize_registry",

@@ -1,5 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_library")
 # Placeholder: load py_binary
+# Placeholder: load py_library
 # Placeholder: load py_test
 
 package(default_visibility = [
@@ -8,9 +8,10 @@ package(default_visibility = [
 
 licenses(["notice"])
 
-py_strict_library(
+py_library(
     name = "sparsity_tooling",
     srcs = ["sparsity_tooling.py"],
+    strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -49,9 +50,10 @@ py_binary(
     ],
 )
 
-py_strict_library(
+py_library(
     name = "check_sparsity_m_by_n",
     srcs = ["check_sparsity_m_by_n.py"],
+    strict_deps = True,
     deps = [
         # absl:app dep1,
         # absl/flags dep1,
