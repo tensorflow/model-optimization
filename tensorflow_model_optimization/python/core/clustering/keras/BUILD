@@ -121,6 +121,7 @@ py_test(
     name = "cluster_test",
     size = "medium",
     srcs = ["cluster_test.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",
@@ -189,6 +190,7 @@ py_test(
     name = "cluster_integration_test",
     size = "medium",
     srcs = ["cluster_integration_test.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",
