@@ -36,6 +36,7 @@ py_test(
     srcs = [
         "default_8bit_quantizers_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":default_8bit_quantizers",
         # absl/testing:parameterized dep1,
@@ -80,6 +81,7 @@ py_test(
     srcs = [
         "default_8bit_quantize_registry_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":default_8bit_quantize_registry",
         # absl/testing:parameterized dep1,
@@ -154,6 +156,7 @@ py_test(
     name = "quantize_numerical_test",
     size = "large",
     srcs = ["quantize_numerical_test.py"],
+    strict_deps = False,
     deps = [
         # absl/testing:parameterized dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added

@@ -27,6 +27,7 @@ py_test(
     name = "sparsity_tooling_test",
     size = "medium",
     srcs = ["sparsity_tooling_test.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":sparsity_tooling",
