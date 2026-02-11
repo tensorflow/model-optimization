@@ -6,9 +6,16 @@
 #
 #  https://github.com/tensorflow/model-optimization
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
-# Placeholder: load py_library
 
-package(default_visibility = ["//visibility:public"])
+# Placeholder: load py_library
+load("//tools/build_defs/license:license.bzl", "license")
+
+package(
+    default_applicable_licenses = [":license"],
+    default_visibility = ["//visibility:public"],
+)
+
+license(name = "license")
 
 licenses(["notice"])
 
