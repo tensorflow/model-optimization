@@ -7,7 +7,7 @@ licenses(["notice"])
 py_library(
     name = "tensor_encoding",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core",
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/encoders",

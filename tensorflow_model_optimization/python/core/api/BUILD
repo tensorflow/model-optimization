@@ -27,7 +27,7 @@ py_library(
         "sparsity/__init__.py",
         "sparsity/keras/__init__.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster_config",

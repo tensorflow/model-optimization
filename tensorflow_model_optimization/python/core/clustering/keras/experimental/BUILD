@@ -11,7 +11,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         ":cluster",  # buildcleaner: keep
     ],
@@ -20,7 +20,7 @@ py_library(
 py_library(
     name = "cluster",
     srcs = ["cluster.py"],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         "//tensorflow_model_optimization/python/core/clustering/keras:cluster",

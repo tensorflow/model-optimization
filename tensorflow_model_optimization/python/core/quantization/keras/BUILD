@@ -13,7 +13,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         ":quantize",  # build-cleaner: keep
         # APIs are not exposed, but still needed for internal imports.
@@ -28,7 +28,7 @@ py_library(
 py_library(
     name = "quant_ops",
     srcs = ["quant_ops.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         # absl/logging dep1,
         # tensorflow dep1,
@@ -54,7 +54,7 @@ py_library(
     srcs = [
         "quantizers.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":quant_ops",
@@ -86,7 +86,7 @@ py_library(
     srcs = [
         "quantize_config.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -101,7 +101,7 @@ py_library(
     srcs = [
         "quantize_registry.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -113,7 +113,7 @@ py_library(
     srcs = [
         "quantize_layout_transform.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -125,7 +125,7 @@ py_library(
     srcs = [
         "quantize_annotate.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":utils",
@@ -155,7 +155,7 @@ py_library(
     srcs = [
         "quantize_aware_activation.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":utils",
@@ -188,7 +188,7 @@ py_library(
     srcs = [
         "quantize_layer.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":quantizers",
@@ -220,7 +220,7 @@ py_library(
     srcs = [
         "quantize_wrapper.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_aware_activation",
@@ -256,7 +256,7 @@ py_library(
     srcs = [
         "quantize.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":quantize_annotate",
@@ -350,7 +350,7 @@ py_library(
     srcs = [
         "utils.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -363,7 +363,7 @@ py_library(
     srcs = [
         "quantize_scheme.py",
     ],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,

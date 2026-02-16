@@ -10,7 +10,7 @@ licenses(["notice"])
 py_library(
     name = "keras",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         ":compat",
         ":utils",
@@ -21,7 +21,7 @@ py_library(
 py_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         ":compat",
         # numpy dep1,
@@ -32,7 +32,7 @@ py_library(
 py_library(
     name = "compat",
     srcs = ["compat.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         # tensorflow dep1,
     ],
@@ -41,7 +41,7 @@ py_library(
 py_library(
     name = "utils",
     srcs = ["utils.py"],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -53,7 +53,7 @@ py_library(
 py_library(
     name = "metrics",
     srcs = ["metrics.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         # python/eager:monitoring tensorflow dep2,
     ],

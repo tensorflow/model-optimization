@@ -10,7 +10,7 @@ licenses(["notice"])
 py_library(
     name = "stages",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":stages_impl",
@@ -21,7 +21,7 @@ py_library(
 py_library(
     name = "stages_impl",
     srcs = ["stages_impl.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         # numpy dep1,
         # tensorflow dep1,

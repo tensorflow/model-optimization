@@ -17,7 +17,7 @@ exports_files(["LICENSE"])
 py_library(
     name = "tensorflow_model_optimization",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         # distutils dep1,
         "//tensorflow_model_optimization/python",  # buildcleaner: keep

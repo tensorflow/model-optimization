@@ -10,7 +10,7 @@ licenses(["notice"])
 py_library(
     name = "encoders",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":common_encoders",
@@ -20,7 +20,7 @@ py_library(
 py_library(
     name = "common_encoders",
     srcs = ["common_encoders.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:core_encoder",

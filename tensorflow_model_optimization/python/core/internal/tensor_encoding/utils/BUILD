@@ -10,7 +10,7 @@ licenses(["notice"])
 py_library(
     name = "utils",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":py_utils",
@@ -21,7 +21,7 @@ py_library(
 py_library(
     name = "py_utils",
     srcs = ["py_utils.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         # numpy dep1,
         # six dep1,
@@ -46,7 +46,7 @@ py_strict_test(
 py_library(
     name = "tf_utils",
     srcs = ["tf_utils.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         # numpy dep1,
         # tensorflow dep1,

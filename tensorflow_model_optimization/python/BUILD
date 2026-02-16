@@ -7,7 +7,7 @@ licenses(["notice"])
 py_library(
     name = "python",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         "//tensorflow_model_optimization/python/core",  # buildcleaner: keep
     ],

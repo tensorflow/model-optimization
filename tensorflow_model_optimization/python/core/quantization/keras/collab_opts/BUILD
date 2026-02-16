@@ -7,7 +7,7 @@ licenses(["notice"])
 py_library(
     name = "collab_opts",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    strict_deps = False,
     deps = [
         "//tensorflow_model_optimization/python/core/quantization/keras/collab_opts/cluster_preserve",  # buildcleaner: keep
         "//tensorflow_model_optimization/python/core/quantization/keras/collab_opts/prune_preserve",  # buildcleaner: keep
