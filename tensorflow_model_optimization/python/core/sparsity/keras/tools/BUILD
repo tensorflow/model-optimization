@@ -27,6 +27,7 @@ py_test(
     name = "sparsity_tooling_test",
     size = "medium",
     srcs = ["sparsity_tooling_test.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":sparsity_tooling",
@@ -41,6 +42,7 @@ py_test(
 py_binary(
     name = "evaluate_pruning",
     srcs = ["evaluate_pruning.py"],
+    strict_deps = False,
     deps = [
         ":sparsity_tooling",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added

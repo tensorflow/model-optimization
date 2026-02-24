@@ -54,6 +54,7 @@ py_test(
     srcs = [
         "cluster_preserve_quantize_registry_test.py",
     ],
+    strict_deps = False,
     visibility = ["//visibility:private"],
     deps = [
         ":cluster_preserve_quantize_registry",
@@ -72,6 +73,7 @@ py_test(
     srcs = [
         "mnist_prune_cluster_preserve_qat_test.py",
     ],
+    strict_deps = False,
     tags = ["requires-net:external"],
     visibility = ["//visibility:private"],
     deps = [
@@ -103,6 +105,7 @@ py_test(
     srcs = [
         "cluster_preserve_integration_test.py",
     ],
+    strict_deps = False,
     visibility = ["//visibility:private"],
     deps = [
         ":default_8bit_cluster_preserve_quantize_scheme",

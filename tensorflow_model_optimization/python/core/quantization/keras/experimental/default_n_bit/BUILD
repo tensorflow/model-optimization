@@ -33,6 +33,7 @@ py_test(
     srcs = [
         "default_n_bit_quantizers_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":default_n_bit_quantizers",
         # absl/testing:parameterized dep1,
@@ -76,6 +77,7 @@ py_test(
     srcs = [
         "default_n_bit_quantize_registry_test.py",
     ],
+    strict_deps = False,
     deps = [
         ":default_n_bit_quantize_registry",
         # absl/testing:parameterized dep1,
@@ -92,6 +94,7 @@ py_library(
     srcs = [
         "default_n_bit_transforms.py",
     ],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,

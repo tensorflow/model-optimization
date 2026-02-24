@@ -325,6 +325,7 @@ py_test(
     name = "pruning_policy_test",
     size = "medium",
     srcs = ["pruning_policy_test.py"],
+    strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":prune",

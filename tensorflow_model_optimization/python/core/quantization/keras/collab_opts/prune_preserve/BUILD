@@ -39,6 +39,7 @@ py_test(
     srcs = [
         "prune_preserve_quantize_registry_test.py",
     ],
+    strict_deps = False,
     visibility = ["//visibility:private"],
     deps = [
         ":prune_preserve_quantize_registry",
