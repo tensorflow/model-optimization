@@ -1,9 +1,5 @@
 # Placeholder: load py_library
 
-package(default_visibility = [
-    "//tensorflow_model_optimization:__subpackages__",
-])
-
 licenses(["notice"])
 
 py_library(
