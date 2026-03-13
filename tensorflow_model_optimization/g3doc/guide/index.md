@@ -60,7 +60,7 @@ network layers) have been pruned, introducing zeros to the parameter tensors.
 Clustered models are those where the original model's parameters are replaced
 with a smaller number of unique values.
 
-### Collaborative optimizaiton
+### Collaborative optimization
 
 The toolkit provides experimental support for collaborative optimization. This
 enables you to benefit from combining several model compression techniques and
