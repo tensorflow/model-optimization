@@ -4,6 +4,7 @@ load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_st
 
 package(default_visibility = [
     "//tensorflow_model_optimization:__subpackages__",
+    "//third_party/arcore/ar/perception/deep_inertial_tracking/activity_recognition/training:__pkg__",
 ])
 
 licenses(["notice"])
