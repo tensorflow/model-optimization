@@ -1,6 +1,9 @@
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library", "pytype_strict_test")
 
-package(default_visibility = ["//visibility:private"])
+package(
+    default_applicable_licenses = ["//tensorflow_model_optimization:license"],
+    default_visibility = ["//visibility:private"],
+)
 
 licenses(["notice"])
 

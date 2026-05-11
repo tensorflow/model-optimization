@@ -1,5 +1,9 @@
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library", "pytype_strict_test")
 
+package(
+    default_applicable_licenses = ["//tensorflow_model_optimization:license"],
+)
+
 licenses(["notice"])
 
 pytype_strict_library(

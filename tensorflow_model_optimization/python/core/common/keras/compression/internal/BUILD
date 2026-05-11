@@ -1,8 +1,11 @@
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "pytype_strict_library")
 
-package(default_visibility = [
-    "//tensorflow_model_optimization/python/core/common/keras/compression:__subpackages__",
-])
+package(
+    default_applicable_licenses = ["//tensorflow_model_optimization:license"],
+    default_visibility = [
+        "//tensorflow_model_optimization/python/core/common/keras/compression:__subpackages__",
+    ],
+)
 
 licenses(["notice"])
 

@@ -2,6 +2,7 @@
 # Placeholder: load py_library
 
 package(
+    default_applicable_licenses = ["//tensorflow_model_optimization:license"],
     default_visibility = ["//visibility:public"],
 )
 

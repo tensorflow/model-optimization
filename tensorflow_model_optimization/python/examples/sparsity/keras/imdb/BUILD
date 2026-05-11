@@ -1,6 +1,7 @@
 load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
 
 package(
+    default_applicable_licenses = ["//tensorflow_model_optimization:license"],
     default_visibility = ["//visibility:public"],
 )
 
