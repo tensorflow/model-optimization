@@ -15,7 +15,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [],
 )
 
@@ -24,7 +24,7 @@ py_library(
     srcs = [
         "transforms.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -49,7 +49,7 @@ py_library(
     srcs = [
         "model_transformer.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":transforms",

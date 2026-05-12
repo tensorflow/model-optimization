@@ -32,6 +32,14 @@ Keras pruning API:
 
 # TensorFlow Model Optimization next release TBD
 
+# TensorFlow Model Optimization 0.8.1
+
+TFMOT 0.8.1 improves compatibility with numpy v2 and dependencies.
+ * Fix keras importing failures at the colab.
+ * Add required packages to setup.py to match requirements.txt.
+ * Relax absl-py requirements for tensorflow_model_optimization.
+ * Mark compatibility with numpy v2.
+
 # TensorFlow Model Optimization 0.8.0
 
 TFMOT 0.8.0 forces users to use the keras v2 version.

@@ -13,7 +13,7 @@ py_library(
     name = "test_utils_mnist",
     testonly = 1,
     srcs = ["test_utils_mnist.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,

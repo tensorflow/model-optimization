@@ -15,7 +15,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         ":default_8bit_prune_preserve_quantize_scheme",  # buildcleaner: keep
     ],
@@ -26,7 +26,7 @@ py_library(
     srcs = [
         "prune_preserve_quantize_registry.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -42,7 +42,7 @@ py_test(
     srcs = [
         "prune_preserve_quantize_registry_test.py",
     ],
-    strict_deps = False,
+    # strict_deps = False,
     visibility = ["//visibility:private"],
     deps = [
         ":prune_preserve_quantize_registry",
@@ -60,7 +60,7 @@ py_library(
     srcs = [
         "default_8bit_prune_preserve_quantize_scheme.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":prune_preserve_quantize_registry",

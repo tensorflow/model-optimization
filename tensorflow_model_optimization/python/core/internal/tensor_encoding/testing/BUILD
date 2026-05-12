@@ -13,7 +13,7 @@ licenses(["notice"])
 py_library(
     name = "testing",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":test_utils",
@@ -23,7 +23,7 @@ py_library(
 py_library(
     name = "test_utils",
     srcs = ["test_utils.py"],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # absl/testing:parameterized dep1,
         # numpy dep1,

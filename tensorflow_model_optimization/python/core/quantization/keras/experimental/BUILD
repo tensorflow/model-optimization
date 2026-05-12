@@ -14,7 +14,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         ":quantization",  # buildcleaner: keep
     ],
@@ -23,7 +23,7 @@ py_library(
 py_library(
     name = "quantization",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         "//tensorflow_model_optimization/python/core/quantization/keras",  # buildcleaner: keep
     ],

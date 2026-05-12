@@ -15,7 +15,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         ":default_8bit_cluster_preserve_quantize_scheme",  # buildcleaner: keep
     ],
@@ -26,7 +26,7 @@ py_library(
     srcs = [
         "cluster_utils.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -38,7 +38,7 @@ py_library(
     srcs = [
         "cluster_preserve_quantize_registry.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         ":cluster_utils",
         # tensorflow dep1,
@@ -57,7 +57,7 @@ py_test(
     srcs = [
         "cluster_preserve_quantize_registry_test.py",
     ],
-    strict_deps = False,
+    # strict_deps = False,
     visibility = ["//visibility:private"],
     deps = [
         ":cluster_preserve_quantize_registry",
@@ -76,7 +76,7 @@ py_test(
     srcs = [
         "mnist_prune_cluster_preserve_qat_test.py",
     ],
-    strict_deps = False,
+    # strict_deps = False,
     tags = ["requires-net:external"],
     visibility = ["//visibility:private"],
     deps = [
@@ -96,7 +96,7 @@ py_library(
     srcs = [
         "default_8bit_cluster_preserve_quantize_scheme.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         ":cluster_preserve_quantize_registry",
         "//tensorflow_model_optimization/python/core/quantization/keras/default_8bit:default_8bit_quantize_scheme",
@@ -108,7 +108,7 @@ py_test(
     srcs = [
         "cluster_preserve_integration_test.py",
     ],
-    strict_deps = False,
+    # strict_deps = False,
     visibility = ["//visibility:private"],
     deps = [
         ":default_8bit_cluster_preserve_quantize_scheme",

@@ -304,9 +304,9 @@ class DefaultTransformsTest(tf.test.TestCase, parameterized.TestCase):
               'bias_constraint': keras.constraints.unit_norm(),
           },
       ),
-      ('activation_relu', {'activation': 'relu'}),
       # TODO(pulkitb): Temporarily disabling due to numerical errors resulting
       # from caching of activation logits in TF code.
+      # ('activation_relu', {'activation': 'relu'}),
       # ('activation_softmax', {'activation': 'softmax'}),
   )
   def testSeparableConv1DQuantize_(self, kwargs):

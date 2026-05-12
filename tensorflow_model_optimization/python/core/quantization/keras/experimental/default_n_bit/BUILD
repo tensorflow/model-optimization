@@ -14,7 +14,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [],
 )
 
@@ -23,7 +23,7 @@ py_library(
     srcs = [
         "default_n_bit_quantizers.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -36,7 +36,7 @@ py_test(
     srcs = [
         "default_n_bit_quantizers_test.py",
     ],
-    strict_deps = False,
+    # strict_deps = False,
     deps = [
         ":default_n_bit_quantizers",
         # absl/testing:parameterized dep1,
@@ -51,7 +51,7 @@ py_library(
     srcs = [
         "default_n_bit_quantize_configs.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         "//tensorflow_model_optimization/python/core/quantization/keras:quantize_config",
         "//tensorflow_model_optimization/python/core/quantization/keras:quantizers",
@@ -63,7 +63,7 @@ py_library(
     srcs = [
         "default_n_bit_quantize_registry.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
@@ -80,7 +80,7 @@ py_test(
     srcs = [
         "default_n_bit_quantize_registry_test.py",
     ],
-    strict_deps = False,
+    # strict_deps = False,
     deps = [
         ":default_n_bit_quantize_registry",
         # absl/testing:parameterized dep1,
@@ -97,7 +97,7 @@ py_library(
     srcs = [
         "default_n_bit_transforms.py",
     ],
-    strict_deps = False,
+    # strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
@@ -117,7 +117,7 @@ py_library(
     srcs = [
         "default_n_bit_quantize_layout_transform.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         ":default_n_bit_transforms",
         # tensorflow dep1,
@@ -155,7 +155,7 @@ py_library(
     srcs = [
         "default_n_bit_quantize_scheme.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":default_n_bit_quantize_layout_transform",

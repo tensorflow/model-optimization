@@ -16,7 +16,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         ":prunable_layer",  # buildcleaner: keep
         ":prune",  # buildcleaner: keep
@@ -29,7 +29,7 @@ py_library(
 py_library(
     name = "prune",
     srcs = ["prune.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_schedule",
@@ -43,7 +43,7 @@ py_library(
 py_library(
     name = "prunable_layer",
     srcs = ["prunable_layer.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -53,7 +53,7 @@ py_library(
 py_library(
     name = "prune_registry",
     srcs = ["prune_registry.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
@@ -65,7 +65,7 @@ py_library(
 py_library(
     name = "pruning_policy",
     srcs = ["pruning_policy.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
@@ -78,7 +78,7 @@ py_library(
 py_library(
     name = "pruning_schedule",
     srcs = ["pruning_schedule.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -104,7 +104,7 @@ py_strict_test(
 py_library(
     name = "pruning_wrapper",
     srcs = ["pruning_wrapper.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":prunable_layer",
@@ -123,7 +123,7 @@ py_library(
 py_library(
     name = "pruning_callbacks",
     srcs = ["pruning_callbacks.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
@@ -154,7 +154,7 @@ py_strict_test(
 py_library(
     name = "pruning_impl",
     srcs = ["pruning_impl.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_utils",
@@ -166,7 +166,7 @@ py_library(
 py_library(
     name = "pruning_utils",
     srcs = ["pruning_utils.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # numpy dep1,
@@ -177,7 +177,7 @@ py_library(
 py_library(
     name = "estimator_utils",
     srcs = ["estimator_utils.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":pruning_wrapper",
@@ -191,7 +191,7 @@ py_library(
     name = "test_utils",
     testonly = 1,
     srcs = ["test_utils.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":prune",
@@ -328,7 +328,7 @@ py_test(
     name = "pruning_policy_test",
     size = "medium",
     srcs = ["pruning_policy_test.py"],
-    strict_deps = False,
+    # strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":prune",

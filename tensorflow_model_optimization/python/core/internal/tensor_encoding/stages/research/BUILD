@@ -13,7 +13,7 @@ licenses(["notice"])
 py_library(
     name = "research",
     srcs = ["__init__.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":clipping",
@@ -26,7 +26,7 @@ py_library(
 py_library(
     name = "clipping",
     srcs = ["clipping.py"],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:encoding_stage",
@@ -50,7 +50,7 @@ py_strict_test(
 py_library(
     name = "kashin",
     srcs = ["kashin.py"],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # numpy dep1,
         # tensorflow dep1,
@@ -76,7 +76,7 @@ py_strict_test(
 py_library(
     name = "quantization",
     srcs = ["quantization.py"],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:encoding_stage",
@@ -101,7 +101,7 @@ py_strict_test(
 py_library(
     name = "misc",
     srcs = ["misc.py"],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/core:encoding_stage",

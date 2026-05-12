@@ -16,7 +16,7 @@ py_library(
     srcs = [
         "__init__.py",
     ],
-    strict_deps = True,
+    # strict_deps = True,
     deps = [
         ":cluster",  # buildcleaner: keep
         ":clustering_callbacks",  # buildcleaner: keep
@@ -27,7 +27,7 @@ py_library(
 py_library(
     name = "cluster",
     srcs = ["cluster.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_config",
@@ -41,14 +41,14 @@ py_library(
 py_library(
     name = "cluster_config",
     srcs = ["cluster_config.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
 )
 
 py_library(
     name = "clustering_registry",
     srcs = ["clustering_registry.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":clusterable_layer",
@@ -61,7 +61,7 @@ py_library(
 py_library(
     name = "clusterable_layer",
     srcs = ["clusterable_layer.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -71,7 +71,7 @@ py_library(
 py_library(
     name = "clustering_centroids",
     srcs = ["clustering_centroids.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_config",
@@ -85,7 +85,7 @@ py_library(
 py_library(
     name = "cluster_wrapper",
     srcs = ["cluster_wrapper.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         ":cluster_config",
@@ -100,7 +100,7 @@ py_library(
 py_library(
     name = "clustering_algorithm",
     srcs = ["clustering_algorithm.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # six dep1,
@@ -112,7 +112,7 @@ py_library(
 py_library(
     name = "clustering_callbacks",
     srcs = ["clustering_callbacks.py"],
-    strict_deps = True,
+    # strict_deps = True,
     visibility = ["//visibility:public"],
     deps = [
         # tensorflow dep1,
@@ -124,7 +124,7 @@ py_test(
     name = "cluster_test",
     size = "medium",
     srcs = ["cluster_test.py"],
-    strict_deps = False,
+    # strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",
@@ -193,7 +193,7 @@ py_test(
     name = "cluster_integration_test",
     size = "medium",
     srcs = ["cluster_integration_test.py"],
-    strict_deps = False,
+    # strict_deps = False,
     visibility = ["//visibility:public"],
     deps = [
         ":cluster",
