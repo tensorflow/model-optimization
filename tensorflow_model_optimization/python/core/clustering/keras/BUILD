@@ -1,4 +1,3 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 # Placeholder: load py_library
 # Placeholder: load py_test
 
@@ -140,7 +139,7 @@ py_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "clustering_centroids_test",
     size = "medium",
     srcs = ["clustering_centroids_test.py"],
@@ -156,7 +155,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "cluster_wrapper_test",
     size = "medium",
     srcs = ["cluster_wrapper_test.py"],
@@ -173,7 +172,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "clustering_registry_test",
     size = "medium",
     srcs = ["clustering_registry_test.py"],
@@ -207,7 +206,7 @@ py_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "cluster_distributed_test",
     srcs = ["cluster_distributed_test.py"],
     visibility = ["//visibility:public"],
@@ -225,7 +224,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "mnist_clusterable_layer_test",
     srcs = ["mnist_clusterable_layer_test.py"],
     tags = ["requires-net:external"],
@@ -241,7 +240,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "mnist_clustering_test",
     srcs = ["mnist_clustering_test.py"],
     tags = ["requires-net:external"],

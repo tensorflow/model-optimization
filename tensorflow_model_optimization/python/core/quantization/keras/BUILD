@@ -1,5 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 # Placeholder: load py_library
+# Placeholder: load py_test
 
 package(
     default_applicable_licenses = ["//tensorflow_model_optimization:license"],
@@ -39,7 +39,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quant_ops_test",
     size = "small",
     srcs = ["quant_ops_test.py"],
@@ -67,7 +67,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantizers_test",
     srcs = [
         "quantizers_test.py",
@@ -137,7 +137,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantize_annotate_test",
     srcs = [
         "quantize_annotate_test.py",
@@ -168,7 +168,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantize_aware_activation_test",
     srcs = [
         "quantize_aware_activation_test.py",
@@ -202,7 +202,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantize_layer_test",
     srcs = [
         "quantize_layer_test.py",
@@ -236,7 +236,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantize_wrapper_test",
     srcs = [
         "quantize_wrapper_test.py",
@@ -278,7 +278,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantize_test",
     srcs = ["quantize_test.py"],
     visibility = ["//visibility:public"],
@@ -299,7 +299,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantize_integration_test",
     srcs = ["quantize_integration_test.py"],
     deps = [
@@ -316,7 +316,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantize_models_test",
     size = "enormous",
     srcs = ["quantize_models_test.py"],
@@ -332,7 +332,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "quantize_functional_test",
     size = "large",
     srcs = ["quantize_functional_test.py"],

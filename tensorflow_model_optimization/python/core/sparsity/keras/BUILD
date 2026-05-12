@@ -1,4 +1,3 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 # Placeholder: load py_library
 # Placeholder: load py_test
 
@@ -86,7 +85,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "pruning_schedule_test",
     size = "medium",
     srcs = ["pruning_schedule_test.py"],
@@ -134,7 +133,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "pruning_callbacks_test",
     size = "medium",
     srcs = ["pruning_callbacks_test.py"],
@@ -203,7 +202,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "prune_test",
     size = "medium",
     srcs = ["prune_test.py"],
@@ -222,7 +221,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "prune_integration_test",
     size = "medium",
     timeout = "long",
@@ -244,7 +243,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "prune_distributed_test",
     size = "medium",
     timeout = "long",
@@ -264,7 +263,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "prune_registry_test",
     size = "medium",
     srcs = ["prune_registry_test.py"],
@@ -279,7 +278,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "pruning_wrapper_test",
     size = "medium",
     srcs = ["pruning_wrapper_test.py"],
@@ -293,7 +292,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "pruning_impl_test",
     size = "medium",
     srcs = ["pruning_impl_test.py"],
@@ -310,7 +309,7 @@ py_strict_test(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "pruning_utils_test",
     size = "medium",
     srcs = ["pruning_utils_test.py"],

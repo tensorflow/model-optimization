@@ -1,5 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 # Placeholder: load py_library
+# Placeholder: load py_test
 
 package(
     default_applicable_licenses = ["//tensorflow_model_optimization:license"],
@@ -33,7 +33,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "common_encoders_test",
     size = "small",
     srcs = ["common_encoders_test.py"],

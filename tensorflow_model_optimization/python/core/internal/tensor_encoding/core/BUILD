@@ -1,5 +1,5 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 # Placeholder: load py_library
+# Placeholder: load py_test
 
 package(
     default_applicable_licenses = ["//tensorflow_model_optimization:license"],
@@ -35,7 +35,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "core_encoder_test",
     size = "small",
     srcs = ["core_encoder_test.py"],
@@ -59,7 +59,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "encoding_stage_test",
     size = "small",
     srcs = ["encoding_stage_test.py"],
@@ -85,7 +85,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "gather_encoder_test",
     size = "small",
     srcs = ["gather_encoder_test.py"],
@@ -113,7 +113,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "simple_encoder_test",
     size = "small",
     srcs = ["simple_encoder_test.py"],

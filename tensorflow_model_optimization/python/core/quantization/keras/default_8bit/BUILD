@@ -1,4 +1,3 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_test")
 # Placeholder: load py_library
 # Placeholder: load py_test
 
@@ -116,7 +115,7 @@ py_library(
     ],
 )
 
-py_strict_test(
+py_test(
     name = "default_8bit_transforms_test",
     size = "large",
     srcs = [
