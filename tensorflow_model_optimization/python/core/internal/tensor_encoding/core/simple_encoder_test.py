@@ -142,6 +142,35 @@ class SimpleEncoderTest(tf.test.TestCase, parameterized.TestCase):
     self.assertAllClose(x, decoded_x_py)
 
   @tf_test_util.run_all_in_graph_and_eager_modes
+  def test_interleaved_py_tf_parameters(self):
+    """Tests that interleaved Python and TF parameters are decoded correctly."""
+    class SwappedKeysStage(test_utils.SimpleLinearEncodingStage):
+      def get_params(self, name=None):
+        # Return parameters in a specific order to test if encoding/decoding
+        # respects this order or sorts keys.
+        params = {self.B_PARAM_KEY: self._b, self.A_PARAM_KEY: self._a}
+        return params, params
+
+    x = tf.constant(2.0)
+    tensorspec = tf.TensorSpec.from_tensor(x)
+
+    # Use one Python constant and one TF Variable to ensure they are split and merged.
+    b_var = tf.compat.v1.get_variable('b_var_interleaved', initializer=3.0)
+
+    encoder = simple_encoder.SimpleEncoder(
+        core_encoder.EncoderComposer(
+            SwappedKeysStage(2.0, b_var)).make(),
+        tensorspec)
+
+    state = encoder.initial_state()
+    iteration = _make_iteration_function(encoder)
+
+    self.evaluate(tf.compat.v1.global_variables_initializer())
+
+    x_val, _, decoded_x, _ = self.evaluate(iteration(x, state))
+    self.assertAllClose(x_val, decoded_x)
+
+  @tf_test_util.run_all_in_graph_and_eager_modes
   def test_decode_needs_input_shape_static(self):
     """Tests that mechanism for passing input shape works with static shape."""
     x = tf.reshape(list(range(15)), [3, 5])
