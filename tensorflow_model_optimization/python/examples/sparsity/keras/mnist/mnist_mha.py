@@ -16,6 +16,12 @@
 """Train a simple model with MultiHeadAttention layer on MNIST dataset
 and prune it.
 """
+import datetime
+import os
+import tempfile
+
+from absl import app as absl_app
+from absl import flags
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
@@ -26,76 +32,97 @@ from tensorflow_model_optimization.python.core.sparsity.keras import pruning_sch
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_utils
 from tensorflow_model_optimization.python.core.sparsity.keras import pruning_wrapper
 
-
-tf.random.set_seed(42)
-
-ConstantSparsity = pruning_schedule.ConstantSparsity
-
-# Load MNIST dataset
-mnist = keras.datasets.mnist
-(train_images, train_labels), (test_images, test_labels) = mnist.load_data()
-
-# Normalize the input image so that each pixel value is between 0 to 1.
-train_images = train_images / 255.0
-test_images = test_images / 255.0
-
-# define model
-input = keras.layers.Input(shape=(28, 28))
-x = keras.layers.MultiHeadAttention(num_heads=2, key_dim=16, name='mha')(
-    query=input, value=input
-)
-x = keras.layers.Flatten()(x)
-out = keras.layers.Dense(10)(x)
-model = keras.Model(inputs=input, outputs=out)
-
-# Train the digit classification model
-model.compile(
-    optimizer='adam',
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=['accuracy'],
+FLAGS = flags.FLAGS
+flags.DEFINE_string(
+    'output_dir',
+    None,
+    'Output directory for models and logs. If not set, a temporary directory'
+    ' is used.',
 )
 
-model.fit(
-    train_images, train_labels, epochs=10, validation_split=0.1,
-)
 
-score = model.evaluate(test_images, test_labels, verbose=0)
-print('Model test loss:', score[0])
-print('Model test accuracy:', score[1])
+def main(unused_argv):
+  tf.random.set_seed(42)
 
-# Define parameters for pruning
+  constant_sparsity = pruning_schedule.ConstantSparsity
 
-batch_size = 128
-epochs = 3
-validation_split = 0.1  # 10% of training set will be used for validation set.
+  # Load MNIST dataset
+  mnist = keras.datasets.mnist
+  (train_images, train_labels), (test_images, test_labels) = mnist.load_data()
 
-callbacks = [
-    pruning_callbacks.UpdatePruningStep(),
-    pruning_callbacks.PruningSummaries(log_dir='/tmp/logs')
-]
+  # Normalize the input image so that each pixel value is between 0 to 1.
+  train_images = train_images / 255.0
+  test_images = test_images / 255.0
 
-pruning_params = {
-      'pruning_schedule': ConstantSparsity(0.75, begin_step=2000, frequency=100)
-}
+  # define model
+  input = keras.layers.Input(shape=(28, 28))
+  x = keras.layers.MultiHeadAttention(num_heads=2, key_dim=16, name='mha')(
+      query=input, value=input
+  )
+  x = keras.layers.Flatten()(x)
+  out = keras.layers.Dense(10)(x)
+  model = keras.Model(inputs=input, outputs=out)
 
-model_for_pruning = prune.prune_low_magnitude(model, **pruning_params)
+  # Train the digit classification model
+  model.compile(
+      optimizer='adam',
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=['accuracy'],
+  )
 
-# `prune_low_magnitude` requires a recompile.
-model_for_pruning.compile(
-    optimizer='adam',
-    loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
-    metrics=['accuracy'],
-)
+  model.fit(
+      train_images, train_labels, epochs=10, validation_split=0.1,
+  )
 
-model_for_pruning.fit(
-    train_images,
-    train_labels,
-    batch_size=batch_size,
-    epochs=epochs,
-    callbacks=callbacks,
-    validation_split=validation_split,
-)
+  score = model.evaluate(test_images, test_labels, verbose=0)
+  print('Model test loss:', score[0])
+  print('Model test accuracy:', score[1])
 
-score = model_for_pruning.evaluate(test_images, test_labels, verbose=0)
-print('Pruned model test loss:', score[0])
-print('Pruned model test accuracy:', score[1])
+  # Define parameters for pruning
+
+  batch_size = 128
+  epochs = 3
+  validation_split = 0.1  # 10% of training set will be used for validation set.
+
+  if FLAGS.output_dir and not os.path.exists(FLAGS.output_dir):
+    os.makedirs(FLAGS.output_dir)
+  output_dir = tempfile.mkdtemp(
+      dir=FLAGS.output_dir,
+      prefix=datetime.datetime.now().strftime('tmp_%Y%m%d%H%M_'),
+  )
+  print('All models and logs will be saved to: {}'.format(output_dir))
+  callbacks = [
+      pruning_callbacks.UpdatePruningStep(),
+      pruning_callbacks.PruningSummaries(log_dir=output_dir)
+  ]
+
+  pruning_params = {
+      'pruning_schedule': constant_sparsity(
+          0.75, begin_step=2000, frequency=100
+      )
+  }
+
+  model_for_pruning = prune.prune_low_magnitude(model, **pruning_params)
+
+  # `prune_low_magnitude` requires a recompile.
+  model_for_pruning.compile(
+      optimizer='adam',
+      loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True),
+      metrics=['accuracy'],
+  )
+
+  model_for_pruning.fit(
+      train_images,
+      train_labels,
+      batch_size=batch_size,
+      epochs=epochs,
+      callbacks=callbacks,
+      validation_split=validation_split,
+  )
+
+  score = model_for_pruning.evaluate(test_images, test_labels, verbose=0)
+  print('Pruned model test loss:', score[0])
+  print('Pruned model test accuracy:', score[1])
+
+if __name__ == '__main__':
+  absl_app.run(main)

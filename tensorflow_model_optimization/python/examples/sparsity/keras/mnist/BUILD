@@ -52,6 +52,7 @@ py_strict_binary(
     srcs = ["mnist_e2e_sparsity2x4.py"],
     deps = [
         # absl:app dep1,
+        # absl/flags dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
         "//tensorflow_model_optimization/python/core/keras:test_utils",

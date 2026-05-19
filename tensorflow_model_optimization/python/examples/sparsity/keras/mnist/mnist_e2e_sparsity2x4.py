@@ -19,7 +19,12 @@
 """
 from __future__ import print_function
 
+import datetime
+import os
+import tempfile
+
 from absl import app as absl_app
+from absl import flags
 import tensorflow as tf
 
 from tensorflow_model_optimization.python.core.keras import test_utils as keras_test_utils
@@ -39,6 +44,14 @@ tf.random.set_seed(42)
 batch_size = 128
 num_classes = 10
 epochs = 1
+
+FLAGS = flags.FLAGS
+flags.DEFINE_string(
+    'output_dir',
+    None,
+    'Output directory for models and logs. If not set, a temporary directory'
+    ' is used.',
+)
 
 PRUNABLE_2x4_LAYERS = (keras.layers.Conv2D, keras.layers.Dense)
 
@@ -77,7 +90,7 @@ def build_layerwise_model(input_shape, **pruning_params):
   ])
 
 
-def train(model, x_train, y_train, x_test, y_test):
+def train(model, x_train, y_train, x_test, y_test, output_dir):
   model.compile(
       loss=keras.losses.categorical_crossentropy,
       optimizer='adam',
@@ -92,7 +105,7 @@ def train(model, x_train, y_train, x_test, y_test):
   # step. Also add a callback to add pruning summaries to tensorboard
   callbacks = [
       pruning_callbacks.UpdatePruningStep(),
-      pruning_callbacks.PruningSummaries(log_dir='/tmp/logs')
+      pruning_callbacks.PruningSummaries(log_dir=output_dir)
   ]
 
   model.fit(
@@ -131,14 +144,25 @@ def main(unused_argv):
       'sparsity_m_by_n': (2, 4),
   }
 
+  if FLAGS.output_dir and not os.path.exists(FLAGS.output_dir):
+    os.makedirs(FLAGS.output_dir)
+  temp_dir = tempfile.mkdtemp(
+      dir=FLAGS.output_dir,
+      prefix=datetime.datetime.now().strftime('tmp_%Y%m%d%H%M_'),
+  )
+  print('All models and logs will be saved to: {}'.format(temp_dir))
+
   model = build_layerwise_model(input_shape, **pruning_params)
-  pruned_model = train(model, x_train, y_train, x_test, y_test)
+  pruned_model = train(
+      model, x_train, y_train, x_test, y_test, output_dir=temp_dir
+  )
 
   # Write a model that has been pruned with 2x4 sparsity.
   converter = tf.lite.TFLiteConverter.from_keras_model(pruned_model)
   tflite_model = converter.convert()
 
-  tflite_model_path = '/tmp/mnist_2x4.tflite'
+  tflite_model_dir = temp_dir
+  tflite_model_path = os.path.join(tflite_model_dir, 'mnist_2x4.tflite')
   print('model is saved to {}'.format(tflite_model_path))
   with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model)

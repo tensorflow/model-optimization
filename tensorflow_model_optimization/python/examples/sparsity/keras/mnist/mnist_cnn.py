@@ -16,6 +16,10 @@
 """Train a simple convnet on the MNIST dataset."""
 from __future__ import print_function
 
+import datetime
+import os
+import tempfile
+
 from absl import app as absl_app
 from absl import flags
 import tensorflow as tf
@@ -35,8 +39,12 @@ batch_size = 128
 num_classes = 10
 epochs = 12
 
-flags.DEFINE_string('output_dir', '/tmp/mnist_train/',
-                    'Output directory to hold tensorboard events')
+flags.DEFINE_string(
+    'output_dir',
+    None,
+    'Output directory to hold tensorboard events and models. If None, a'
+    ' temporary directory is used.',
+)
 
 
 def build_sequential_model(input_shape):
@@ -94,7 +102,7 @@ def build_layerwise_model(input_shape, **pruning_params):
   ])
 
 
-def train_and_save(models, x_train, y_train, x_test, y_test):
+def train_and_save(models, x_train, y_train, x_test, y_test, output_dir):
   for model in models:
     model.compile(
         loss=keras.losses.categorical_crossentropy,
@@ -109,7 +117,7 @@ def train_and_save(models, x_train, y_train, x_test, y_test):
     # step. Also add a callback to add pruning summaries to tensorboard
     callbacks = [
         pruning_callbacks.UpdatePruningStep(),
-        pruning_callbacks.PruningSummaries(log_dir=FLAGS.output_dir)
+        pruning_callbacks.PruningSummaries(log_dir=output_dir)
     ]
 
     model.fit(
@@ -125,7 +133,7 @@ def train_and_save(models, x_train, y_train, x_test, y_test):
     print('Test accuracy:', score[1])
 
     # Export and import the model. Check that accuracy persists.
-    saved_model_dir = '/tmp/saved_model'
+    saved_model_dir = os.path.join(output_dir, 'saved_model')
     print('Saving model to: ', saved_model_dir)
     keras.models.save_model(model, saved_model_dir, save_format='tf')
     print('Loading model from: ', saved_model_dir)
@@ -182,8 +190,18 @@ def main(unused_argv):
   functional_model = prune.prune_low_magnitude(
       functional_model, **pruning_params)
 
+  if FLAGS.output_dir and not os.path.exists(FLAGS.output_dir):
+    os.makedirs(FLAGS.output_dir)
+  output_dir = tempfile.mkdtemp(
+      dir=FLAGS.output_dir,
+      prefix=datetime.datetime.now().strftime('tmp_%Y%m%d%H%M_'),
+  )
+  print('All models and logs will be saved to: {}'.format(output_dir))
+
   models = [layerwise_model, sequential_model, functional_model]
-  train_and_save(models, x_train, y_train, x_test, y_test)
+  train_and_save(
+      models, x_train, y_train, x_test, y_test, output_dir=output_dir
+  )
 
 
 if __name__ == '__main__':

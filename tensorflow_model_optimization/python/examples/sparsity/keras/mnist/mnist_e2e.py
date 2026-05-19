@@ -16,6 +16,10 @@
 """Train a simple convnet on the MNIST dataset."""
 from __future__ import print_function
 
+import datetime
+import os
+import tempfile
+
 from absl import app as absl_app
 from absl import flags
 import tensorflow as tf
@@ -37,6 +41,12 @@ num_classes = 10
 epochs = 1
 
 flags.DEFINE_float('sparsity', '0.0', 'Target sparsity level.')
+flags.DEFINE_string(
+    'output_dir',
+    None,
+    'Output directory for models and logs. If not set, a temporary directory'
+    ' is used.',
+)
 
 
 def build_layerwise_model(input_shape, **pruning_params):
@@ -60,7 +70,7 @@ def build_layerwise_model(input_shape, **pruning_params):
   ])
 
 
-def train(model, x_train, y_train, x_test, y_test):
+def train(model, x_train, y_train, x_test, y_test, output_dir):
   model.compile(
       loss=keras.losses.categorical_crossentropy,
       optimizer='adam',
@@ -74,7 +84,7 @@ def train(model, x_train, y_train, x_test, y_test):
   # step. Also add a callback to add pruning summaries to tensorboard
   callbacks = [
       pruning_callbacks.UpdatePruningStep(),
-      pruning_callbacks.PruningSummaries(log_dir='/tmp/logs')
+      pruning_callbacks.PruningSummaries(log_dir=output_dir)
   ]
 
   model.fit(
@@ -101,6 +111,14 @@ def main(unused_argv):
       x_test,
       y_test), input_shape = keras_test_utils.get_preprocessed_mnist_data()
 
+  if FLAGS.output_dir and not os.path.exists(FLAGS.output_dir):
+    os.makedirs(FLAGS.output_dir)
+  temp_dir = tempfile.mkdtemp(
+      dir=FLAGS.output_dir,
+      prefix=datetime.datetime.now().strftime('tmp_%Y%m%d%H%M_'),
+  )
+  print('All models and logs will be saved to: {}'.format(temp_dir))
+
   ##############################################################################
   # Train and convert a model with 2x2 block config. There's no kernel in tflite
   # supporting this block configuration, so the sparse tensor is densified and
@@ -113,13 +131,13 @@ def main(unused_argv):
   }
 
   model = build_layerwise_model(input_shape, **pruning_params)
-  model = train(model, x_train, y_train, x_test, y_test)
+  model = train(model, x_train, y_train, x_test, y_test, output_dir=temp_dir)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
 
   # Get a dense model as baseline
   tflite_model_dense = converter.convert()
-  tflite_model_path = '/tmp/dense_mnist.tflite'
+  tflite_model_path = os.path.join(temp_dir, 'dense_mnist.tflite')
   with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model_dense)
 
@@ -131,7 +149,9 @@ def main(unused_argv):
   # Check the model is compressed
   print('Compression ratio: ', len(tflite_model) / len(tflite_model_dense))
 
-  tflite_model_path = '/tmp/sparse_mnist_%s_2x2.tflite' % FLAGS.sparsity
+  tflite_model_path = os.path.join(
+      temp_dir, 'sparse_mnist_%s_2x2.tflite' % FLAGS.sparsity
+  )
   with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model)
 
@@ -152,7 +172,7 @@ def main(unused_argv):
   }
 
   model = build_layerwise_model(input_shape, **pruning_params)
-  model = train(model, x_train, y_train, x_test, y_test)
+  model = train(model, x_train, y_train, x_test, y_test, output_dir=temp_dir)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
   converter.optimizations = {tf.lite.Optimize.EXPERIMENTAL_SPARSITY}
@@ -161,7 +181,9 @@ def main(unused_argv):
   # Check the model is compressed
   print('Compression ratio: ', len(tflite_model) / len(tflite_model_dense))
 
-  tflite_model_path = '/tmp/sparse_mnist_%s_1x4.tflite' % FLAGS.sparsity
+  tflite_model_path = os.path.join(
+      temp_dir, 'sparse_mnist_%s_1x4.tflite' % FLAGS.sparsity
+  )
   with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model)
 
@@ -181,7 +203,7 @@ def main(unused_argv):
   }
 
   model = build_layerwise_model(input_shape, **pruning_params)
-  model = train(model, x_train, y_train, x_test, y_test)
+  model = train(model, x_train, y_train, x_test, y_test, output_dir=temp_dir)
 
   converter = tf.lite.TFLiteConverter.from_keras_model(model)
   converter.optimizations = {
@@ -192,7 +214,9 @@ def main(unused_argv):
   # Check the model is compressed
   print('Compression ratio: ', len(tflite_model) / len(tflite_model_dense))
 
-  tflite_model_path = '/tmp/sparse_mnist_%s_1x16.tflite' % FLAGS.sparsity
+  tflite_model_path = os.path.join(
+      temp_dir, 'sparse_mnist_%s_1x16.tflite' % FLAGS.sparsity
+  )
   with open(tflite_model_path, 'wb') as f:
     f.write(tflite_model)
 
