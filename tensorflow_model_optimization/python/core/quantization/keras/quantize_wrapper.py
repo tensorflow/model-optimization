@@ -252,8 +252,8 @@ class QuantizeWrapper(keras.layers.Wrapper):
 class QuantizeWrapperV2(QuantizeWrapper):
 
   def build(self, input_shape):
-    self._trainable_weights.extend(self.layer.trainable_weights)
     super(QuantizeWrapperV2, self).build(input_shape)
+    self._trainable_weights = self.layer.trainable_weights + self._trainable_weights
 
   @property
   def trainable_weights(self):
