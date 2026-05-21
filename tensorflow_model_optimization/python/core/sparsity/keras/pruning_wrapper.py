@@ -240,7 +240,7 @@ class PruneLowMagnitude(Wrapper):
       else:
         dtype = weight.dtype
       mask = self.add_weight(
-          'mask',
+          weight.name + '_mask',
           shape=weight.shape,
           initializer=keras.initializers.get('ones'),
           dtype=dtype,
@@ -248,7 +248,7 @@ class PruneLowMagnitude(Wrapper):
           aggregation=tf.VariableAggregation.MEAN,
       )
       threshold = self.add_weight(
-          'threshold',
+          weight.name + '_threshold',
           shape=[],
           initializer=keras.initializers.get('zeros'),
           dtype=dtype,
