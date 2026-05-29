@@ -198,12 +198,14 @@ class GatherEncoderTest(tf.test.TestCase, parameterized.TestCase):
         core_encoder.EncoderComposer(test_utils.TimesTwoEncodingStage()).make(),
         spec)
     self.assertTrue(encoder.fully_commutes_with_sum)
+    self.assertIsInstance(encoder.fully_commutes_with_sum, bool)
 
     encoder = gather_encoder.GatherEncoder.from_encoder(
         core_encoder.EncoderComposer(
             test_utils.TimesTwoEncodingStage()).add_parent(
                 test_utils.TimesTwoEncodingStage(), T2_VALS).make(), spec)
     self.assertTrue(encoder.fully_commutes_with_sum)
+    self.assertIsInstance(encoder.fully_commutes_with_sum, bool)
 
     encoder = core_encoder.EncoderComposer(
         test_utils.SignIntFloatEncodingStage())
@@ -213,6 +215,7 @@ class GatherEncoderTest(tf.test.TestCase, parameterized.TestCase):
         test_utils.PlusOneOverNEncodingStage(), T2_VALS)
     encoder = gather_encoder.GatherEncoder.from_encoder(encoder.make(), spec)
     self.assertFalse(encoder.fully_commutes_with_sum)
+    self.assertIsInstance(encoder.fully_commutes_with_sum, bool)
 
   @tf_test_util.run_all_in_graph_and_eager_modes
   def test_state_aggregation_modes(self):
