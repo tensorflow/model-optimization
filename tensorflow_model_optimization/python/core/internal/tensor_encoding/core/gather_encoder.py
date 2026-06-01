@@ -370,7 +370,7 @@ class GatherEncoder:
   @property
   def fully_commutes_with_sum(self):
     # If any element is not True, the whole thing does not fully commute.
-    return sum(tf.nest.flatten(self._commuting_structure))
+    return all(tf.nest.flatten(self._commuting_structure))
 
   @property
   def state_update_aggregation_modes(self):
