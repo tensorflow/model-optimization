@@ -212,7 +212,6 @@ class LinearCentroidsInitialisation(AbstractCentroidsInitialisation):
   def _calculate_centroids_for_interval(self, weight_interval,
                                         number_of_clusters_for_interval):
     if tf.math.less_equal(number_of_clusters_for_interval, 0):
-      # Return an empty array of centroids
       return tf.constant([])
 
     weight_min = tf.reduce_min(weight_interval)
@@ -247,6 +246,10 @@ class RandomCentroidsInitialisation(AbstractCentroidsInitialisation):
 
   def _calculate_centroids_for_interval(self, weight_interval,
                                         number_of_clusters_for_interval):
+    if tf.math.less_equal(number_of_clusters_for_interval, 0):
+      # Return an empty array of centroids
+      return tf.constant([])
+
     weight_min = tf.reduce_min(weight_interval)
     weight_max = tf.reduce_max(weight_interval)
     cluster_centroids = tf.random.uniform(
