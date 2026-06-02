@@ -188,6 +188,15 @@ class CMWCRandomSequenceTests(tf.test.TestCase, parameterized.TestCase):
     with self.assertRaisesRegex(TypeError, 'tf.int64 Tensor'):
       tf_utils._cmwc_random_sequence(10, tf.constant(123, tf.int32))
 
+  def test_reproduction_b511305971(self):
+    """Verifies that the PRNG does not produce negative states or bounds violations."""
+    # Reproduction steps from b/511305971
+    sequence = tf_utils._cmwc_random_sequence(
+        1000, tf.constant(12345, dtype=tf.int64))
+    sequence = self.evaluate(sequence)
+    self.assertAllGreaterEqual(sequence, 0.0)
+    self.assertAllLessEqual(sequence, 1.0)
+
 
 class RandomSignsCMWCTests(tf.test.TestCase, parameterized.TestCase):
   """Tests for `random_signs_cmwc` method."""
