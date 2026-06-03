@@ -1,6 +1,3 @@
-# Placeholder: load py_library
-load("@rules_license//rules:license.bzl", "license")
-
 # Description:
 #
 #  TensorFlow Optimization is a repository for the training-time
@@ -8,7 +5,10 @@ load("@rules_license//rules:license.bzl", "license")
 #  used to optimize machine learning models for deployment and execution.
 #
 #  https://github.com/tensorflow/model-optimization
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
+
+# Placeholder: load py_binary
+# Placeholder: load py_library
+load("@rules_license//rules:license.bzl", "license")
 
 package(
     default_applicable_licenses = [":license"],
@@ -36,7 +36,7 @@ py_library(
     ],
 )
 
-py_strict_binary(
+py_binary(
     name = "build_docs",
     srcs = ["build_docs.py"],
     deps = [

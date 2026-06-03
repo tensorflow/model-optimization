@@ -1,4 +1,4 @@
-load("//tensorflow_model_optimization:tensorflow_model_optimization.bzl", "py_strict_binary")
+# Placeholder: load py_binary
 
 package(
     default_applicable_licenses = ["//tensorflow_model_optimization:license"],
@@ -12,7 +12,7 @@ filegroup(
     srcs = glob(["**"]),
 )
 
-py_strict_binary(
+py_binary(
     name = "mnist_cnn",
     srcs = [
         "mnist_cnn.py",
@@ -29,7 +29,7 @@ py_strict_binary(
     ],
 )
 
-py_strict_binary(
+py_binary(
     name = "mnist_e2e",
     srcs = [
         "mnist_e2e.py",
@@ -47,7 +47,7 @@ py_strict_binary(
     ],
 )
 
-py_strict_binary(
+py_binary(
     name = "mnist_e2e_sparsity2x4",
     srcs = ["mnist_e2e_sparsity2x4.py"],
     deps = [
