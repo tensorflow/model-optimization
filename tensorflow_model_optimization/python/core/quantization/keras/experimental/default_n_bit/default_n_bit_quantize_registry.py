@@ -185,9 +185,15 @@ class DefaultNBitQuantizeRegistry(
     self._num_bits_activation = num_bits_activation
     self._layer_quantize_map = {}
     for quantize_info in self._LAYER_QUANTIZE_INFO:
-      quantize_info.num_bits_weight = num_bits_weight
-      quantize_info.num_bits_activation = num_bits_activation
-      self._layer_quantize_map[quantize_info.layer_type] = quantize_info
+      new_quantize_info = _QuantizeInfo(
+          layer_type=quantize_info.layer_type,
+          weight_attrs=quantize_info.weight_attrs,
+          activation_attrs=quantize_info.activation_attrs,
+          quantize_output=quantize_info.quantize_output,
+          num_bits_weight=num_bits_weight,
+          num_bits_activation=num_bits_activation,
+      )
+      self._layer_quantize_map[new_quantize_info.layer_type] = new_quantize_info
 
     # Hack for `Activation` layer. That is the only layer with a separate
     # QuantizeConfig.
