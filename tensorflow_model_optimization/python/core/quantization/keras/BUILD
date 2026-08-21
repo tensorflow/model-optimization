@@ -3,10 +3,7 @@
 
 package(
     default_applicable_licenses = ["//tensorflow_model_optimization:license"],
-    default_visibility = [
-        "//tensorflow_model_optimization:__subpackages__",
-        "//third_party/tensorflow:__subpackages__",
-    ],
+    default_visibility = ["//tensorflow_model_optimization:__subpackages__"],
 )
 
 licenses(["notice"])
