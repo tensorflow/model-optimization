@@ -87,7 +87,7 @@ class PolynomialDecay(Scheduler):
     self.begin_step = begin_step
     self.end_value = end_value
     self.decay_steps = decay_steps
-    self.end_step = self.begin_step + self.decay_steps
+    self.end_step = self.begin_step + self.decay_steps  # pyrefly: ignore[unsupported-operation]
     self.exponent = exponent
     self.dtype = dtype
 
@@ -111,7 +111,7 @@ class PolynomialDecay(Scheduler):
     """Return decayed scheduled value."""
 
     with tf.name_scope(self.name or "PolynomialDecay"):
-      local_steps = tf.cast(step - self.begin_step, dtype=tf.float32)
+      local_steps = tf.cast(step - self.begin_step, dtype=tf.float32)  # pyrefly: ignore[unsupported-operation]
       decay_term = tf.math.divide(local_steps,
                                   tf.cast(self.decay_steps, dtype=tf.float32))
       total_delta = tf.cast(self.start_value - self.end_value, dtype=tf.float32)

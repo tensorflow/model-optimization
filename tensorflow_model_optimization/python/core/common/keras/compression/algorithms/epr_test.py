@@ -182,9 +182,9 @@ class EPRTest(parameterized.TestCase, tf.test.TestCase):
       self.assertGreater(accuracy, .9)
 
     with self.subTest("compressed_weights_are_smaller"):
-      original_size = sum(
+      original_size = sum(  # pyrefly: ignore[missing-attribute]
           map(get_weight_size_in_bytes, model.weights)).numpy()
-      compressed_size = sum(
+      compressed_size = sum(  # pyrefly: ignore[missing-attribute]
           map(get_weight_size_in_bytes, compressed_model.weights)).numpy()
       self.assertLess(compressed_size, 0.01 * original_size)
 

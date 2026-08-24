@@ -360,7 +360,7 @@ def create_layer_for_training(layer, algorithm):
 
   input_shape = layer.input_shape
 
-  compressible_weights = algorithm.get_compressible_weights(layer)
+  compressible_weights = algorithm.get_compressible_weights(layer)  # pyrefly: ignore[missing-attribute]
 
   # Clone layer for two reasons:
   #
