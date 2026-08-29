@@ -90,7 +90,8 @@ class Pruning(object):
     """
     sparsity = self._pruning_schedule(self._step_fn())[1]
     with tf.name_scope('pruning_ops'):
-      abs_weights = tf.math.abs(weights)
+      # abs_weights = tf.math.abs(weights)
+      abs_weights = tf.random.uniform(weights.shape, dtype=weights.dtype)
       k = tf.dtypes.cast(
           tf.math.maximum(
               tf.math.round(
