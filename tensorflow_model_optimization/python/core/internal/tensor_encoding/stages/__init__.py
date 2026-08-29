@@ -24,3 +24,4 @@ from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.s
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.stages_impl import HadamardEncodingStage
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.stages_impl import IdentityEncodingStage
 from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.stages_impl import UniformQuantizationEncodingStage
+from tensorflow_model_optimization.python.core.internal.tensor_encoding.stages.stages_impl import RotationAwareSignEncodingStage
