@@ -32,7 +32,11 @@ def _get_keras_instance():
   # Use Keras 2.
   version_fn = getattr(tf.keras, 'version', None)
   if version_fn and version_fn().startswith('3.'):
-    import tf_keras as keras_internal  # pylint: disable=g-import-not-at-top,unused-import
+    try:
+      import tf_keras as keras_internal  # pylint: disable=g-import-not-at-top
+    except ImportError:
+      # tf_keras is not installed; fall back to tf.keras (Keras 2 bundled with TF).
+      keras_internal = tf.keras
   else:
     keras_internal = tf.keras
   return keras_internal
