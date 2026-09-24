@@ -1,12 +1,7 @@
 # Placeholder: load py_library
 # Placeholder: load py_test
 
-package(
-    default_applicable_licenses = ["//tensorflow_model_optimization:license"],
-    default_visibility = [
-        "//tensorflow_model_optimization/python/core/internal/tensor_encoding:__subpackages__",
-    ],
-)
+package(default_applicable_licenses = ["//tensorflow_model_optimization:license"])
 
 licenses(["notice"])
 
