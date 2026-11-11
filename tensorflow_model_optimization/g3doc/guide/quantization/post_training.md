@@ -1,5 +1,12 @@
 # Post-training quantization
 
+Warning: Post-training quantization in the TensorFlow Lite converter is
+deprecated. To quantize a model, convert it to a float32 LiteRT model and
+quantize it with
+[LiteRT Quantizer](https://github.com/google-ai-edge/LiteRT/tree/main/litert_quantizer).
+See the
+[migration guide](https://developers.google.com/edge/litert/quantization/tflq_to_litertq_migration).
+
 Post-training quantization includes general techniques to reduce CPU and
 hardware accelerator latency, processing, power, and model size with little
 degradation in model accuracy. These techniques can be performed on an

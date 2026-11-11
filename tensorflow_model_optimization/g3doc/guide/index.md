@@ -37,7 +37,7 @@ The area of model optimization can involve various techniques:
     and distillation
 
 Our toolkit supports
-[post-training quantization](./quantization/post_training.md),
+[post-training quantization](./quantization/post_training.md) (deprecated),
 [quantization aware training](./quantization/training.md),
 [pruning](./pruning/index.md), and [clustering](./clustering/index.md). The
 toolkit also provides experimental support for
@@ -45,6 +45,15 @@ toolkit also provides experimental support for
 various techniques.
 
 ### Quantization
+
+Warning: Post-training quantization in the TensorFlow Lite converter is
+deprecated. For post-training quantization, convert your model to a float32
+LiteRT model and quantize it with
+[LiteRT Quantizer](https://github.com/google-ai-edge/LiteRT/tree/main/litert_quantizer).
+See the
+[migration guide](https://developers.google.com/edge/litert/quantization/tflq_to_litertq_migration).
+This doesn't affect the training-time techniques in this toolkit, such as
+pruning, clustering and quantization aware training.
 
 Quantized models are those where we represent the models with lower precision,
 such as 8-bit integers as opposed to 32-bit float. Lower precision is a

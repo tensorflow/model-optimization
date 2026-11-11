@@ -16,14 +16,13 @@ provide the efficiency required by your application.
 
 ## 3. Post-training tooling
 
-If you cannot use a pre-trained model for your application, try using
-[TensorFlow Lite post-training quantization tools](./quantization/post_training)
-during [TensorFlow Lite conversion](https://www.tensorflow.org/lite/convert),
-which can optimize your already-trained TensorFlow model.
+If you cannot use a pre-trained model for your application, convert your
+already-trained model to a float32 LiteRT model and quantize it with
+[LiteRT Quantizer](https://github.com/google-ai-edge/LiteRT/tree/main/litert_quantizer).
 
-See the
-[post-training quantization tutorial](https://github.com/tensorflow/tensorflow/blob/master/tensorflow/lite/g3doc/performance/post_training_quant.ipynb)
-to learn more.
+Note: Post-training quantization in the TensorFlow Lite converter is
+deprecated. See the
+[migration guide](https://developers.google.com/edge/litert/quantization/tflq_to_litertq_migration).
 
 ## Next steps: Training-time tooling
 
