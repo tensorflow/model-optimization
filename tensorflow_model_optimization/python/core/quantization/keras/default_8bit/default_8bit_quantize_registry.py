@@ -366,7 +366,7 @@ class Default8BitQuantizeConfig(QuantizeConfig):
       return False
 
     return (self.weight_attrs == other.weight_attrs and
-            self.activation_attrs == self.activation_attrs and
+            self.activation_attrs == other.activation_attrs and
             self.weight_quantizer == other.weight_quantizer and
             self.activation_quantizer == other.activation_quantizer and
             self.quantize_output == other.quantize_output)
