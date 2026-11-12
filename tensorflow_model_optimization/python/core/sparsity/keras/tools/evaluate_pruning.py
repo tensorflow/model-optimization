@@ -25,6 +25,7 @@ resulting model will be severly degraded.
 
 from __future__ import print_function
 
+import importlib
 import os
 import tempfile
 import textwrap
@@ -51,6 +52,13 @@ _BLOCK_SIZE = flags.DEFINE_string(
     'block_size', '1,1',
     'Comma-separated dimensions (height,weight) of the block sparsity pattern.'
 )
+_ALLOW_UNSAFE_DESERIALIZATION = flags.DEFINE_bool(
+    'allow_unsafe_deserialization',
+    False,
+    'Allow deserialization of Python bytecode embedded in the model (e.g. '
+    '`Lambda` layers). This can lead to arbitrary code execution, so only '
+    'enable it for models from trusted sources.',
+)
 
 
 def _parse_block_size_flag(value):
@@ -65,6 +73,44 @@ def _check_block_size(flag_value):
     return True
   except:
     raise flags.ValidationError('Invalid block size value "%s".' % flag_value)
+
+
+def _get_safe_mode_scope_class():
+  """Returns Keras' `SafeModeScope` class."""
+  # `SafeModeScope` lives next to `load_model` in the Keras `saving` package,
+  # whose import path differs between Keras distributions (e.g.
+  # `tf_keras.saving` vs `tf_keras.src.saving`).
+  saving_package = keras.models.load_model.__module__.rpartition('.')[0]
+  serialization_lib = importlib.import_module(
+      saving_package + '.serialization_lib'
+  )
+  return serialization_lib.SafeModeScope
+
+
+def load_model(model_path, allow_unsafe_deserialization=False):
+  """Loads a Keras model, disallowing unsafe deserialization by default.
+
+  `keras.models.load_model(..., safe_mode=True)` only guards the native
+  `.keras` format. Legacy formats (e.g. HDF5) can embed Python bytecode in
+  `Lambda` layers, which would be executed on load. To protect against
+  arbitrary code execution, safe mode is enforced for every format through
+  Keras' `SafeModeScope`.
+
+  Args:
+    model_path: Path to the Keras model to load.
+    allow_unsafe_deserialization: Whether to allow deserialization of Python
+      bytecode embedded in the model. Only set this for trusted models.
+
+  Returns:
+    The loaded Keras model.
+
+  Raises:
+    ValueError: If an HDF5 or `.keras` model contains unsafe objects and
+      `allow_unsafe_deserialization` is False.
+  """
+  safe_mode = not allow_unsafe_deserialization
+  with _get_safe_mode_scope_class()(safe_mode):
+    return keras.models.load_model(model_path, safe_mode=safe_mode)
 
 
 def convert_to_tflite(keras_model, output_path):
@@ -93,7 +139,13 @@ def pruned_model_filename(sparsity, block_size):
       sparsity, '%dx%d' % block_size)
 
 
-def run(input_model_path, output_dir, target_sparsity, block_size):
+def run(
+    input_model_path,
+    output_dir,
+    target_sparsity,
+    block_size,
+    allow_unsafe_deserialization=False,
+):
   """Prunes the model and converts both pruned and unpruned versions to TFLite."""
 
   print(textwrap.dedent("""\
@@ -101,7 +153,7 @@ def run(input_model_path, output_dir, target_sparsity, block_size):
              are not intended to be served in production, but to be used for
              performance benchmarking."""))
 
-  input_model = keras.models.load_model(input_model_path)
+  input_model = load_model(input_model_path, allow_unsafe_deserialization)
 
   os.makedirs(output_dir, exist_ok=True)
   unpruned_tflite_path = os.path.join(
@@ -136,7 +188,13 @@ def main(argv):
     raise app.UsageError('Too many command-line arguments.')
 
   block_size = _parse_block_size_flag(_BLOCK_SIZE.value)
-  run(_MODEL_PATH.value, _OUTPUT_DIR.value, _SPARSITY.value, block_size)
+  run(
+      _MODEL_PATH.value,
+      _OUTPUT_DIR.value,
+      _SPARSITY.value,
+      block_size,
+      _ALLOW_UNSAFE_DESERIALIZATION.value,
+  )
 
 
 if __name__ == '__main__':
