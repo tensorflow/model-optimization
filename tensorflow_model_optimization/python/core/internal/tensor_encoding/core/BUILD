@@ -67,7 +67,6 @@ py_test(
         ":encoding_stage",
         # absl/testing:parameterized dep1,
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
-        # mock dep1,
         # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/internal/tensor_encoding/testing:test_utils",

@@ -69,7 +69,6 @@ py_test(
         ":compat",
         ":metrics",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
-        # mock dep1,
         # tensorflow dep1,
         # python/eager:monitoring tensorflow dep2,
     ],

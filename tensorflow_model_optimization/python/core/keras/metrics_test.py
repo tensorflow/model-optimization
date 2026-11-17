@@ -14,7 +14,8 @@
 # ==============================================================================
 """Tests for Metrics."""
 
-import mock
+from unittest import mock
+
 import tensorflow as tf
 
 from tensorflow.python.eager import monitoring
