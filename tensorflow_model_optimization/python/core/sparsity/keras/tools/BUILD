@@ -42,16 +42,40 @@ py_test(
     ],
 )
 
+py_library(
+    name = "evaluate_pruning_lib",
+    srcs = ["evaluate_pruning.py"],
+    deps = [
+        ":sparsity_tooling",
+        # absl:app dep1,
+        # absl/flags dep1,
+        # tensorflow dep1,
+        "//tensorflow_model_optimization/python/core/keras:compat",
+        "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
+    ],
+)
+
 py_binary(
     name = "evaluate_pruning",
     srcs = ["evaluate_pruning.py"],
     # strict_deps = False,
     deps = [
-        ":sparsity_tooling",
+        ":evaluate_pruning_lib",
         # google/protobuf:use_fast_cpp_protos dep1,  # Automatically added
+    ],
+)
+
+py_test(
+    name = "evaluate_pruning_test",
+    size = "medium",
+    srcs = ["evaluate_pruning_test.py"],
+    deps = [
+        ":evaluate_pruning_lib",
+        # absl/testing:parameterized dep1,
+        # google/protobuf:use_fast_cpp_protos dep1,
+        # numpy dep1,
         # tensorflow dep1,
         "//tensorflow_model_optimization/python/core/keras:compat",
-        "//tensorflow_model_optimization/python/core/sparsity/keras:prune",
     ],
 )
 
