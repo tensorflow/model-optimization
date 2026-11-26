@@ -110,8 +110,7 @@ class PruningSummaries(callbacks.TensorBoard):
         self._file_writer.flush()
 
   def on_epoch_begin(self, epoch, logs=None):
-    if logs is not None:
-      super(PruningSummaries, self).on_epoch_begin(epoch, logs)
+    del logs
 
     pruning_logs = {}
     params = []
