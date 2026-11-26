@@ -152,7 +152,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
                    y_train=None,
                    callbacks=None):
     if x_train is None:
-      x_train = np.random.rand(20, 10),
+      x_train = np.random.rand(20, 10)
     if y_train is None:
       y_train = keras.utils.to_categorical(
           np.random.randint(5, size=(20, 1)), 5)
@@ -190,7 +190,7 @@ class PruneIntegrationTest(tf.test.TestCase, parameterized.TestCase,
         target_sparsity=0, begin_step=0, frequency=1)
     pruned_model = prune.prune_low_magnitude(model2, **params)
 
-    x_train = np.random.rand(20, 10),
+    x_train = np.random.rand(20, 10)
     y_train = keras.utils.to_categorical(np.random.randint(5, size=(20, 1)), 5)
 
     self._train_model(model, epochs=1, x_train=x_train, y_train=y_train)
