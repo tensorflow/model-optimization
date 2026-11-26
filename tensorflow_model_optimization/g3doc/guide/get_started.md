@@ -11,7 +11,7 @@ also generally faster and more energy efficient.
 ## 2. Pre-optimized models
 
 See if any existing
-[TensorFlow Lite pre-optimized models](https://www.tensorflow.org/lite/models)
+[pre-trained TensorFlow and Keras models for LiteRT](https://developers.google.com/edge/litert/conversion/tensorflow/pretrained_models)
 provide the efficiency required by your application.
 
 ## 3. Post-training tooling
