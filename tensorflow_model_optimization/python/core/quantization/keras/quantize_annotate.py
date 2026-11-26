@@ -115,9 +115,7 @@ class QuantizeAnnotate(keras.layers.Wrapper):
     config = config.copy()
 
     quantize_config = deserialize_keras_object(
-        config.pop('quantize_config'),
-        module_objects=globals(),
-        custom_objects=None)
+        config.pop('quantize_config'), custom_objects=None)
 
     layer_config = config.pop('layer')
     use_legacy_format = 'module' not in layer_config
