@@ -473,7 +473,7 @@ class ModelTransformer(object):
   def _weight_name(self, name):
     """Extracts the weight name by removing layer from TF variable name.
 
-    For example, returns 'kernel:0' for 'dense_2/kernel:0'.
+    For example, returns 'conv1d_25/kernel:0' for 'quantize_annotate_2/conv1d_25/kernel:0'.
 
     Args:
       name: TensorFlow variable name.
@@ -481,7 +481,7 @@ class ModelTransformer(object):
     Returns:
       Extracted weight name.
     """
-    return name.split('/')[-1]
+    return name.partition('/')[2]
 
   def _get_keras_layer_weights(self, keras_layer):
     """Returns a map of weight name, weight matrix. Keeps keras ordering."""
